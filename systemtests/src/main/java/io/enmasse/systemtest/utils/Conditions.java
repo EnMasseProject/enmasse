@@ -115,8 +115,8 @@ public final class Conditions {
                         current.getKind(), current.getMetadata().getNamespace(), current.getMetadata().getName(),
                         conditionType, expected,
                         state,
-                        json.getString("phase", "<none>"),
-                        json.getString("message", "<none>")
+                        json.getString("phase", "<unknown>"),
+                        json.getString("message", "<unknown>")
                 );
 
                 return expectedString.equals(state);
@@ -172,14 +172,16 @@ public final class Conditions {
             @Override
             public boolean getAsBoolean() {
                 var current = resource.get();
+
                 if (current != null) {
-                    var state = statusJson(resource);
+                    var json = statusJson(current);
                     log.info("{} {}/{} exists - phase: {}, finalizers: {}",
                             current.getKind(), current.getMetadata().getNamespace(), current.getMetadata().getName(),
-                            state.getJsonObject("status", new JsonObject()).getString("phase", "<unknown>"),
+                            json.getString("phase", "<unknown>"),
                             current.getMetadata().getFinalizers()
                     );
                 }
+
                 return current == null;
             }
 

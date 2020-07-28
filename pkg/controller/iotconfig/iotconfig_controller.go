@@ -58,6 +58,8 @@ const iotServiceCaConfigMapName = "iot-service-ca"
 
 const DeviceConnectionTypeAnnotation = iotPrefix + "/deviceConnection.type"
 
+const EventReasonInfrastructureTermination = "InfrastructureTermination"
+
 const RegistryTypeAnnotation = iotPrefix + "/registry.type"
 
 var log = logf.Log.WithName("controller_iotconfig")
@@ -653,9 +655,27 @@ func (r *ReconcileIoTConfig) deconstruct(ctx context.Context, reqLogger logr.Log
 	rc := recon.ReconcileContext{}
 	original := config.DeepCopy()
 
-	if config.DeletionTimestamp != nil && config.Status.Phase != iotv1alpha1.ConfigPhaseTerminating {
+	if config.Status.Phase != iotv1alpha1.ConfigPhaseTerminating {
+
+		// set phase and message
+
+		config.Status.Phase = iotv1alpha1.ConfigPhaseTerminating
+		config.Status.Message = "Infrastructure deleted"
+
+		// set ready condition to false
+
+		readyCondition := config.Status.GetConfigCondition(iotv1alpha1.ConfigConditionTypeReady)
+		readyCondition.SetStatus(corev1.ConditionFalse, "Deconstructing", "Project is being deleted")
+
+		// record event
+
+		r.recorder.Event(config, corev1.EventTypeNormal, EventReasonInfrastructureTermination, "Deconstructing IoT infrastructure")
+
+		// store and re-queue
+
 		reqLogger.Info("Re-queue after setting phase to terminating")
 		return reconcile.Result{Requeue: true}, r.client.Status().Update(ctx, config)
+
 	}
 
 	// process finalizers
