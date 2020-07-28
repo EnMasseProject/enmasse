@@ -6,13 +6,17 @@
 import React from "react";
 import { useParams } from "react-router";
 import { useQuery } from "@apollo/react-hooks";
-import { RETURN_IOT_DEVICE_DETAIL } from "graphql-module/queries";
+import {
+  RETURN_IOT_DEVICE_DETAIL,
+  SET_IOT_CREDENTIAL_FOR_DEVICE
+} from "graphql-module/queries";
 import { IDeviceDetailResponse } from "schema";
 import { DeviceInfo } from "modules/iot-device-detail/components";
-//import { useStoreContext } from "context-state-reducer";
 import { ErrorState } from "modules/iot-device-detail/components";
 import { useMutationQuery } from "hooks";
 import { DELETE_CREDENTIALS_FOR_IOT_DEVICE } from "graphql-module/queries";
+import { ICredential } from "modules/iot-device/components";
+import { FetchPolicy } from "constant";
 
 export interface IDeviceInfoContainerProps {
   id: string;
@@ -21,9 +25,7 @@ export interface IDeviceInfoContainerProps {
 export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
   id
 }) => {
-  // const { dispatch } = useStoreContext();
   const { projectname, deviceid, namespace } = useParams();
-
   const queryResolver = `
     devices{
       via
@@ -34,10 +36,12 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
   `;
 
   const { data } = useQuery<IDeviceDetailResponse>(
-    RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid, queryResolver)
+    RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid, queryResolver),
+    {
+      fetchPolicy: FetchPolicy.NETWORK_ONLY
+    }
   );
 
-  //const [setCredentialStatusQueryVaribles]=useMutationQuery();
   //const [setUpdatePasswordQueryVaribles]=useMutationQuery();
   const refetchQueries = ["iot_device_detail"];
   const [setDeleteCredentialsQueryVariables] = useMutationQuery(
@@ -45,9 +49,13 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
     refetchQueries
   );
 
+  const [
+    setUpdateCredentialQueryVariable
+  ] = useMutationQuery(SET_IOT_CREDENTIAL_FOR_DEVICE, ["iot_device_detail"]);
+
   const { credentials, ext: extString, via, defaults } =
     data?.devices?.devices[0] || {};
-  const credentialsJson = credentials && JSON.parse(credentials);
+  const parsecredentials = credentials && JSON.parse(credentials);
 
   const ext = extString && JSON.parse(extString);
   const defaultObject = defaults && JSON.parse(defaults);
@@ -59,11 +67,22 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
     ext
   };
 
-  const onChangeCredentialStatus = async (authId: string) => {
-    /**
-     * TODO: add query for update credential status i.e. enabled/disabled
-     */
-    //await setCredentialStatusQueryVaribles("");
+  const onConfirmCredentialsStatus = async (data: any) => {
+    const { authId, status, credentialType } = data || {};
+    const newCredentials = [...parsecredentials];
+    const crdIndex: number = newCredentials?.findIndex(
+      (crd: ICredential) =>
+        crd["auth-id"] === authId && crd?.type === credentialType
+    );
+    if (crdIndex >= 0) {
+      newCredentials[crdIndex]["enabled"] = status;
+      const variable = {
+        iotproject: { name: projectname, namespace },
+        deviceId: deviceid,
+        jsonData: JSON.stringify(newCredentials)
+      };
+      await setUpdateCredentialQueryVariable(variable);
+    }
   };
 
   const onConfirmSecretPassword = async (formdata: any, secretId: string) => {
@@ -93,12 +112,12 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
   const getErrorState = () => {
     let errorState = "";
     if (
-      Array.isArray(credentialsJson) &&
-      credentialsJson?.length > 0 &&
+      Array.isArray(parsecredentials) &&
+      parsecredentials?.length > 0 &&
       viaGateway
     ) {
       errorState = ErrorState.CONFLICTING;
-    } else if (!(credentialsJson?.length > 0) && !viaGateway) {
+    } else if (!(parsecredentials?.length > 0) && viaGateway === false) {
       errorState = ErrorState.MISSING;
     }
     return errorState;
@@ -109,12 +128,11 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
       id={id}
       deviceList={via}
       metadataList={metadetaJson}
-      credentials={credentialsJson}
-      onChangeStatus={onChangeCredentialStatus}
-      onConfirmPassword={onConfirmSecretPassword}
+      credentials={parsecredentials}
       errorState={getErrorState()}
       deleteGateways={deleteGateways}
       deleteCredentials={deleteCredentials}
+      onConfirmCredentialsStatus={onConfirmCredentialsStatus}
     />
   );
 };

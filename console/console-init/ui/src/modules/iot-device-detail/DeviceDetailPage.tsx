@@ -214,7 +214,7 @@ export default function DeviceDetailPage() {
               credentials={parseCredentials}
               viaGateway={viaGateway}
               connectiontype={getDeviceConnectionType(
-                viaGateway || false,
+                viaGateway,
                 parseCredentials
               )}
             />
