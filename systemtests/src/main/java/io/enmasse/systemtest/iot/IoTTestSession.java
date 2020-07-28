@@ -675,7 +675,9 @@ public final class IoTTestSession implements IoTTestContext {
 
                 // create IoT project
 
-                createDefaultResource(Kubernetes::iotTenants, project, ProjectConditionType.READY, cleanup);
+                if (this.awaitReady) {
+                    createDefaultResource(Kubernetes::iotTenants, project, ProjectConditionType.READY, cleanup);
+                }
 
                 // create endpoints
 
