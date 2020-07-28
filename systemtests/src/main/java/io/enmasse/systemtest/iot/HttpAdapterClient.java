@@ -178,7 +178,7 @@ public class HttpAdapterClient extends ApiClient {
             path = messageType.path();
         }
 
-        log.info("POST(pre) - path: {}, body '{}'", path, payload);
+        log.debug("POST(pre) - path: {}, body '{}'", path, payload);
 
         var request = getClient().post(this.endpoint.getPort(), this.endpoint.getHost(), path)
                 .putHeader(HttpHeaders.CONTENT_TYPE, contentType(payload))
@@ -196,7 +196,7 @@ public class HttpAdapterClient extends ApiClient {
             requestCustomizer.accept(request);
         }
 
-        log.info("POST(pre) - path: {}, headers: {}{}", path, lineSeparator(), request.headers());
+        log.debug("POST(pre) - path: {}, headers: {}{}", path, lineSeparator(), request.headers());
 
         // result promise
 
@@ -226,7 +226,7 @@ public class HttpAdapterClient extends ApiClient {
                 .flatMap(response -> {
                     var code = response.statusCode();
 
-                    log.info("POST(assert): code {} -> {}", code, response.bodyAsString());
+                    log.debug("POST(assert): code {} -> {}", code, response.bodyAsString());
                     if (expectedCodePredicate.test(code)) {
                         return succeededFuture(response);
                     } else {
