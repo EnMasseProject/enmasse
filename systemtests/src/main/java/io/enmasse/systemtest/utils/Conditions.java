@@ -9,15 +9,11 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
-import java.util.Optional;
-import java.util.function.BooleanSupplier;
-
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 
@@ -113,6 +109,16 @@ public final class Conditions {
             public boolean getAsBoolean() {
                 var current = access.get();
                 var state = conditionStatus(current, conditionType);
+
+                var json = statusJson(current);
+                log.info("Waiting for {} {}/{} to become {} ({}) -> {}, phase: {}, message: {}",
+                        current.getKind(), current.getMetadata().getNamespace(), current.getMetadata().getName(),
+                        conditionType, expected,
+                        state,
+                        json.getString("phase", "<none>"),
+                        json.getString("message", "<none>")
+                );
+
                 return expectedString.equals(state);
             }
 
@@ -170,7 +176,7 @@ public final class Conditions {
                     var state = statusJson(resource);
                     log.info("{} {}/{} exists - phase: {}, finalizers: {}",
                             current.getKind(), current.getMetadata().getNamespace(), current.getMetadata().getName(),
-                            state.getString("phase", "<unknown>"),
+                            state.getJsonObject("status", new JsonObject()).getString("phase", "<unknown>"),
                             current.getMetadata().getFinalizers()
                     );
                 }

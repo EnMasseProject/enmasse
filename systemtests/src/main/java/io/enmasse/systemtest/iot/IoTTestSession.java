@@ -19,6 +19,7 @@ import io.enmasse.iot.model.v1.AdaptersConfigFluent.HttpNested;
 import io.enmasse.iot.model.v1.AdaptersConfigFluent.LoraWanNested;
 import io.enmasse.iot.model.v1.AdaptersConfigFluent.MqttNested;
 import io.enmasse.iot.model.v1.AdaptersConfigFluent.SigfoxNested;
+import io.enmasse.iot.model.v1.ConfigConditionType;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTConfigFluent.SpecNested;
@@ -26,6 +27,7 @@ import io.enmasse.iot.model.v1.IoTConfigSpec;
 import io.enmasse.iot.model.v1.IoTConfigSpecFluent.AdaptersNested;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
+import io.enmasse.iot.model.v1.ProjectConditionType;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -35,7 +37,6 @@ import io.enmasse.systemtest.iot.IoTTestSession.Builder.PreDeployProcessor;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.ThrowingCallable;
 import io.enmasse.systemtest.utils.ThrowingConsumer;
@@ -55,7 +56,6 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -64,7 +64,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -521,7 +520,7 @@ public final class IoTTestSession implements IoTTestContext {
                         .endSpec()
 
                         .build();
-                createDefaultResource(Kubernetes::messagingInfrastructures, messagingInfrastructure, cleanup);
+                createDefaultResource(Kubernetes::messagingInfrastructures, messagingInfrastructure, "Ready", cleanup);
 
                 // create vertx context
 
@@ -531,7 +530,7 @@ public final class IoTTestSession implements IoTTestContext {
 
                 // create IoT config
 
-                createDefaultResource(Kubernetes::iotConfigs, config, cleanup,
+                createDefaultResource(Kubernetes::iotConfigs, config, ConfigConditionType.READY, cleanup,
                         IoTUtils::assertIoTConfigReady,
                         IoTUtils::assertIoTConfigGone
                 );
@@ -656,7 +655,7 @@ public final class IoTTestSession implements IoTTestContext {
                     if (this.projectCustomizer != null) {
                         this.projectCustomizer.accept(messagingProject);
                     }
-                    createDefaultResource(Kubernetes::messagingProjects, messagingProject.build(), cleanup);
+                    createDefaultResource(Kubernetes::messagingProjects, messagingProject.build(), "Ready", cleanup);
 
                     // create messaging endpoint
 
@@ -664,7 +663,7 @@ public final class IoTTestSession implements IoTTestContext {
                     if (this.endpointCustomizer != null) {
                         this.endpointCustomizer.accept(messagingEndpoint);
                     }
-                    createDefaultResource(Kubernetes::messagingEndpoints, messagingEndpoint.build(), cleanup);
+                    createDefaultResource(Kubernetes::messagingEndpoints, messagingEndpoint.build(), "Ready", cleanup);
                 }
 
                 // get the endpoint, we always expect a "downstream" endpoint for testing
@@ -676,7 +675,7 @@ public final class IoTTestSession implements IoTTestContext {
 
                 // create IoT project
 
-                createDefaultResource(Kubernetes::iotTenants, project, cleanup);
+                createDefaultResource(Kubernetes::iotTenants, project, ProjectConditionType.READY, cleanup);
 
                 // create endpoints
 
@@ -1333,6 +1332,7 @@ public final class IoTTestSession implements IoTTestContext {
     private static <T extends HasMetadata, L, D> void createDefaultResource(
             final Function<String, MixedOperation<T, L, D, Resource<T, D>>> clientProvider,
             final T resource,
+            final Object readyCondition,
             final List<ThrowingCallable> cleanup,
             final BiConsumer<T, SoftAssertions> assertAfterConstruction,
             final BiConsumer<T, SoftAssertions> assertAfterDeconstruction) {
@@ -1369,7 +1369,7 @@ public final class IoTTestSession implements IoTTestContext {
                 .inNamespace(resource.getMetadata().getNamespace())
                 .withName(resource.getMetadata().getName());
 
-        waitUntilConditionOrFail(condition(client, resource, "Ready"), ofMinutes(5), ofSeconds(5));
+        waitUntilConditionOrFail(condition(client, resource, readyCondition), ofMinutes(5), ofSeconds(5));
 
         log.info("Creating successful. Resource is ready.");
 
@@ -1380,15 +1380,15 @@ public final class IoTTestSession implements IoTTestContext {
             });
         }
 
-
     }
 
     private static <T extends HasMetadata, L, D> void createDefaultResource(
             final Function<String, MixedOperation<T, L, D, Resource<T, D>>> clientProvider,
             final T resource,
+            final Object readyCondition,
             final List<ThrowingCallable> cleanup) {
 
-        createDefaultResource(clientProvider, resource, cleanup, null, null);
+        createDefaultResource(clientProvider, resource, readyCondition, cleanup, null, null);
 
     }
 
