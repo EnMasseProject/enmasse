@@ -18,7 +18,6 @@ import {
   FlexItem
 } from "@patternfly/react-core";
 import { CreateMetadata } from "modules/iot-device/components";
-import { SwitchWithToggle } from "components/SwitchWithToggle/SwitchWithToggle";
 import { StyleSheet, css } from "aphrodite";
 
 export interface IDeviceInfo {
