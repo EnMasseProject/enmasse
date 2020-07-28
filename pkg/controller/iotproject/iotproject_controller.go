@@ -228,8 +228,15 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 
 	rc := &recon.ReconcileContext{}
 
+	rc.Process(func() (reconcile.Result, error) {
+		return r.checkDeconstruct(ctx, reqLogger, project)
+	})
+	if rc.NeedRequeue() || rc.Error() != nil {
+		return rc.Result()
+	}
+
 	if project.DeletionTimestamp != nil {
-		return r.deconstruct(ctx, reqLogger, project)
+		return reconcile.Result{}, nil
 	}
 
 	// start construction
@@ -249,7 +256,7 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 
 }
 
-func (r *ReconcileIoTProject) deconstruct(ctx context.Context, reqLogger logr.Logger, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
+func (r *ReconcileIoTProject) checkDeconstruct(ctx context.Context, reqLogger logr.Logger, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
 
 	rc := &recon.ReconcileContext{}
 	original := project.DeepCopy()
@@ -286,22 +293,4 @@ func (r *ReconcileIoTProject) deconstruct(ctx context.Context, reqLogger logr.Lo
 	}
 
 	return rc.Result()
-}
-
-// get the first, active endpoint for an IoTProject
-// returns an error if there is one
-func findFirstActiveEndpoint(ctx context.Context, c client.Client, project *iotv1alpha1.IoTProject) (*enmassev1.MessagingEndpoint, error) {
-	endpoints := &enmassev1.MessagingEndpointList{}
-	if err := c.List(ctx, endpoints, client.InNamespace(project.Namespace)); err != nil {
-		return nil, err
-	}
-
-	for _, e := range endpoints.Items {
-		if !e.IsActive() {
-			continue
-		}
-		return &e, nil
-	}
-
-	return nil, util.NewConfigurationError("No active endpoint found in namespace '%s'", project.Namespace)
 }

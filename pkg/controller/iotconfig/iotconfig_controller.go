@@ -266,13 +266,21 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 
 	// check for deconstruction
 
+	rc := &recon.ReconcileContext{}
+	rc.Process(func() (reconcile.Result, error) {
+		return r.checkDeconstruct(ctx, reqLogger, config)
+	})
+	if rc.NeedRequeue() || rc.Error() != nil {
+		return rc.Result()
+	}
+
 	if config.DeletionTimestamp != nil {
-		return r.deconstruct(ctx, reqLogger, config)
+		// we are deleted and must stop here
+		return reconcile.Result{}, nil
 	}
 
 	// we can start
 
-	rc := &recon.ReconcileContext{}
 	original := config.DeepCopy()
 
 	// get messaging infrastructure
@@ -650,7 +658,7 @@ func (r *ReconcileIoTConfig) processRoute(ctx context.Context, name string, conf
 	return nil
 }
 
-func (r *ReconcileIoTConfig) deconstruct(ctx context.Context, reqLogger logr.Logger, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) checkDeconstruct(ctx context.Context, reqLogger logr.Logger, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
 
 	rc := recon.ReconcileContext{}
 	original := config.DeepCopy()
