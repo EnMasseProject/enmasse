@@ -5,3 +5,4 @@
 
 export * from "./DeviceInfoContainer";
 export * from "./ConfigurationInfoContainer";
+export * from "./SecretViewContainer";

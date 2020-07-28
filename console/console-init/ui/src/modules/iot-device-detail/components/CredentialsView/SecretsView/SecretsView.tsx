@@ -12,7 +12,6 @@ import { getLabelByKey } from "utils";
 import { ISecret } from "modules/iot-device/components";
 import { StyleSheet, css } from "aphrodite";
 import { PasswordLabel } from "components";
-import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 
 const styles = StyleSheet.create({
   row_margin: {
@@ -31,67 +30,58 @@ const styles = StyleSheet.create({
 });
 
 export interface ISecretsViewProps
-  extends Pick<ISecretRowProps, "onConfirmPassword"> {
+  extends Pick<
+    ISecretRowProps,
+    "onOpenUpdatePasswordDialog" | "authId" | "credentialType"
+  > {
   id: string;
   secrets: Omit<ISecret, "id">[];
   heading: string;
-  enableActions: boolean;
+  enableActions?: boolean;
 }
 
 interface ISecretRowProps {
   secret: ISecret;
-  onConfirmPassword?: (formdata: any, secretId: string) => void;
   enableActions: boolean;
+  authId?: string;
+  credentialType?: string;
+  onOpenUpdatePasswordDialog?: (formData: any) => void;
 }
 
 const SecretRow: React.FC<ISecretRowProps> = ({
   secret,
-  onConfirmPassword,
-  enableActions
+  enableActions,
+  authId,
+  credentialType,
+  onOpenUpdatePasswordDialog
 }) => {
-  const { dispatch } = useStoreContext();
-  const onClickChangePassword = () => {
-    dispatch &&
-      dispatch({
-        type: types.SHOW_MODAL,
-        modalType: MODAL_TYPES.UPDATE_PASSWORD,
-        modalProps: {
-          onConfirm
-        }
+  const opOpenPasswordDialog = () => {
+    const { id } = secret;
+    onOpenUpdatePasswordDialog &&
+      onOpenUpdatePasswordDialog({
+        authId,
+        credentialType,
+        secretId: id
       });
   };
 
-  const onConfirm = (formdata: any) => {
-    /**
-     * TODO: get secretId
-     */
-    const { id = "" } = secret;
-    onConfirmPassword && onConfirmPassword(formdata, id);
-  };
-
   const renderGridItemValue = (value: string, key: string) => {
-    if (key === "pwd-hash") {
-      if (enableActions) {
-        return (
-          <Button
-            id="secrets-view-change-password-button"
-            variant="link"
-            icon={<EditAltIcon />}
-            className={classNames([
-              styles.c_button_PaddingLeft,
-              styles.c_button_PaddingBottom
-            ])}
-            onClick={onClickChangePassword}
-          >
-            Change password
-          </Button>
-        );
-      } else {
-        return (
-          <PasswordLabel id="secret-view-pwd-password-label" value={value} />
-        );
-      }
-    } else if (key === "key") {
+    if (key === "pwd-hash" && enableActions) {
+      return (
+        <Button
+          id="secrets-view-change-password-button"
+          variant="link"
+          icon={<EditAltIcon />}
+          className={classNames([
+            styles.c_button_PaddingLeft,
+            styles.c_button_PaddingBottom
+          ])}
+          onClick={opOpenPasswordDialog}
+        >
+          Change password
+        </Button>
+      );
+    } else if (key === "key" || !enableActions) {
       return (
         <PasswordLabel id="secrets-view-key-password-label" value={value} />
       );
@@ -129,8 +119,10 @@ export const SecretsView: React.FC<ISecretsViewProps> = ({
   id,
   secrets,
   heading,
-  onConfirmPassword,
-  enableActions
+  enableActions = true,
+  authId,
+  credentialType,
+  onOpenUpdatePasswordDialog
 }) => {
   return (
     <>
@@ -145,8 +137,10 @@ export const SecretsView: React.FC<ISecretsViewProps> = ({
             <>
               <SecretRow
                 secret={secret}
-                onConfirmPassword={onConfirmPassword}
                 enableActions={enableActions}
+                authId={authId}
+                credentialType={credentialType}
+                onOpenUpdatePasswordDialog={onOpenUpdatePasswordDialog}
               />
               {index < secrets.length - 1 && <br />}
             </>
