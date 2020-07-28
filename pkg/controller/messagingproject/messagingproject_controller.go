@@ -220,6 +220,10 @@ func (r *ReconcileMessagingProject) Reconcile(request reconcile.Request) (reconc
 	if result.ShouldReturn(err) {
 		return result.Result(), err
 	}
+	if found.DeletionTimestamp != nil {
+		// we must return in any case, as we are being deconstructed
+		return reconcile.Result{}, nil
+	}
 
 	// Lookup messaging infra
 	infra := &v1.MessagingInfrastructure{}

@@ -284,6 +284,10 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	if err != nil || fresult.Requeue || fresult.Return {
 		return reconcile.Result{Requeue: fresult.Requeue}, err
 	}
+	if found.DeletionTimestamp != nil {
+		// we must return in any case, as we are being deconstructed
+		return reconcile.Result{}, nil
+	}
 
 	// Start regular processing loop
 	rc := &resourceContext{

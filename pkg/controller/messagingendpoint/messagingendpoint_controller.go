@@ -176,6 +176,10 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 	if result.ShouldReturn(err) {
 		return result.Result(), err
 	}
+	if found.DeletionTimestamp != nil {
+		// we must return in any case, as we are being deconstructed
+		return reconcile.Result{}, nil
+	}
 
 	// Retrieve the MessagingInfra for this MessagingEndpoint
 	var infra *v1.MessagingInfrastructure
