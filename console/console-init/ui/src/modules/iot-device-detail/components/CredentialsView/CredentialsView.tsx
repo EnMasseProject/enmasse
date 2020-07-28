@@ -156,10 +156,6 @@ export const Credential: React.FC<ICredentialProps> = ({
                   isChecked={enabled}
                   onChange={onChange}
                 />
-              ) : enabled ? (
-                <>
-                  <CheckCircleIcon color="green" /> &nbsp; On
-                </>
               ) : (
                 <StatusLabelWithIcon
                   id="credential-view-status-icon"

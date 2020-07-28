@@ -18,7 +18,7 @@ import {
 import { useBreadcrumb } from "use-patternfly";
 import { Link } from "react-router-dom";
 
-export default function CreateDeviceUsingJsonPage() {
+export default function AddDeviceUsingJsonPage() {
   const history = useHistory();
   const { projectname, namespace } = useParams();
   const [deviceDetail, setDeviceDetail] = useState<string>();
@@ -44,8 +44,6 @@ export default function CreateDeviceUsingJsonPage() {
     history.push(deviceListRouteLink);
   };
 
-  const onPreview = (detail: string) => {};
-
   const onLeave = () => {
     history.push(deviceListRouteLink);
   };
@@ -65,7 +63,6 @@ export default function CreateDeviceUsingJsonPage() {
         setDeviceDetail={setDeviceDetail}
         onLeave={onLeave}
         onSave={onSave}
-        onPreview={onPreview}
       />
     </Page>
   );

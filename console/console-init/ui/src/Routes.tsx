@@ -23,7 +23,7 @@ const getIoTProjectDetailPage = () =>
 const getIoTCreateDevicePage = () =>
   import("modules/iot-device/dialogs/CreateDevice/CreateDevicePage");
 const getIoTCreateDeviceUsingJsonPage = () =>
-  import("modules/iot-device/dialogs/CreateDevice/CreateDeviceUsingJsonPage");
+  import("modules/iot-device/dialogs/CreateDevice/AddDeviceUsingJsonPage");
 
 export const AppRoutes = () => (
   <SwitchWith404>

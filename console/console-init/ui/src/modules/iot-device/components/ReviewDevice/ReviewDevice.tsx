@@ -55,10 +55,10 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
             </Title>
             {/*TODO: {metadata} */}
             --
+            <br />
+            <br />
           </>
         )}
-        <br />
-        <br />
       </>
     );
   };
