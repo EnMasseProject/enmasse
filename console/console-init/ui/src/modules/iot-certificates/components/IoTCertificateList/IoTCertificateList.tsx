@@ -14,6 +14,8 @@ import {
   GridItem,
   Grid,
   PageSection,
+  Flex,
+  FlexItem,
   Switch,
   PageSectionVariants
 } from "@patternfly/react-core";
@@ -43,9 +45,6 @@ const style = StyleSheet.create({
   },
   no_bottom_padding: {
     paddingBottom: 0
-  },
-  switch_button_align: {
-    float: "right"
   }
 });
 
@@ -75,11 +74,26 @@ export const IoTCertificateList: React.FunctionComponent<IIoTCertificateListProp
       <Grid key={"iiid"}>
         <GridItem span={7}>
           <PageSection className={css(style.no_top_bottom_padding)}>
-            <IoTCertificateToolbar
-              handleJsonViewChange={handleJsonViewChange}
-              isJsonView={isJsonView}
-              setShowCertificateForm={setShowCertificateForm}
-            />
+            {isJsonView ? (
+              <Flex>
+                <FlexItem align={{ default: "alignRight" }}>
+                  <Switch
+                    id="iot-cert-edit-json-switch"
+                    aria-label="Switch for edit in Json"
+                    label="Edit in Json"
+                    isChecked={isJsonView}
+                    onChange={handleJsonViewChange}
+                  />
+                  <br />
+                </FlexItem>
+              </Flex>
+            ) : (
+              <IoTCertificateToolbar
+                handleJsonViewChange={handleJsonViewChange}
+                isJsonView={isJsonView}
+                setShowCertificateForm={setShowCertificateForm}
+              />
+            )}
           </PageSection>
           {showCertificateForm && (
             <PageSection className={css(style.no_bottom_padding)}>
@@ -93,18 +107,6 @@ export const IoTCertificateList: React.FunctionComponent<IIoTCertificateListProp
           )}
           {isJsonView ? (
             <Grid>
-              <GridItem span={12}>
-                <Switch
-                  className={css(style.switch_button_align)}
-                  id="iot-cert-edit-json-switch"
-                  aria-label="Switch for edit in Json"
-                  label="Edit in Json"
-                  isChecked={isJsonView}
-                  onChange={handleJsonViewChange}
-                />
-                <br />
-                <br />
-              </GridItem>
               <GridItem span={12}>
                 <JsonEditor
                   value={
