@@ -23,7 +23,6 @@ describe("<ProjectList/>", () => {
       type: "standard",
       status: StatusTypes.FAILED,
       creationTimestamp: "2020-01-20T11:44:28.607Z",
-      errorMessageRate: 3,
       addressCount: 15,
       connectionCount: 3
     },
@@ -34,7 +33,6 @@ describe("<ProjectList/>", () => {
       namespace: "devops_jbosstest1",
       status: StatusTypes.ACTIVE,
       creationTimestamp: "2020-05-21T14:40:28.607Z",
-      errorMessageRate: 25,
       deviceCount: 10500,
       activeCount: 7100
     },
@@ -79,18 +77,8 @@ describe("<ProjectList/>", () => {
     getByText("Type");
     getByText("Status");
     getByText("Time created");
-    getByText("Error messages");
     getByText("Entities");
 
-    const getProjectPlan = () => {
-      const project: IProject = projects[0];
-      if (project && project.type) {
-        return (
-          project.type[0].toUpperCase() +
-          project.type.substring(1, project.type.length)
-        );
-      }
-    };
     //first row's data
     getByText(projects[0].displayName || "");
     getByText(projects[0].projectType);

@@ -123,6 +123,12 @@ const RETURN_ALL_PROJECTS = (
               name
             }
           }
+          addresses{
+						total
+          }
+          connections{
+            total
+          }
         }
         ... on IoTProject_iot_enmasse_io_v1alpha1 {
           kind

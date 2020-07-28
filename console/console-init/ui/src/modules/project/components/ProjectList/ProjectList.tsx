@@ -174,17 +174,17 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
           ),
           key: displayName + "-" + creationTimestamp
         },
-        {
-          title: (
-            <>
-              <ProjectError
-                errorCount={errorMessageRate}
-                errorMessages={errorMessages}
-              />
-            </>
-          ),
-          key: displayName + "-" + errorMessageRate
-        },
+        // {
+        //   title: (
+        //     <>
+        //       <ProjectError
+        //         errorCount={errorMessageRate}
+        //         errorMessages={errorMessages}
+        //       />
+        //     </>
+        //   ),
+        //   key: displayName + "-" + errorMessageRate
+        // },
         {
           title: (
             <ProjectEntities
@@ -209,9 +209,9 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
     { title: "Type", transforms: [sortable] },
     { title: "Status", transforms: [sortable] },
     { title: "Time created", transforms: [sortable] },
-    {
-      title: "Error messages"
-    },
+    // {
+    //   title: "Error messages"
+    // },
     {
       title: "Entities"
     }
