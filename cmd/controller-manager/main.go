@@ -151,7 +151,7 @@ func main() {
 		}
 	*/
 
-	if util.IsModuleEnabled("IOT_PROJECT") {
+	if util.IsModuleEnabled("IOT_TENANT") {
 		globalGvks = append(globalGvks,
 			schema.GroupVersionKind{
 				Group:   "iot.enmasse.io",
