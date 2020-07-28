@@ -1,4 +1,4 @@
-apiVersion: apiextensions.k8s.io/v1
+apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: iottenants.iot.enmasse.io
@@ -9,6 +9,7 @@ metadata:
 spec:
 
   group: iot.enmasse.io
+  version: v1
   scope: Namespaced
 
   names:
@@ -22,152 +23,147 @@ spec:
     - enmasse
     - iot
 
-  versions:
-    - name: v1
-      served: true
-      storage: true
+  additionalPrinterColumns:
+    - name: Hono tenant
+      type: string
+      description: The name of the tenant in Eclipse Hono
+      JSONPath: .status.tenantName
+    - name: Phase
+      type: string
+      description: Phase of the IoT tenant
+      JSONPath: .status.phase
 
-      subresources:
-        status: {}
+  subresources:
+    status: {}
 
-      additionalPrinterColumns:
-        - name: Hono tenant
+  validation:
+    openAPIV3Schema:
+      description: IoTTenant creates a new isolated space for IoT related messsaging.
+      type: object
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
-          description: The name of the tenant in Eclipse Hono
-          jsonPath: .status.tenantName
-        - name: Phase
+        kind:
+          description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
-          description: Phase of the IoT tenant
-          jsonPath: .status.phase
-
-      schema:
-        openAPIV3Schema:
-          description: IoTTenant creates a new isolated space for IoT related messsaging.
+        spec:
           type: object
           properties:
-            apiVersion:
-              description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-              type: string
-            kind:
-              description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-              type: string
-            spec:
+
+            configuration:
               type: object
               properties:
 
-                configuration:
-                  type: object
-                  properties:
+                enabled:
+                  type: boolean
+                  description: 'Allows to disable the use of the Tenant.'
 
-                    enabled:
-                      type: boolean
-                      description: 'Allows to disable the use of the Tenant.'
-
-                    trustAnchors:
-                      type: array
-                      items:
-                        type: object
-                        required:
-                          - certificate
-                        properties:
-                          certificate:
-                            type: string
-
-                    defaults:
-                      type: object
-                      description: 'Defaults for properties defined on the tenant and device level.'
-
-                    ext:
-                      type: object
-                      description: 'Allows arbitrary properties as extension to the ones specified by the Hono API.'
-
-                    minimumMessageSize:
-                      type: integer
-                      minimum: 0
-                      description: |
-                        The minimum message size in bytes. If set, then reported size of
-                        telemetry, event and command messages is calculated as the minimum multiple
-                        of the configured value that is greater than or equal to the messages
-                        payload size.
-
-                    adapters:
-                      type: object
-                      properties:
-                        http:
-                          type: object
-                          properties:
-                            enabled:
-                              type: boolean
-                            ext:
-                              type: object
-                        mqtt:
-                          type: object
-                          properties:
-                            enabled:
-                              type: boolean
-                            ext:
-                              type: object
-                        lorawan:
-                          type: object
-                          properties:
-                            enabled:
-                              type: boolean
-                            ext:
-                              type: object
-                        sigfox:
-                          type: object
-                          properties:
-                            enabled:
-                              type: boolean
-                            ext:
-                              type: object
-
-                downstreamStrategy:
-                  type: object
-                  properties:
-                    externalStrategy:
-                      type: object
-                    managedStrategy:
-                      type: object
-                    providedStrategy:
-                      type: object
-                  oneOf:
-                    - required: [externalStrategy]
-                    - required: [managedStrategy]
-                    - required: [providedStrategy]
-
-            status:
-              type: object
-              properties:
-
-                phase:
-                  type: string
-                message:
-                  type: string
-                tenantName:
-                  type: string
-
-                accepted:
-                  description: 'The input accepted from the `.spec.configuration` section, split up into the different areas.'
-                  type: object
-                  properties:
-                    configuration:
-                      description: 'The accepted configuration section, ready to be used as a reply to a "Get Tenant" request.'
-                      type: object
-
-                conditions:
+                trustAnchors:
                   type: array
                   items:
                     type: object
+                    required:
+                      - certificate
                     properties:
-                      type:
+                      certificate:
                         type: string
-                      status:
-                        type: string
-                      lastTransitionTime:
-                        type: string
-                        format: date-time
-                      reason:
-                        type: string
-                      message:
-                        type: string
+
+                defaults:
+                  type: object
+                  description: 'Defaults for properties defined on the tenant and device level.'
+
+                ext:
+                  type: object
+                  description: 'Allows arbitrary properties as extension to the ones specified by the Hono API.'
+
+                minimumMessageSize:
+                  type: integer
+                  minimum: 0
+                  description: |
+                    The minimum message size in bytes. If set, then reported size of
+                    telemetry, event and command messages is calculated as the minimum multiple
+                    of the configured value that is greater than or equal to the messages
+                    payload size.
+
+                adapters:
+                  type: object
+                  properties:
+                    http:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                        ext:
+                          type: object
+                    mqtt:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                        ext:
+                          type: object
+                    lorawan:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                        ext:
+                          type: object
+                    sigfox:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                        ext:
+                          type: object
+
+            downstreamStrategy:
+              type: object
+              properties:
+                externalStrategy:
+                  type: object
+                managedStrategy:
+                  type: object
+                providedStrategy:
+                  type: object
+              oneOf:
+                - required: [externalStrategy]
+                - required: [managedStrategy]
+                - required: [providedStrategy]
+
+        status:
+          type: object
+          properties:
+
+            phase:
+              type: string
+            message:
+              type: string
+            tenantName:
+              type: string
+
+            accepted:
+              description: 'The input accepted from the `.spec.configuration` section, split up into the different areas.'
+              type: object
+              properties:
+                configuration:
+                  description: 'The accepted configuration section, ready to be used as a reply to a "Get Tenant" request.'
+                  type: object
+
+            conditions:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  status:
+                    type: string
+                  lastTransitionTime:
+                    type: string
+                    format: date-time
+                  reason:
+                    type: string
+                  message:
+                    type: string
