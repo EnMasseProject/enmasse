@@ -28,13 +28,25 @@ import { useHistory, useParams } from "react-router";
 import { Link } from "react-router-dom";
 import { useBreadcrumb } from "use-patternfly";
 import { SwitchWithToggle } from "components";
+import {
+  ReviewDeviceContainer,
+  IDeviceProp
+} from "modules/iot-device/containers";
+
+const getInitialDeviceForm = () => {
+  const device: IDeviceProp = {
+    connectionType: "directly"
+  };
+  return device;
+};
 
 export default function CreateDevicePage() {
   const history = useHistory();
-  const [connectionType, setConnectionType] = useState<string>();
+  // const [connectionType, setConnectionType] = useState<string>("directly");
   const [addedGateways, setAddedGateways] = useState<string[]>([]);
   const { projectname, namespace } = useParams();
   const deviceListRouteLink = `/iot-projects/${namespace}/${projectname}/devices`;
+  const [device, setDevice] = useState<IDeviceProp>(getInitialDeviceForm());
   const breadcrumb = useMemo(
     () => (
       <Breadcrumb>
@@ -85,13 +97,18 @@ export default function CreateDevicePage() {
 
   const reviewForm = {
     name: "Review",
-    component: <p>Review</p>
+    component: (
+      <ReviewDeviceContainer
+        device={device}
+        title={"Verify that the following information is correct before done"}
+      />
+    )
   };
 
-  const onConnectionChange = (_: boolean, event: any) => {
-    const data = event.target.value;
-    if (data) {
-      setConnectionType(data);
+  const onChangeConnection = (_: boolean, event: any) => {
+    const connectionType = event.target.value;
+    if (connectionType) {
+      setDevice({ ...device, connectionType });
     }
   };
 
@@ -109,15 +126,15 @@ export default function CreateDevicePage() {
       name: "Connection Type",
       component: (
         <ConnectionType
-          connectionType={connectionType}
-          onConnectionChange={onConnectionChange}
+          connectionType={device.connectionType}
+          onChangeConnection={onChangeConnection}
         />
       )
     }
   ];
 
-  if (connectionType) {
-    if (connectionType === "directly") {
+  if (device.connectionType) {
+    if (device.connectionType === "directly") {
       steps.push(addCredentials);
     } else {
       steps.push(addGateway);
@@ -145,7 +162,8 @@ export default function CreateDevicePage() {
                   type="submit"
                   onClick={onNext}
                   className={
-                    activeStep.name === "Connection Type" && !connectionType
+                    activeStep.name === "Connection Type" &&
+                    !device.connectionType
                       ? "pf-m-disabled"
                       : ""
                   }

@@ -11,3 +11,4 @@ export * from "./EditCredentialsContainer";
 export * from "./AddCredentialsContainer";
 export * from "./AddGatewaysContainer";
 export * from "./EmptyDeviceContainer";
+export * from "./ReviewDeviceContainer";

@@ -5,7 +5,12 @@
 
 import React from "react";
 import { Title, Grid, GridItem } from "@patternfly/react-core";
-import { Table, TableHeader, TableBody } from "@patternfly/react-table";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableVariant
+} from "@patternfly/react-table";
 import { StyleSheet, css } from "aphrodite";
 import { convertJsonToMetadataOptions } from "utils";
 
@@ -82,6 +87,7 @@ export const ExtensionsView: React.FC<IExtensionsViewProps> = ({
             </Title>
           </GridItem>
           <Table
+            variant={TableVariant.compact}
             aria-label="extensions view tableheader"
             cells={columns}
             rows={rows}

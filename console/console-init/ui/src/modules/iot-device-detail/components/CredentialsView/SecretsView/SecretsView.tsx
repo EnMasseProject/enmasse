@@ -35,16 +35,19 @@ export interface ISecretsViewProps
   id: string;
   secrets: Omit<ISecret, "id">[];
   heading: string;
+  enableActions: boolean;
 }
 
 interface ISecretRowProps {
   secret: ISecret;
   onConfirmPassword?: (formdata: any, secretId: string) => void;
+  enableActions: boolean;
 }
 
 const SecretRow: React.FC<ISecretRowProps> = ({
   secret,
-  onConfirmPassword
+  onConfirmPassword,
+  enableActions
 }) => {
   const { dispatch } = useStoreContext();
   const onClickChangePassword = () => {
@@ -68,20 +71,26 @@ const SecretRow: React.FC<ISecretRowProps> = ({
 
   const renderGridItemValue = (value: string, key: string) => {
     if (key === "pwd-hash") {
-      return (
-        <Button
-          id="secrets-view-change-password-button"
-          variant="link"
-          icon={<EditAltIcon />}
-          className={classNames([
-            styles.c_button_PaddingLeft,
-            styles.c_button_PaddingBottom
-          ])}
-          onClick={onClickChangePassword}
-        >
-          Change password
-        </Button>
-      );
+      if (enableActions) {
+        return (
+          <Button
+            id="secrets-view-change-password-button"
+            variant="link"
+            icon={<EditAltIcon />}
+            className={classNames([
+              styles.c_button_PaddingLeft,
+              styles.c_button_PaddingBottom
+            ])}
+            onClick={onClickChangePassword}
+          >
+            Change password
+          </Button>
+        );
+      } else {
+        return (
+          <PasswordLabel id="secret-view-pwd-password-label" value={value} />
+        );
+      }
     } else if (key === "key") {
       return (
         <PasswordLabel id="secrets-view-key-password-label" value={value} />
@@ -120,7 +129,8 @@ export const SecretsView: React.FC<ISecretsViewProps> = ({
   id,
   secrets,
   heading,
-  onConfirmPassword
+  onConfirmPassword,
+  enableActions
 }) => {
   return (
     <>
@@ -136,6 +146,7 @@ export const SecretsView: React.FC<ISecretsViewProps> = ({
               <SecretRow
                 secret={secret}
                 onConfirmPassword={onConfirmPassword}
+                enableActions={enableActions}
               />
               {index < secrets.length - 1 && <br />}
             </>
