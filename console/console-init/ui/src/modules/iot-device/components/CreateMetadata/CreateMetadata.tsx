@@ -51,7 +51,6 @@ export const CreateMetadata: React.FC<ICreateMetadataProps> = ({
       }
     ]);
   };
-
   const getMetadataRows = (metaDataRows: IMetadataProps[]) => {
     return metaDataRows.map((metadataRow, index: number) => {
       if (typeof metadataRow.value === "object") {
