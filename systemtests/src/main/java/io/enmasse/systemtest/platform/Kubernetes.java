@@ -162,13 +162,14 @@ public abstract class Kubernetes {
                 log.error("Error checking olm availability", e);
                 instance.olmAvailable = false;
             }
-        }
 
-        log.info("Is CRC: {}", isCRC());
-        log.info("Is OpenShift: {}", isOpenShift());
-        log.info("Is OpenShiftCompatible: {}", isOpenShiftCompatible());
-        for (var v : OpenShiftVersion.values()) {
-            log.info("Is OpenShiftCompatible({}): {}", v, isOpenShiftCompatible(v));
+            log.info("Is CRC: {}", isCRC());
+            log.info("Is OpenShift: {}", isOpenShift());
+            log.info("Is OpenShiftCompatible: {}", isOpenShiftCompatible());
+            for (var v : OpenShiftVersion.values()) {
+                log.info("Is OpenShiftCompatible({}): {}", v, isOpenShiftCompatible(v));
+            }
+
         }
 
         return instance;
