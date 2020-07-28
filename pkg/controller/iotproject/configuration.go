@@ -27,6 +27,7 @@ import (
 
 const labelProjectOwnerNamespace = "iot.enmasse.io/project-owner-namespace"
 const labelProjectOwnerName = "iot.enmasse.io/project-owner-name"
+const labelProjectSubjectName = "iot.enmasse.io/project-subject"
 
 var namespaceSubjectDn = uuid.MustParse("dedf9da2-98e5-11ea-b0a4-f875a464d175")
 
@@ -258,6 +259,7 @@ func (r *ReconcileIoTProject) ensureSubjectDnIsUnique(project *iotv1alpha1.IoTPr
 			// when creating, we simply set ourselves as owner
 			cm.Labels[labelProjectOwnerNamespace] = project.Namespace
 			cm.Labels[labelProjectOwnerName] = project.Name
+			cm.Labels[labelProjectSubjectName] = subjectDn
 
 		} else {
 
