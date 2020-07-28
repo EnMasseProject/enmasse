@@ -9,13 +9,13 @@ import (
 	"context"
 	enmassev1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/util"
+	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
 	"github.com/enmasseproject/enmasse/pkg/util/loghandler"
+	"github.com/go-logr/logr"
 	"k8s.io/client-go/tools/record"
 	"reflect"
 
 	corev1 "k8s.io/api/core/v1"
-
-	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
 
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 
@@ -228,6 +228,32 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 
 	rc := &recon.ReconcileContext{}
 
+	if project.DeletionTimestamp != nil {
+		return r.deconstruct(ctx, reqLogger, project)
+	}
+
+	// start construction
+
+	rc.ProcessSimple(func() error {
+		return project.Status.GetProjectCondition(iotv1alpha1.ProjectConditionTypeConfigurationAccepted).
+			RunWith("ConfigurationNotAccepted", func() error {
+				return r.acceptConfiguration(project)
+			})
+	})
+
+	rc.Process(func() (result reconcile.Result, e error) {
+		return r.reconcileManaged(ctx, project)
+	})
+
+	return r.updateProjectStatus(ctx, original, project, rc)
+
+}
+
+func (r *ReconcileIoTProject) deconstruct(ctx context.Context, reqLogger logr.Logger, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
+
+	rc := &recon.ReconcileContext{}
+	original := project.DeepCopy()
+
 	if project.DeletionTimestamp != nil && project.Status.Phase != iotv1alpha1.ProjectPhaseTerminating {
 		reqLogger.Info("Re-queue after setting phase to terminating")
 		return r.updateProjectStatus(ctx, original, project, &recon.ReconcileContext{})
@@ -259,19 +285,7 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 		// the call to Update will re-trigger us, and we don't need to set "requeue"
 	}
 
-	rc.ProcessSimple(func() error {
-		return project.Status.GetProjectCondition(iotv1alpha1.ProjectConditionTypeConfigurationAccepted).
-			RunWith("ConfigurationNotAccepted", func() error {
-				return r.acceptConfiguration(project)
-			})
-	})
-
-	rc.Process(func() (result reconcile.Result, e error) {
-		return r.reconcileManaged(ctx, project)
-	})
-
-	return r.updateProjectStatus(ctx, original, project, rc)
-
+	return rc.Result()
 }
 
 // get the first, active endpoint for an IoTProject

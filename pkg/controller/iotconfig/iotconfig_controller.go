@@ -7,6 +7,8 @@ package iotconfig
 
 import (
 	"context"
+	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
+	"github.com/go-logr/logr"
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
@@ -60,6 +62,8 @@ const RegistryTypeAnnotation = iotPrefix + "/registry.type"
 
 var log = logf.Log.WithName("controller_iotconfig")
 
+var finalizers []finalizer.Finalizer
+
 // Gets called by parent "init", adding as to the manager
 func Add(mgr manager.Manager) error {
 	name, err := iot.GetIoTConfigName()
@@ -90,6 +94,7 @@ func newReconciler(mgr manager.Manager, infraNamespace string, configName string
 
 	return &ReconcileIoTConfig{
 		client:         mgr.GetClient(),
+		reader:         mgr.GetAPIReader(),
 		scheme:         mgr.GetScheme(),
 		namespace:      infraNamespace,
 		configName:     configName,
@@ -166,6 +171,7 @@ type ReconcileIoTConfig struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client   client.Client
+	reader   client.Reader
 	scheme   *runtime.Scheme
 	recorder record.EventRecorder
 
@@ -254,6 +260,12 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 
 	if config.Name != r.configName {
 		return r.failWrongConfigName(ctx, config)
+	}
+
+	// check for deconstruction
+
+	if config.DeletionTimestamp != nil {
+		return r.deconstruct(ctx, reqLogger, config)
 	}
 
 	// we can start
@@ -634,4 +646,44 @@ func (r *ReconcileIoTConfig) processRoute(ctx context.Context, name string, conf
 	}
 
 	return nil
+}
+
+func (r *ReconcileIoTConfig) deconstruct(ctx context.Context, reqLogger logr.Logger, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+
+	rc := recon.ReconcileContext{}
+	original := config.DeepCopy()
+
+	if config.DeletionTimestamp != nil && config.Status.Phase != iotv1alpha1.ConfigPhaseTerminating {
+		reqLogger.Info("Re-queue after setting phase to terminating")
+		return reconcile.Result{Requeue: true}, r.client.Status().Update(ctx, config)
+	}
+
+	// process finalizers
+
+	rc.Process(func() (result reconcile.Result, e error) {
+		return finalizer.ProcessFinalizers(ctx, r.client, r.reader, r.recorder, config, finalizers)
+	})
+
+	if rc.Error() != nil {
+		reqLogger.Error(rc.Error(), "Failed to process finalizers")
+		// processing finalizers failed
+		return rc.Result()
+	}
+
+	if rc.NeedRequeue() {
+		// persist changes from finalizers, this is signaled to use via "need requeue"
+		// Note: we cannot use "updateProjectStatus" here, as we don't update the status section
+		reqLogger.Info("Re-queue after processing finalizers")
+		if !reflect.DeepEqual(config, original) {
+			err := r.client.Update(ctx, config)
+			return reconcile.Result{}, err
+		} else {
+			return rc.Result()
+		}
+		// processing the finalizers required a persist step, and so we stop early
+		// the call to Update will re-trigger us, and we don't need to set "requeue"
+	}
+
+	return rc.Result()
+
 }
