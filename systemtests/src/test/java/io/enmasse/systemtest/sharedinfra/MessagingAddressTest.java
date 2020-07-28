@@ -13,15 +13,15 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpConnectOptions;
-import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.amqp.TerminusFactory;
-import io.enmasse.systemtest.amqp.TopicTerminusFactory;
 import io.enmasse.systemtest.framework.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.framework.annotations.DefaultMessagingProject;
 import io.enmasse.systemtest.framework.annotations.ExternalClients;
+import io.enmasse.systemtest.framework.condition.DisabledOnCluster;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.ResourceKind;
+import io.enmasse.systemtest.platform.cluster.ClusterType;
 import io.enmasse.systemtest.utils.AssertionUtils;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
@@ -153,6 +153,7 @@ public class MessagingAddressTest extends TestBase {
     }
 
     @Test
+    @DisabledOnCluster(type = ClusterType.OPENSHIFT)
     public void testDeadLetterConsume(ExtensionContext extensionContext) throws Exception {
         MessagingEndpoint ingress = new MessagingEndpointBuilder()
                 .editOrNewMetadata()

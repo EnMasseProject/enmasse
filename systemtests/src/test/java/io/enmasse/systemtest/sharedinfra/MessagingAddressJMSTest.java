@@ -11,9 +11,11 @@ import io.enmasse.api.model.MessagingEndpointBuilder;
 import io.enmasse.api.model.MessagingProject;
 import io.enmasse.api.model.MessagingProjectBuilder;
 import io.enmasse.systemtest.TestBase;
-import io.enmasse.systemtest.framework.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.framework.LoggerUtils;
+import io.enmasse.systemtest.framework.annotations.DefaultMessagingInfrastructure;
+import io.enmasse.systemtest.framework.condition.DisabledOnCluster;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
+import io.enmasse.systemtest.platform.cluster.ClusterType;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
 import io.enmasse.systemtest.utils.JmsProvider;
 import org.hamcrest.Matchers;
@@ -48,6 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+@DisabledOnCluster(type = ClusterType.OPENSHIFT)
 @DefaultMessagingInfrastructure
 @ExtendWith(JmsProviderParameterResolver.class)
 public class MessagingAddressJMSTest extends TestBase {
@@ -317,7 +320,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .withAddress("jmsTopicDurSubs")
                 .endSpec()
                 .build();
-        MessagingAddress addressSub1= new MessagingAddressBuilder()
+        MessagingAddress addressSub1 = new MessagingAddressBuilder()
                 .withNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-topic-dur-sub-1")
@@ -329,7 +332,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .withAddress("sub1DurSub")
                 .endSpec()
                 .build();
-        MessagingAddress addressSub2= new MessagingAddressBuilder()
+        MessagingAddress addressSub2 = new MessagingAddressBuilder()
                 .withNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-topic-dur-sub-2")
@@ -418,7 +421,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .withAddress(topicAddress)
                 .endSpec()
                 .build();
-        MessagingAddress addressSub1= new MessagingAddressBuilder()
+        MessagingAddress addressSub1 = new MessagingAddressBuilder()
                 .withNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-topic-trans-sub1")
@@ -430,7 +433,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .withAddress(sub1ID)
                 .endSpec()
                 .build();
-        MessagingAddress addressSub2= new MessagingAddressBuilder()
+        MessagingAddress addressSub2 = new MessagingAddressBuilder()
                 .withNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-topic-trans-sub2")
@@ -497,7 +500,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .withAddress(topicAddress)
                 .endSpec()
                 .build();
-        MessagingAddress addressSub1= new MessagingAddressBuilder()
+        MessagingAddress addressSub1 = new MessagingAddressBuilder()
                 .withNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-topic-durable-sub")

@@ -6,7 +6,7 @@ package io.enmasse.systemtest.platform;
 
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.condition.OpenShiftVersion;
+import io.enmasse.systemtest.framework.condition.OpenShiftVersion;
 import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Service;

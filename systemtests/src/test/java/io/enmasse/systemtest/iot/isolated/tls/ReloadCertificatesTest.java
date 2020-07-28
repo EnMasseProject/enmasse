@@ -6,7 +6,7 @@
 package io.enmasse.systemtest.iot.isolated.tls;
 
 import io.enmasse.iot.model.v1.ConfigConditionType;
-import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.framework.condition.OpenShift;
 import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.iot.IoTTestSession.ProjectInstance.Device;
 import io.enmasse.systemtest.iot.IoTTests;
@@ -22,7 +22,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 
-import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
+import static io.enmasse.systemtest.framework.condition.OpenShiftVersion.OCP4;
 import static io.enmasse.systemtest.framework.TestTag.IOT;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static io.enmasse.systemtest.platform.Kubernetes.getClient;

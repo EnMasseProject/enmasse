@@ -25,7 +25,7 @@ import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
+import static io.enmasse.systemtest.framework.condition.OpenShiftVersion.OCP4;
 
 public final class DefaultDeviceRegistry {
 

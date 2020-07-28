@@ -5,10 +5,10 @@
 package io.enmasse.systemtest.framework;
 
 import io.enmasse.systemtest.EnmasseInstallType;
-import io.enmasse.systemtest.condition.AssumeKubernetesCondition;
-import io.enmasse.systemtest.condition.AssumeOpenshiftCondition;
-import io.enmasse.systemtest.condition.SupportedInstallType;
-import io.enmasse.systemtest.condition.SupportedInstallTypeCondition;
+import io.enmasse.systemtest.framework.condition.KubernetesCondition;
+import io.enmasse.systemtest.framework.condition.OpenshiftCondition;
+import io.enmasse.systemtest.framework.condition.SupportedInstallType;
+import io.enmasse.systemtest.framework.condition.SupportedInstallTypeCondition;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
@@ -62,7 +62,7 @@ public class TestPlanInfo {
                                 Optional<Method> testMethod = ReflectionUtils.findMethod(Class.forName(testSource.getClassName()), testSource.getMethodName(), testSource.getMethodParameterTypes());
                                 if (testMethod.isPresent()) {
                                     TestMethodExtensionContext extensionContext = new TestMethodExtensionContext(Class.forName(testSource.getClassName()), testMethod);
-                                    ExecutionCondition[] conditions = new ExecutionCondition[]{this::disabledCondition, new SupportedInstallTypeCondition(), new AssumeKubernetesCondition(), new AssumeOpenshiftCondition()};
+                                    ExecutionCondition[] conditions = new ExecutionCondition[]{this::disabledCondition, new SupportedInstallTypeCondition(), new KubernetesCondition(), new OpenshiftCondition()};
                                     if (evaluateTestDisabled(extensionContext, conditions)) {
                                         LOGGER.debug("Test {}.{} is disabled", testSource.getClassName(), testSource.getMethodName());
                                     } else {

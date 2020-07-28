@@ -7,7 +7,7 @@ package io.enmasse.systemtest.logs;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.framework.ThrowableRunner;
-import io.enmasse.systemtest.condition.OpenShiftVersion;
+import io.enmasse.systemtest.framework.condition.OpenShiftVersion;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.framework.TestPlanInfo;
 import io.enmasse.systemtest.platform.KubeCMDClient;

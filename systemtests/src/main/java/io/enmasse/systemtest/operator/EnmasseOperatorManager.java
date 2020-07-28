@@ -8,7 +8,7 @@ import io.enmasse.admin.model.v1.ConsoleService;
 import io.enmasse.admin.model.v1.ConsoleServiceSpec;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OLMInstallationType;
-import io.enmasse.systemtest.condition.OpenShiftVersion;
+import io.enmasse.systemtest.framework.condition.OpenShiftVersion;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.framework.LoggerUtils;
@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
+import static io.enmasse.systemtest.framework.condition.OpenShiftVersion.OCP4;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EnmasseOperatorManager {

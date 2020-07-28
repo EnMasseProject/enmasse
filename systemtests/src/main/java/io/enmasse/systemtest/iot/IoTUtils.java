@@ -14,7 +14,7 @@ import io.enmasse.iot.model.v1.IoTProjectStatus;
 import io.enmasse.iot.model.v1.MeshConfig;
 import io.enmasse.iot.model.v1.ServiceConfig;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.condition.OpenShiftVersion;
+import io.enmasse.systemtest.framework.condition.OpenShiftVersion;
 import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.SystemtestsOperation;
