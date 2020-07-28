@@ -113,6 +113,7 @@ func (lex *lexer) Lex(out *FilterSymType) int {
             /FALSE/i => { tok = FALSE; fbreak;};
             /NULL/i => { tok = NULL; fbreak;};
             /IS/i => { tok = IS; fbreak;};
+            /IN/i => { tok = IN; fbreak;};
 
             /ASC/i => { tok = ASC; fbreak;};
             /DESC/i => { tok = DESC; fbreak;};
@@ -123,7 +124,6 @@ func (lex *lexer) Lex(out *FilterSymType) int {
             '>=' => { tok = GE; fbreak;};
             '<=' => { tok = LE; fbreak;};
             '!=' => { tok = NE; fbreak;};
-            'IN' => { tok = IN; fbreak;};
 
             '(' => { tok = '('; fbreak;};
             ')' => { tok = ')'; fbreak;};

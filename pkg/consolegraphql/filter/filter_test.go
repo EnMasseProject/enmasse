@@ -121,12 +121,16 @@ func TestFilterEval(t *testing.T) {
 
 		{"'a' NOT LIKE 'b'", true},
 
-		//{"1 IN [1,2,3]", true},
-		//{"4 IN [1,2,3]", false},
-		//{"10 IN [1,2,3]", false},
-		//{"'abc' IN ['abc','def']", true},
-		//{"'ghi' IN ['abc','def']", false},
-		//{"'a' IN ['abc','def']", false},
+		{"1 IN (1,2,3)", true},
+		{"9 IN (1,2,3)", false},
+		{"10 IN (1,2,3)", false},
+		{"'abc' IN ('abc','def')", true},
+		{"'xyz' IN ('abc','def')", false},
+		{"'a' IN ('abc','def')", false},
+
+		{"'xyz' NOT IN ('abc','def')", true},
+		{"'a' NOT IN ('abc','def')", true},
+		{"9 NOT IN (1,2,3)", true},
 
 		{"NULL IS NULL", true},
 		{"'a' IS NULL", false},
@@ -177,12 +181,13 @@ func TestFilterEval(t *testing.T) {
 		{"`$.NonExistentNode` IS NULL", true},
 		{"`$.FooStr.NonExistentSubNode` IS NULL", true},
 
-		{"'1' IN `$.FooIntArr`", true},
-		{"'9' IN `$.FooIntArr`", false},
-		{"'10' IN `$.FooIntArr`", false},
-		{"'abc' IN `$.FooStrArr`", true},
-		{"'xyz' IN `$.FooStrArr`", false},
-		{"'a' IN `$.FooStrArr`", false},
+		// todo switch to CONTAINS and swap left and right
+		//{"'1' IN `$.FooIntArr`", true},
+		//{"'9' IN `$.FooIntArr`", false},
+		//{"'10' IN `$.FooIntArr`", false},
+		//{"'abc' IN `$.FooStrArr`", true},
+		//{"'xyz' IN `$.FooStrArr`", false},
+		//{"'a' IN `$.FooStrArr`", false},
 	}
 
 	for _, tc := range testCases {

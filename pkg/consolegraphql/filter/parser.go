@@ -100,68 +100,73 @@ var FilterExca = [...]int{
 	4, 8,
 	5, 8,
 	17, 8,
-	-2, 15,
+	-2, 17,
 }
 
 const FilterPrivate = 57344
 
-const FilterLast = 66
+const FilterLast = 88
 
 var FilterAct = [...]int{
 
-	8, 19, 9, 7, 13, 14, 15, 16, 17, 10,
-	11, 38, 39, 6, 51, 13, 14, 15, 16, 17,
-	10, 11, 36, 20, 46, 48, 44, 44, 43, 45,
-	2, 21, 4, 1, 3, 22, 21, 37, 49, 23,
-	24, 47, 22, 21, 18, 12, 25, 44, 42, 50,
-	5, 0, 0, 0, 40, 41, 27, 29, 30, 31,
-	32, 33, 34, 26, 28, 35,
+	10, 51, 8, 19, 7, 2, 61, 9, 50, 3,
+	39, 40, 56, 37, 6, 20, 13, 14, 15, 16,
+	17, 11, 12, 63, 49, 60, 45, 45, 46, 46,
+	52, 36, 48, 44, 47, 13, 14, 15, 16, 17,
+	35, 54, 13, 14, 15, 16, 17, 11, 12, 45,
+	4, 46, 53, 57, 58, 59, 55, 23, 24, 22,
+	21, 52, 62, 13, 14, 15, 16, 17, 21, 1,
+	22, 21, 41, 42, 27, 29, 30, 31, 32, 33,
+	34, 26, 28, 43, 38, 18, 25, 5,
 }
 var FilterPact = [...]int{
 
-	5, -1000, -3, 2, 38, -1000, -3, -3, -1000, 50,
-	-1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -6, -1000,
-	-15, -3, -3, 31, -1000, -14, -14, 11, 19, -1000,
-	-1000, -1000, -1000, -1000, -1000, -1000, 2, -1000, -1000, -1000,
-	-1000, 26, -1000, -1000, -1000, -1000, -14, -1000, -8, -1000,
-	-1000, -1000,
+	-20, -1000, -2, -6, 55, -1000, -2, -2, -1000, 68,
+	25, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -15, -1000,
+	-16, -2, -2, 66, -1000, 24, 24, 19, 2, -1000,
+	-1000, -1000, -1000, -1000, -1000, 14, 37, -6, -1000, -1000,
+	-1000, -1000, 63, -1000, -1000, -1000, -1000, -1000, 24, -1000,
+	-10, -1000, 45, 14, -1000, -1000, -1000, 8, -22, -1000,
+	-1000, 17, 6, -1000,
 }
 var FilterPgo = [...]int{
 
-	0, 32, 50, 46, 45, 2, 0, 44, 1, 37,
-	33,
+	0, 50, 87, 86, 0, 7, 2, 1, 85, 3,
+	84, 69,
 }
 var FilterR1 = [...]int{
 
-	0, 10, 10, 1, 1, 1, 1, 1, 1, 2,
-	2, 2, 2, 2, 5, 5, 3, 3, 3, 3,
-	3, 3, 3, 4, 4, 4, 4, 4, 6, 6,
-	7, 7, 7, 8, 9, 9, 9,
+	0, 11, 11, 1, 1, 1, 1, 1, 1, 2,
+	2, 2, 2, 2, 2, 2, 5, 5, 3, 3,
+	3, 3, 3, 3, 4, 4, 4, 4, 4, 7,
+	7, 6, 6, 8, 8, 8, 9, 10, 10, 10,
 }
 var FilterR2 = [...]int{
 
 	0, 2, 2, 1, 3, 3, 3, 2, 1, 3,
-	3, 4, 3, 4, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	0, 1, 3, 2, 0, 1, 1,
+	3, 4, 3, 4, 3, 4, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 3,
+	5, 1, 1, 0, 1, 3, 2, 0, 1, 1,
 }
 var FilterChk = [...]int{
 
-	-1000, -10, 25, 29, -1, -2, 16, 6, -6, -5,
-	23, 24, -4, 18, 19, 20, 21, 22, -7, -8,
+	-1000, -11, 25, 29, -1, -2, 16, 6, -6, -5,
+	-4, 23, 24, 18, 19, 20, 21, 22, -8, -9,
 	21, 5, 4, -1, -1, -3, 13, 6, 14, 7,
-	8, 9, 10, 11, 12, 15, 28, -9, 26, 27,
-	-1, -1, 17, -5, -6, -5, 13, 22, 6, -8,
-	-5, 22,
+	8, 9, 10, 11, 12, 15, 6, 28, -10, 26,
+	27, -1, -1, 17, -5, -4, -6, -5, 13, 22,
+	6, -7, 16, 15, -9, -5, 22, -4, -7, -7,
+	17, 28, -4, 17,
 }
 var FilterDef = [...]int{
 
-	0, -2, 0, 30, 1, 3, 0, 0, -2, 0,
-	28, 29, 14, 23, 24, 25, 26, 27, 2, 31,
-	34, 0, 0, 0, 7, 0, 0, 0, 0, 16,
-	17, 18, 19, 20, 21, 22, 0, 33, 35, 36,
-	5, 6, 4, 9, 15, 10, 0, 12, 0, 32,
-	11, 13,
+	0, -2, 0, 33, 1, 3, 0, 0, -2, 0,
+	16, 31, 32, 24, 25, 26, 27, 28, 2, 34,
+	37, 0, 0, 0, 7, 0, 0, 0, 0, 18,
+	19, 20, 21, 22, 23, 0, 0, 0, 36, 38,
+	39, 5, 6, 4, 9, 16, 17, 10, 0, 12,
+	0, 14, 0, 0, 35, 11, 13, 0, 0, 15,
+	29, 0, 0, 30,
 }
 var FilterTok1 = [...]int{
 
@@ -522,217 +527,235 @@ Filterdefault:
 
 	case 1:
 		FilterDollar = FilterS[Filterpt-2 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:80
+//line pkg/consolegraphql/filter/parser.y:82
 		{
 			setExpressionTree(Filterlex, FilterDollar[2].expr)
 		}
 	case 2:
 		FilterDollar = FilterS[Filterpt-2 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:85
+//line pkg/consolegraphql/filter/parser.y:87
 		{
 			setOrderByTree(Filterlex, FilterDollar[2].orderList)
 		}
 	case 3:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:91
+//line pkg/consolegraphql/filter/parser.y:93
 		{
 			FilterVAL.expr = FilterDollar[1].expr
 		}
 	case 4:
 		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:95
+//line pkg/consolegraphql/filter/parser.y:97
 		{
 			FilterVAL.expr = FilterDollar[2].expr
 		}
 	case 5:
 		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:99
+//line pkg/consolegraphql/filter/parser.y:101
 		{
 			FilterVAL.expr = NewAndExpr(FilterDollar[1].expr, FilterDollar[3].expr)
 		}
 	case 6:
 		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:103
+//line pkg/consolegraphql/filter/parser.y:105
 		{
 			FilterVAL.expr = NewOrExpr(FilterDollar[1].expr, FilterDollar[3].expr)
 		}
 	case 7:
 		FilterDollar = FilterS[Filterpt-2 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:107
+//line pkg/consolegraphql/filter/parser.y:109
 		{
 			FilterVAL.expr = NewNotExpr(FilterDollar[2].expr)
 		}
 	case 8:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:111
+//line pkg/consolegraphql/filter/parser.y:113
 		{
 			FilterVAL.expr = FilterDollar[1].boolVal
 		}
 	case 9:
 		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:117
+//line pkg/consolegraphql/filter/parser.y:119
 		{
 			FilterVAL.expr = NewComparisonExpr(FilterDollar[1].expr, FilterDollar[2].str, FilterDollar[3].expr)
 		}
 	case 10:
 		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:121
+//line pkg/consolegraphql/filter/parser.y:123
 		{
 			FilterVAL.expr = NewComparisonExpr(FilterDollar[1].expr, LikeStr, FilterDollar[3].expr)
 		}
 	case 11:
 		FilterDollar = FilterS[Filterpt-4 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:125
+//line pkg/consolegraphql/filter/parser.y:127
 		{
 			FilterVAL.expr = NewComparisonExpr(FilterDollar[1].expr, NotLikeStr, FilterDollar[4].expr)
 		}
 	case 12:
 		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:129
+//line pkg/consolegraphql/filter/parser.y:131
 		{
 			FilterVAL.expr = NewIsNullExpr(FilterDollar[1].expr, IsNull)
 		}
 	case 13:
 		FilterDollar = FilterS[Filterpt-4 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:133
+//line pkg/consolegraphql/filter/parser.y:135
 		{
 			FilterVAL.expr = NewIsNullExpr(FilterDollar[1].expr, IsNotNull)
 		}
 	case 14:
-		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:140
+		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
+//line pkg/consolegraphql/filter/parser.y:139
 		{
-			FilterVAL.expr = FilterDollar[1].expr
+			FilterVAL.expr = NewInExpr(FilterDollar[1].expr, InStr, FilterDollar[3].valueList)
 		}
 	case 15:
-		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
+		FilterDollar = FilterS[Filterpt-4 : Filterpt+1]
 //line pkg/consolegraphql/filter/parser.y:144
 		{
-			FilterVAL.expr = FilterDollar[1].boolVal
+			FilterVAL.expr = NewInExpr(FilterDollar[1].expr, NotInStr, FilterDollar[4].valueList)
 		}
 	case 16:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:150
+//line pkg/consolegraphql/filter/parser.y:151
 		{
-			FilterVAL.str = EqualStr
+			FilterVAL.expr = FilterDollar[1].expr
 		}
 	case 17:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:154
+//line pkg/consolegraphql/filter/parser.y:155
 		{
-			FilterVAL.str = LessThanStr
+			FilterVAL.expr = FilterDollar[1].boolVal
 		}
 	case 18:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:158
+//line pkg/consolegraphql/filter/parser.y:161
 		{
-			FilterVAL.str = GreaterThanStr
+			FilterVAL.str = EqualStr
 		}
 	case 19:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:162
+//line pkg/consolegraphql/filter/parser.y:165
 		{
-			FilterVAL.str = LessEqualStr
+			FilterVAL.str = LessThanStr
 		}
 	case 20:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:166
+//line pkg/consolegraphql/filter/parser.y:169
 		{
-			FilterVAL.str = GreaterEqualStr
+			FilterVAL.str = GreaterThanStr
 		}
 	case 21:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:170
+//line pkg/consolegraphql/filter/parser.y:173
 		{
-			FilterVAL.str = NotEqualStr
+			FilterVAL.str = LessEqualStr
 		}
 	case 22:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:174
+//line pkg/consolegraphql/filter/parser.y:177
 		{
-			FilterVAL.str = InStr
+			FilterVAL.str = GreaterEqualStr
 		}
 	case 23:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:180
+//line pkg/consolegraphql/filter/parser.y:181
 		{
-			FilterVAL.expr = StringVal(FilterDollar[1].stringValue)
+			FilterVAL.str = NotEqualStr
 		}
 	case 24:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:184
+//line pkg/consolegraphql/filter/parser.y:187
 		{
-			FilterVAL.expr = IntVal(FilterDollar[1].integralValue)
+			FilterVAL.expr = StringVal(FilterDollar[1].stringValue)
 		}
 	case 25:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:188
+//line pkg/consolegraphql/filter/parser.y:191
 		{
-			FilterVAL.expr = FloatVal(FilterDollar[1].floatValue)
+			FilterVAL.expr = IntVal(FilterDollar[1].integralValue)
 		}
 	case 26:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:192
+//line pkg/consolegraphql/filter/parser.y:195
 		{
-			FilterVAL.expr = FilterDollar[1].jsonPathValue
+			FilterVAL.expr = FloatVal(FilterDollar[1].floatValue)
 		}
 	case 27:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:196
+//line pkg/consolegraphql/filter/parser.y:199
 		{
-			FilterVAL.expr = NewNullVal()
+			FilterVAL.expr = FilterDollar[1].jsonPathValue
 		}
 	case 28:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:202
+//line pkg/consolegraphql/filter/parser.y:203
 		{
-			FilterVAL.boolVal = BoolVal(true)
+			FilterVAL.expr = NewNullVal()
 		}
 	case 29:
-		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:206
+		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
+//line pkg/consolegraphql/filter/parser.y:209
 		{
-			FilterVAL.boolVal = BoolVal(false)
+			FilterVAL.valueList = NewValueList(FilterDollar[2].expr)
 		}
 	case 30:
-		FilterDollar = FilterS[Filterpt-0 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:211
+		FilterDollar = FilterS[Filterpt-5 : Filterpt+1]
+//line pkg/consolegraphql/filter/parser.y:213
 		{
-			FilterVAL.orderList = NewEmptyOrderBy()
+			FilterVAL.valueList = append(FilterDollar[2].valueList, FilterDollar[4].expr)
 		}
 	case 31:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:215
+//line pkg/consolegraphql/filter/parser.y:219
+		{
+			FilterVAL.boolVal = BoolVal(true)
+		}
+	case 32:
+		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
+//line pkg/consolegraphql/filter/parser.y:223
+		{
+			FilterVAL.boolVal = BoolVal(false)
+		}
+	case 33:
+		FilterDollar = FilterS[Filterpt-0 : Filterpt+1]
+//line pkg/consolegraphql/filter/parser.y:228
+		{
+			FilterVAL.orderList = NewEmptyOrderBy()
+		}
+	case 34:
+		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
+//line pkg/consolegraphql/filter/parser.y:232
 		{
 			FilterVAL.orderList = NewOrderBy(FilterDollar[1].order)
 		}
-	case 32:
+	case 35:
 		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:219
+//line pkg/consolegraphql/filter/parser.y:236
 		{
 			FilterVAL.orderList = append(FilterDollar[1].orderList, FilterDollar[3].order)
 		}
-	case 33:
+	case 36:
 		FilterDollar = FilterS[Filterpt-2 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:225
+//line pkg/consolegraphql/filter/parser.y:242
 		{
 			FilterVAL.order = NewOrder(FilterDollar[1].jsonPathValue, FilterDollar[2].str)
 		}
-	case 34:
+	case 37:
 		FilterDollar = FilterS[Filterpt-0 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:230
+//line pkg/consolegraphql/filter/parser.y:247
 		{
 			FilterVAL.str = AscScr
 		}
-	case 35:
+	case 38:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:234
+//line pkg/consolegraphql/filter/parser.y:251
 		{
 			FilterVAL.str = AscScr
 		}
-	case 36:
+	case 39:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:238
+//line pkg/consolegraphql/filter/parser.y:255
 		{
 			FilterVAL.str = DescScr
 		}

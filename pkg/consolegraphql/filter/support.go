@@ -33,6 +33,7 @@ const (
 	IsNull          = "is null"
 	IsNotNull       = "is not null"
 	InStr		    = "in"
+	NotInStr	    = "not in"
 )
 
 func ParseFilterExpression(s string) (Expr, error) {
@@ -201,6 +202,103 @@ func (e IsNullExpr) Eval(v interface{}) (interface{}, error) {
 func (e IsNullExpr) Traverse(accept func(e Expr) bool, visit func(e Expr)) {
 	if accept(e) {
 		e.Expr.Traverse(accept, visit)
+		visit(e)
+	}
+}
+
+type ValueList []Expr
+
+func (list ValueList) Eval(v interface{}) (interface{}, error) {
+
+	tab := ValueList{}
+
+	for _, val := range list {
+
+		tab = append(tab, val.Eval(v))
+	}
+
+	return &tab, nil
+}
+
+func NewEmptyValueList() ValueList {
+	return ValueList{}
+}
+
+func NewValueList(expr Expr) ValueList {
+	return append(ValueList{}, expr)
+}
+
+func NewInExpr(left Expr, operator string, values ValueList) Expr {
+	return &InExpr{operator, left, values}
+}
+
+type InExpr struct {
+	Operator string
+	Left Expr
+	Values ValueList
+}
+
+func (e InExpr) Eval(v interface{}) (interface{}, error) {
+
+	left, err := e.Left.Eval(v)
+	if err != nil {
+		return nil, err
+	}
+
+	values, err := e.Values.Eval(v)
+	if err != nil {
+		return nil, err
+	}
+
+	switch e.Operator {
+	case InStr:
+		switch l := left.(type) {
+		case int:
+			switch r := values.(type) {
+			case []int:
+				sort.Ints(r)
+				return sort.SearchInts(r, l) == l, nil
+			default:
+				return false, nil
+			}
+		case string:
+			switch r := values.(type) {
+			case []string:
+				return FindStrings(r, l), nil
+			default:
+				return false, nil
+			}
+		default:
+			return false, nil
+		}
+	case NotInStr:
+		switch l := left.(type) {
+		case int:
+			switch r := values.(type) {
+			case []int:
+				return !FindInts(r, l), nil
+			default:
+				return false, nil
+			}
+		case string:
+			switch r := values.(type) {
+			case []string:
+				return !FindStrings(r, l), nil
+			default:
+				return false, nil
+			}
+		default:
+			return false, nil
+		}
+		return false, nil
+	default:
+		return false, nil
+	}
+}
+
+func (e InExpr) Traverse(accept func(e Expr) bool, visit func(e Expr)) {
+	if accept(e) {
+		e.Left.Traverse(accept, visit)
 		visit(e)
 	}
 }
@@ -1027,3 +1125,21 @@ const (
 	AscScr  = "asc"
 	DescScr = "desc"
 )
+
+func FindStrings(slice []string, val string) bool {
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+	return false
+}
+
+func FindInts(slice []int, val int) bool {
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+	return false
+}

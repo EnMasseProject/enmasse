@@ -25,15 +25,15 @@ var _filterlexer_actions []byte = []byte{
 	1, 20, 1, 21, 1, 22, 1, 23, 
 	1, 24, 1, 25, 1, 26, 1, 27, 
 	1, 28, 1, 29, 1, 30, 1, 31, 
-	1, 32, 2, 0, 1, 2, 3, 4, 
-	2, 3, 5, 
+	1, 32, 1, 33, 2, 0, 1, 2, 
+	3, 4, 2, 3, 5, 
 }
 
 var _filterlexer_to_state_actions []byte = []byte{
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0, 0, 59, 0, 0, 
+	0, 0, 0, 0, 0, 61, 0, 0, 
 	0, 0, 0, 0, 
 }
 
@@ -127,69 +127,69 @@ _resume:
 	case 29:
 		switch  lex.data[( lex.p)] {
 		case 32:
-			goto tr35;
-		case 33:
 			goto tr36;
+		case 33:
+			goto tr37;
 		case 39:
 			goto tr3;
 		case 40:
-			goto tr37;
-		case 41:
 			goto tr38;
+		case 41:
+			goto tr39;
 		case 44:
-			goto tr40;
-		case 60:
 			goto tr41;
-		case 61:
+		case 60:
 			goto tr42;
-		case 62:
+		case 61:
 			goto tr43;
+		case 62:
+			goto tr44;
 		case 65:
-			goto tr44;
+			goto tr45;
 		case 68:
-			goto tr45;
+			goto tr46;
 		case 70:
-			goto tr46;
+			goto tr47;
 		case 73:
-			goto tr47;
+			goto tr48;
 		case 76:
-			goto tr48;
+			goto tr49;
 		case 78:
-			goto tr49;
+			goto tr50;
 		case 79:
-			goto tr50;
+			goto tr51;
 		case 84:
-			goto tr51;
+			goto tr52;
 		case 96:
-			goto tr32;
+			goto tr33;
 		case 97:
-			goto tr44;
-		case 100:
 			goto tr45;
-		case 102:
+		case 100:
 			goto tr46;
-		case 105:
+		case 102:
 			goto tr47;
-		case 108:
+		case 105:
 			goto tr48;
-		case 110:
+		case 108:
 			goto tr49;
-		case 111:
+		case 110:
 			goto tr50;
-		case 116:
+		case 111:
 			goto tr51;
+		case 116:
+			goto tr52;
 		}
 		switch {
 		case  lex.data[( lex.p)] < 43:
 			if 9 <=  lex.data[( lex.p)] &&  lex.data[( lex.p)] <= 13 {
-				goto tr35;
+				goto tr36;
 			}
 		case  lex.data[( lex.p)] > 45:
 			if 48 <=  lex.data[( lex.p)] &&  lex.data[( lex.p)] <= 57 {
 				goto tr5;
 			}
 		default:
-			goto tr39;
+			goto tr40;
 		}
 		goto tr1;
 	case 0:
@@ -208,7 +208,7 @@ _resume:
 		if  lex.data[( lex.p)] == 39 {
 			goto tr3;
 		}
-		goto tr52;
+		goto tr53;
 	case 3:
 		if 48 <=  lex.data[( lex.p)] &&  lex.data[( lex.p)] <= 57 {
 			goto tr5;
@@ -216,12 +216,12 @@ _resume:
 		goto tr1;
 	case 31:
 		if  lex.data[( lex.p)] == 46 {
-			goto tr54;
+			goto tr55;
 		}
 		if 48 <=  lex.data[( lex.p)] &&  lex.data[( lex.p)] <= 57 {
 			goto tr5;
 		}
-		goto tr53;
+		goto tr54;
 	case 4:
 		if 48 <=  lex.data[( lex.p)] &&  lex.data[( lex.p)] <= 57 {
 			goto tr7;
@@ -231,17 +231,17 @@ _resume:
 		if 48 <=  lex.data[( lex.p)] &&  lex.data[( lex.p)] <= 57 {
 			goto tr7;
 		}
-		goto tr55;
+		goto tr56;
 	case 33:
 		if  lex.data[( lex.p)] == 61 {
-			goto tr57;
+			goto tr58;
 		}
-		goto tr56;
+		goto tr57;
 	case 34:
 		if  lex.data[( lex.p)] == 61 {
-			goto tr59;
+			goto tr60;
 		}
-		goto tr58;
+		goto tr59;
 	case 5:
 		switch  lex.data[( lex.p)] {
 		case 78:
@@ -328,150 +328,154 @@ _resume:
 		goto tr1;
 	case 15:
 		switch  lex.data[( lex.p)] {
+		case 78:
+			goto tr19;
 		case 83:
+			goto tr20;
+		case 110:
 			goto tr19;
 		case 115:
-			goto tr19;
+			goto tr20;
 		}
 		goto tr1;
 	case 16:
 		switch  lex.data[( lex.p)] {
 		case 73:
-			goto tr20;
+			goto tr21;
 		case 105:
-			goto tr20;
+			goto tr21;
 		}
 		goto tr1;
 	case 17:
 		switch  lex.data[( lex.p)] {
 		case 75:
-			goto tr21;
+			goto tr22;
 		case 107:
-			goto tr21;
+			goto tr22;
 		}
 		goto tr1;
 	case 18:
 		switch  lex.data[( lex.p)] {
 		case 69:
-			goto tr22;
+			goto tr23;
 		case 101:
-			goto tr22;
+			goto tr23;
 		}
 		goto tr1;
 	case 19:
 		switch  lex.data[( lex.p)] {
 		case 79:
-			goto tr23;
+			goto tr24;
 		case 85:
-			goto tr24;
+			goto tr25;
 		case 111:
-			goto tr23;
-		case 117:
 			goto tr24;
+		case 117:
+			goto tr25;
 		}
 		goto tr1;
 	case 20:
 		switch  lex.data[( lex.p)] {
 		case 84:
-			goto tr25;
+			goto tr26;
 		case 116:
-			goto tr25;
+			goto tr26;
 		}
 		goto tr1;
 	case 21:
 		switch  lex.data[( lex.p)] {
 		case 76:
-			goto tr26;
+			goto tr27;
 		case 108:
-			goto tr26;
+			goto tr27;
 		}
 		goto tr1;
 	case 22:
 		switch  lex.data[( lex.p)] {
 		case 76:
-			goto tr27;
+			goto tr28;
 		case 108:
-			goto tr27;
+			goto tr28;
 		}
 		goto tr1;
 	case 23:
 		switch  lex.data[( lex.p)] {
 		case 82:
-			goto tr28;
+			goto tr29;
 		case 114:
-			goto tr28;
+			goto tr29;
 		}
 		goto tr1;
 	case 24:
 		switch  lex.data[( lex.p)] {
 		case 82:
-			goto tr29;
+			goto tr30;
 		case 114:
-			goto tr29;
+			goto tr30;
 		}
 		goto tr1;
 	case 25:
 		switch  lex.data[( lex.p)] {
 		case 85:
-			goto tr30;
+			goto tr31;
 		case 117:
-			goto tr30;
+			goto tr31;
 		}
 		goto tr1;
 	case 26:
 		switch  lex.data[( lex.p)] {
 		case 69:
-			goto tr31;
+			goto tr32;
 		case 101:
-			goto tr31;
+			goto tr32;
 		}
 		goto tr1;
 	case 27:
 		if  lex.data[( lex.p)] == 96 {
-			goto tr33;
+			goto tr34;
 		}
-		goto tr32;
+		goto tr33;
 	case 35:
 		if  lex.data[( lex.p)] == 96 {
-			goto tr61;
+			goto tr62;
 		}
-		goto tr60;
+		goto tr61;
 	case 28:
 		if  lex.data[( lex.p)] == 96 {
-			goto tr32;
+			goto tr33;
 		}
-		goto tr34;
+		goto tr35;
 	}
 
 	tr1:  lex.cs = 0; goto _again
-	tr36:  lex.cs = 1; goto _again
+	tr37:  lex.cs = 1; goto _again
 	tr3:  lex.cs = 2; goto _again
-	tr39:  lex.cs = 3; goto _again
-	tr54:  lex.cs = 4; goto _again
-	tr44:  lex.cs = 5; goto _again
+	tr40:  lex.cs = 3; goto _again
+	tr55:  lex.cs = 4; goto _again
+	tr45:  lex.cs = 5; goto _again
 	tr8:  lex.cs = 6; goto _again
 	tr9:  lex.cs = 7; goto _again
-	tr45:  lex.cs = 8; goto _again
+	tr46:  lex.cs = 8; goto _again
 	tr12:  lex.cs = 9; goto _again
 	tr13:  lex.cs = 10; goto _again
-	tr46:  lex.cs = 11; goto _again
+	tr47:  lex.cs = 11; goto _again
 	tr15:  lex.cs = 12; goto _again
 	tr16:  lex.cs = 13; goto _again
 	tr17:  lex.cs = 14; goto _again
-	tr47:  lex.cs = 15; goto _again
-	tr48:  lex.cs = 16; goto _again
-	tr20:  lex.cs = 17; goto _again
-	tr21:  lex.cs = 18; goto _again
-	tr49:  lex.cs = 19; goto _again
-	tr23:  lex.cs = 20; goto _again
-	tr24:  lex.cs = 21; goto _again
-	tr26:  lex.cs = 22; goto _again
-	tr50:  lex.cs = 23; goto _again
-	tr51:  lex.cs = 24; goto _again
-	tr29:  lex.cs = 25; goto _again
-	tr30:  lex.cs = 26; goto _again
-	tr32:  lex.cs = 27; goto _again
-	tr61:  lex.cs = 28; goto _again
+	tr48:  lex.cs = 15; goto _again
+	tr49:  lex.cs = 16; goto _again
+	tr21:  lex.cs = 17; goto _again
+	tr22:  lex.cs = 18; goto _again
+	tr50:  lex.cs = 19; goto _again
+	tr24:  lex.cs = 20; goto _again
+	tr25:  lex.cs = 21; goto _again
+	tr27:  lex.cs = 22; goto _again
+	tr51:  lex.cs = 23; goto _again
+	tr52:  lex.cs = 24; goto _again
+	tr30:  lex.cs = 25; goto _again
+	tr31:  lex.cs = 26; goto _again
+	tr33:  lex.cs = 27; goto _again
+	tr62:  lex.cs = 28; goto _again
 	tr0:  lex.cs = 29; goto f0
 	tr2:  lex.cs = 29; goto f1
 	tr6:  lex.cs = 29; goto f4
@@ -480,62 +484,64 @@ _resume:
 	tr14:  lex.cs = 29; goto f7
 	tr18:  lex.cs = 29; goto f8
 	tr19:  lex.cs = 29; goto f9
-	tr22:  lex.cs = 29; goto f10
-	tr25:  lex.cs = 29; goto f11
-	tr27:  lex.cs = 29; goto f12
+	tr20:  lex.cs = 29; goto f10
+	tr23:  lex.cs = 29; goto f11
+	tr26:  lex.cs = 29; goto f12
 	tr28:  lex.cs = 29; goto f13
-	tr31:  lex.cs = 29; goto f14
-	tr34:  lex.cs = 29; goto f16
-	tr35:  lex.cs = 29; goto f19
-	tr37:  lex.cs = 29; goto f20
+	tr29:  lex.cs = 29; goto f14
+	tr32:  lex.cs = 29; goto f15
+	tr35:  lex.cs = 29; goto f17
+	tr36:  lex.cs = 29; goto f20
 	tr38:  lex.cs = 29; goto f21
-	tr40:  lex.cs = 29; goto f22
-	tr42:  lex.cs = 29; goto f23
-	tr52:  lex.cs = 29; goto f24
+	tr39:  lex.cs = 29; goto f22
+	tr41:  lex.cs = 29; goto f23
+	tr43:  lex.cs = 29; goto f24
 	tr53:  lex.cs = 29; goto f25
-	tr55:  lex.cs = 29; goto f26
+	tr54:  lex.cs = 29; goto f26
 	tr56:  lex.cs = 29; goto f27
 	tr57:  lex.cs = 29; goto f28
 	tr58:  lex.cs = 29; goto f29
 	tr59:  lex.cs = 29; goto f30
 	tr60:  lex.cs = 29; goto f31
+	tr61:  lex.cs = 29; goto f32
 	tr4:  lex.cs = 30; goto f2
 	tr5:  lex.cs = 31; goto f3
 	tr7:  lex.cs = 32; goto _again
-	tr41:  lex.cs = 33; goto _again
-	tr43:  lex.cs = 34; goto _again
-	tr33:  lex.cs = 35; goto f15
+	tr42:  lex.cs = 33; goto _again
+	tr44:  lex.cs = 34; goto _again
+	tr34:  lex.cs = 35; goto f16
 
 	f3: _acts = 3; goto execFuncs
 	f5: _acts = 5; goto execFuncs
-	f13: _acts = 7; goto execFuncs
-	f11: _acts = 9; goto execFuncs
-	f10: _acts = 11; goto execFuncs
-	f14: _acts = 13; goto execFuncs
+	f14: _acts = 7; goto execFuncs
+	f12: _acts = 9; goto execFuncs
+	f11: _acts = 11; goto execFuncs
+	f15: _acts = 13; goto execFuncs
 	f8: _acts = 15; goto execFuncs
-	f12: _acts = 17; goto execFuncs
-	f9: _acts = 19; goto execFuncs
-	f6: _acts = 21; goto execFuncs
-	f7: _acts = 23; goto execFuncs
-	f23: _acts = 25; goto execFuncs
-	f30: _acts = 27; goto execFuncs
-	f28: _acts = 29; goto execFuncs
-	f0: _acts = 31; goto execFuncs
-	f20: _acts = 33; goto execFuncs
+	f13: _acts = 17; goto execFuncs
+	f10: _acts = 19; goto execFuncs
+	f9: _acts = 21; goto execFuncs
+	f6: _acts = 23; goto execFuncs
+	f7: _acts = 25; goto execFuncs
+	f24: _acts = 27; goto execFuncs
+	f31: _acts = 29; goto execFuncs
+	f29: _acts = 31; goto execFuncs
+	f0: _acts = 33; goto execFuncs
 	f21: _acts = 35; goto execFuncs
 	f22: _acts = 37; goto execFuncs
-	f19: _acts = 39; goto execFuncs
-	f25: _acts = 41; goto execFuncs
+	f23: _acts = 39; goto execFuncs
+	f20: _acts = 41; goto execFuncs
 	f26: _acts = 43; goto execFuncs
-	f24: _acts = 45; goto execFuncs
-	f31: _acts = 47; goto execFuncs
-	f29: _acts = 49; goto execFuncs
-	f27: _acts = 51; goto execFuncs
-	f4: _acts = 53; goto execFuncs
-	f16: _acts = 55; goto execFuncs
-	f1: _acts = 57; goto execFuncs
-	f2: _acts = 62; goto execFuncs
-	f15: _acts = 65; goto execFuncs
+	f27: _acts = 45; goto execFuncs
+	f25: _acts = 47; goto execFuncs
+	f32: _acts = 49; goto execFuncs
+	f30: _acts = 51; goto execFuncs
+	f28: _acts = 53; goto execFuncs
+	f4: _acts = 55; goto execFuncs
+	f17: _acts = 57; goto execFuncs
+	f1: _acts = 59; goto execFuncs
+	f2: _acts = 64; goto execFuncs
+	f16: _acts = 67; goto execFuncs
 
 execFuncs:
 	_nacts = uint(_filterlexer_actions[_acts]); _acts++
@@ -593,55 +599,60 @@ execFuncs:
 { tok = IS; ( lex.p)++; goto _out
 }
 		case 14:
-//line pkg/consolegraphql/filter/lex.rl:117
+//line pkg/consolegraphql/filter/lex.rl:116
  lex.te = ( lex.p)+1
-{ tok = ASC; ( lex.p)++; goto _out
+{ tok = IN; ( lex.p)++; goto _out
 }
 		case 15:
 //line pkg/consolegraphql/filter/lex.rl:118
  lex.te = ( lex.p)+1
-{ tok = DESC; ( lex.p)++; goto _out
+{ tok = ASC; ( lex.p)++; goto _out
 }
 		case 16:
-//line pkg/consolegraphql/filter/lex.rl:120
+//line pkg/consolegraphql/filter/lex.rl:119
  lex.te = ( lex.p)+1
-{ tok = '='; ( lex.p)++; goto _out
+{ tok = DESC; ( lex.p)++; goto _out
 }
 		case 17:
-//line pkg/consolegraphql/filter/lex.rl:123
+//line pkg/consolegraphql/filter/lex.rl:121
  lex.te = ( lex.p)+1
-{ tok = GE; ( lex.p)++; goto _out
+{ tok = '='; ( lex.p)++; goto _out
 }
 		case 18:
 //line pkg/consolegraphql/filter/lex.rl:124
  lex.te = ( lex.p)+1
-{ tok = LE; ( lex.p)++; goto _out
+{ tok = GE; ( lex.p)++; goto _out
 }
 		case 19:
 //line pkg/consolegraphql/filter/lex.rl:125
  lex.te = ( lex.p)+1
-{ tok = NE; ( lex.p)++; goto _out
+{ tok = LE; ( lex.p)++; goto _out
 }
 		case 20:
-//line pkg/consolegraphql/filter/lex.rl:127
+//line pkg/consolegraphql/filter/lex.rl:126
  lex.te = ( lex.p)+1
-{ tok = '('; ( lex.p)++; goto _out
+{ tok = NE; ( lex.p)++; goto _out
 }
 		case 21:
 //line pkg/consolegraphql/filter/lex.rl:128
  lex.te = ( lex.p)+1
-{ tok = ')'; ( lex.p)++; goto _out
+{ tok = '('; ( lex.p)++; goto _out
 }
 		case 22:
-//line pkg/consolegraphql/filter/lex.rl:130
+//line pkg/consolegraphql/filter/lex.rl:129
+ lex.te = ( lex.p)+1
+{ tok = ')'; ( lex.p)++; goto _out
+}
+		case 23:
+//line pkg/consolegraphql/filter/lex.rl:131
  lex.te = ( lex.p)+1
 { tok = ','; ( lex.p)++; goto _out
 }
-		case 23:
-//line pkg/consolegraphql/filter/lex.rl:132
+		case 24:
+//line pkg/consolegraphql/filter/lex.rl:133
  lex.te = ( lex.p)+1
 
-		case 24:
+		case 25:
 //line pkg/consolegraphql/filter/lex.rl:71
  lex.te = ( lex.p)
 ( lex.p)--
@@ -655,7 +666,7 @@ execFuncs:
             tok = INTEGRAL;
             ( lex.p)++; goto _out
 }
-		case 25:
+		case 26:
 //line pkg/consolegraphql/filter/lex.rl:81
  lex.te = ( lex.p)
 ( lex.p)--
@@ -669,7 +680,7 @@ execFuncs:
             tok = FLOAT;
             ( lex.p)++; goto _out
 }
-		case 26:
+		case 27:
 //line pkg/consolegraphql/filter/lex.rl:91
  lex.te = ( lex.p)
 ( lex.p)--
@@ -679,7 +690,7 @@ execFuncs:
             out.stringValue = StringVal(val)
             ( lex.p)++; goto _out
  }
-		case 27:
+		case 28:
 //line pkg/consolegraphql/filter/lex.rl:97
  lex.te = ( lex.p)
 ( lex.p)--
@@ -694,19 +705,19 @@ execFuncs:
             out.jsonPathValue = NewJSONPathVal(jsonPath, val)
             ( lex.p)++; goto _out
  }
-		case 28:
-//line pkg/consolegraphql/filter/lex.rl:121
- lex.te = ( lex.p)
-( lex.p)--
-{ tok = '>'; ( lex.p)++; goto _out
-}
 		case 29:
 //line pkg/consolegraphql/filter/lex.rl:122
  lex.te = ( lex.p)
 ( lex.p)--
-{ tok = '<'; ( lex.p)++; goto _out
+{ tok = '>'; ( lex.p)++; goto _out
 }
 		case 30:
+//line pkg/consolegraphql/filter/lex.rl:123
+ lex.te = ( lex.p)
+( lex.p)--
+{ tok = '<'; ( lex.p)++; goto _out
+}
+		case 31:
 //line pkg/consolegraphql/filter/lex.rl:71
 ( lex.p) = ( lex.te) - 1
 {
@@ -719,7 +730,7 @@ execFuncs:
             tok = INTEGRAL;
             ( lex.p)++; goto _out
 }
-		case 31:
+		case 32:
 //line pkg/consolegraphql/filter/lex.rl:97
 ( lex.p) = ( lex.te) - 1
 {
@@ -733,7 +744,7 @@ execFuncs:
             out.jsonPathValue = NewJSONPathVal(jsonPath, val)
             ( lex.p)++; goto _out
  }
-		case 32:
+		case 33:
 //line NONE:1
 	switch  lex.act {
 	case 0:
@@ -763,7 +774,7 @@ goto _again
  }
 	}
 	
-//line pkg/consolegraphql/filter/lex.go:767
+//line pkg/consolegraphql/filter/lex.go:778
 		}
 	}
 	goto _again
@@ -782,7 +793,7 @@ _again:
 //line NONE:1
  lex.act = 0
 
-//line pkg/consolegraphql/filter/lex.go:786
+//line pkg/consolegraphql/filter/lex.go:797
 		}
 	}
 
@@ -798,30 +809,30 @@ _again:
 		case 2:
 			goto tr2
 		case 30:
-			goto tr52
-		case 31:
 			goto tr53
+		case 31:
+			goto tr54
 		case 4:
 			goto tr6
 		case 32:
-			goto tr55
-		case 33:
 			goto tr56
+		case 33:
+			goto tr57
 		case 34:
-			goto tr58
+			goto tr59
 		case 27:
 			goto tr2
 		case 35:
-			goto tr60
+			goto tr61
 		case 28:
-			goto tr34
+			goto tr35
 	}
 	}
 
 	_out: {}
 	}
 
-//line pkg/consolegraphql/filter/lex.rl:136
+//line pkg/consolegraphql/filter/lex.rl:137
 
 
     return tok;

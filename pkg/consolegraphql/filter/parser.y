@@ -56,6 +56,8 @@ func setOrderByTree(yylex interface{}, expr OrderBy) {
 %token <floatValue> FLOAT
 %token <jsonPathValue> JSON_PATH
 
+%type <valueList> value_list
+
 %token <bytes> NULL TRUE FALSE
 
 %token <bytes> START_EXPRESSION
@@ -133,6 +135,15 @@ condition:
   {
     $$ = NewIsNullExpr($1, IsNotNull)
   }
+| value IN value_list
+  {
+    $$ = NewInExpr($1, InStr, $3)
+  }
+
+| value NOT IN value_list
+  {
+    $$ = NewInExpr($1, NotInStr, $4)
+  }
 
 
 value_expression:
@@ -170,10 +181,6 @@ compare:
   {
     $$ = NotEqualStr
   }
-| IN
-  {
-    $$ = InStr
-  }
 
 value:
   STRING
@@ -195,6 +202,16 @@ value:
 | NULL
   {
     $$ = NewNullVal()
+  }
+
+value_list:
+ '(' value ')'
+  {
+    $$ = NewValueList($2)
+  }
+| '(' value_list ',' value ')'
+  {
+    $$ = append($2, $4)
   }
 
 boolean_value:
