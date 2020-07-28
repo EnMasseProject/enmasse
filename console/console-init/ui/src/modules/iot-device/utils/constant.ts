@@ -4,7 +4,7 @@
  */
 
 import { ISelectOption } from "utils";
-import { IDeviceFilter, IMetadataProps } from "modules/iot-device/components";
+import { IDeviceFilter } from "modules/iot-device/components";
 import { AlertVariant } from "@patternfly/react-core";
 
 /**
@@ -116,7 +116,6 @@ export {
   SHOW_ADVANCE_SETTING,
   credentialTypeOptions,
   deviceRegistrationTypeOptions,
-  getInitialMetadataState,
   MAX_DEVICE_LIST_COUNT,
   ValidationStatusType
 };

@@ -29,7 +29,7 @@ import {
   RETURN_ALL_PROJECTS,
   DOWNLOAD_CERTIFICATE
 } from "graphql-module";
-import { IAddressSpace } from "modules/messaging-project";
+// import { IAddressSpace } from "modules/address-space";
 import { IAllProjectsResponse } from "schema/iot_project";
 import { POLL_INTERVAL, FetchPolicy } from "constant";
 

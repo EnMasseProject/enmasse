@@ -119,7 +119,7 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
     <>
       <Grid>
         <GridItem span={8}>
-          {title && title.trim() != "" && (
+          {title && title.trim() !== "" && (
             <>
               <Title size="2xl" headingLevel="h2">
                 {title}

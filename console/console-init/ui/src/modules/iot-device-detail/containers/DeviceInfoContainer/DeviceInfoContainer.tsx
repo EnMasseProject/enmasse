@@ -85,12 +85,12 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
     }
   };
 
-  const onConfirmSecretPassword = async (formdata: any, secretId: string) => {
-    /**
-     * TODO: add query for update password
-     */
-    //await setUpdatePasswordQueryVaribles("");
-  };
+  // const onConfirmSecretPassword = async (formdata: any, secretId: string) => {
+  //   /**
+  //    * TODO: add query for update password
+  //    */
+  //   //await setUpdatePasswordQueryVaribles("");
+  // };
 
   const deleteGateways = () => {
     /**
