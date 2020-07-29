@@ -6,25 +6,19 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
-	"github.com/99designs/gqlgen/graphql"
-	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/handler/extension"
-	"github.com/99designs/gqlgen/graphql/handler/transport"
-	"github.com/99designs/gqlgen/graphql/playground"
 	adminv1beta2 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/metric"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/resolvers"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server/query"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/watchers"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/vektah/gqlparser/v2/gqlerror"
 	"k8s.io/client-go/tools/clientcmd"
 	"log"
 	"net/http"
@@ -54,10 +48,10 @@ func main() {
 	port := util.GetEnvOrDefault("PORT", "8080")
 	metricsPort := util.GetEnvOrDefault("METRICS_PORT", "8889")
 
-	var impersonationConfig *server.ImpersonationConfig
+	var impersonationConfig *query.ImpersonationConfig
 	impersonationEnable := util.GetBooleanEnvOrDefault("IMPERSONATION_ENABLE", false)
 	if impersonationEnable {
-		impersonationConfig = &server.ImpersonationConfig{}
+		impersonationConfig = &query.ImpersonationConfig{}
 		userHeader, ok := os.LookupEnv("IMPERSONATION_USER_HEADER")
 		if ok {
 			impersonationConfig.UserHeader = &userHeader
@@ -147,68 +141,17 @@ http://localhost:` + port + `/graphql
 		}, updateMetricsPeriod)
 	}
 
-	queryTimeMetric := prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "console_query_time_seconds",
-		Help:    "The query time in seconds",
-		Buckets: prometheus.DefBuckets,
-	}, []string{"operationName"})
-	queryErrorCountMetric := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "console_query_error_total",
-		Help: "Number of queries that have ended in error",
-	}, []string{"operationName"})
-	sessionCountMetric := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "console_active_sessions",
-		Help: "Number of active HTTP sessions",
-	})
+	queryTimeMetric, queryErrorCountMetric, sessionCountMetric := server.CreateMetrics()
 	prometheus.MustRegister(queryTimeMetric, queryErrorCountMetric, sessionCountMetric)
-
-	queryServer := http.NewServeMux()
-
-	gqlServer := handler.New(resolvers.NewExecutableSchema(resolvers.Config{Resolvers: &resolver}))
-
-	queryEndpoint := "/graphql/query"
-	if graphqlPlayground || *developmentMode {
-		playgroundHandler := playground.Handler("GraphQL playground", queryEndpoint)
-		queryServer.Handle("/graphql/", playgroundHandler)
-		gqlServer.Use(extension.Introspection{})
-	}
 
 	sessionManager := server.CreateSessionManager(sessionLifetime, sessionIdleTimeout,
 		func() { manager.BeginWatching() },
 		func() { manager.EndWatching() },
 		sessionCountMetric)
 
-	gqlServer.AddTransport(transport.GET{})
-	gqlServer.AddTransport(transport.POST{})
-
-	gqlServer.SetErrorPresenter(func(ctx context.Context, err error) *gqlerror.Error {
-		rctx := graphql.GetOperationContext(ctx)
-		if rctx != nil {
-			log.Printf("Query error - op: %s query: %s vars: %+v error: %s\n", rctx.OperationName, rctx.RawQuery, rctx.Variables, err)
-		}
-		queryErrorCountMetric.WithLabelValues(rctx.OperationName).Inc()
-		return graphql.DefaultErrorPresenter(ctx, err)
-	})
-
-	gqlServer.AroundResponses(func(ctx context.Context, next graphql.ResponseHandler) *graphql.Response {
-		loggedOnUser := "<unknown>"
-		start := time.Now()
-		result := next(ctx)
-		loggedOnUser = server.UpdateAccessControllerState(ctx, loggedOnUser, sessionManager)
-		rctx := graphql.GetOperationContext(ctx)
-		if rctx != nil {
-			since := time.Since(start)
-			log.Printf("[%s] Query execution - op: %s %s\n", loggedOnUser, rctx.OperationName, since)
-			queryTimeMetric.WithLabelValues(rctx.OperationName).Observe(since.Seconds())
-		}
-		return result
-	})
-
-	if *developmentMode {
-		queryServer.Handle(queryEndpoint, server.DevelopmentHandler(gqlServer, sessionManager, config.BearerToken))
-	} else {
-		queryServer.Handle(queryEndpoint, server.AuthHandler(gqlServer, sessionManager, impersonationConfig))
-	}
+	queryServer := query.CreateQueryServer(resolver, graphqlPlayground, *developmentMode,
+		sessionManager,
+		queryErrorCountMetric, queryTimeMetric, config, impersonationConfig, query.CreateClientSets)
 
 	go func() {
 		err = http.ListenAndServe("127.0.0.1:"+port, sessionManager.LoadAndSave(queryServer))
@@ -226,3 +169,4 @@ http://localhost:` + port + `/graphql
 	}
 
 }
+
