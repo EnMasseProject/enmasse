@@ -5,11 +5,11 @@
 package io.enmasse.systemtest.logs;
 
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.framework.LoggerUtils;
+import io.enmasse.systemtest.framework.TestPlanInfo;
 import io.enmasse.systemtest.framework.ThrowableRunner;
 import io.enmasse.systemtest.framework.condition.OpenShiftVersion;
-import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.framework.TestPlanInfo;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
@@ -347,6 +347,9 @@ public class GlobalLogCollector {
             Files.writeString(path.resolve("standardinfraconfigs.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "standardinfraconfigs", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("brokeredinfraconfigs.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "brokeredinfraconfigs", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("authenticationservices.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "authenticationservices", "-o", "yaml", "--all-namespaces").getStdOut());
+
+            Files.writeString(path.resolve("iotprojects.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "iotprojects", "-o", "yaml", "--all-namespaces").getStdOut());
+            Files.writeString(path.resolve("iotconfigs.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "iotconfigs", "-o", "yaml", "--all-namespaces").getStdOut());
 
             //cluster wide logs
             Files.writeString(path.resolve("pvs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pv").getStdOut());
