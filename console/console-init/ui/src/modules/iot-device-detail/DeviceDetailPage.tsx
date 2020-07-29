@@ -95,7 +95,7 @@ export default function DeviceDetailPage() {
     () => (
       <Breadcrumb>
         <BreadcrumbItem>
-          <Link id="device-detail-home-link" to={"/"}>
+          <Link id="home-link" to={"/"}>
             Home
           </Link>
         </BreadcrumbItem>

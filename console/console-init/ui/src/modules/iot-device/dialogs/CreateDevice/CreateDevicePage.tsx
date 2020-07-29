@@ -51,7 +51,7 @@ export default function CreateDevicePage() {
     () => (
       <Breadcrumb>
         <BreadcrumbItem>
-          <Link id="cdetail-link-home" to={"/"}>
+          <Link id="home-link" to={"/"}>
             Home
           </Link>
         </BreadcrumbItem>

@@ -22,7 +22,9 @@ const styles = StyleSheet.create({
 const breadcrumb = (
   <Breadcrumb>
     <BreadcrumbItem>
-      <Link to={"/"}>Home</Link>
+      <Link to={"/"} id="home-link">
+        Home
+      </Link>
     </BreadcrumbItem>
     <BreadcrumbItem isActive={true}>IoT Project</BreadcrumbItem>
   </Breadcrumb>

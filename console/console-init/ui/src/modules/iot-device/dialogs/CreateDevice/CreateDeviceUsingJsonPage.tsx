@@ -27,7 +27,7 @@ export default function CreateDeviceUsingJsonPage() {
     () => (
       <Breadcrumb>
         <BreadcrumbItem>
-          <Link id="crt-dvc-brdcmb-home-link" to={"/"}>
+          <Link id="home-link" to={"/"}>
             Home
           </Link>
         </BreadcrumbItem>

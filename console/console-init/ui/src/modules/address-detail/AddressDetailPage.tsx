@@ -38,7 +38,7 @@ export default function AddressDetailPage() {
     () => (
       <Breadcrumb>
         <BreadcrumbItem>
-          <Link id="addr-details-home-link" to={"/"}>
+          <Link id="home-link" to={"/"}>
             Home
           </Link>
         </BreadcrumbItem>

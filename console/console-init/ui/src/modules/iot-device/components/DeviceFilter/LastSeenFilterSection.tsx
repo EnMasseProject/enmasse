@@ -87,8 +87,8 @@ const LastSeenFilterSection: React.FunctionComponent<ILastSeenFilterSectionProps
       <DropdownWithToggle
         className={css(styles.dropdown_align)}
         toggleClass={css(styles.dropdown_toggle_align)}
-        id="last-seen-filter-dropdowntoggle"
-        toggleId="last-seen-filter-dropdown-toggle"
+        id="last-seen-filter-dropdown"
+        toggleId="last-seen-filter-dropdowntoggle"
         position={DropdownPosition.left}
         onSelectItem={onStartTimeFormatChange}
         value={lastSeen.startTime ? lastSeen.startTime.form : ""}
@@ -107,8 +107,8 @@ const LastSeenFilterSection: React.FunctionComponent<ILastSeenFilterSectionProps
       />
       <DropdownWithToggle
         className={css(styles.end_dropdown_align)}
-        id="last-seen-filter-end-time-dropdowntoggle"
-        toggleId="last-seen-filter-end-time-dropdown-toggle"
+        id="last-seen-filter-end-time-dropdown"
+        toggleId="last-seen-filter-end-time-dropdowntoggle"
         position={DropdownPosition.left}
         onSelectItem={onEndTimeFormatChange}
         value={lastSeen.endTime ? lastSeen.endTime.form : ""}

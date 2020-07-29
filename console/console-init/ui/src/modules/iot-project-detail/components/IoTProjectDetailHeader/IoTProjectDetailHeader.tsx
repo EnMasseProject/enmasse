@@ -145,7 +145,7 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
         id="iot-project-detail-kebab-dropdown"
         isPlain={true}
         position={DropdownPosition.right}
-        toggleId="iot-project-header-kebab-toggle"
+        toggleId="iot-project-header-kebab-dropdowntoggle"
         dropdownItems={dropdownItems}
       />
     );

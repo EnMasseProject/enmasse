@@ -80,14 +80,14 @@ const IoTConfiguration: React.FC<IIoTConfigurationProps> = ({
               <FormGroup
                 label="Namespace"
                 isRequired={true}
-                fieldId="iot-config-namespace-selecttoggle"
+                fieldId="iot-config-namespace-select"
               >
                 <SelectWithToggle
                   selectOptions={namespaceOptions}
                   onSelectItem={onNameSpaceSelect}
                   selections={namespace}
                   ariaLabel={"iot namespace"}
-                  id="iot-config-name-space-selecttoggle"
+                  id="iot-config-namespace-select"
                   optionId="iot-namespace-select-option"
                   variant={SelectVariant.typeahead}
                 />
