@@ -74,7 +74,7 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
           </FormGroup>
           <FormGroup
             id="cd-device-info-form-switch"
-            label={<p className={css(styles.lighter_text)}>Status</p>}
+            label="Status"
             fieldId="device-info-switchtoggle"
           >
             <Flex>
