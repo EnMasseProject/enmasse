@@ -46,6 +46,8 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.net.PemTrustOptions;
 import org.assertj.core.api.SoftAssertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -748,12 +750,19 @@ public final class IoTTestSession implements IoTTestContext {
                         .map(MessagingEndpointPort::getPort)
                         .findAny().orElseThrow(() -> new IllegalStateException("Unable to find port 'AMQPS' in endpoint status"));
                 var amqpEndpoint = new Endpoint(endpointHost, port);
+                var cert = messagingEndpoint.getStatus().getTls().getCaCertificate();
 
                 // create AMQP client
 
                 var client = new AmqpClient(
                         defaultQueue(amqpEndpoint)
                                 .customizeProtonClientOptions(options -> {
+                                    options
+                                            .setSsl(true)
+                                            .setHostnameVerificationAlgorithm("")
+                                            .setTrustOptions(new PemTrustOptions()
+                                                    .addCertValue(Buffer.buffer(cert)));
+
                                     if (this.consumerTlsVersions != null) {
                                         options.setEnabledSecureTransportProtocols(this.consumerTlsVersions);
                                     } else if (this.defaultTlsVersions != null) {
