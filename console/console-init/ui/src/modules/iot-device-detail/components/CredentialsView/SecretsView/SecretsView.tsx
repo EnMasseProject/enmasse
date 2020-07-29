@@ -55,7 +55,7 @@ const SecretRow: React.FC<ISecretRowProps> = ({
   credentialType,
   onOpenUpdatePasswordDialog
 }) => {
-  const opOpenPasswordDialog = () => {
+  const onOpenPasswordDialog = () => {
     const { id } = secret;
     onOpenUpdatePasswordDialog &&
       onOpenUpdatePasswordDialog({
@@ -76,7 +76,7 @@ const SecretRow: React.FC<ISecretRowProps> = ({
             styles.c_button_PaddingLeft,
             styles.c_button_PaddingBottom
           ])}
-          onClick={opOpenPasswordDialog}
+          onClick={onOpenPasswordDialog}
         >
           Change password
         </Button>

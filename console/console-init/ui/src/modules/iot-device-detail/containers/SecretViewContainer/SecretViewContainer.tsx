@@ -82,7 +82,7 @@ export const SecretsViewContainer: React.FC<ISecretsViewProps> = ({
         type: types.SHOW_MODAL,
         modalType: MODAL_TYPES.UPDATE_PASSWORD,
         modalProps: {
-          data: { authId, credentialType, secretId },
+          additionallProps: { authId, credentialType, secretId },
           onConfirm: onConfirmPassword
         }
       });

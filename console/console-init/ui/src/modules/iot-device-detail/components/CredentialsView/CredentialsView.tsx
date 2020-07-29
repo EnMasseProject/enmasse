@@ -16,10 +16,7 @@ import {
   CardTitle,
   Switch
 } from "@patternfly/react-core";
-import {
-  CheckCircleIcon,
-  ExclamationCircleIcon as OffIcon
-} from "@patternfly/react-icons";
+import { CheckCircleIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "aphrodite";
 import { getLabelByKey } from "utils";
 import { StatusLabelWithIcon } from "components";
