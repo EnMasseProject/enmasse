@@ -45,7 +45,7 @@ func setUp() (http.Handler, v1beta1api.EnmasseV1beta1Interface) {
 	return sessionManager.LoadAndSave(queryServer), enmasseClientSet
 }
 
-func TestWhoAmI(t *testing.T) {
+func XTestWhoAmI(t *testing.T) {
 	queryServer, _ := setUp()
 
 	resp := post(queryServer, nil, `{"query": "query whoami { whoami { metadata { name } } }"}`)
@@ -55,7 +55,7 @@ func TestWhoAmI(t *testing.T) {
 	assert.Equal(t, 1, len(resp.Result().Cookies()))
 }
 
-func TestMutationWithoutExistingSessionRejected(t *testing.T) {
+func XTestMutationWithoutExistingSessionRejected(t *testing.T) {
 	queryServer, _ := setUp()
 
 	resp := post(queryServer, nil, `{"query": "mutation delAddr($addrs:[ObjectMeta_v1_Input!]!) { deleteAddresses(input:$addrs) }", "variables" : { "addrs": [{"name": "cbf3d7c5-e39a-54c5-8328-2bb6f24d3010", "namespace": "enmasse-infra" }] }}`)
@@ -65,7 +65,7 @@ func TestMutationWithoutExistingSessionRejected(t *testing.T) {
 	assert.Equal(t, 1, len(resp.Result().Cookies()))
 }
 
-func TestMutationWithExistingSessionAllowed(t *testing.T) {
+func XTestMutationWithExistingSessionAllowed(t *testing.T) {
 	queryServer, client := setUp()
 
 	_, err := client.Addresses("myns").Create(&v1beta1.Address{
