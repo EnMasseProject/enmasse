@@ -13,6 +13,7 @@
 * #5001: Ensure that IoT roles iot-tenant-service/iot-device-connection have distinct perms sets (#5019)
 * #5031: Bump postgresql-jdbc from 42.2.13 -> 42.2.14 
 * #5047: Ensure that application of end user network policy does not affect traffic between EnMasse components.
+* #5091: [CVE-2020-14319] Deny mutation operations unless an existing session exists 
 
 ## 0.32.1
 *  #4929: Readd old CRD versions to unbreak OLM upgrades (#4929)
