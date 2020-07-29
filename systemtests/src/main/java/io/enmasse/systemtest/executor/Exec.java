@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  * Class provide execution of external command
  */
 public class Exec {
-    private static Logger log = LoggerUtils.getLogger();
+    private static final Logger log = LoggerUtils.getLogger();
     private Process process;
     private String stdOut;
     private String stdErr;
@@ -138,7 +138,7 @@ public class Exec {
      * @throws ExecutionException
      */
     public int exec(String input, List<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException {
-        log.info("Running command - " + String.join(" ", commands.toArray(new String[0])));
+        log.debug("Running command - " + String.join(" ", commands.toArray(new String[0])));
         ProcessBuilder builder = new ProcessBuilder();
         builder.command(commands);
         builder.directory(new File(System.getProperty("user.dir")));
@@ -313,12 +313,17 @@ public class Exec {
             int ret = executor.exec(input, command, timeout);
             synchronized (lock) {
                 if (logToOutput) {
+                    log.info("Command - " + String.join(" ", command.toArray(new String[0])));
                     log.info("Return code: {}", ret);
-                    if (!executor.getStdOut().equals("")) {
-                        log.info("stdout: \n{}", executor.getStdOut());
+                    if (!executor.getStdOut().isEmpty()) {
+                        log.info("======STDOUT START=======");
+                        log.info("\n{}", executor.getStdOut());
+                        log.info("======STDOUT END======");
                     }
-                    if (!executor.getStdErr().equals("")) {
-                        log.info("stderr: \n{}", executor.getStdErr());
+                    if (!executor.getStdErr().isEmpty()) {
+                        log.info("======STDERR START=======");
+                        log.info("\n{}", executor.getStdErr());
+                        log.info("======STDERR END======");
                     }
                 }
             }

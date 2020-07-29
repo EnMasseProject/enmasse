@@ -174,11 +174,11 @@ public abstract class Kubernetes {
             isOpenshift = Exec.execute(Arrays.asList(Kubernetes.getInstance().getCluster().getKubeCmd(), "api-resources"), false).getStdOut().contains("openshift.io");
             ocpVersion = instance.getOcpVersion();
 
-            log.info("Is CRC: {}", isCRC());
-            log.info("Is OpenShift: {}", isOpenShift());
-            log.info("Is OpenShiftCompatible: {}", isOpenShiftCompatible());
+            log.debug("Is CRC: {}", isCRC());
+            log.debug("Is OpenShift: {}", isOpenShift());
+            log.debug("Is OpenShiftCompatible: {}", isOpenShiftCompatible());
             for (var v : OpenShiftVersion.values()) {
-                log.info("Is OpenShiftCompatible({}): {}", v, isOpenShiftCompatible(v));
+                log.debug("Is OpenShiftCompatible({}): {}", v, isOpenShiftCompatible(v));
             }
 
         }
