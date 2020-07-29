@@ -6,6 +6,7 @@ package io.enmasse.systemtest.iot;
 
 import io.enmasse.iot.model.v1.AdapterConfig;
 import io.enmasse.iot.model.v1.AdaptersConfig;
+import io.enmasse.iot.model.v1.DoneableIoTConfig;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigSpec;
 import io.enmasse.iot.model.v1.IoTConfigStatus;
@@ -22,9 +23,13 @@ import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.Serialization;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.DeletionPropagation;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import io.vertx.core.json.JsonObject;
 import org.assertj.core.api.Condition;
+import org.assertj.core.api.SoftAssertions;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -38,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import static io.enmasse.systemtest.platform.Kubernetes.getClient;
+import static io.enmasse.systemtest.platform.Kubernetes.getInstance;
 import static io.enmasse.systemtest.platform.Kubernetes.iotConfigs;
 import static io.enmasse.systemtest.platform.Kubernetes.iotTenants;
 import static io.enmasse.systemtest.time.TimeMeasuringSystem.Operation.startOperation;
@@ -74,31 +80,16 @@ class IoTUtils {
                     .orElse(false),
             "ready");
 
-    static void waitForIoTConfigReady(IoTConfig config) {
-        var budget = new TimeoutBudget(15, TimeUnit.MINUTES);
-        var iotConfigAccess = iotConfigs(config.getMetadata().getNamespace()).withName(config.getMetadata().getName());
-        TestUtils.waitUntilCondition(() -> {
-                    var currentStatus = ofNullable(iotConfigAccess.get()).map(IoTConfig::getStatus);
-                    var currentPhase = currentStatus
-                            .map(IoTConfigStatus::getPhase)
-                            .orElse(null);
-                    if ("Active".equals(currentPhase)) {
-                        log.info("IoTConfig is ready - phase: {} -> {}", currentPhase, toJson(false, currentStatus.get()));
-                        return true;
-                    } else {
-                        log.info("Waiting until IoTConfig: '{}' will be in ready state: {}/{}",
-                                config.getMetadata().getName(),
-                                currentStatus.map(IoTConfigStatus::getPhase).orElse("<none>"),
-                                currentStatus.map(IoTConfigStatus::getMessage).orElse("<none>")
-                        );
-                        return false;
-                    }
-                },
-                budget.remaining(), Duration.ofSeconds(5),
-                explain(() -> ofNullable(iotConfigAccess.get())
-                        .map(IoTConfig::getStatus)
-                        .map(Serialization::toYaml)
-                        .orElse("IoTConfig has no status section")));
+    public static void assertIoTConfigGone(final IoTConfig config, final SoftAssertions softly) {
+
+        var iotPods = getInstance().listPods(config.getMetadata().getNamespace(), IOT_LABELS, Collections.emptyMap());
+
+        softly.assertThat(iotPods)
+                .isEmpty();
+
+    }
+
+    public static void assertIoTConfigReady(final IoTConfig config, final SoftAssertions softly) {
 
         // gather expected deployments
 
@@ -116,16 +107,16 @@ class IoTUtils {
 
         // assert deployments
 
-        var deployments = Kubernetes.getInstance().listDeployments(IOT_LABELS);
-        assertThat(deployments)
+        var deployments = getInstance().listDeployments(IOT_LABELS);
+        softly.assertThat(deployments)
                 .are(ready)
                 .extracting("metadata.name", String.class)
                 .containsExactly(expectedDeployments);
 
         // assert stateful sets
 
-        var statefulSets = Kubernetes.getInstance().listStatefulSets(IOT_LABELS);
-        assertThat(statefulSets)
+        var statefulSets = getInstance().listStatefulSets(IOT_LABELS);
+        softly.assertThat(statefulSets)
                 .are(ready)
                 .extracting("metadata.name", String.class)
                 .containsExactly(expectedStatefulSets);
@@ -145,19 +136,9 @@ class IoTUtils {
                 .map(ServiceConfig::getReplicas)
                 .orElse(1);
 
-        assertEquals(meshReplicas, meshStatefulSet.getStatus().getReplicas());
+        softly.assertThat(meshStatefulSet.getStatus().getReplicas())
+                .isEqualTo(meshReplicas);
 
-    }
-
-    static void deleteIoTConfigAndWait(IoTConfig config) throws Exception {
-        log.info("Deleting IoTConfig: {} in namespace: {}", config.getMetadata().getName(), config.getMetadata().getNamespace());
-        try (var ignored = startOperation(SystemtestsOperation.DELETE_IOT_CONFIG)) {
-            iotConfigs(config.getMetadata().getNamespace())
-                    .withName(config.getMetadata().getName())
-                    .withPropagationPolicy(DeletionPropagation.BACKGROUND)
-                    .delete();
-            TestUtils.waitForNReplicas(0, false, config.getMetadata().getNamespace(), IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(5, TimeUnit.MINUTES), 5000);
-        }
     }
 
     private static String[] getExpectedDeploymentsNames(IoTConfig config) {
@@ -207,120 +188,20 @@ class IoTUtils {
         }
     }
 
-    private static void waitForIoTProjectReady(IoTProject project) {
-        var budget = new TimeoutBudget(15, TimeUnit.MINUTES);
-        var tenantClient = iotTenants(project.getMetadata().getNamespace());
-        var tenantAccess = tenantClient.withName(project.getMetadata().getName());
-
-        TestUtils.waitUntilCondition(() -> {
-                    var currentState = ofNullable(tenantAccess.get()).map(IoTProject::getStatus);
-                    var currentPhase = currentState
-                            .map(IoTProjectStatus::getPhase)
-                            .orElse(null);
-                    if ("Active".equals(currentPhase)) {
-                        log.info("IoTProject is ready - phase: {} -> {}", currentPhase, toJson(false, currentState.get()));
-                        return true;
-                    } else {
-                        log.info("Waiting until IoTProject: '{}' will be in ready state: {}/{}",
-                                project.getMetadata().getName(),
-                                currentState.map(IoTProjectStatus::getPhase).orElse("<none>"),
-                                currentState.map(IoTProjectStatus::getMessage).orElse("<none>")
-                        );
-                        return false;
-                    }
-                },
-                budget.remaining(), Duration.ofSeconds(5),
-                explain(() -> ofNullable(tenantAccess.get())
-                        .map(IoTProject::getStatus)
-                        .map(Serialization::toYaml)
-                        .orElse("Project has no status section")));
-
-        // refresh
-        var actual = tenantAccess.get();
-
-        // the tenant is ready, so we need to check a few things
-        assertNotNull(actual.getStatus());
-        assertEquals("Active", actual.getStatus().getPhase());
-    }
-
-    static void deleteIoTProjectAndWait(IoTProject project) {
-
-        log.info("Deleting IoTProject: {}", project.getMetadata().getName());
-
-        try (var ignored = startOperation(SystemtestsOperation.DELETE_IOT_TENANT)) {
-
-            var tenantClient = iotTenants(project.getMetadata().getNamespace());
-
-            // delete the IoTProject
-
-            tenantClient
-                    .withName(project.getMetadata().getName())
-                    .withPropagationPolicy(DeletionPropagation.FOREGROUND)
-                    .delete();
-
-            // wait until the IoTProject is deleted
-
-            var projectName = project.getMetadata().getNamespace() + "/" + project.getMetadata().getName();
-            TestUtils.waitUntilConditionOrFail(() -> {
-                var updated = tenantClient.withName(project.getMetadata().getName()).get();
-                if (updated != null) {
-                    var finalizers = updated.getMetadata().getFinalizers();
-                    log.info("IoTProject {} still exists -> {} ({})", projectName, updated.getStatus().getPhase(), finalizers);
-                }
-                return updated == null;
-            }, Duration.ofMinutes(5), Duration.ofSeconds(10), () -> "IoT project failed to delete in time");
-            log.info("IoTProject {} deleted", projectName);
-
-        }
-
-    }
-
-    static void createIoTConfig(IoTConfig config) {
-        var name = config.getMetadata().getName();
-        log.info("Creating IoTConfig - name: {}", name);
-        try (var ignored = startOperation(SystemtestsOperation.CREATE_IOT_CONFIG)) {
-            var iotConfigApiClient = iotConfigs(config.getMetadata().getNamespace());
-            if (iotConfigApiClient.withName(name).get() != null) {
-                log.info("iot config {} already exists", name);
-            } else {
-                log.info("iot config {} will be created", name);
-                iotConfigApiClient.create(config);
-            }
-            IoTUtils.waitForIoTConfigReady(config);
-        }
-    }
-
-    static void createIoTProject(IoTProject project, boolean awaitReady) {
-        var name = project.getMetadata().getName();
-        log.info("Creating IoTProject - name: {}", name);
-        try (var ignored = startOperation(SystemtestsOperation.CREATE_IOT_TENANT)) {
-            var iotProjectApiClient = iotTenants(project.getMetadata().getNamespace());
-            if (iotProjectApiClient.withName(name).get() != null) {
-                log.info("iot project {} already exists", name);
-            } else {
-                log.info("iot project {} will be created", name);
-                iotProjectApiClient.create(project);
-            }
-            if (awaitReady) {
-                IoTUtils.waitForIoTProjectReady(project);
-            }
-        }
-    }
-
     public static String getTenantId(IoTProject project) {
         return String.format("%s.%s", project.getMetadata().getNamespace(), project.getMetadata().getName());
     }
 
     public static void assertCorrectDeviceConnectionType(final String type) {
         final Deployment deployment =
-                getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-connection").get();
+                getClient().apps().deployments().inNamespace(getInstance().getInfraNamespace()).withName("iot-device-connection").get();
         assertNotNull(deployment);
         assertEquals(type, deployment.getMetadata().getAnnotations().get("iot.enmasse.io/deviceConnection.type"));
     }
 
     public static void assertCorrectRegistryType(final String type) {
         final Deployment deployment =
-                getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-registry").get();
+                getClient().apps().deployments().inNamespace(getInstance().getInfraNamespace()).withName("iot-device-registry").get();
         assertNotNull(deployment);
         assertEquals(type, deployment.getMetadata().getAnnotations().get("iot.enmasse.io/registry.type"));
     }
@@ -328,10 +209,10 @@ class IoTUtils {
     public static Endpoint getDeviceRegistryManagementEndpoint() {
         if (Kubernetes.isOpenShiftCompatible(OpenShiftVersion.OCP4)) {
             // openshift router
-            return Kubernetes.getInstance().getExternalEndpoint("device-registry");
+            return getInstance().getExternalEndpoint("device-registry");
         } else {
             // load balancer service
-            return Kubernetes.getInstance().getExternalEndpoint("iot-device-registry-external");
+            return getInstance().getExternalEndpoint("iot-device-registry-external");
         }
     }
 }

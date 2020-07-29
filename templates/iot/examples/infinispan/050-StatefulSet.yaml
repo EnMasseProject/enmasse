@@ -1,0 +1,89 @@
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  labels:
+    app.kubernetes.io/name: infinispan
+    app.kubernetes.io/instance: infinispan-1
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: device-registry
+  name: infinispan
+spec:
+  replicas: 1
+  serviceName: infinispan-server-headless
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: infinispan
+      app.kubernetes.io/instance: infinispan-1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: infinispan
+        app.kubernetes.io/instance: infinispan-1
+      name: infinispan
+    spec:
+      serviceAccount: infinispan
+      containers:
+        - name: infinispan-server
+          image: docker.io/infinispan/server:11.0
+          command:
+            - /opt/infinispan/bin/server.sh
+            - -c
+            - /configuration/infinispan.xml
+          env:
+            - name: JDK_JAVA_OPTIONS
+              value: "-XX:MinRAMPercentage=85 -XX:MaxRAMPercentage=85"
+            - name: JAVA_OPTIONS
+              value: "-Djgroups.dns.query=infinispan-jgroups" # align with headless service name
+          ports:
+            - containerPort: 11222
+              name: hotrod
+              protocol: TCP
+            - containerPort: 7800
+              name: jgroups
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /rest/v2/cache-managers/default/health/status
+              port: hotrod
+            failureThreshold: 5
+            initialDelaySeconds: 50
+            successThreshold: 1
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /rest/v2/cache-managers/default/health/status
+              port: hotrod
+            failureThreshold: 5
+            initialDelaySeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 3
+          resources:
+            requests:
+              memory: 512Mi
+            limit:
+              memory: 512Mi
+          volumeMounts:
+            - mountPath: /configuration/
+              name: configuration
+            - mountPath:  /opt/infinispan/server/conf/identities/
+              name: identities
+            - mountPath: /opt/infinispan/server/data/
+              name: infinispan-data
+      volumes:
+        - name: configuration
+          configMap:
+            readOnly: true
+            name: infinispan-configuration
+        - name: identities
+          secret:
+            readOnly: true
+            secretName: infinispan-identities
+  volumeClaimTemplates:
+    - metadata:
+        name: infinispan-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 8Gi

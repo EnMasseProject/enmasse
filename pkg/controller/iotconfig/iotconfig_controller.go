@@ -7,6 +7,8 @@ package iotconfig
 
 import (
 	"context"
+	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
+	"github.com/go-logr/logr"
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
@@ -56,9 +58,13 @@ const iotServiceCaConfigMapName = "iot-service-ca"
 
 const DeviceConnectionTypeAnnotation = iotPrefix + "/deviceConnection.type"
 
+const EventReasonInfrastructureTermination = "InfrastructureTermination"
+
 const RegistryTypeAnnotation = iotPrefix + "/registry.type"
 
 var log = logf.Log.WithName("controller_iotconfig")
+
+var finalizers []finalizer.Finalizer
 
 // Gets called by parent "init", adding as to the manager
 func Add(mgr manager.Manager) error {
@@ -90,6 +96,7 @@ func newReconciler(mgr manager.Manager, infraNamespace string, configName string
 
 	return &ReconcileIoTConfig{
 		client:         mgr.GetClient(),
+		reader:         mgr.GetAPIReader(),
 		scheme:         mgr.GetScheme(),
 		namespace:      infraNamespace,
 		configName:     configName,
@@ -166,6 +173,7 @@ type ReconcileIoTConfig struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client   client.Client
+	reader   client.Reader
 	scheme   *runtime.Scheme
 	recorder record.EventRecorder
 
@@ -256,9 +264,28 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		return r.failWrongConfigName(ctx, config)
 	}
 
+	rc := &recon.ReconcileContext{}
+
+	// check for deconstruction
+
+	if config.DeletionTimestamp != nil && config.Status.Phase != iotv1alpha1.ConfigPhaseTerminating {
+		reqLogger.Info("Re-queue after setting phase to terminating")
+		return r.markTerminating(ctx, config)
+	}
+	rc.Process(func() (reconcile.Result, error) {
+		return r.checkDeconstruct(ctx, reqLogger, config)
+	})
+	if rc.NeedRequeue() || rc.Error() != nil {
+		return rc.Result()
+	}
+
+	if config.DeletionTimestamp != nil {
+		// we are deleted and must stop here
+		return reconcile.Result{}, nil
+	}
+
 	// we can start
 
-	rc := &recon.ReconcileContext{}
 	original := config.DeepCopy()
 
 	// get messaging infrastructure
@@ -634,4 +661,59 @@ func (r *ReconcileIoTConfig) processRoute(ctx context.Context, name string, conf
 	}
 
 	return nil
+}
+
+func (r *ReconcileIoTConfig) checkDeconstruct(ctx context.Context, reqLogger logr.Logger, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+
+	rc := recon.ReconcileContext{}
+	original := config.DeepCopy()
+
+	// process finalizers
+
+	rc.Process(func() (result reconcile.Result, e error) {
+		return finalizer.ProcessFinalizers(ctx, r.client, r.reader, r.recorder, config, finalizers)
+	})
+
+	if rc.Error() != nil {
+		reqLogger.Error(rc.Error(), "Failed to process finalizers")
+		// processing finalizers failed
+		return rc.Result()
+	}
+
+	if rc.NeedRequeue() {
+		// persist changes from finalizers, this is signaled to use via "need requeue"
+		// Note: we cannot use "updateProjectStatus" here, as we don't update the status section
+		reqLogger.Info("Re-queue after processing finalizers")
+		if !reflect.DeepEqual(config, original) {
+			err := r.client.Update(ctx, config)
+			return reconcile.Result{}, err
+		} else {
+			return rc.Result()
+		}
+		// processing the finalizers required a persist step, and so we stop early
+		// the call to Update will re-trigger us, and we don't need to set "requeue"
+	}
+
+	return rc.Result()
+
+}
+
+func (r *ReconcileIoTConfig) markTerminating(ctx context.Context, infra *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+	// set phase and message
+
+	infra.Status.Phase = iotv1alpha1.ConfigPhaseTerminating
+	infra.Status.Message = "Infrastructure deleted"
+
+	// set ready condition to false
+
+	readyCondition := infra.Status.GetConfigCondition(iotv1alpha1.ConfigConditionTypeReady)
+	readyCondition.SetStatus(corev1.ConditionFalse, "Deconstructing", "Infrastructure is being deleted")
+
+	// record event
+
+	r.recorder.Event(infra, corev1.EventTypeNormal, EventReasonInfrastructureTermination, "Deconstructing IoT infrastructure")
+
+	// store and re-queue
+
+	return reconcile.Result{Requeue: true}, r.client.Status().Update(ctx, infra)
 }

@@ -5,11 +5,11 @@
 package io.enmasse.systemtest.logs;
 
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.framework.LoggerUtils;
+import io.enmasse.systemtest.framework.TestPlanInfo;
 import io.enmasse.systemtest.framework.ThrowableRunner;
 import io.enmasse.systemtest.framework.condition.OpenShiftVersion;
-import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.framework.TestPlanInfo;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
@@ -348,13 +348,14 @@ public class GlobalLogCollector {
             Files.writeString(path.resolve("brokeredinfraconfigs.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "brokeredinfraconfigs", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("authenticationservices.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "authenticationservices", "-o", "yaml", "--all-namespaces").getStdOut());
 
+            Files.writeString(path.resolve("iotprojects.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "iotprojects", "-o", "yaml", "--all-namespaces").getStdOut());
+            Files.writeString(path.resolve("iotconfigs.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "iotconfigs", "-o", "yaml", "--all-namespaces").getStdOut());
+
             //cluster wide logs
             Files.writeString(path.resolve("pvs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pv").getStdOut());
             Files.writeString(path.resolve("storageclass.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "storageclass", "-o", "yaml").getStdOut());
             if (Kubernetes.isOpenShiftCompatible()) {
                 Files.writeString(path.resolve("routes.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "-A", "routes", "-o", "yaml").getStdOut());
-                Files.writeString(path.resolve("routes.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "-A", "routes", "-o", "yaml").getStdOut());
-
             }
             Files.writeString(path.resolve("events.txt"), KubeCMDClient.getAllEvents().getStdOut());
             Files.writeString(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut());

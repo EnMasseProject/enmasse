@@ -9,13 +9,13 @@ import (
 	"context"
 	enmassev1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/util"
+	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
 	"github.com/enmasseproject/enmasse/pkg/util/loghandler"
+	"github.com/go-logr/logr"
 	"k8s.io/client-go/tools/record"
 	"reflect"
 
 	corev1 "k8s.io/api/core/v1"
-
-	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
 
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 
@@ -122,6 +122,7 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, originalP
 
 	} else {
 
+		// FIXME: clean up this mess
 		// eval ready state
 
 		if rc.Error() == nil &&
@@ -130,11 +131,8 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, originalP
 
 			newProject.Status.Phase = iotv1alpha1.ProjectPhaseActive
 			newProject.Status.Message = ""
-
 		} else {
-
 			newProject.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
-
 		}
 
 		// fill main "ready" condition
@@ -148,8 +146,10 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, originalP
 		}
 		if newProject.Status.Phase == iotv1alpha1.ProjectPhaseActive {
 			status = corev1.ConditionTrue
+			newProject.Status.Message = ""
 		} else {
 			status = corev1.ConditionFalse
+			newProject.Status.Message = message
 		}
 		readyCondition.SetStatus(status, reason, message)
 
@@ -228,10 +228,44 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 
 	rc := &recon.ReconcileContext{}
 
+	// check for deconstruction
+
 	if project.DeletionTimestamp != nil && project.Status.Phase != iotv1alpha1.ProjectPhaseTerminating {
 		reqLogger.Info("Re-queue after setting phase to terminating")
-		return r.updateProjectStatus(ctx, original, project, &recon.ReconcileContext{})
+		return r.updateProjectStatus(ctx, original, project, rc)
 	}
+	rc.Process(func() (reconcile.Result, error) {
+		return r.checkDeconstruct(ctx, reqLogger, project)
+	})
+	if rc.NeedRequeue() || rc.Error() != nil {
+		return rc.Result()
+	}
+
+	if project.DeletionTimestamp != nil {
+		return reconcile.Result{}, nil
+	}
+
+	// start construction
+
+	rc.ProcessSimple(func() error {
+		return project.Status.GetProjectCondition(iotv1alpha1.ProjectConditionTypeConfigurationAccepted).
+			RunWith("ConfigurationNotAccepted", func() error {
+				return r.acceptConfiguration(project)
+			})
+	})
+
+	rc.Process(func() (result reconcile.Result, e error) {
+		return r.reconcileManaged(ctx, project)
+	})
+
+	return r.updateProjectStatus(ctx, original, project, rc)
+
+}
+
+func (r *ReconcileIoTProject) checkDeconstruct(ctx context.Context, reqLogger logr.Logger, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
+
+	rc := &recon.ReconcileContext{}
+	original := project.DeepCopy()
 
 	// process finalizers
 
@@ -259,35 +293,5 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 		// the call to Update will re-trigger us, and we don't need to set "requeue"
 	}
 
-	rc.ProcessSimple(func() error {
-		return project.Status.GetProjectCondition(iotv1alpha1.ProjectConditionTypeConfigurationAccepted).
-			RunWith("ConfigurationNotAccepted", func() error {
-				return r.acceptConfiguration(project)
-			})
-	})
-
-	rc.Process(func() (result reconcile.Result, e error) {
-		return r.reconcileManaged(ctx, project)
-	})
-
-	return r.updateProjectStatus(ctx, original, project, rc)
-
-}
-
-// get the first, active endpoint for an IoTProject
-// returns an error if there is one
-func findFirstActiveEndpoint(ctx context.Context, c client.Client, project *iotv1alpha1.IoTProject) (*enmassev1.MessagingEndpoint, error) {
-	endpoints := &enmassev1.MessagingEndpointList{}
-	if err := c.List(ctx, endpoints, client.InNamespace(project.Namespace)); err != nil {
-		return nil, err
-	}
-
-	for _, e := range endpoints.Items {
-		if !e.IsActive() {
-			continue
-		}
-		return &e, nil
-	}
-
-	return nil, util.NewConfigurationError("No active endpoint found in namespace '%s'", project.Namespace)
+	return rc.Result()
 }

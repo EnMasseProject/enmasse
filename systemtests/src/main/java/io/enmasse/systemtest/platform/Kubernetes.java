@@ -116,10 +116,16 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public abstract class Kubernetes {
     private static final Logger log = LoggerUtils.getLogger();
+
+    private static boolean isCRC;
+    private static boolean isOpenshift;
+    private static OpenShiftVersion ocpVersion;
     private static Kubernetes instance;
+    protected static KubeCluster cluster;
+
     protected final KubernetesClient client;
     protected final String infraNamespace;
-    protected static KubeCluster cluster;
+
     private boolean olmAvailable;
     private boolean verboseLog;
 
@@ -162,7 +168,20 @@ public abstract class Kubernetes {
                 log.error("Error checking olm availability", e);
                 instance.olmAvailable = false;
             }
+
+            isCRC = Kubernetes.getInstance().getCluster().toString().equals(ClusterType.CRC.toString().toLowerCase());
+            isOpenshift = Exec.execute(Arrays.asList(Kubernetes.getInstance().getCluster().getKubeCmd(), "api-resources"), false).getStdOut().contains("openshift.io");
+            ocpVersion = instance.getOcpVersion();
+
+            log.info("Is CRC: {}", isCRC());
+            log.info("Is OpenShift: {}", isOpenShift());
+            log.info("Is OpenShiftCompatible: {}", isOpenShiftCompatible());
+            for (var v : OpenShiftVersion.values()) {
+                log.info("Is OpenShiftCompatible({}): {}", v, isOpenShiftCompatible(v));
+            }
+
         }
+
         return instance;
     }
 
@@ -197,7 +216,7 @@ public abstract class Kubernetes {
             return true;
         }
 
-        return Kubernetes.getInstance().getOcpVersion() == version;
+        return ocpVersion == version;
 
     }
 
@@ -212,14 +231,14 @@ public abstract class Kubernetes {
      * Check if tests are running on OpenShift (excluding CRC).
      */
     public static boolean isOpenShift() {
-        return Exec.execute(Arrays.asList(Kubernetes.getInstance().getCluster().getKubeCmd(), "api-resources"), false).getStdOut().contains("openshift.io");
+        return isOpenshift;
     }
 
     /**
      * Check if tests are running on OpenShift in CRC.
      */
     public static boolean isCRC() {
-        return Kubernetes.getInstance().getCluster().toString().equals(ClusterType.CRC.toString().toLowerCase());
+        return isCRC;
     }
 
     protected Kubernetes(Supplier<KubernetesClient> clientSupplier) {
@@ -678,7 +697,7 @@ public abstract class Kubernetes {
     /**
      * Deletes ingress
      *
-     * @param namespace   namespace
+     * @param namespace namespace
      * @param ingressName ingress name
      */
     public void deleteIngress(String namespace, String ingressName) {
@@ -691,7 +710,7 @@ public abstract class Kubernetes {
     /**
      * Test if ingress already exists
      *
-     * @param namespace   namespace
+     * @param namespace namespace
      * @param ingressName name of ingress
      * @return boolean
      */
@@ -703,7 +722,7 @@ public abstract class Kubernetes {
     /**
      * Return host of ingress
      *
-     * @param namespace   namespace
+     * @param namespace namespace
      * @param ingressName name of ingress
      * @return string host
      */
@@ -729,7 +748,7 @@ public abstract class Kubernetes {
     /**
      * Delete configmap from resource
      *
-     * @param namespace     kubernetes namespace
+     * @param namespace kubernetes namespace
      * @param configmapName configmap
      */
     public void deleteConfigmap(String namespace, String configmapName) {
@@ -740,7 +759,7 @@ public abstract class Kubernetes {
     /**
      * Test if configmap plready exists
      *
-     * @param namespace     kubernetes namespace
+     * @param namespace kubernetes namespace
      * @param configmapName configmap
      * @return boolean
      */
@@ -787,7 +806,7 @@ public abstract class Kubernetes {
     /**
      * Test if service already exists
      *
-     * @param namespace   namespace
+     * @param namespace namespace
      * @param serviceName service name
      * @return boolean
      */
@@ -856,7 +875,7 @@ public abstract class Kubernetes {
     /**
      * Creates service account
      *
-     * @param name      name of servcie account
+     * @param name name of servcie account
      * @param namespace namespace
      * @return full name
      */
@@ -870,7 +889,7 @@ public abstract class Kubernetes {
     /**
      * Deletes service account
      *
-     * @param name      name
+     * @param name name
      * @param namespace namesapce
      * @return full name
      */
@@ -882,6 +901,7 @@ public abstract class Kubernetes {
 
     /**
      * Get the token for a service account.
+     *
      * @param namespace The namespace of the service account.
      * @param serviceAccountName The name of the service account.
      * @return The resolved token.
@@ -964,7 +984,7 @@ public abstract class Kubernetes {
      * Deletes pvc
      *
      * @param namespace namespace
-     * @param pvcName   pvc name
+     * @param pvcName pvc name
      */
     public void deletePvc(String namespace, String pvcName) {
         client.persistentVolumeClaims().inNamespace(namespace).withName(pvcName).delete();
@@ -975,7 +995,7 @@ public abstract class Kubernetes {
      * Test if pvc already exists
      *
      * @param namespace namespace
-     * @param pvcName   of pvc
+     * @param pvcName of pvc
      * @return boolean    private static final String OLM_NAMESPACE = "operators";
      */
     public boolean pvcExists(String namespace, String pvcName) {
@@ -1002,7 +1022,7 @@ public abstract class Kubernetes {
      * Deletes pvc
      *
      * @param namespace namespace
-     * @param secret    secret name
+     * @param secret secret name
      */
     public void deleteSecret(String namespace, String secret) {
         client.secrets().inNamespace(namespace).withName(secret).cascading(true).delete();
@@ -1013,7 +1033,7 @@ public abstract class Kubernetes {
      * Test if secret already exists
      *
      * @param namespace namespace
-     * @param secret    of pvc
+     * @param secret of pvc
      * @return boolean
      */
     public boolean secretExists(String namespace, String secret) {
@@ -1145,15 +1165,15 @@ public abstract class Kubernetes {
      * are attached to some kind of "shell", you can use the {@code afterInput} handler so send some
      * "exit" command after the input stream has been transmitted.
      *
-     * @param podAccess  Access to the pod.
-     * @param input      The input to stream to the remote side "stdin".
+     * @param podAccess Access to the pod.
+     * @param input The input to stream to the remote side "stdin".
      * @param afterInput Called after all the input has been streamed. May be used for an additional
-     *                   command. There is no need to flush or close the stream, this will be done automatically.
-     * @param timeout    The time to wait for the remote side to exit.
-     * @param command    The command to execute in the pod.
+     * command. There is no need to flush or close the stream, this will be done automatically.
+     * @param timeout The time to wait for the remote side to exit.
+     * @param command The command to execute in the pod.
      * @return The output from the {@code stdout} stream of the application.
-     * @throws IOException          If any of the calls throws an {@link IOException}.
-     * @throws TimeoutException     When waiting for the command times out.
+     * @throws IOException If any of the calls throws an {@link IOException}.
+     * @throws TimeoutException When waiting for the command times out.
      * @throws InterruptedException If waiting for the command fails.
      */
     public static String executeWithInput(final PodResource<Pod, DoneablePod> podAccess, final InputStream input, final AfterInput afterInput, final Duration timeout,
@@ -1266,7 +1286,7 @@ public abstract class Kubernetes {
      */
     public static MixedOperation<MessagingEndpoint, MessagingEndpointList, DoneableMessagingEndpoint, Resource<MessagingEndpoint, DoneableMessagingEndpoint>> messagingEndpoints(final String namespace) {
         var result = getClient().customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.messagingEndpoints()), MessagingEndpoint.class, MessagingEndpointList.class, DoneableMessagingEndpoint.class);
-        if (namespace != null ) {
+        if (namespace != null) {
             result = (MixedOperation<MessagingEndpoint, MessagingEndpointList, DoneableMessagingEndpoint, Resource<MessagingEndpoint, DoneableMessagingEndpoint>>) result.inNamespace(namespace);
         }
         return result;
@@ -1280,7 +1300,7 @@ public abstract class Kubernetes {
      */
     public static MixedOperation<MessagingProject, MessagingProjectList, DoneableMessagingProject, Resource<MessagingProject, DoneableMessagingProject>> messagingProjects(final String namespace) {
         var result = getClient().customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.messagingProjects()), MessagingProject.class, MessagingProjectList.class, DoneableMessagingProject.class);
-        if (namespace != null ) {
+        if (namespace != null) {
             result = (MixedOperation<MessagingProject, MessagingProjectList, DoneableMessagingProject, Resource<MessagingProject, DoneableMessagingProject>>) result.inNamespace(namespace);
         }
         return result;
@@ -1294,7 +1314,7 @@ public abstract class Kubernetes {
      */
     public static MixedOperation<MessagingInfrastructure, MessagingInfrastructureList, DoneableMessagingInfrastructure, Resource<MessagingInfrastructure, DoneableMessagingInfrastructure>> messagingInfrastructures(final String namespace) {
         var result = getClient().customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.messagingInfras()), MessagingInfrastructure.class, MessagingInfrastructureList.class, DoneableMessagingInfrastructure.class);
-        if (namespace != null ) {
+        if (namespace != null) {
             result = (MixedOperation<MessagingInfrastructure, MessagingInfrastructureList, DoneableMessagingInfrastructure, Resource<MessagingInfrastructure, DoneableMessagingInfrastructure>>) result.inNamespace(namespace);
         }
         return result;
