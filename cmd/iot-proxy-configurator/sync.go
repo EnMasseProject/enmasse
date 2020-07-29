@@ -128,9 +128,9 @@ var routes = []RouteConfig{
 	{"c_o", "out", "command"},
 }
 
-func (c *Configurator) syncProject(project *v1.IoTTenant) (bool, error) {
+func (c *Configurator) syncTenant(project *v1.IoTTenant) (bool, error) {
 
-	log.Info("Sync project", "project", project)
+	log.Info("Sync tenant", "tenant", project)
 
 	m := util.MultiTool{}
 
@@ -149,9 +149,9 @@ func (c *Configurator) syncProject(project *v1.IoTTenant) (bool, error) {
 	return m.Return()
 }
 
-func (c *Configurator) deleteProject(object metav1.Object) error {
+func (c *Configurator) deleteTenant(object metav1.Object) error {
 
-	log.Info("Delete project", "project", object)
+	log.Info("Delete tenant", "tenant", object)
 
 	m := util.MultiTool{}
 
