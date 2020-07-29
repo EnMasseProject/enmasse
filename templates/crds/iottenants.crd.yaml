@@ -21,7 +21,6 @@ spec:
     - iott
     categories:
     - enmasse
-    - iot
 
   additionalPrinterColumns:
     - name: Hono tenant

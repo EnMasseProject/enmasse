@@ -19,7 +19,6 @@ spec:
     - iotinfra
     categories:
     - enmasse
-    - iot
 
   additionalPrinterColumns:
     - name: Phase
