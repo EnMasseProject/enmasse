@@ -35,7 +35,7 @@ public class AmqpSubordinate extends AbstractSubordinate implements AutoCloseabl
 
     private final AmqpAdapterClient client;
 
-    AmqpSubordinate(final IoTTestSession.ProjectInstance.Device device) throws Exception {
+    AmqpSubordinate(final IoTTestSession.TenantInstance.Device device) throws Exception {
         super(device.getDeviceId());
 
         this.client = device.createAmqpAdapterClient();

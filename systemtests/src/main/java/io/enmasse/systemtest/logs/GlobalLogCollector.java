@@ -348,8 +348,8 @@ public class GlobalLogCollector {
             Files.writeString(path.resolve("brokeredinfraconfigs.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "brokeredinfraconfigs", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("authenticationservices.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "authenticationservices", "-o", "yaml", "--all-namespaces").getStdOut());
 
-            Files.writeString(path.resolve("iotprojects.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "iotprojects", "-o", "yaml", "--all-namespaces").getStdOut());
-            Files.writeString(path.resolve("iotconfigs.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "iotconfigs", "-o", "yaml", "--all-namespaces").getStdOut());
+            Files.writeString(path.resolve("iottenants.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "iottenants", "-o", "yaml", "--all-namespaces").getStdOut());
+            Files.writeString(path.resolve("iotinfrastructures.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "iotinfrastructures", "-o", "yaml", "--all-namespaces").getStdOut());
 
             //cluster wide logs
             Files.writeString(path.resolve("pvs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pv").getStdOut());

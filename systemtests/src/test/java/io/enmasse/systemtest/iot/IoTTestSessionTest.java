@@ -5,7 +5,7 @@
 
 package io.enmasse.systemtest.iot;
 
-import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTInfrastructure;
 import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -23,14 +23,14 @@ public class IoTTestSessionTest {
 
     @Test
     public void testNameInDefaultConfig() {
-        var config = IoTTestSession.createDefaultConfig("default-ns", true).build();
+        var config = IoTTestSession.createDefaultInfrastructure("default-ns", true).build();
 
         assertDefaultConfig(config);
     }
 
     @Test
     public void testNameInDefaultConfigAfterChange() {
-        var configBuilder = IoTTestSession.createDefaultConfig("default-ns", true);
+        var configBuilder = IoTTestSession.createDefaultInfrastructure("default-ns", true);
 
         assertDefaultConfig(configBuilder.build());
 
@@ -43,7 +43,7 @@ public class IoTTestSessionTest {
 
     }
 
-    private void assertDefaultConfig(IoTConfig config) {
+    private void assertDefaultConfig(IoTInfrastructure config) {
         assertNotNull(config);
 
         assertNotNull(config.getMetadata());
@@ -58,7 +58,7 @@ public class IoTTestSessionTest {
         IoTTestSession
                 .create("default-ns", true)
                 .adapters(Adapter.HTTP)
-                .config(configBuilder -> {
+                .infra(configBuilder -> {
 
                     var config = configBuilder.build();
 

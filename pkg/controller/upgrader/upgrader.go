@@ -8,8 +8,8 @@ package upgrader
 import (
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"k8s.io/apimachinery/pkg/runtime"
-	kubernetes "k8s.io/client-go/kubernetes"
-	rest "k8s.io/client-go/rest"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )

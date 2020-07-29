@@ -5,21 +5,6 @@
 
 package io.enmasse.systemtest.iot;
 
-import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
-import java.time.Duration;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-
-import io.vertx.proton.ProtonReceiver;
-import org.apache.qpid.proton.Proton;
-import org.apache.qpid.proton.amqp.Binary;
-import org.apache.qpid.proton.amqp.messaging.Data;
-import org.apache.qpid.proton.message.Message;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.enmasse.iot.utils.MoreFutures;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.iot.MessageSendTester.Type;
@@ -37,6 +22,19 @@ import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.sasl.impl.ProtonSaslExternalImpl;
 import io.vertx.proton.sasl.impl.ProtonSaslPlainImpl;
+import org.apache.qpid.proton.Proton;
+import org.apache.qpid.proton.amqp.Binary;
+import org.apache.qpid.proton.amqp.messaging.Data;
+import org.apache.qpid.proton.message.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
+import java.time.Duration;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class AmqpAdapterClient implements MessageSendTester.Sender, AutoCloseable {
 

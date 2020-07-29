@@ -44,7 +44,7 @@
 * Wait for the resources to be ready
 
   ```
-  oc get iotproject
+  oc get iottenant
   oc get addressspace
   ```
 

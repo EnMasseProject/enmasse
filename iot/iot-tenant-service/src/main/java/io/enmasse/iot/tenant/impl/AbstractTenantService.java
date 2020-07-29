@@ -22,8 +22,8 @@ import org.eclipse.hono.util.TenantResult;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.iot.service.base.AbstractProjectBasedService;
+import io.enmasse.iot.model.v1.IoTTenant;
+import io.enmasse.iot.service.base.AbstractTenantBasedService;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
@@ -33,7 +33,7 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public abstract class AbstractTenantService extends AbstractProjectBasedService implements TenantService {
+public abstract class AbstractTenantService extends AbstractTenantBasedService implements TenantService {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(AbstractTenantService.class);
 
@@ -63,7 +63,7 @@ public abstract class AbstractTenantService extends AbstractProjectBasedService 
         return get(subjectDn, NoopSpan.INSTANCE);
     }
 
-    protected TenantResult<JsonObject> convertToHono(final IoTProject project, final SpanContext spanContext) {
+    protected TenantResult<JsonObject> convertToHono(final IoTTenant project, final SpanContext spanContext) {
 
         final String tenantName = String.format("%s.%s", project.getMetadata().getNamespace(), project.getMetadata().getName());
 
@@ -76,16 +76,16 @@ public abstract class AbstractTenantService extends AbstractProjectBasedService 
 
             if (project.getStatus() == null || project.getStatus().getAccepted() == null) {
                 // controller has not yet processed the configuration ... handle as "not found"
-                log.info("IoTProject is missing '.status.accepted' section");
-                TracingHelper.logError(span, "IoTProject is missing '.status.accepted' section");
+                log.info("IoTTenant is missing '.status.accepted' section");
+                TracingHelper.logError(span, "IoTTenant is missing '.status.accepted' section");
                 HTTP_STATUS.set(span, RESULT_NOT_FOUND.getStatus());
                 return RESULT_NOT_FOUND;
             }
 
             if (project.getStatus().getAccepted().getConfiguration() == null) {
                 // controller processed the configuration, but rejected it ... handle as "not found"
-                log.info("IoTProject rejected the tenant configuration");
-                TracingHelper.logError(span, "IoTProject rejected the tenant configuration");
+                log.info("IoTTenant rejected the tenant configuration");
+                TracingHelper.logError(span, "IoTTenant rejected the tenant configuration");
                 HTTP_STATUS.set(span, RESULT_NOT_FOUND.getStatus());
                 return RESULT_NOT_FOUND;
             }

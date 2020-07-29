@@ -5,7 +5,7 @@
 
 package io.enmasse.systemtest.iot;
 
-import io.enmasse.systemtest.iot.IoTTestSession.ProjectInstance.Device;
+import io.enmasse.systemtest.iot.IoTTestSession.TenantInstance.Device;
 
 import java.util.Objects;
 

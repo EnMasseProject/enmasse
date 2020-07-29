@@ -5,7 +5,17 @@
 
 package io.enmasse.systemtest.iot;
 
-import static io.enmasse.systemtest.iot.DeviceManagementApi.getManagementToken;
+import io.enmasse.systemtest.Endpoint;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.Json;
+import org.eclipse.hono.service.management.credentials.CommonCredential;
+import org.eclipse.hono.service.management.credentials.PasswordCredential;
+import org.eclipse.hono.service.management.credentials.PasswordSecret;
+import org.eclipse.hono.service.management.credentials.PskCredential;
+import org.eclipse.hono.service.management.credentials.PskSecret;
+import org.eclipse.hono.service.management.credentials.X509CertificateCredential;
+import org.eclipse.hono.service.management.credentials.X509CertificateSecret;
 
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
@@ -23,18 +33,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
 
-import org.eclipse.hono.service.management.credentials.CommonCredential;
-import org.eclipse.hono.service.management.credentials.PasswordCredential;
-import org.eclipse.hono.service.management.credentials.PasswordSecret;
-import org.eclipse.hono.service.management.credentials.PskCredential;
-import org.eclipse.hono.service.management.credentials.PskSecret;
-import org.eclipse.hono.service.management.credentials.X509CertificateCredential;
-import org.eclipse.hono.service.management.credentials.X509CertificateSecret;
-
-import io.enmasse.systemtest.Endpoint;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.Json;
+import static io.enmasse.systemtest.iot.DeviceManagementApi.getManagementToken;
 
 public class CredentialsRegistryClient extends HonoApiClient {
 

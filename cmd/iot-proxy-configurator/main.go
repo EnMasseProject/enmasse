@@ -63,7 +63,7 @@ func main() {
 
 	configurator := NewConfigurator(
 		enmasseClient,
-		enmasseInformerFactory.Iot().V1alpha1().IoTProjects(),
+		enmasseInformerFactory.Iot().V1().IoTTenants(),
 	)
 
 	enmasseInformerFactory.Start(stopCh)

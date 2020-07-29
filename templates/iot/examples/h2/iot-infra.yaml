@@ -1,0 +1,39 @@
+kind: IoTInfrastructure
+apiVersion: iot.enmasse.io/v1
+metadata:
+  name: default
+spec:
+  # This example only focuses on the aspect of the "external" JDBC device registry and connection service.
+  # It is not a complete configuration.
+  services:
+    deviceConnection:
+      jdbc:
+        server:
+          external:
+            extensions:
+              - container:
+                  image: quay.io/enmasse/h2-extension:1.4.200-3
+                  imagePullPolicy: IfNotPresent
+                  name: ext-add-h2-driver
+                  volumeMounts:
+                  - mountPath: /ext
+                    name: extensions
+            password: user12
+            url: jdbc:h2:tcp://h2.device-registry-storage.svc//data/device-registry
+            username: registry
+    deviceRegistry:
+      jdbc:
+        server:
+          external:
+            management:
+              url: jdbc:h2:tcp://h2.device-registry-storage.svc//data/device-registry
+              username: registry
+              password: user12
+              extensions:
+                - container:
+                    name: ext-add-h2-driver
+                    image: quay.io/enmasse/h2-extension:1.4.200-3
+                    imagePullPolicy: IfNotPresent
+                    volumeMounts:
+                    - name: extensions
+                      mountPath: /ext

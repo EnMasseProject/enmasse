@@ -41,7 +41,7 @@ endif::[]
 [options="nowrap",subs="attributes"]
 ----
 {cmdcli} get addressspace iot
-{cmdcli} get iotproject iot
+{cmdcli} get iottenant iot
 ----
 NOTE: Make sure that the `Phase` field shows `Ready` status for both resources.
 

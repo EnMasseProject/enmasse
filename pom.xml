@@ -602,6 +602,13 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>${maven-compiler-plugin.version}</version>
+                    <configuration>
+                        <!--
+                        this setting provides you with helpful compiler error messages, compared to just
+                        getting some weird exception
+                        -->
+                        <forceJavacCompilerUse>true</forceJavacCompilerUse>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

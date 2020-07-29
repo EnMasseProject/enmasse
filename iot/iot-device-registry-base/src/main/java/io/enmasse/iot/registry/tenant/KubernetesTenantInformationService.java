@@ -4,15 +4,11 @@
  */
 package io.enmasse.iot.registry.tenant;
 
-import static io.vertx.core.Future.failedFuture;
-import static io.vertx.core.Future.succeededFuture;
-import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
-import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
-
-import java.net.HttpURLConnection;
-import java.util.Optional;
-
-import io.enmasse.iot.model.v1.IoTProjectStatus;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.enmasse.iot.model.v1.IoTTenant;
+import io.enmasse.iot.service.base.AbstractTenantBasedService;
+import io.opentracing.Span;
+import io.vertx.core.Future;
 import org.eclipse.hono.client.ClientErrorException;
 import org.eclipse.hono.client.ServerErrorException;
 import org.eclipse.hono.deviceregistry.service.tenant.TenantInformationService;
@@ -22,16 +18,16 @@ import org.eclipse.hono.service.management.Result;
 import org.eclipse.hono.service.management.tenant.Tenant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.HttpURLConnection;
+import java.util.Optional;
 
-import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.iot.service.base.AbstractProjectBasedService;
-import io.opentracing.Span;
-import io.vertx.core.Future;
+import static io.vertx.core.Future.failedFuture;
+import static io.vertx.core.Future.succeededFuture;
+import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
-public class KubernetesTenantInformationService extends AbstractProjectBasedService implements TenantInformationService {
+public class KubernetesTenantInformationService extends AbstractTenantBasedService implements TenantInformationService {
 
     private static final Logger log = LoggerFactory.getLogger(KubernetesTenantInformationService.class);
 
@@ -40,7 +36,7 @@ public class KubernetesTenantInformationService extends AbstractProjectBasedServ
     @Override
     public Future<Result<TenantKey>> tenantExists(String tenantId, Span span) {
 
-        return getProject(tenantId)
+        return getTenant(tenantId)
                 .flatMap(project -> {
                             if (!project.isEmpty()) {
                                 return validateTenant(project, tenantId, HTTP_NOT_FOUND)
@@ -70,24 +66,24 @@ public class KubernetesTenantInformationService extends AbstractProjectBasedServ
      */
     public Future<TenantInformation> tenantExists(final String tenantName, final int notFoundStatusCode, final Span span) {
 
-        return getProject(tenantName)
+        return getTenant(tenantName)
                 .flatMap(project -> validateTenant(project, tenantName, notFoundStatusCode));
 
     }
 
     public Future<Optional<Tenant>> getTenant(TenantKey tenantKey) {
-        return getProject(tenantKey.getName())
+        return getTenant(tenantKey.getName())
                 .flatMap(project -> validateTenant(project, tenantKey.getName(), HTTP_NOT_FOUND)
                                         .compose(tenant -> Future.succeededFuture(tenant.getTenant())));
     }
 
-    private Future<TenantInformation> validateTenant(final Optional<IoTProject> projectResult, final String tenantName, final int notFoundStatusCode) {
+    private Future<TenantInformation> validateTenant(final Optional<IoTTenant> projectResult, final String tenantName, final int notFoundStatusCode) {
 
         if (projectResult.isEmpty()) {
             return notFound(notFoundStatusCode, "Tenant '" + tenantName + "' does not exist");
         }
 
-        final IoTProject project = projectResult.orElseThrow();
+        final IoTTenant project = projectResult.orElseThrow();
 
         if (project.getMetadata().getDeletionTimestamp() != null) {
             // project is being deleted

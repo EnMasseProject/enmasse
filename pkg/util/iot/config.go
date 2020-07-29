@@ -7,6 +7,6 @@ package iot
 
 import "github.com/enmasseproject/enmasse/pkg/util"
 
-func GetIoTConfigName() (string, error) {
+func GetIoTInfrastructureName() (string, error) {
 	return util.GetEnvOrError("IOT_CONFIG_NAME")
 }

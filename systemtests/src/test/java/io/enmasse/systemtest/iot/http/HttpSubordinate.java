@@ -12,7 +12,7 @@ import io.enmasse.systemtest.iot.CommandTester.Context;
 import io.enmasse.systemtest.iot.CommandTester.ReceivedCommand;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.IoTTestSession;
-import io.enmasse.systemtest.iot.IoTTestSession.ProjectInstance.Device;
+import io.enmasse.systemtest.iot.IoTTestSession.TenantInstance.Device;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;

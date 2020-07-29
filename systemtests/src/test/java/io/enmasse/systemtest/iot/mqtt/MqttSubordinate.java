@@ -27,7 +27,7 @@ public class MqttSubordinate extends AbstractSubordinate implements AutoCloseabl
 
     private final MqttAdapterClient client;
 
-    MqttSubordinate(final IoTTestSession.ProjectInstance.Device device) throws Exception {
+    MqttSubordinate(final IoTTestSession.TenantInstance.Device device) throws Exception {
         super(device.getDeviceId());
 
         this.client = device.createMqttAdapterClient();

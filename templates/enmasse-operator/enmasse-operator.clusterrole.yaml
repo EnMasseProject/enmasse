@@ -33,7 +33,7 @@ rules:
     resources: [ "messaginginfrastructures", "messaginginfrastructures/finalizers", "messaginginfrastructures/status" ]
     verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
   - apiGroups: [ "iot.enmasse.io" ]
-    resources: [ "iotprojects", "iotprojects/finalizers", "iotprojects/status" ]
+    resources: [ "iottenants", "iottenants/finalizers", "iottenants/status" ]
     verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
   - apiGroups: [ "monitoring.coreos.com" ]
     resources: [ "prometheusrules", "servicemonitors" ]

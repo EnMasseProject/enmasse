@@ -22,6 +22,6 @@ public interface MonitoringQueries {
 
     String ENMASSE_IOT_CONFIG = "enmasse_iot_configs";
     String ENMASSE_IOT_CONFIG_ACTIVE = "enmasse_iot_configs_active";
-    String ENMASSE_IOT_PROJECT = "enmasse_iot_projects";
-    String ENMASSE_IOT_PROJECT_ACTIVE = "enmasse_iot_projects_active";
+    String ENMASSE_IOT_TENANT = "enmasse_iot_tenants";
+    String ENMASSE_IOT_TENANT_ACTIVE = "enmasse_iot_tenants_active";
 }

@@ -3,19 +3,19 @@
 // assembly-service-admin.adoc
 
 [id='proc-iot-troubleshoot-stuck-iotproject-{context}']
-= Fix `IoTProject` stuck in termination
+= Fix `IoTTenant` stuck in termination
 
-When an `IoTProject` instance is deleted, the resource will not be deleted immediately.
+When an `IoTTenant` instance is deleted, the resource will not be deleted immediately.
 It is only marked for deletion and necessary cleanup operations will be performed in the background.
 The resource will automatically be deleted once the cleanup has been performed successfully.
 
 In some situations it might be that, due do to infrastructure issues, the clean-up operation
-cannot be performed at this point in time. The `IoTProject` will still be kept, and the
+cannot be performed at this point in time. The `IoTTenant` will still be kept, and the
 operator will re-try periodically to clean up the resources. The cleanup will succeed once
 the infrastructure is back in operational state.
 
 In the case that the infrastructure is not expected to function ever again, it might be desirable
-to force the destruction of the `IoTProject` resources.
+to force the destruction of the `IoTTenant` resources.
 
 WARNING: Manually removing the resource cleanup finalizer will skip the cleanup process,
  and prevent the system from properly cleaning up.
@@ -26,7 +26,7 @@ WARNING: Manually removing the resource cleanup finalizer will skip the cleanup 
 +
 [options="nowrap",subs="attributes, +quotes"]
 ----
-{cmdcli} get iotproject iot -n myapp
+{cmdcli} get iottenant iot -n myapp
 NAME   IOT TENANT  DOWNSTREAM HOST                       DOWNSTREAM PORT   TLS    PHASE
 iot    myapp.iot   messaging-be482a6.enmasse-infra.svc   5671              true   Terminating
 ----
@@ -35,7 +35,7 @@ In addition, verify that the cleanup finalizer is still present:
 +
 [options="nowrap",subs="attributes, +quotes"]
 ----
-{cmdcli} get iotproject iot -n myapp -ojsonpath='{range .metadata.finalizers[*]}{..}{"\n"}{end}'
+{cmdcli} get iottenant iot -n myapp -ojsonpath='{range .metadata.finalizers[*]}{..}{"\n"}{end}'
 iot.enmasse.io/deviceRegistryCleanup
 ----
 If the list contains an entry of `iot.enmasse.io/deviceRegistryCleanup`, then resource cleanup process
@@ -45,7 +45,7 @@ is still pending.
 +
 [options="nowrap",subs="attributes, +quotes"]
 ----
-{cmdcli} edit iotproject iot -n myapp
+{cmdcli} edit iottenant iot -n myapp
 ----
 This will open up a text editor with the content of the resource:
 +
@@ -64,6 +64,6 @@ metadata:
 <1> The line with the finalizer to delete
 +
 Delete the line of the finalizer. Save and exit the editor. This will automatically trigger an update
-on the server, and the system will continue deleting the `IoTProject` resource.
+on the server, and the system will continue deleting the `IoTTenant` resource.
 
 . After the finalizer has been removed, the resource should be deleted and disappear from the system.

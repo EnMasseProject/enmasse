@@ -363,6 +363,7 @@ public class SystemtestsKubernetesApps {
 
         // wait for the deployment
 
+        log.info("Waiting for infinispan to become ready");
         client
                 .apps().statefulSets()
                 .inNamespace(INFINISPAN_PROJECT)
@@ -425,6 +426,7 @@ public class SystemtestsKubernetesApps {
 
         // wait for the deployment
 
+        log.info("Waiting for postgres to become ready");
         client
                 .apps().deployments()
                 .inNamespace(POSTGRESQL_PROJECT)
@@ -446,7 +448,7 @@ public class SystemtestsKubernetesApps {
 
         var pod = podLister
                 .list().getItems().stream().findFirst()
-                .orElseThrow(() -> new IllegalStateException("Pod that was ready just dissapeared"));
+                .orElseThrow(() -> new IllegalStateException("Pod that was ready just disappeared"));
         var podAccess = client.pods()
                 .inNamespace(pod.getMetadata().getNamespace())
                 .withName(pod.getMetadata().getName());

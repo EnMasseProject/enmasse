@@ -174,7 +174,7 @@ jobs:
 
       - name: IoT systemtests
         run: |
-          make TESTCASE=iot.isolated.http.HttpAdapterTest PROFILE=iot systemtests
+          make TESTCASE=iot.http.HttpAdapterTest PROFILE=iot systemtests
 
       - name: Collect logs
         if: failure()

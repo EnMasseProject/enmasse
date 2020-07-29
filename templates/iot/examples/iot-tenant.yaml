@@ -1,0 +1,5 @@
+kind: IoTTenant
+apiVersion: iot.enmasse.io/v1
+metadata:
+  name: default
+spec: {}

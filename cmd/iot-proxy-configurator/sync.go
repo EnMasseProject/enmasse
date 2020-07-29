@@ -8,11 +8,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/enmasseproject/enmasse/pkg/controller/iotconfig"
+	"github.com/enmasseproject/enmasse/pkg/controller/iotinfra"
 	"reflect"
 	"strings"
 
-	"github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	"github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 	"github.com/enmasseproject/enmasse/pkg/qdr"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -128,9 +128,9 @@ var routes = []RouteConfig{
 	{"c_o", "out", "command"},
 }
 
-func (c *Configurator) syncProject(project *v1alpha1.IoTProject) (bool, error) {
+func (c *Configurator) syncTenant(project *v1.IoTTenant) (bool, error) {
 
-	log.Info("Sync project", "project", project)
+	log.Info("Sync tenant", "tenant", project)
 
 	m := util.MultiTool{}
 
@@ -140,7 +140,7 @@ func (c *Configurator) syncProject(project *v1alpha1.IoTProject) (bool, error) {
 				NamedResource:     namedResource(project, "linkRoute/"+r.Tag),
 				Direction:         r.Direction,
 				Pattern:           util.AddressName(project, r.Prefix) + "/#",
-				Connection:        iotconfig.SharedInfraConnectionName,
+				Connection:        iotinfra.SharedInfraConnectionName,
 				AddExternalPrefix: project.Namespace + "/",
 			})
 		})
@@ -149,9 +149,9 @@ func (c *Configurator) syncProject(project *v1alpha1.IoTProject) (bool, error) {
 	return m.Return()
 }
 
-func (c *Configurator) deleteProject(object metav1.Object) error {
+func (c *Configurator) deleteTenant(object metav1.Object) error {
 
-	log.Info("Delete project", "project", object)
+	log.Info("Delete tenant", "tenant", object)
 
 	m := util.MultiTool{}
 

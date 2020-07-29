@@ -5,12 +5,6 @@
 
 package io.enmasse.iot.tenant.impl;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsIterableWithSize.iterableWithSize;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
 import java.net.HttpURLConnection;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -24,14 +18,20 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.iot.model.v1.IoTProjectBuilder;
+import io.enmasse.iot.model.v1.IoTTenant;
+import io.enmasse.iot.model.v1.IoTTenantBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.opentracing.noop.NoopSpan;
 import io.opentracing.noop.NoopTracerFactory;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsIterableWithSize.iterableWithSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class AbstractTenantServiceTest {
 
@@ -50,7 +50,7 @@ public class AbstractTenantServiceTest {
 
     @Test
     public void testConvertForHonoNoStatus() {
-        final IoTProject project = new IoTProjectBuilder()
+        final IoTTenant project = new IoTTenantBuilder()
                 .withMetadata(DEFAULT_METADATA)
                 .build();
         var result = service.convertToHono(project, NoopSpan.INSTANCE.context());
@@ -60,7 +60,7 @@ public class AbstractTenantServiceTest {
 
     @Test
     public void testConvertForHonoNoAcceptedStatus() {
-        final IoTProject project = new IoTProjectBuilder()
+        final IoTTenant project = new IoTTenantBuilder()
                 .withMetadata(DEFAULT_METADATA)
                 .withNewStatus()
                 .endStatus()
@@ -73,7 +73,7 @@ public class AbstractTenantServiceTest {
 
     @Test
     public void testConvertForHonoNoAcceptedConfiguration() {
-        final IoTProject project = new IoTProjectBuilder()
+        final IoTTenant project = new IoTTenantBuilder()
                 .withMetadata(DEFAULT_METADATA)
                 .withNewStatus()
                 .withNewAccepted()
@@ -88,7 +88,7 @@ public class AbstractTenantServiceTest {
 
     @Test
     public void testConvertForHonoEmptyAcceptedConfiguration() {
-        final IoTProject project = new IoTProjectBuilder()
+        final IoTTenant project = new IoTTenantBuilder()
                 .withMetadata(DEFAULT_METADATA)
                 .withNewStatus()
                 .withNewAccepted()
@@ -116,7 +116,7 @@ public class AbstractTenantServiceTest {
     @SuppressWarnings("unchecked")
     public void testNotAfter() throws Exception {
 
-        var project = new ObjectMapper().readValue(AbstractTenantServiceTest.class.getResourceAsStream("/test-with-cert.json"), IoTProject.class);
+        var project = new ObjectMapper().readValue(AbstractTenantServiceTest.class.getResourceAsStream("/test-with-cert.json"), IoTTenant.class);
 
         var input = (List<?>) ((Map<String, Object>) project.getStatus().getAccepted().getConfiguration()).get(TenantConstants.FIELD_PAYLOAD_TRUSTED_CA);
 
@@ -135,7 +135,7 @@ public class AbstractTenantServiceTest {
     @SuppressWarnings("unchecked")
     public void testNotBefore() throws Exception {
 
-        var project = new ObjectMapper().readValue(AbstractTenantServiceTest.class.getResourceAsStream("/test-with-cert.json"), IoTProject.class);
+        var project = new ObjectMapper().readValue(AbstractTenantServiceTest.class.getResourceAsStream("/test-with-cert.json"), IoTTenant.class);
 
         var input = (List<?>) ((Map<String, Object>) project.getStatus().getAccepted().getConfiguration()).get(TenantConstants.FIELD_PAYLOAD_TRUSTED_CA);
 
@@ -154,7 +154,7 @@ public class AbstractTenantServiceTest {
     @SuppressWarnings("unchecked")
     public void testBetweenBeforeAndAfter() throws Exception {
 
-        var project = new ObjectMapper().readValue(AbstractTenantServiceTest.class.getResourceAsStream("/test-with-cert.json"), IoTProject.class);
+        var project = new ObjectMapper().readValue(AbstractTenantServiceTest.class.getResourceAsStream("/test-with-cert.json"), IoTTenant.class);
 
         var input = (List<?>) ((Map<String, Object>) project.getStatus().getAccepted().getConfiguration()).get(TenantConstants.FIELD_PAYLOAD_TRUSTED_CA);
 
