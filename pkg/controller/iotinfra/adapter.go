@@ -345,7 +345,7 @@ func (r *ReconcileIoTInfrastructure) addQpidProxySetup(infra *iotv1.IoTInfrastru
 			return err
 		}
 
-		container.Args = []string{"/sbin/qdrouterd", "-c", "/etc/qdr/infra/qdrouterd.json"}
+		container.Args = []string{"/sbin/qdrouterd", "-c", "/etc/qdr/config/qdrouterd.json"}
 		container.Command = nil
 
 		// set default resource limits
@@ -357,8 +357,8 @@ func (r *ReconcileIoTInfrastructure) addQpidProxySetup(infra *iotv1.IoTInfrastru
 		}
 
 		install.ApplyVolumeMountSimple(container, "qdr-tmp-certs", "/var/qdr-certs", true)
-		install.ApplyVolumeMountSimple(container, "qdr-proxy-infra", "/etc/qdr/infra", true)
-		install.ApplyVolumeMountSimple(container, "qdr-command-infra", "/etc/qdr/command", true)
+		install.ApplyVolumeMountSimple(container, "qdr-proxy-config", "/etc/qdr/config", true)
+		install.ApplyVolumeMountSimple(container, "qdr-command-config", "/etc/qdr/command", true)
 		install.ApplyVolumeMountSimple(container, tlsServiceCAVolumeName, "/etc/tls-service-ca", true)
 		install.ApplyVolumeMountSimple(container, "shared-infra", "/etc/shared-infra-internal", true)
 
@@ -380,8 +380,8 @@ func (r *ReconcileIoTInfrastructure) addQpidProxySetup(infra *iotv1.IoTInfrastru
 	}
 
 	install.ApplyEmptyDirVolume(&deployment.Spec.Template.Spec, "qdr-tmp-certs")
-	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "qdr-proxy-infra", "qdr-proxy-configurator")
-	install.ApplySecretVolume(&deployment.Spec.Template.Spec, "qdr-command-infra", nameCommandMeshSecretName)
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "qdr-proxy-config", "qdr-proxy-configurator")
+	install.ApplySecretVolume(&deployment.Spec.Template.Spec, "qdr-command-config", nameCommandMeshSecretName)
 	install.ApplySecretVolume(&deployment.Spec.Template.Spec, "shared-infra", getSharedInfraSecretName(infra))
 
 	if err := ApplyInterServiceForDeployment(r.client, infra, deployment, "", ""); err != nil {
@@ -507,9 +507,9 @@ func (r *ReconcileIoTInfrastructure) reconcileAdapterConfigMap(iotInfra *iotv1.I
 			"sslProfile",
 			map[string]interface{}{
 				"name":           SharedInfraConnectionName + "-ssl",
-				"privateKeyFile": "/etc/shared-msgInfra-internal/tls.key",
-				"certFile":       "/etc/shared-msgInfra-internal/tls.crt",
-				"caCertFile":     "/etc/shared-msgInfra-internal/ca.crt",
+				"privateKeyFile": "/etc/shared-infra-internal/tls.key",
+				"certFile":       "/etc/shared-infra-internal/tls.crt",
+				"caCertFile":     "/etc/shared-infra-internal/ca.crt",
 			},
 		},
 		{
@@ -727,9 +727,9 @@ func (r *ReconcileIoTInfrastructure) reconcileStandardAdapterDeployment(
 		// environment
 
 		container.Env = []corev1.EnvVar{
-			{Name: "SPRING_CONFIG_LOCATION", Value: "file:///etc/infra/"},
+			{Name: "SPRING_CONFIG_LOCATION", Value: "file:///etc/config/"},
 			{Name: "SPRING_PROFILES_ACTIVE", Value: ""},
-			{Name: "LOGGING_CONFIG", Value: "file:///etc/infra/logback-spring.xml"},
+			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: install.FromFieldNamespace()},
 
 			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
@@ -744,7 +744,7 @@ func (r *ReconcileIoTInfrastructure) reconcileStandardAdapterDeployment(
 
 		// volume mounts
 
-		install.ApplyVolumeMountSimple(container, "infra", "/etc/infra", true)
+		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
 		install.ApplyVolumeMountSimple(container, "tls", "/etc/tls", true)
 
 		// apply container options
@@ -776,7 +776,7 @@ func (r *ReconcileIoTInfrastructure) reconcileStandardAdapterDeployment(
 
 	// volumes
 
-	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "infra", adapter.FullName()+"-config")
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", adapter.FullName()+"-config")
 
 	// inter service secrets
 

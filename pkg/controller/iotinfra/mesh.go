@@ -111,7 +111,7 @@ func (r *ReconcileIoTInfrastructure) reconcileServiceMeshStatefulSet(infra *iotv
 		container.Env = []corev1.EnvVar{
 			{Name: "APPLICATION_NAME", Value: iotMeshDomainName},
 
-			{Name: "QDROUTERD_CONF", Value: "/etc/infra/qdrouterd.json"},
+			{Name: "QDROUTERD_CONF", Value: "/etc/config/qdrouterd.json"},
 			{Name: "QDROUTERD_CONF_TYPE", Value: "json"},
 			{Name: "QDROUTERD_AUTO_MESH_DISCOVERY", Value: "INFER"},
 			{Name: "QDROUTERD_AUTO_MESH_SERVICE_NAME", Value: nameServiceMeshInter},
@@ -139,7 +139,7 @@ func (r *ReconcileIoTInfrastructure) reconcileServiceMeshStatefulSet(infra *iotv
 		install.ApplyVolumeMountSimple(container, "runtime", "/var/lib/qdrouterd", false)
 		install.ApplyVolumeMountSimple(container, "users", "/etc/users", true)
 
-		install.ApplyVolumeMountSimple(container, "infra", "/etc/infra", true)
+		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
 		install.ApplyVolumeMountSimple(container, "tls-inter", "/etc/tls-inter", true)
 		install.ApplyVolumeMountSimple(container, "tls-command", "/etc/tls-command", true)
 		install.ApplyVolumeMountSimple(container, tlsServiceCAVolumeName, "/etc/tls-service-ca", true)
@@ -169,7 +169,7 @@ func (r *ReconcileIoTInfrastructure) reconcileServiceMeshStatefulSet(infra *iotv
 
 	install.ApplyEmptyDirVolume(&statefulSet.Spec.Template.Spec, "runtime")
 	install.ApplySecretVolume(&statefulSet.Spec.Template.Spec, "users", nameServiceMesh+"-users")
-	install.ApplyConfigMapVolume(&statefulSet.Spec.Template.Spec, "infra", nameServiceMesh+"-config")
+	install.ApplyConfigMapVolume(&statefulSet.Spec.Template.Spec, "config", nameServiceMesh+"-config")
 
 	// inter service secrets
 

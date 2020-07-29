@@ -146,7 +146,7 @@ func applyDefaultDeploymentConfig(deployment *appsv1.Deployment, serviceConfig i
 }
 
 func applyDefaultPodSpecConfig(template *corev1.PodTemplateSpec, serviceConfig iotv1.ServiceConfig, config *cchange.ConfigChangeRecorder) {
-	cchange.ApplyTo(config, "iot.enmasse.io/infra-hash", &template.Annotations)
+	cchange.ApplyTo(config, "iot.enmasse.io/config-hash", &template.Annotations)
 
 	template.Spec.Affinity = serviceConfig.Affinity
 }

@@ -97,9 +97,9 @@ func (r *ReconcileIoTInfrastructure) reconcileAuthServiceDeployment(infra *iotv1
 		// environment
 
 		container.Env = []corev1.EnvVar{
-			{Name: "SPRING_CONFIG_LOCATION", Value: "file:///etc/infra/"},
+			{Name: "SPRING_CONFIG_LOCATION", Value: "file:///etc/config/"},
 			{Name: "SPRING_PROFILES_ACTIVE", Value: "authentication-impl"},
-			{Name: "LOGGING_CONFIG", Value: "file:///etc/infra/logback-spring.xml"},
+			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: install.FromFieldNamespace()},
 
 			{Name: "HONO_AUTH_SVC_SIGNING_SHARED_SECRET", ValueFrom: install.FromSecret(nameAuthServicePskSecret, keyInterServicePsk)},
@@ -115,7 +115,7 @@ func (r *ReconcileIoTInfrastructure) reconcileAuthServiceDeployment(infra *iotv1
 
 		// volume mounts
 
-		install.ApplyVolumeMountSimple(container, "infra", "/etc/infra", true)
+		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
 		install.ApplyVolumeMountSimple(container, "permissions", "/etc/permissions", true)
 		install.ApplyVolumeMountSimple(container, "tls", "/etc/tls", true)
 
@@ -142,7 +142,7 @@ func (r *ReconcileIoTInfrastructure) reconcileAuthServiceDeployment(infra *iotv1
 
 	// volumes
 
-	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "infra", nameAuthService+"-config")
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", nameAuthService+"-config")
 	install.ApplySecretVolume(&deployment.Spec.Template.Spec, "permissions", nameAuthService+"-permissions")
 
 	// inter service secrets

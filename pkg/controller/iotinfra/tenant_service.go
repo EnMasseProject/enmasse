@@ -93,7 +93,7 @@ func (r *ReconcileIoTInfrastructure) reconcileTenantServiceDeployment(infra *iot
 
 		container.Env = []corev1.EnvVar{
 			{Name: "SPRING_PROFILES_ACTIVE", Value: "prod"},
-			{Name: "LOGGING_CONFIG", Value: "file:///etc/infra/logback-spring.xml"},
+			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: install.FromFieldNamespace()},
 
 			{Name: "ENMASSE_IOT_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
@@ -113,7 +113,7 @@ func (r *ReconcileIoTInfrastructure) reconcileTenantServiceDeployment(infra *iot
 
 		// volume mounts
 
-		install.ApplyVolumeMountSimple(container, "infra", "/etc/infra", true)
+		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
 		install.ApplyVolumeMountSimple(container, "tls", "/etc/tls", true)
 
 		// apply container options
@@ -139,7 +139,7 @@ func (r *ReconcileIoTInfrastructure) reconcileTenantServiceDeployment(infra *iot
 
 	// volumes
 
-	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "infra", nameTenantService+"-config")
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", nameTenantService+"-config")
 
 	// inter service secrets
 

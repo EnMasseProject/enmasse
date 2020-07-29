@@ -223,9 +223,9 @@ func (r *ReconcileIoTInfrastructure) reconcileCommonJdbcDeviceRegistryDeployment
 		// environment
 
 		container.Env = []corev1.EnvVar{
-			{Name: "SPRING_CONFIG_LOCATION", Value: "file:///etc/infra/"},
+			{Name: "SPRING_CONFIG_LOCATION", Value: "file:///etc/config/"},
 			{Name: "SPRING_PROFILES_ACTIVE", Value: profiles},
-			{Name: "LOGGING_CONFIG", Value: "file:///etc/infra/logback-spring.xml"},
+			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: install.FromFieldNamespace()},
 
 			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
@@ -248,7 +248,7 @@ func (r *ReconcileIoTInfrastructure) reconcileCommonJdbcDeviceRegistryDeployment
 
 		// volume mounts
 
-		install.ApplyVolumeMountSimple(container, "infra", "/etc/infra", true)
+		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
 		if adapter {
 			install.ApplyVolumeMountSimple(container, "tls", "/etc/tls-internal", true)
 		} else {
@@ -296,7 +296,7 @@ func (r *ReconcileIoTInfrastructure) reconcileCommonJdbcDeviceRegistryDeployment
 
 	// volumes
 
-	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "infra", configMapName)
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", configMapName)
 	install.DropVolume(&deployment.Spec.Template.Spec, "registry")
 	ext.AddExtensionVolume(&deployment.Spec.Template.Spec)
 

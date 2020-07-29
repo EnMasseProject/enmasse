@@ -93,9 +93,9 @@ func (r *ReconcileIoTInfrastructure) reconcileJdbcDeviceConnectionDeployment(inf
 		// environment
 
 		container.Env = []corev1.EnvVar{
-			{Name: "SPRING_CONFIG_LOCATION", Value: "file:///etc/infra/"},
+			{Name: "SPRING_CONFIG_LOCATION", Value: "file:///etc/config/"},
 			{Name: "SPRING_PROFILES_ACTIVE", Value: "device-connection"},
-			{Name: "LOGGING_CONFIG", Value: "file:///etc/infra/logback-spring.xml"},
+			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: install.FromFieldNamespace()},
 
 			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
@@ -116,7 +116,7 @@ func (r *ReconcileIoTInfrastructure) reconcileJdbcDeviceConnectionDeployment(inf
 
 		// volume mounts
 
-		install.ApplyVolumeMountSimple(container, "infra", "/etc/infra", true)
+		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
 		install.ApplyVolumeMountSimple(container, "tls", "/etc/tls", true)
 
 		// extensions
@@ -154,7 +154,7 @@ func (r *ReconcileIoTInfrastructure) reconcileJdbcDeviceConnectionDeployment(inf
 
 	// volumes
 
-	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "infra", nameDeviceConnection+"-config")
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", nameDeviceConnection+"-config")
 	ext.AddExtensionVolume(&deployment.Spec.Template.Spec)
 
 	// inter service secrets
