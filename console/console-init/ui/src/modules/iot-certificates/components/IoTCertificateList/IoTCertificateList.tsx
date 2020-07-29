@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from "react";
+import { JsonEditor } from "components";
 import {
   IoTCertificateToolbar,
   CertificateForm,
@@ -13,6 +14,9 @@ import {
   GridItem,
   Grid,
   PageSection,
+  Flex,
+  FlexItem,
+  Switch,
   PageSectionVariants
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
@@ -70,11 +74,26 @@ export const IoTCertificateList: React.FunctionComponent<IIoTCertificateListProp
       <Grid key={"iiid"}>
         <GridItem span={7}>
           <PageSection className={css(style.no_top_bottom_padding)}>
-            <IoTCertificateToolbar
-              handleJsonViewChange={handleJsonViewChange}
-              isJsonView={isJsonView}
-              setShowCertificateForm={setShowCertificateForm}
-            />
+            {isJsonView ? (
+              <Flex>
+                <FlexItem align={{ default: "alignRight" }}>
+                  <Switch
+                    id="iot-cert-edit-json-switch"
+                    aria-label="Switch for edit in Json"
+                    label="Edit in Json"
+                    isChecked={isJsonView}
+                    onChange={handleJsonViewChange}
+                  />
+                  <br />
+                </FlexItem>
+              </Flex>
+            ) : (
+              <IoTCertificateToolbar
+                handleJsonViewChange={handleJsonViewChange}
+                isJsonView={isJsonView}
+                setShowCertificateForm={setShowCertificateForm}
+              />
+            )}
           </PageSection>
           {showCertificateForm && (
             <PageSection className={css(style.no_bottom_padding)}>
@@ -86,16 +105,28 @@ export const IoTCertificateList: React.FunctionComponent<IIoTCertificateListProp
               <br />
             </PageSection>
           )}
-          {certificates.map((certificate: IIoTCertificate, index: number) => (
-            <IoTCertificate
-              key={`certificate-${index}`}
-              id={`certificate-${index}`}
-              certificate={certificate}
-              onEdit={onSave}
-              onChangeStatus={onChangeStatus}
-              onDelete={onDelete}
-            />
-          ))}
+          {isJsonView ? (
+            <Grid>
+              <GridItem span={12}>
+                <JsonEditor
+                  value={
+                    certificates && JSON.stringify(certificates, undefined, 2)
+                  }
+                />
+              </GridItem>
+            </Grid>
+          ) : (
+            certificates.map((certificate: IIoTCertificate, index: number) => (
+              <IoTCertificate
+                key={`certificate-${index}`}
+                id={`certificate-${index}`}
+                certificate={certificate}
+                onEdit={onSave}
+                onChangeStatus={onChangeStatus}
+                onDelete={onDelete}
+              />
+            ))
+          )}
         </GridItem>
       </Grid>
     </PageSection>
