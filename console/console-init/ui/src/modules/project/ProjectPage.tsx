@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
 import {
@@ -76,6 +76,10 @@ export default function ProjectPage() {
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const [selectedProjects, setSelectedProjects] = useState<IProject[]>([]);
   const [isAllSelected, setIsAllSelected] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsAllSelected(false);
+  }, [page]);
 
   const resetFormState = () => {
     setIsAllSelected(false);
@@ -260,6 +264,7 @@ export default function ProjectPage() {
             selectAllProjects={selectAllProjects}
             isAllProjectSelected={isAllSelected}
             setCount={setCount}
+            setIsAllSelected={setIsAllSelected}
           />
           {renderPagination()}
         </PageSection>
