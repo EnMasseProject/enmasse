@@ -10,6 +10,7 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server/session"
 	"github.com/prometheus/client_golang/prometheus"
+	"net/http"
 	"sync/atomic"
 	"time"
 )
@@ -50,6 +51,7 @@ func CreateSessionManager(sessionLifetime time.Duration, sessionIdleTimeout time
 	sessionManager.Cookie.HttpOnly = true
 	sessionManager.Cookie.Persist = false
 	sessionManager.Cookie.Secure = true
+	sessionManager.Cookie.SameSite = http.SameSiteStrictMode
 	sessionManager.Store = store
 	return sessionManager
 }
