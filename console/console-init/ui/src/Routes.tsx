@@ -24,6 +24,12 @@ const getIoTCreateDevicePage = () =>
   import("modules/iot-device/dialogs/CreateDevice/CreateDevicePage");
 const getIoTCreateDeviceUsingJsonPage = () =>
   import("modules/iot-device/dialogs/CreateDevice/AddDeviceUsingJsonPage");
+const getIoTCloneDevicePage = () =>
+  import("modules/iot-device-detail/dialogs/CloneDevice/CloneDevicePage");
+const getIoTCloneDeviceUsingJsonPage = () =>
+  import(
+    "modules/iot-device-detail/dialogs/CloneDevice/CloneDeviceUsingJsonPage"
+  );
 
 export const AppRoutes = () => (
   <SwitchWith404>
@@ -52,6 +58,16 @@ export const AppRoutes = () => (
     <LazyRoute
       path="/messaging-projects/:namespace/:name/:type/connections/:connectionname"
       getComponent={getConnectionDetail}
+      exact={true}
+    />
+    <LazyRoute
+      path="/iot-projects/:namespace/:projectname/devices/:deviceid/cloneform"
+      getComponent={getIoTCloneDevicePage}
+      exact={true}
+    />
+    <LazyRoute
+      path="/iot-projects/:namespace/:projectname/devices/:deviceid/clonejson"
+      getComponent={getIoTCloneDeviceUsingJsonPage}
       exact={true}
     />
     <LazyRoute

@@ -161,6 +161,15 @@ export default function DeviceDetailPage() {
     /**
      * TODO: implement clone device logic
      */
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.CLONE_DEVICE,
+      modalProps: {
+        projectname: projectname,
+        namespace: namespace,
+        deviceid: deviceId
+      }
+    });
   };
 
   const onConfirmToggleDeviceStatus = async (data: any) => {

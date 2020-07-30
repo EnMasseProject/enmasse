@@ -48,13 +48,15 @@ interface IAddDeviceWithJsonProps {
   setDeviceDetail: (detail?: string) => void;
   onLeave: () => void;
   onSave: (detail: string) => void;
+  allowTemplate?: boolean;
 }
 
 const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
   deviceDetail,
   setDeviceDetail,
   onLeave,
-  onSave
+  onSave,
+  allowTemplate = true
 }) => {
   const { dispatch } = useStoreContext();
   const [selectedTemplate, setSelectedTemplate] = useState<string>(
@@ -175,6 +177,21 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
     return device;
   };
 
+  const getEditor = () => {
+    return (
+      <JsonEditor
+        value={deviceDetail}
+        readOnly={false}
+        name={"editor-add-device"}
+        setDetail={setDeviceInfoInDetail}
+        style={{
+          minHeight: "39em"
+        }}
+        className={css(styles.box_align_style)}
+      />
+    );
+  };
+
   return (
     <PageSection variant={PageSectionVariants.light}>
       <DeviceListAlert
@@ -192,17 +209,10 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
             <ReviewDeviceContainer device={getDeviceDetail()} />
           </div>
         ) : (
+      {allowTemplate ? (
           <>
             <GridItem span={9} className={css(styles.box_align_style)}>
-              <JsonEditor
-                value={deviceDetail}
-                readOnly={false}
-                name={"editor-add-device"}
-                setDetail={setDeviceInfoInDetail}
-                style={{
-                  minHeight: "39em"
-                }}
-              />
+              {getEditor()}
             </GridItem>
             <GridItem span={3} className={css(styles.box_align_style)}>
               <PageSection variant={PageSectionVariants.light}>
@@ -215,6 +225,9 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
               </PageSection>
             </GridItem>
           </>
+          ) : (
+                  getEditor()
+                )}
         )}
       </Grid>
       <br />
