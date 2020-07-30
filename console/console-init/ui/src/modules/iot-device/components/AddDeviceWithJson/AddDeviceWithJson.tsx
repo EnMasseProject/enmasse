@@ -28,6 +28,7 @@ import {
   IDeviceProp,
   ReviewDeviceContainer
 } from "modules/iot-device/containers";
+import { INVALID_JSON_ERROR } from "modules/iot-device/utils";
 
 const styles = StyleSheet.create({
   box_align_style: {
@@ -47,7 +48,6 @@ interface IAddDeviceWithJsonProps {
   setDeviceDetail: (detail?: string) => void;
   onLeave: () => void;
   onSave: (detail: string) => void;
-  // onPreview: () => void;
 }
 
 const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
@@ -55,7 +55,6 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
   setDeviceDetail,
   onLeave,
   onSave
-  // onPreview,
 }) => {
   const { dispatch } = useStoreContext();
   const [selectedTemplate, setSelectedTemplate] = useState<string>(
@@ -66,7 +65,6 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
 
   const setDeviceInfoInDetail = (value?: string) => {
     if (errorMessage !== "") {
-      // setShowJsonValidationError(false);
       setErrorMessage("");
     }
     setDeviceDetail(value);
@@ -127,23 +125,23 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
   const onFinish = () => {
     if (deviceDetail)
       if (!isJsonValid()) {
-        setErrorMessage("Invalid JSON syntax, unable to parse JSON");
+        setErrorMessage(INVALID_JSON_ERROR);
       } else {
         onSave(deviceDetail);
       }
   };
 
-  const handleOnPreview = () => {
+  const onPreview = () => {
     if (deviceDetail) {
       if (!isJsonValid()) {
-        setErrorMessage("Invalid JSON syntax, unable to parse JSON");
+        setErrorMessage(INVALID_JSON_ERROR);
       } else {
         setIsPreviewEnabled(true);
       }
     }
   };
 
-  const handleOnBack = () => {
+  const onBack = () => {
     setIsPreviewEnabled(false);
   };
 
@@ -152,24 +150,26 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
       deviceInformation: {
         metadata: []
       },
+      connectionType: "",
       credentials: [],
       gateways: { gateways: [], gatewayGroups: [] }
     };
     if (deviceDetail) {
-      const obj = JSON.parse(deviceDetail);
-      if (device && device.deviceInformation) {
-        device.deviceInformation.deviceId = obj.id;
-        if (obj?.registration?.enabled) {
-          device.deviceInformation.status = obj.registration.enabled;
-        }
+      const parseDeviceDetail = JSON.parse(deviceDetail);
+      //add deviceId to device object from the parseDeviceDetail
+      device.deviceInformation.deviceId = parseDeviceDetail.id;
+      //add registration.enabled field to device object from the parseDeviceDetail
+      if (parseDeviceDetail?.registration.enabled !== undefined) {
+        device.deviceInformation.status =
+          parseDeviceDetail.registration.enabled;
       }
-      if (device.credentials && obj.credentials) {
-        device.credentials = obj.credentials;
+      //add credentials field to device object from the parseDeviceDetail
+      if (device.credentials && parseDeviceDetail.credentials) {
+        device.credentials = parseDeviceDetail.credentials;
       }
-      if (device.gateways?.gateways) {
-        if (obj?.registration?.via) {
-          device.gateways.gateways = obj.registration.via;
-        }
+      //add registration.via field to device object from the parseDeviceDetail
+      if (device.gateways?.gateways && parseDeviceDetail?.registration?.via) {
+        device.gateways.gateways = parseDeviceDetail.registration.via;
       }
     }
     return device;
@@ -222,7 +222,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
         <SplitItem>
           <Button
             id="add-device-json-finish-button"
-            aria-label="Finish button"
+            aria-label="finish button"
             variant="primary"
             onClick={onFinish}
           >
@@ -235,7 +235,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
               id="add-device-json-back-button"
               aria-label="Back button"
               variant="secondary"
-              onClick={handleOnBack}
+              onClick={onBack}
             >
               Back
             </Button>
@@ -244,7 +244,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
               id="add-device-json-preview-button"
               aria-label="Preview button"
               variant="secondary"
-              onClick={handleOnPreview}
+              onClick={onPreview}
               disabled={!deviceDetail || deviceDetail?.trim() === ""}
             >
               Preview

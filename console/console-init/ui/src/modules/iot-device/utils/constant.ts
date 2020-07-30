@@ -90,6 +90,7 @@ const getInitialAlert = () => {
  */
 const HIDE_ADVANCE_SETTING = "Hide advance setting";
 const SHOW_ADVANCE_SETTING = "Show advanced setting";
+const INVALID_JSON_ERROR = "Invalid JSON syntax, unable to parse JSON";
 
 const deviceRegistrationTypeOptions: ISelectOption[] = [
   { key: "string", label: "String", value: "string" },
@@ -114,6 +115,7 @@ export {
   getInitialAlert,
   HIDE_ADVANCE_SETTING,
   SHOW_ADVANCE_SETTING,
+  INVALID_JSON_ERROR,
   credentialTypeOptions,
   deviceRegistrationTypeOptions,
   MAX_DEVICE_LIST_COUNT,

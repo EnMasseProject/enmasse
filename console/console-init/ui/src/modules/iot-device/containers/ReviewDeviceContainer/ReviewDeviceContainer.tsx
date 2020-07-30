@@ -12,13 +12,13 @@ interface IReviewDeviceContainerProps {
 }
 
 export interface IDeviceProp {
-  deviceInformation?: {
+  deviceInformation: {
     deviceId?: string;
     status?: boolean;
     metadata?: any[];
   };
-  connectionType?: string;
-  gateways?: {
+  connectionType: string;
+  gateways: {
     gateways?: string[];
     gatewayGroups?: string[];
   };
