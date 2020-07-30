@@ -38,7 +38,7 @@ export const CreateMetadata: React.FC = () => {
       }
     ]);
   };
-  //TODO: Add child rows
+
   const getMetadataRows = (metaDataRows: IMetadataProps[]) => {
     return metaDataRows.map((metadataRow, index: number) => {
       if (typeof metadataRow.value === "object") {

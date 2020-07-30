@@ -4,75 +4,34 @@
  */
 
 import React, { useState } from "react";
-import {
-  Grid,
-  GridItem,
-  InputGroup,
-  Button,
-  DropdownPosition,
-  TextInput
-} from "@patternfly/react-core";
-import { DropdownWithToggle } from "components";
-import { PlusIcon, MinusCircleIcon } from "@patternfly/react-icons";
-import {
-  deviceRegistrationTypeOptions,
-  IMetadataProps
-} from "modules/iot-device";
-import { DataType } from "constant";
+import { Grid, GridItem } from "@patternfly/react-core";
 import { ValidationStatusType } from "modules/iot-device/utils";
+import { isObjectOrArray } from "utils";
+import { MetaDataProperty } from "./MetaDataProperty";
+import { MetaDataType } from "./MetaDataType";
+import { MetaDataValue } from "./MetaDataValue";
 
-export interface IMetaDataRow {
+export interface IMetaDataRowProps {
   metadataList: any;
   setMetadataList: (metadataList: any) => void;
   rowIndex: number;
 }
 
-export const MetaDataRow: React.FC<IMetaDataRow> = ({
+export const MetaDataRow: React.FC<IMetaDataRowProps> = ({
   metadataList,
   setMetadataList,
   rowIndex
 }) => {
-  const currentRow = metadataList[rowIndex];
   const [validationStatus, setValidationStatus] = useState<
     ValidationStatusType.DEFAULT | ValidationStatusType.ERROR
   >(ValidationStatusType.DEFAULT);
 
   const updateMetadataList = (property: string, value: string) => {
     let updatedMetadataList = [...metadataList];
-    switch (property) {
-      case "key":
-        updatedMetadataList[rowIndex].key = value;
-        break;
-      case "type":
-        updatedMetadataList[rowIndex].type = value;
-        if (isObjectOrArray(value as any))
-          updatedMetadataList[rowIndex].value = "";
-        break;
-      case "value":
-        updatedMetadataList[rowIndex].value = value;
-        break;
-    }
+    updatedMetadataList[rowIndex][property] = value;
+    if (property === "type" && isObjectOrArray(value as any))
+      updatedMetadataList[rowIndex].value = "";
     setMetadataList(updatedMetadataList);
-  };
-
-  const handleTypeChange = (type: string) => {
-    const validationStatus = getValidationStatus(type, currentRow.value);
-    setValidationStatus(validationStatus);
-    updateMetadataList("type", type);
-  };
-
-  const handlePropertyChange = (property: string) => {
-    updateMetadataList("key", property);
-  };
-
-  const handleValueChange = (value: string, _: any) => {
-    const validationStatus = getValidationStatus(currentRow.type, value);
-    setValidationStatus(validationStatus);
-    updateMetadataList("value", value);
-  };
-
-  const isObjectOrArray = (type: DataType.ARRAY | DataType.OBJECT) => {
-    return type === DataType.OBJECT || type === DataType.ARRAY;
   };
 
   const getValidationStatus = (type: string, value: string) => {
@@ -108,80 +67,37 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
     return validationStatus;
   };
 
-  const handleAddChildRow = (_: any) => {
-    let parentKey: string = currentRow.key;
-    let newRow: IMetadataProps = {
-      key: parentKey + "/",
-      value: "",
-      type: deviceRegistrationTypeOptions[0].value
-    };
-    let updatedValueMetadata = [...metadataList];
-    updatedValueMetadata[rowIndex].value = newRow;
-    setMetadataList(updatedValueMetadata);
-  };
-
-  const handleDeleteRow = (index: any) => {
-    const deletedRowMetadata = [...metadataList];
-    deletedRowMetadata.splice(index, 1);
-    setMetadataList(deletedRowMetadata);
-  };
-
   //TODO: Increase width of type dropdown
   return (
     <>
       <Grid hasGutter>
         <GridItem span={5}>
-          <InputGroup>
-            <TextInput
-              id="metadata-row-text-parameter-input"
-              value={currentRow.key}
-              type="text"
-              onChange={handlePropertyChange}
-              aria-label="text input example"
-            />
-            {isObjectOrArray(currentRow.type) && (
-              <Button
-                id="metadata-row-add-child-button"
-                variant="control"
-                aria-label="Add child on button click"
-                onClick={handleAddChildRow}
-              >
-                <PlusIcon />
-              </Button>
-            )}
-          </InputGroup>
+          <MetaDataProperty
+            metadataList={metadataList}
+            setMetadataList={setMetadataList}
+            rowIndex={rowIndex}
+            updateMetadataList={updateMetadataList}
+          />
         </GridItem>
         <GridItem span={2}>
-          <DropdownWithToggle
-            id="metadata-row-type-dropdowntoggle"
-            toggleId="metadata-row-type-dropdown-toggle"
-            position={DropdownPosition.left}
-            onSelectItem={handleTypeChange}
-            dropdownItems={deviceRegistrationTypeOptions}
-            value={currentRow.type}
-            isLabelAndValueNotSame={true}
-            isDisabled={isObjectOrArray(currentRow.type)}
+          <MetaDataType
+            metadataList={metadataList}
+            rowIndex={rowIndex}
+            getValidationStatus={getValidationStatus}
+            setValidationStatus={setValidationStatus}
+            updateMetadataList={updateMetadataList}
           />
         </GridItem>
         <GridItem span={5}>
-          <InputGroup>
-            <TextInput
-              id="metadata-row-text-value-input"
-              value={currentRow.value}
-              validated={validationStatus}
-              type="text"
-              onChange={handleValueChange}
-              aria-label="text input example"
-              isDisabled={isObjectOrArray(currentRow.type)}
-            />
-            <Button
-              id="metadata-row-delete-button"
-              aria-label="delete button"
-              variant="link"
-              icon={<MinusCircleIcon />}
-              onClick={handleDeleteRow}
-            />
-          </InputGroup>
+          <MetaDataValue
+            metadataList={metadataList}
+            rowIndex={rowIndex}
+            getValidationStatus={getValidationStatus}
+            setValidationStatus={setValidationStatus}
+            updateMetadataList={updateMetadataList}
+            setMetadataList={setMetadataList}
+            validationStatus={validationStatus}
+          />
         </GridItem>
       </Grid>
     </>

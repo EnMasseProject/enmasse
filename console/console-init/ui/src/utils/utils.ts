@@ -7,7 +7,8 @@ import {
   MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
   TypeAheadMessage,
   SERVER_DATA_THRESHOLD,
-  DeviceConnectionType
+  DeviceConnectionType,
+  DataType
 } from "constant";
 import {
   forbiddenBackslashRegexp,
@@ -370,6 +371,10 @@ const deepClean = (obj: object, omitAttributes?: string[]) => {
   }
 };
 
+const isObjectOrArray = (type: DataType.ARRAY | DataType.OBJECT) => {
+  return type === DataType.OBJECT || type === DataType.ARRAY;
+};
+
 export {
   getSelectOptionList,
   compareObject,
@@ -377,6 +382,7 @@ export {
   removeForbiddenChars,
   dnsSubDomainRfc1123NameRegexp,
   messagingAddressNameRegexp,
+  isObjectOrArray,
   kFormatter,
   uniqueId,
   findIndexByProperty,
