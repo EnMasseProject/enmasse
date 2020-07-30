@@ -25,7 +25,7 @@ export const UpdatePassword = () => {
   });
   const { state, dispatch } = useStoreContext();
   const { modalProps } = (state && state.modal) || {};
-  const { onClose, onConfirm, additionalProps } = modalProps || {};
+  const { onClose, onConfirm, credentialProps } = modalProps || {};
 
   const onCloseDialog = () => {
     dispatch({ type: types.HIDE_MODAL });
@@ -35,7 +35,7 @@ export const UpdatePassword = () => {
   const onConfirmDialog = () => {
     const { password } = formData;
     onCloseDialog();
-    onConfirm && onConfirm({ ...additionalProps, password });
+    onConfirm && onConfirm({ ...credentialProps, password });
   };
 
   const isDisabledSaveButton = () => {

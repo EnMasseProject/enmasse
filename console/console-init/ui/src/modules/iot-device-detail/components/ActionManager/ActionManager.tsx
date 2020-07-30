@@ -41,10 +41,9 @@ export const ActionManager: React.FC<IActionManagerProps> = ({
         return <AddCredentialsContainer />;
       case DeviceActionType.ADD_GATEWAYS:
         return <AddGatewaysContainer />;
-      case DeviceActionType.CHANGE_CONNECTION_TYPE:
-        if (viaGateway) {
-          return <AddCredentialsContainer />;
-        }
+      case DeviceActionType.CHANGE_CONNECTION_TYPE_CONNECTED_DIRECTLY:
+        return <AddCredentialsContainer />;
+      case DeviceActionType.CHANGE_CONNECTION_TYPE_VIA_GATEWAYS:
         return <AddGatewaysContainer />;
       default:
         return null;

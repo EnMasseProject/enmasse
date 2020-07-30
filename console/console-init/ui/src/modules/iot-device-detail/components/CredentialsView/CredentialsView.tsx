@@ -92,85 +92,80 @@ export const Credential: React.FC<ICredentialProps> = ({
   };
 
   return (
-    <>
-      <Grid>
-        <GridItem span={3}>
-          <Title
-            headingLevel="h1"
-            size="md"
-            id="credentials-view-auth-id-title"
-          >
-            {getLabelByKey("auth-id")}
-          </Title>
-        </GridItem>
-        <GridItem span={9} className={css(styles.row_margin)}>
-          {authId}
-        </GridItem>
-        <GridItem span={3}>
-          <Title headingLevel="h1" size="md" id="credentials-view-type-title">
-            {getLabelByKey("type")}
-          </Title>
-        </GridItem>
-        <GridItem span={9} className={css(styles.row_margin)}>
-          {getLabelByKey(type || "")}
-        </GridItem>
-        <SecretsViewContainer
-          secrets={secrets}
-          id={"credetials-view-secrets-" + authId}
-          heading={"Secrets"}
-          authId={authId}
-          credentialType={type}
-          enableActions={enableActions}
-        />
-        <ExtensionsView
-          id={"credetials-view-extensions-" + authId}
-          ext={ext}
-          heading={"Ext"}
-        />
-        {hasOwnProperty(credential, "enabled") && (
-          <>
-            <GridItem span={12} className={css(styles.status_section_margin)}>
-              <Title
-                headingLevel="h6"
-                size="xl"
-                id="credentials-view-status-title"
-              >
-                Status
-              </Title>
-            </GridItem>
-            <GridItem span={3}>
-              <Title
-                headingLevel="h1"
-                size="md"
-                id="credentials-view-enable-title"
-              >
-                Enable
-              </Title>
-            </GridItem>
-            <GridItem span={9}>
-              {enableActions ? (
-                <Switch
-                  id={"credentials-view-status-switch-button"}
-                  label={"On"}
-                  labelOff={"Off"}
-                  isChecked={enabled}
-                  onChange={onChange}
-                />
-              ) : (
-                <StatusLabelWithIcon
-                  id="credential-view-status-icon"
-                  key={`credential-view-status-${authId}`}
-                  isEnabled={enabled || false}
-                  disabledTitle={"Off"}
-                  enabledTitle={"On"}
-                  disabledIconColor="var(--pf-global--palette--black-300)"
-                />
-              )}
-            </GridItem>
-          </>
-        )}
-      </Grid>
-    </>
+    <Grid>
+      <GridItem span={3}>
+        <Title headingLevel="h1" size="md" id="credentials-view-auth-id-title">
+          {getLabelByKey("auth-id")}
+        </Title>
+      </GridItem>
+      <GridItem span={9} className={css(styles.row_margin)}>
+        {authId}
+      </GridItem>
+      <GridItem span={3}>
+        <Title headingLevel="h1" size="md" id="credentials-view-type-title">
+          {getLabelByKey("type")}
+        </Title>
+      </GridItem>
+      <GridItem span={9} className={css(styles.row_margin)}>
+        {getLabelByKey(type || "")}
+      </GridItem>
+      <SecretsViewContainer
+        secrets={secrets}
+        id={"credetials-view-secrets-" + authId}
+        heading={"Secrets"}
+        authId={authId}
+        credentialType={type}
+        enableActions={enableActions}
+      />
+      <ExtensionsView
+        id={"credetials-view-extensions-" + authId}
+        ext={ext}
+        heading={"Ext"}
+      />
+      {hasOwnProperty(credential, "enabled") && (
+        <>
+          <GridItem span={12} className={css(styles.status_section_margin)}>
+            <Title
+              headingLevel="h6"
+              size="xl"
+              id="credentials-view-status-title"
+            >
+              Status
+            </Title>
+          </GridItem>
+          <GridItem span={3}>
+            <Title
+              headingLevel="h1"
+              size="md"
+              id="credentials-view-enable-title"
+            >
+              Enable
+            </Title>
+          </GridItem>
+          <GridItem span={9}>
+            {enableActions ? (
+              <Switch
+                id={`credentials-view-status-switch-button-${authId}-${type}`}
+                key={`${authId}-${type}`}
+                label={"On"}
+                labelOff={"Off"}
+                isChecked={enabled}
+                onChange={onChange}
+              />
+            ) : (
+              <StatusLabelWithIcon
+                id="credential-view-status-icon"
+                key={`credential-view-status-${authId}-${type}`}
+                isEnabled={enabled || false}
+                disabledTitle={"Off"}
+                enabledTitle={"On"}
+                disabledIconColor="var(--pf-global--palette--black-300)"
+              />
+            )}
+          </GridItem>
+        </>
+      )}
+    </Grid>
   );
 };
 
@@ -224,12 +219,12 @@ export const CredentialsView: React.FC<ICredentialsViewProps> = ({
       <CardBody>
         {credentials &&
           credentials.map((credential: ICredentialView, index: number) => {
-            const { "auth-id": authId } = credential;
+            const { "auth-id": authId, type } = credential;
             return (
               <>
                 <Credential
                   credential={credential}
-                  key={authId}
+                  key={`${authId}-${type}`}
                   toggleCredentialsStatus={toggleCredentialsStatus}
                   enableActions={enableActions}
                 />

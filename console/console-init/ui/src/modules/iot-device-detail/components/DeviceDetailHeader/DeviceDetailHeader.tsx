@@ -21,8 +21,9 @@ import {
 import { StyleSheet, css } from "aphrodite";
 import { FormatDistance } from "use-patternfly";
 import { DropdownWithKebabToggle } from "components";
-import { useStoreContext, types } from "context-state-reducer";
+import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { DeviceActionType } from "modules/iot-device-detail/utils";
+import { DeviceConnectionType } from "constant";
 
 interface IDeviceDetailHeaderProps {
   deviceName?: string;
@@ -34,7 +35,10 @@ interface IDeviceDetailHeaderProps {
   onClone: () => void;
   viaGateway?: boolean;
   credentials?: any[];
-  connectiontype?: string;
+  connectiontype?:
+    | DeviceConnectionType.CONNECTED_DIRECTLY
+    | DeviceConnectionType.VIA_GATEWAYS
+    | DeviceConnectionType.NA;
 }
 
 const styles = StyleSheet.create({
@@ -94,10 +98,35 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
     });
   };
 
+  const onConfirmConnectionType = () => {
+    let actionType;
+    if (connectiontype === DeviceConnectionType.CONNECTED_DIRECTLY) {
+      actionType = DeviceActionType.CHANGE_CONNECTION_TYPE_CONNECTED_DIRECTLY;
+    } else if (connectiontype === DeviceConnectionType.VIA_GATEWAYS) {
+      actionType = DeviceActionType.CHANGE_CONNECTION_TYPE_VIA_GATEWAYS;
+    }
+
+    if (actionType) {
+      dispatch({
+        type: types.SET_DEVICE_ACTION_TYPE,
+        payload: { actionType }
+      });
+    }
+  };
+
   const onSelectChangeConnectionType = () => {
     dispatch({
-      type: types.SET_DEVICE_ACTION_TYPE,
-      payload: { actionType: DeviceActionType.CHANGE_CONNECTION_TYPE }
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.CHANGE_CONNECTION_TYPE,
+      modalProps: {
+        iconType: "danger",
+        confirmButtonLabel: "Change",
+        onConfirm: onConfirmConnectionType,
+        option: "change-button",
+        detail:
+          "This action can not be undone. After you changed the setting, all data under this setting will also be deleted and is uncoverable.",
+        header: "Do you want to change the connection type?"
+      }
     });
   };
 
