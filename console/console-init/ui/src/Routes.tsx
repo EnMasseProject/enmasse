@@ -7,11 +7,11 @@ import React from "react";
 import { SwitchWith404, LazyRoute } from "use-patternfly";
 import { Redirect } from "react-router";
 
-const getAddressSpaceListPage = () =>
-  import("modules/address-space/AddressSpacePage");
+const getMessagingProjectListPage = () =>
+  import("modules/messaging-project/MessagingProjectPage");
 const getProjectListPage = () => import("modules/project/ProjectPage");
-const getAddressSpaceDetail = () =>
-  import("modules/address-space/AddressSpaceDetailPage");
+const getMessagingProjectDetail = () =>
+  import("modules/messaging-project/MessagingProjectDetailPage");
 const getAddressDetail = () =>
   import("modules/address-detail/AddressDetailPage");
 const getConnectionDetail = () =>
@@ -37,12 +37,12 @@ export const AppRoutes = () => (
     <LazyRoute
       path="/messaging-projects"
       exact={true}
-      getComponent={getAddressSpaceListPage}
+      getComponent={getMessagingProjectListPage}
     />
     <LazyRoute
       path="/messaging-projects/:namespace/:name/:type/:subList"
       exact={true}
-      getComponent={getAddressSpaceDetail}
+      getComponent={getMessagingProjectDetail}
     />
     <LazyRoute
       path="/messaging-projects/:namespace/:name/:type/addresses/:addressname"

@@ -20,7 +20,8 @@ import { OutlinedCopyIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "aphrodite";
 import { endpointProtocolOptions } from "modules/messaging-project/utils";
 
-export interface IMessagingReviewProps {
+// TODO: To be renamed
+export interface IAddressSpaceReviewProps {
   name?: string;
   type?: string;
   plan?: string;
@@ -61,9 +62,6 @@ const style = StyleSheet.create({
   editor: {
     border: "1px solid",
     borderColor: "lightgrey"
-  },
-  bottom_margin: {
-    marginBottom: 32
   }
 });
 interface IReviewGridProps {
@@ -98,7 +96,8 @@ const ReviewGridItem: React.FunctionComponent<IReviewGridProps> = ({
     </>
   );
 };
-export const MessagingReview: React.FC<IMessagingReviewProps> = ({
+// TODO: To be renamed
+export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
   name,
   type,
   plan,
@@ -123,10 +122,10 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
 
   return (
     <PageSection variant={PageSectionVariants.light}>
-      <Title headingLevel="h2" size="3xl" className={css(style.bottom_margin)}>
+      <Title headingLevel="h2" size="3xl" style={{ marginBottom: 32 }}>
         Review your configuration
       </Title>
-      <Title headingLevel="h2" size="xl" className={css(style.bottom_margin)}>
+      <Title headingLevel="h2" size="xl" style={{ marginBottom: 32 }}>
         {" "}
         Review the information below and Click Finish to create the new address
         space. Use the Back button to make changes.
@@ -229,7 +228,7 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
           >
             {`Configuration details  `}
             <Tooltip
-              id="messaging-review-successfully-copied-tooltip"
+              id="preview-as-feedback-tooltip"
               position={TooltipPosition.top}
               enableFlip={false}
               trigger={"manual"}
@@ -238,7 +237,7 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
             >
               <span>
                 <Tooltip
-                  id="messaging-review-copy-config-details-tooltip"
+                  id="preview-as-copy-tooltip"
                   position={TooltipPosition.top}
                   enableFlip={false}
                   content={
@@ -246,7 +245,7 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
                   }
                 >
                   <Button
-                    id="messaging-review-copy-configuration-button"
+                    id="preview-addr-copy-configuration-button"
                     variant={ButtonVariant.link}
                     aria-label="copy-configuration"
                     onClick={() => {
@@ -257,10 +256,7 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
                       setIsCopied(false);
                     }}
                   >
-                    <OutlinedCopyIcon
-                      id="messaging-review-copyicon"
-                      size="md"
-                    />
+                    <OutlinedCopyIcon id="preview-addr-copy-btn" size="md" />
                   </Button>
                 </Tooltip>
               </span>

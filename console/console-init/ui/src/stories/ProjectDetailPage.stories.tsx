@@ -41,7 +41,7 @@ export const IoTProjectDetailInfoPage = () => {
     url: "https://http.bosch-iot-hub.com",
     username: text("username", "username"),
     password: text("password", "password"),
-    addressSpace: text("Address space", "devops-iottest"),
+    addressSpace: text("Messaging Project", "devops-iottest"),
     eventAddress,
     telemetryAddress,
     commandAddresses: commandAddresses

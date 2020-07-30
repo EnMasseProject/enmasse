@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { IMessagingProject } from "./CreateProject";
+import { IMessagingProject } from "./CreateMessagingProject";
 import {
   Form,
   FormGroup,
@@ -194,13 +194,13 @@ const ConfiguringRoutes: React.FunctionComponent<IConfiguringRoutes> = ({
                     </Title>
                     <br />
                     <FormGroup
-                      fieldId={`configuring-routes-hostname-input-${protocol}`}
+                      fieldId="form-group-route-hostname"
                       label="Hostname"
                       helperText="Public hostname for the route.If not specified, a hostname is generated"
                     >
                       <TextInput
                         type="text"
-                        id={`configuring-routes-hostname-input-${protocol}`}
+                        id={`text-input-hostname-${protocol}`}
                         name="text-input-hostname"
                         aria-describedby="text-input-hostname-helper"
                         value={hostname}
@@ -213,7 +213,7 @@ const ConfiguringRoutes: React.FunctionComponent<IConfiguringRoutes> = ({
                       <>
                         <br />
                         <FormGroup
-                          fieldId="configuring-routes-tls-terminations-radio"
+                          fieldId="form-group-endpoint-tls-certs"
                           label="TLS Terminations"
                           isRequired={true}
                         >
@@ -231,9 +231,8 @@ const ConfiguringRoutes: React.FunctionComponent<IConfiguringRoutes> = ({
                                   name={`radio-${termination.key}-${protocol}`}
                                   key={`${protocol}-${termination.key}`}
                                   label={termination.label}
-                                  id={`configuring-routes-tls-terminations-radio-${termination.key}-${protocol}`}
+                                  id={`radio-${termination.key}-${protocol}`}
                                   value={termination.value}
-                                  style={{ marginLeft: 20 }}
                                 />
                               </div>
                             )

@@ -5,7 +5,7 @@
 
 export * from "./user";
 export * from "./address";
-export * from "./address_space";
+export * from "./messaging_project";
 export * from "./connection";
 export * from "./name_space";
 export * from "./endpoint";
