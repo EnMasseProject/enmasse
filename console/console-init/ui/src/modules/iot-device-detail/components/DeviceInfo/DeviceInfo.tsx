@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
 export interface IDeviceInfoProps
   extends Pick<
       ICredentialsViewProps,
-      "credentials" | "onConfirmPassword" | "onConfirmCredentialsStatus"
+      "credentials" | "onConfirmCredentialsStatus"
     >,
     IErrorStateAlertProps {
   id: string;

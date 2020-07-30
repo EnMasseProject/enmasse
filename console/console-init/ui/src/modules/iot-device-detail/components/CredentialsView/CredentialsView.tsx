@@ -16,15 +16,16 @@ import {
   CardTitle,
   Switch
 } from "@patternfly/react-core";
+import { CheckCircleIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "aphrodite";
 import { getLabelByKey } from "utils";
 import { StatusLabelWithIcon } from "components";
-import { SecretsView, ISecretsViewProps } from "./SecretsView";
+import { ISecretsViewProps } from "./SecretsView";
 import { ExtensionsView } from "./ExtensionsView";
 import { hasOwnProperty } from "utils";
 import { DialogTypes } from "constant";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
-import { CheckCircleIcon, ExclamationCircleIcon as OffIcon } from "@patternfly/react-icons";
+import { SecretsViewContainer } from "modules/iot-device-detail/containers";
 
 const styles = StyleSheet.create({
   row_margin: {
@@ -54,17 +55,15 @@ export interface ICredentialView extends Pick<ISecretsViewProps, "secrets"> {
 
 export interface ICredentialsViewProps
   extends Pick<
-      ICredentialProps,
-      "toggleCredentialsStatus" | "onConfirmCredentialsStatus"
-    >,
-    Pick<ISecretsViewProps, "onConfirmPassword"> {
+    ICredentialProps,
+    "toggleCredentialsStatus" | "onConfirmCredentialsStatus"
+  > {
   id: string;
   credentials: ICredentialView[];
   enableActions?: boolean;
 }
 
-export interface ICredentialProps
-  extends Pick<ISecretsViewProps, "onConfirmPassword"> {
+export interface ICredentialProps {
   credential: ICredentialView;
   toggleCredentialsStatus?: (
     authId: string,
@@ -77,7 +76,6 @@ export interface ICredentialProps
 
 export const Credential: React.FC<ICredentialProps> = ({
   credential,
-  onConfirmPassword,
   toggleCredentialsStatus,
   enableActions
 }) => {
@@ -116,11 +114,12 @@ export const Credential: React.FC<ICredentialProps> = ({
         <GridItem span={9} className={css(styles.row_margin)}>
           {getLabelByKey(type || "")}
         </GridItem>
-        <SecretsView
+        <SecretsViewContainer
           secrets={secrets}
           id={"credetials-view-secrets-" + authId}
           heading={"Secrets"}
-          onConfirmPassword={onConfirmPassword}
+          authId={authId}
+          credentialType={type}
           enableActions={enableActions}
         />
         <ExtensionsView
@@ -150,13 +149,13 @@ export const Credential: React.FC<ICredentialProps> = ({
             </GridItem>
             <GridItem span={9}>
               {enableActions ? (
-              <Switch
-                id={"credentials-view-status-switch-button"}
-                label={"On"}
-                labelOff={"Off"}
-                isChecked={enabled}
-                onChange={onChange}
-              />
+                <Switch
+                  id={"credentials-view-status-switch-button"}
+                  label={"On"}
+                  labelOff={"Off"}
+                  isChecked={enabled}
+                  onChange={onChange}
+                />
               ) : enabled ? (
                 <>
                   <CheckCircleIcon color="green" /> &nbsp; On
@@ -182,7 +181,6 @@ export const Credential: React.FC<ICredentialProps> = ({
 export const CredentialsView: React.FC<ICredentialsViewProps> = ({
   id,
   credentials,
-  onConfirmPassword,
   onConfirmCredentialsStatus,
   enableActions = true
 }) => {
@@ -237,7 +235,6 @@ export const CredentialsView: React.FC<ICredentialsViewProps> = ({
                   credential={credential}
                   key={authId}
                   toggleCredentialsStatus={toggleCredentialsStatus}
-                  onConfirmPassword={onConfirmPassword}
                   enableActions={enableActions}
                 />
                 {index < credentials.length - 1 && (
