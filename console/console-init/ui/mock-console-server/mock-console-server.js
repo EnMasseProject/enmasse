@@ -2509,7 +2509,17 @@ const resolvers = {
     },
 
     createIotDevice: (parent, args) => {
-      return createIotDevice(args.iotproject.name, args.device);
+      let reg = args.device.registration;
+      reg.deviceId = args.device.deviceId;
+      let creds = args.device.credentials;
+
+      let result = createIotDevice(args.iotproject.name, args.device);
+      if (result != undefined) {
+        setCredentials(args.iotproject.name, result.deviceId, creds);
+        return result;
+      } else {
+        throw "Device could not be updated";
+      }
     },
     deleteIotDevices: (parent, args) => {
       var errors = [];
@@ -2528,7 +2538,17 @@ const resolvers = {
     },
     updateIotDevice: (parent, args) => {
       deleteIotDevice(args.iotproject.name, args.device.deviceId);
-      return createIotDevice(args.iotproject.name, args.device);
+      let reg = args.device.registration;
+      reg.deviceId = args.device.deviceId;
+      let creds = args.device.credentials;
+
+      let result = createIotDevice(args.iotproject.name, args.device);
+      if (result != undefined) {
+        setCredentials(args.iotproject.name, result.deviceId, creds);
+        return result;
+      } else {
+        throw "Device could not be updated";
+      }
     },
     setCredentialsForDevice: (parent, args) => {
       setCredentials(args.iotproject.name, args.deviceId, args.jsonData);

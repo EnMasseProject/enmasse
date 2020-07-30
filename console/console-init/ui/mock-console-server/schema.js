@@ -821,7 +821,7 @@ const typeDefs = gql`
   input Device_iot_console_input {
     deviceId: String
     registration: Device_registration_iot_console_input
-    credentials: String! #A Json array with the devices credentials.
+    credentials: String #A Json array with the devices credentials.
   }
 
   input Device_registration_iot_console_input {
