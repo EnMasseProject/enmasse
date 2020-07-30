@@ -46,6 +46,8 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.net.PemTrustOptions;
 import org.assertj.core.api.SoftAssertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -666,13 +668,6 @@ public final class IoTTestSession implements IoTTestContext {
                     createDefaultResource(Kubernetes::messagingEndpoints, messagingEndpoint.build(), "Ready", cleanup);
                 }
 
-                // get the endpoint, we always expect a "downstream" endpoint for testing
-
-                var messagingEndpoint = Kubernetes.messagingEndpoints(namespace)
-                        .withName("downstream")
-                        .get();
-                var endpointHost = messagingEndpoint.getStatus().getHost();
-
                 // create IoT tenant
 
                 if (this.awaitReady) {
@@ -681,15 +676,15 @@ public final class IoTTestSession implements IoTTestContext {
 
                 // create endpoints
 
-                final Endpoint deviceRegistryEndpoint = IoTUtils.getDeviceRegistryManagementEndpoint();
+                var deviceRegistryEndpoint = IoTUtils.getDeviceRegistryManagementEndpoint();
 
-                final DeviceRegistryClient registryClient = new DeviceRegistryClient(
+                var registryClient = new DeviceRegistryClient(
                         IoTTestSession.this.vertx,
                         deviceRegistryEndpoint,
                         this.defaultTlsVersions);
                 cleanup.add(registryClient::close);
 
-                final CredentialsRegistryClient credentialsClient = new CredentialsRegistryClient(
+                var credentialsClient = new CredentialsRegistryClient(
                         IoTTestSession.this.vertx,
                         deviceRegistryEndpoint,
                         this.defaultTlsVersions);
@@ -739,21 +734,36 @@ public final class IoTTestSession implements IoTTestContext {
                 UserUtils.waitForUserActive(user, ofDuration(ofMinutes(1)));
                 */
 
+
+                // get the endpoint, we always expect a "downstream" endpoint for testing
+
+                var messagingEndpoint = Kubernetes.messagingEndpoints(namespace)
+                        .withName("downstream")
+                        .get();
+                var endpointHost = messagingEndpoint.getStatus().getHost();
+
                 // eval messaging endpoint
 
                 var port = messagingEndpoint.getStatus()
                         .getPorts().stream()
-                        .filter(p -> "AMQP".equals(p.getProtocol()))
+                        .filter(p -> "AMQPS".equals(p.getProtocol()))
                         .map(MessagingEndpointPort::getPort)
-                        .findAny().orElseThrow(() -> new IllegalStateException("Unable to find port 'AMQP' in endpoint status"));
-                final Endpoint amqpEndpoint = new Endpoint(endpointHost, port);
+                        .findAny().orElseThrow(() -> new IllegalStateException("Unable to find port 'AMQPS' in endpoint status"));
+                var amqpEndpoint = new Endpoint(endpointHost, port);
+                var cert = messagingEndpoint.getStatus().getTls().getCaCertificate();
 
                 // create AMQP client
 
-                AmqpClient client = new AmqpClient(
+                var client = new AmqpClient(
                         defaultQueue(amqpEndpoint)
                                 .customizeProtonClientOptions(options -> {
-                                    if (consumerTlsVersions != null) {
+                                    options
+                                            .setSsl(true)
+                                            .setHostnameVerificationAlgorithm("")
+                                            .setTrustOptions(new PemTrustOptions()
+                                                    .addCertValue(Buffer.buffer(cert)));
+
+                                    if (this.consumerTlsVersions != null) {
                                         options.setEnabledSecureTransportProtocols(this.consumerTlsVersions);
                                     } else if (this.defaultTlsVersions != null) {
                                         options.setEnabledSecureTransportProtocols(this.defaultTlsVersions);
@@ -788,18 +798,40 @@ public final class IoTTestSession implements IoTTestContext {
 
         private MessagingEndpointBuilder createDefaultEndpoint(final String namespace) {
 
-            return new MessagingEndpointBuilder()
+            var builder = new MessagingEndpointBuilder()
                     .withNewMetadata()
                     .withNamespace(namespace)
                     .withName("downstream")
-                    .endMetadata()
+                    .endMetadata();
 
-                    .withNewSpec()
-                    .withHost(Kubernetes.getInstance().getHost())
-                    .withNewNodePort().endNodePort()
-                    .addNewProtocol("AMQP")
+            builder = builder.editOrNewSpec()
+
+                    // always go for AMQPS
+                    .addNewProtocol("AMQPS")
+
+                    // with self signed certs
+                    .withNewTls()
+                    .withNewSelfsigned().endSelfsigned()
+                    .endTls()
+
                     .endSpec();
 
+            if (isOpenShiftCompatible(OCP4)) {
+
+                builder = builder.editOrNewSpec()
+                        .withNewRoute().endRoute()
+                        .endSpec();
+
+            } else {
+
+                builder = builder.editOrNewSpec()
+                        .withHost(Kubernetes.getInstance().getHost())
+                        .withNewNodePort().endNodePort()
+                        .endSpec();
+
+            }
+
+            return builder;
         }
     }
 
