@@ -235,7 +235,7 @@ public final class DefaultDeviceRegistry {
 
     }
 
-    public static DeviceRegistryServiceConfig newPostgresBasedRegistry(final Endpoint jdbcEndpoint, final boolean split) throws Exception {
+    public static DeviceRegistryServiceConfig newPostgresBasedRegistry(final Endpoint jdbcEndpoint, final boolean split) {
 
         var builder = new DeviceRegistryServiceConfigBuilder()
                 .withNewJdbc()
@@ -250,7 +250,7 @@ public final class DefaultDeviceRegistry {
 
     }
 
-    public static DeviceRegistryServiceConfig newH2BasedRegistry(final Endpoint jdbcEndpoint) throws Exception {
+    public static DeviceRegistryServiceConfig newH2BasedRegistry(final Endpoint jdbcEndpoint) {
 
         var builder = new DeviceRegistryServiceConfigBuilder()
                 .withNewJdbc()
@@ -303,7 +303,7 @@ public final class DefaultDeviceRegistry {
         return builder.build();
     }
 
-    public static DeviceConnectionServiceConfig newPostgresBasedConnection(final Endpoint jdbcEndpoint) throws Exception {
+    public static DeviceConnectionServiceConfig newPostgresBasedConnection(final Endpoint jdbcEndpoint) {
         return new DeviceConnectionServiceConfigBuilder()
                 .withNewJdbc()
                 .withNewServer()
@@ -315,7 +315,7 @@ public final class DefaultDeviceRegistry {
                 .build();
     }
 
-    public static DeviceConnectionServiceConfig newH2BasedConnection(final Endpoint jdbcEndpoint) throws Exception {
+    public static DeviceConnectionServiceConfig newH2BasedConnection(final Endpoint jdbcEndpoint) {
         return new DeviceConnectionServiceConfigBuilder()
                 .withNewJdbc()
                 .withNewServer()

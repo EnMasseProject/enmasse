@@ -22,8 +22,8 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 
-import static io.enmasse.systemtest.framework.condition.OpenShiftVersion.OCP4;
 import static io.enmasse.systemtest.framework.TestTag.IOT;
+import static io.enmasse.systemtest.framework.condition.OpenShiftVersion.OCP4;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static io.enmasse.systemtest.platform.Kubernetes.getClient;
 import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
@@ -48,9 +48,9 @@ public class ReloadCertificatesTest implements IoTTests {
         IoTTestSession
                 .createDefault()
                 .adapters(HTTP)
-                .infra(config -> {
-                    // ensure we are using the service-ca
-                    config.editOrNewSpec()
+
+                // ensure we are using the service-ca
+                .infra(infra -> infra.editOrNewSpec()
                         .withNewInterServiceCertificates()
                         .withNewServiceCAStrategy()
                         .endServiceCAStrategy()
@@ -63,8 +63,9 @@ public class ReloadCertificatesTest implements IoTTests {
                         .endHttp()
                         .endAdapters()
 
-                        .endSpec();
-                })
+                        .endSpec()
+                )
+
                 .run((session) -> {
 
                     var deviceId = Names.randomDevice();

@@ -608,6 +608,7 @@ func applyEndpointDeployment(client client.Client, endpoint iotv1.EndpointConfig
 		if err := install.ApplySecretHash(client, &deployment.Spec.Template, iotPrefix+"/endpoint-secret-hash", deployment.Namespace, endpointSecretName+"-tls"); err != nil {
 			return err
 		}
+
 	}
 
 	return nil
