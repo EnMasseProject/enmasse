@@ -5,6 +5,7 @@
 
 package io.enmasse.systemtest.iot;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import io.enmasse.api.model.MessagingEndpointBuilder;
 import io.enmasse.api.model.MessagingEndpointPort;
@@ -81,6 +82,7 @@ import static io.enmasse.systemtest.platform.Kubernetes.isOpenShiftCompatible;
 import static io.enmasse.systemtest.utils.Conditions.condition;
 import static io.enmasse.systemtest.utils.Conditions.gone;
 import static io.enmasse.systemtest.utils.TestUtils.waitUntilConditionOrFail;
+import static java.lang.System.lineSeparator;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
@@ -376,7 +378,7 @@ public final class IoTTestSession implements IoTTestContext {
             T process(IoTInfrastructure infra, IoTTenant tenant) throws X;
         }
 
-        private final IoTTenantBuilder tenant;
+        private IoTTenantBuilder tenant;
         private final List<PreDeployProcessor> preDeploy = new LinkedList<>();
 
         private IoTInfrastructureBuilder infra;
@@ -390,8 +392,8 @@ public final class IoTTestSession implements IoTTestContext {
             this.tenant = tenant;
         }
 
-        public Builder infra(final ThrowingConsumer<IoTInfrastructureBuilder> infraCustomizer) throws Exception {
-            infraCustomizer.accept(this.infra);
+        public Builder infra(final ThrowingFunction<IoTInfrastructureBuilder, IoTInfrastructureBuilder> infraCustomizer) throws Exception {
+            this.infra = infraCustomizer.apply(this.infra);
             return this;
         }
 
@@ -405,8 +407,8 @@ public final class IoTTestSession implements IoTTestContext {
             return this;
         }
 
-        public Builder tenant(final ThrowingConsumer<IoTTenantBuilder> customizer) throws Exception {
-            customizer.accept(this.tenant);
+        public Builder tenant(final ThrowingFunction<IoTTenantBuilder, IoTTenantBuilder> customizer) throws Exception {
+            this.tenant = customizer.apply(this.tenant);
             return this;
         }
 
@@ -493,6 +495,7 @@ public final class IoTTestSession implements IoTTestContext {
                 // build objects
 
                 var infra = this.infra.build();
+                log.info("Final infrastructure configuration:{} {}", lineSeparator(), new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(infra));
 
                 /*
                  * Create resources: in order to properly clean up, register cleanups first, then perform the operation

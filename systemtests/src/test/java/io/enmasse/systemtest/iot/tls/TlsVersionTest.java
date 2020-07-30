@@ -11,6 +11,7 @@ import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 import io.enmasse.systemtest.iot.IoTTests;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -25,18 +26,21 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class TlsVersionTest implements IoTTests {
 
     @Test
+    @Disabled("HAproxy doesn't support TLSv1.3")
     public void testWithExplicitVersion() throws Exception {
         IoTTestSession
                 .createDefault()
                 .adapters(Adapter.HTTP)
-                .infra(config -> config
+                .infra(infra -> infra
                         .editOrNewSpec()
                         .editOrNewTls()
                         .withVersions("TLSv1.3")
                         .endTls()
                         .endSpec())
-                // we accept 1.2 and 1.3 for all connections we don't test explicitly
+
+                // we accept 1.2 and 1.3 for all connections we don't test explicitly (e.g. device management)
                 .defaultTlsVersions("TLSv1.2", "TLSv1.3")
+
                 .run(session -> {
 
                     var device = session.registerNewRandomDeviceWithPassword();

@@ -73,6 +73,8 @@ public class IoTTestSessionTest {
 
                     called.set(true);
 
+                    return configBuilder;
+
                 });
 
         assertTrue(called.get());
