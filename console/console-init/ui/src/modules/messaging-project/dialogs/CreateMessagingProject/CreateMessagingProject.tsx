@@ -213,7 +213,7 @@ const CreateMessagingProject: React.FunctionComponent<ICreateMessagingProjectPro
 
   return (
     <Wizard
-      id="create-as-wizard"
+      id="create-messaging-project-wizard"
       isOpen={true}
       onClose={onCloseDialog}
       title="Create an Instance"

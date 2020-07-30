@@ -64,7 +64,7 @@ export const MessagingProjectHeader: React.FunctionComponent<IMessagingProjectHe
   const dropdownItems = [
     <DropdownItem
       key="edit"
-      id="as-header-edit"
+      id="messaging-project-header-edit-dropdownitem"
       aria-label="edit"
       onClick={() => onEdit()}
     >
@@ -72,7 +72,7 @@ export const MessagingProjectHeader: React.FunctionComponent<IMessagingProjectHe
     </DropdownItem>,
     <DropdownItem
       key="delete"
-      id="as-header-delete"
+      id="messaging-project-header-delete-dropdownitem"
       aria-label="delete"
       onClick={() => onDelete({ name, namespace })}
     >
@@ -80,7 +80,7 @@ export const MessagingProjectHeader: React.FunctionComponent<IMessagingProjectHe
     </DropdownItem>,
     <DropdownItem
       key="download"
-      id="as-header-download"
+      id="messaging-project-header-download-certificate-dropdownitem"
       aria-label="download"
       onClick={() => onDownload({ name, namespace })}
       style={{ paddingRight: 50 }}
@@ -122,8 +122,8 @@ export const MessagingProjectHeader: React.FunctionComponent<IMessagingProjectHe
         <SplitItem isFilled></SplitItem>
         <SplitItem className={css(styles.kebab_toggle_margin)}>
           <DropdownWithKebabToggle
-            id="as-header-dropdown"
-            toggleId={"as-header-kebab"}
+            id="messaging-project-header-kebab-dropdown"
+            toggleId={"messaging-project-header-kebab-dropdowntoggle"}
             position={DropdownPosition.right}
             isPlain={true}
             dropdownItems={dropdownItems}

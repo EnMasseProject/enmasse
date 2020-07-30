@@ -32,13 +32,13 @@ export const EmptyMessagingProject: React.FunctionComponent<{}> = () => {
       <Title headingLevel="h2" id="empty-ad-space-title" size="lg">
         Create a messaging project
       </Title>
-      <EmptyStateBody id="empty-ad-space-body">
+      <EmptyStateBody id="empty-messaging-project-body">
         There are currently no messaging projects available. Please click on the
         button below to create one.Learn more about this in the
         <a href={process.env.REACT_APP_DOCS}> documentation</a>
       </EmptyStateBody>
       <Button
-        id="empty-ad-space-create-button"
+        id="empty-messaging-project-create-button"
         variant={ButtonVariant.primary}
         onClick={onCreateAddressSpace}
       >

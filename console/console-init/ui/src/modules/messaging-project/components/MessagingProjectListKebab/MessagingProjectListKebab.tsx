@@ -27,7 +27,7 @@ export const MessagingProjectListKebab: React.FC<IMessagingProjectListKebabProps
 }) => {
   const dropdownItems = [
     <DropdownItem
-      id="as-list-delete-all"
+      id="messaging-project-list-kebab-delete-dropdownitem"
       key="delete-all"
       component="button"
       value="deleteAll"
@@ -45,7 +45,7 @@ export const MessagingProjectListKebab: React.FC<IMessagingProjectListKebabProps
             {/* Remove is Persistent after fixing dropdown items for overflow menu */}
             <OverflowMenuItem isPersistent>
               <Button
-                id="al-filter-overflow-button"
+                id="messaging-project-list-kebab-create-button"
                 variant={ButtonVariant.primary}
                 onClick={onCreateAddressSpace}
               >
@@ -56,8 +56,8 @@ export const MessagingProjectListKebab: React.FC<IMessagingProjectListKebabProps
         </OverflowMenuContent>
         <OverflowMenuControl hasAdditionalOptions>
           <DropdownWithKebabToggle
-            id="al-filter-overflow-dropdown"
-            toggleId="al-filter-overflow-kebab"
+            id="messaging-project-list-kebab-dropdown"
+            toggleId="messaging-project-list-kebab-dropdowntoggle"
             onSelect={onSelectDeleteAll}
             dropdownItems={dropdownItems}
             isPlain

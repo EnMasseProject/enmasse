@@ -45,14 +45,14 @@ export const EditMsgProject: React.FC<IEditMsgProjectProps> = ({
   return (
     <Modal
       variant="large"
-      id="edit-msg-edit-modal"
+      id="edit-msg-project-modal"
       title="Edit"
       isOpen={true}
       onClose={onCloseDialog}
       actions={[
         <Button
           key="confirm"
-          id="edit-msg-edit-confirm-button"
+          id="edit-msg-project-confirm-button"
           variant="primary"
           onClick={onConfirmDialog}
         >
@@ -60,7 +60,7 @@ export const EditMsgProject: React.FC<IEditMsgProjectProps> = ({
         </Button>,
         <Button
           key="cancel"
-          id="edit-msg-edit-cancel-button"
+          id="edit-msg-project-cancel-button"
           variant="link"
           onClick={onCloseDialog}
         >
@@ -74,17 +74,17 @@ export const EditMsgProject: React.FC<IEditMsgProjectProps> = ({
         </TextContent>
         <FormGroup
           label="Namespace"
-          fieldId="edit-msg-project-namespace-formselect"
+          fieldId="edit-msg-project-namespace-select"
           isRequired={true}
         >
           <FormSelect
-            id="edit-msg-project-namespace-formselect"
+            id="edit-msg-project-namespace-select"
             isDisabled
             value={project.namespace}
             aria-label="FormSelect Input"
           >
             <FormSelectOption
-              id="edit-msg-project-namespace-option"
+              id="edit-msg-project-namespace-selectoption"
               key={`project-form-select-option-${project?.namespace}`}
               value={project?.namespace}
               label={project?.namespace || ""}
@@ -105,7 +105,7 @@ export const EditMsgProject: React.FC<IEditMsgProjectProps> = ({
         </FormGroup>
         <FormGroup
           label="Type"
-          fieldId="edit-msg-project-type-input"
+          fieldId="edit-msg-project-type-radio"
           isInline
           isRequired={true}
         >
@@ -113,7 +113,7 @@ export const EditMsgProject: React.FC<IEditMsgProjectProps> = ({
             name="radio-1"
             isDisabled
             label="Standard"
-            id="edit-msg-project-radio-standard"
+            id="edit-msg-project-type-standard-radio"
             key="radio-standard"
             value="standard"
             isChecked={project.type === "standard"}
@@ -122,7 +122,7 @@ export const EditMsgProject: React.FC<IEditMsgProjectProps> = ({
             name="radio-2"
             isDisabled
             label="Brokered"
-            id="edit-msg-project-radio-brokered"
+            id="edit-msg-project-type-brokered-radio"
             key="radio-standard"
             value="brokered"
             isChecked={project.type === "brokered"}
@@ -130,11 +130,11 @@ export const EditMsgProject: React.FC<IEditMsgProjectProps> = ({
         </FormGroup>
         <FormGroup
           label="Address space plan"
-          fieldId="simple-form-name"
+          fieldId="edit-msg-project-plan-select"
           isRequired={true}
         >
           <FormSelect
-            id="edit-msg-project-edit-addr-plan"
+            id="edit-msg-project-plan-select"
             value={project.plan}
             onChange={val => onPlanChange(val)}
             aria-label="FormSelect Input"
@@ -150,18 +150,18 @@ export const EditMsgProject: React.FC<IEditMsgProjectProps> = ({
         </FormGroup>
         <FormGroup
           label="Authentication Service"
-          fieldId="edit-msg-project-auth-service"
+          fieldId="edit-msg-project-auth-service-select"
           isRequired={true}
         >
           <FormSelect
-            id="edit-msg-project-auth-service"
+            id="edit-msg-project-auth-service-select"
             value={project.authService}
             onChange={val => onAuthServiceChange(val)}
             aria-label="FormSelect Input"
           >
             {authServiceOptions.map(option => (
               <FormSelectOption
-                id={`edit-msg-project-auth-service-option-${option.value}`}
+                id={`edit-msg-project-auth-service-selectoption-${option.value}`}
                 key={option.value}
                 value={option.value}
                 label={option.label}

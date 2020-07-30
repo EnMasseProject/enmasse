@@ -63,7 +63,7 @@ export const MessagingProjectList: React.FunctionComponent<IMessagingPojectListP
           onSort={onSort}
           sortBy={sortBy}
         >
-          <TableHeader id="aslist-table-header" />
+          <TableHeader id="messaging-project-list-tableheader" />
           <TableBody />
         </Table>
       </div>
