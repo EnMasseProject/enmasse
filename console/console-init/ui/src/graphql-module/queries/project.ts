@@ -79,7 +79,7 @@ const ALL_PROJECTS_SORT = (sortBy?: ISortBy) => {
       default:
         break;
     }
-    if (orderBy.trim() != "" && sortBy.direction) {
+    if (orderBy.trim() !== "" && sortBy.direction) {
       orderBy += sortBy.direction;
     }
   }

@@ -100,15 +100,6 @@ const deviceRegistrationTypeOptions: ISelectOption[] = [
   { key: "array", label: "Array", value: "array" }
 ];
 
-const getInitialMetadataState = () => {
-  const initialState = {
-    key: "",
-    value: [],
-    type: deviceRegistrationTypeOptions[0].value
-  };
-  return initialState;
-};
-
 const MAX_DEVICE_LIST_COUNT = 500;
 
 enum ValidationStatusType {
@@ -125,7 +116,6 @@ export {
   SHOW_ADVANCE_SETTING,
   credentialTypeOptions,
   deviceRegistrationTypeOptions,
-  getInitialMetadataState,
   MAX_DEVICE_LIST_COUNT,
   ValidationStatusType
 };
