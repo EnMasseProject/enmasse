@@ -11,6 +11,7 @@ import io.enmasse.address.model.AddressSpaceSpecConnectorCredentials;
 import io.enmasse.address.model.AddressSpaceSpecConnectorTls;
 import io.enmasse.address.model.AddressSpecForwarderBuilder;
 import io.enmasse.address.model.AddressSpecForwarderDirection;
+import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.annotations.ExternalClients;
@@ -32,15 +33,20 @@ import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 
 import java.util.Objects;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -65,8 +71,84 @@ class ForwardersTest extends BridgingBase {
     @Test
     void testForwardFromRemoteQueue() throws Exception {
         doTestForwarderIn(null, defaultCredentials());
-
     }
+
+    @ParameterizedTest(name = "testForwardToRemoteQueueWithConsumerPriority-{0}")
+    @ValueSource(ints = {10})
+    void testForwardToRemoteQueueWithConsumerPriority(int priority) throws Exception {
+        assertThat("Unsupported priority for test", priority, not(is(0)));
+
+        AddressSpace space = createAddressSpace("forward-to-remote", "*", null, defaultCredentials());
+        Address forwarder = new AddressBuilder()
+                .withNewMetadata()
+                .withName(AddressUtils.generateAddressMetadataName(space, "forwarder-queue1"))
+                .withNamespace(remoteBrokerNamespace)
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("forwarder-queue1")
+                .withType(AddressType.QUEUE.toString())
+                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                .addToForwarders(new AddressSpecForwarderBuilder()
+                        .withName("forwarder1")
+                        .withRemoteAddress(REMOTE_NAME + "/" + REMOTE_QUEUE1)
+                        .withDirection(AddressSpecForwarderDirection.out)
+                        .withNewPriority(priority)
+                        .build())
+                .endSpec()
+                .build();
+        resourcesManager.setAddresses(forwarder);
+        AddressUtils.waitForForwardersReady(new TimeoutBudget(1, TimeUnit.MINUTES), forwarder);
+
+        UserCredentials localUser = new UserCredentials("test", "test");
+        resourcesManager.createOrUpdateUser(space, localUser);
+
+        int messagesBatch = 20;
+
+        Endpoint internalEndpointByName = AddressSpaceUtils.getInternalEndpointByName(space, "messaging", "amqps");
+        try (ExternalMessagingClient localReceivingClient = new ExternalMessagingClient()
+                .withClientEngine(new ProtonJMSClientReceiver())
+                .withMessagingRoute(Objects.requireNonNull(internalEndpointByName))
+                .withCount(messagesBatch)
+                .withAddress(forwarder.getSpec().getAddress())
+                .withCredentials(localUser);
+             ExternalMessagingClient remoteReceivingClient = createOnClusterClientToRemoteBroker(new ProtonJMSClientReceiver(), messagesBatch)
+                     .withAddress(REMOTE_QUEUE1);
+             ExternalMessagingClient localSendingClient = new ExternalMessagingClient()
+                     .withClientEngine(new ProtonJMSClientSender())
+                     .withMessagingRoute(Objects.requireNonNull(internalEndpointByName))
+                     .withCount(messagesBatch)
+                     .withAddress(forwarder.getSpec().getAddress())
+                     .withCredentials(localUser)
+        ) {
+            final ExternalMessagingClient receivingClient;
+            final ExternalMessagingClient nonReceivingClient;
+            if (priority > 0) {
+                // the forwarder's consumer has raised priority therefore we expect all messages to flow across connector
+                receivingClient = localReceivingClient;
+                nonReceivingClient = remoteReceivingClient;
+            } else {
+                // the forwarder's consumer has lowered priority therefore we expect no messages to flow across connector
+                receivingClient = remoteReceivingClient;
+                nonReceivingClient = localReceivingClient;
+            }
+
+            receivingClient.withCount(messagesBatch);
+            final Future<Boolean> receiverDone = receivingClient.runAsync();
+            nonReceivingClient.runAsync();
+
+            CompletableFuture<Void> receiversReady = CompletableFuture.allOf(((CompletableFuture<Void>) localReceivingClient.getLinkAttachedProbe()),
+                    ((CompletableFuture<Void>) remoteReceivingClient.getLinkAttachedProbe()));
+
+            receiversReady.get(30, TimeUnit.SECONDS);
+            assertThat("Receivers are not attached within timeout", receiversReady.isDone(), is(true));
+
+            assertTrue(localSendingClient.run());
+
+            assertThat("Receiver not complete with timeout", receiverDone.get(30, TimeUnit.SECONDS), is(true));
+            assertThat("Unexpected number of messages at expected receiver", receivingClient.getMessages().size(), is(messagesBatch));
+        }
+    }
+
 
     @Test
     void testForwardToUnavailableBroker() throws Exception {
