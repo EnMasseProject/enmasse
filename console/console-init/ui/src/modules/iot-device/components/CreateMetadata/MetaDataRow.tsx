@@ -6,10 +6,18 @@
 import React, { useState } from "react";
 import { Grid, GridItem } from "@patternfly/react-core";
 import { ValidationStatusType } from "modules/iot-device/utils";
+<<<<<<< HEAD
 import { isObjectOrArray } from "utils";
 import { MetaDataProperty } from "./MetaDataProperty";
 import { MetaDataType } from "./MetaDataType";
 import { MetaDataValue } from "./MetaDataValue";
+=======
+import { css, StyleSheet } from "aphrodite";
+const dropdown_item_styles = StyleSheet.create({
+  dropdown_align: { display: "flex" },
+  dropdown_toggle_align: { flex: "1" }
+});
+>>>>>>> Fix metadata type dropdown toggle
 
 export interface IMetaDataRowProps {
   metadataList: any;
@@ -80,12 +88,26 @@ export const MetaDataRow: React.FC<IMetaDataRowProps> = ({
           />
         </GridItem>
         <GridItem span={2}>
+<<<<<<< HEAD
           <MetaDataType
             metadataList={metadataList}
             rowIndex={rowIndex}
             getValidationStatus={getValidationStatus}
             setValidationStatus={setValidationStatus}
             updateMetadataList={updateMetadataList}
+=======
+          <DropdownWithToggle
+            id="metadata-row-type-dropdowntoggle"
+            className={css(dropdown_item_styles.dropdown_align)}
+            toggleId="metadata-row-type-dropdown-toggle"
+            toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
+            position={DropdownPosition.left}
+            onSelectItem={onSelectType}
+            dropdownItems={deviceRegistrationTypeOptions}
+            value={metadataRow.type}
+            isLabelAndValueNotSame={true}
+            isDisabled={isObjectOrArray(metadataRow.type)}
+>>>>>>> Fix metadata type dropdown toggle
           />
         </GridItem>
         <GridItem span={5}>
