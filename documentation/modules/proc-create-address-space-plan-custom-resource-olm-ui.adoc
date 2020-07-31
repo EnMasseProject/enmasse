@@ -10,11 +10,9 @@ You must create an address space plan custom resource to use {ProductName}. This
 
 .Procedure
 
-. From the dropdown menu, select the `{ProductNamespace}` project.
+. In the top right, click the *Plus* icon (+). The Import YAML window opens.
 
-. Click *Catalog > Installed Operators*.
-
-. Click *Add > Import YAML*. The Import YAML window opens.
+. From the top left drop-down menu, select the `{ProductNamespace}` project.
 
 . Copy the following code:
 +
@@ -35,11 +33,12 @@ spec:
     aggregate: 4.0
 ----
 
-. In the Import YAML window, paste the copied code and click *Create*. The AddressPlan Overview page is displayed.
+. In the Import YAML window, paste the copied code and click *Create*. The AddressSpacePlan overview page is displayed.
 
-. Click *Workloads > Pods*. In the *Readiness* column, the Pod status is `Ready` when the custom resource has been deployed.
+. Click *Operators > Installed Operators*.
+
+. Click the {ProductName} Operator and click the *Address Space Plan* tab to verify that its *Status* displays as *Active*.
 
 .Next steps
 
 * link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-create-address-plan-custom-resource-olm-ui-messaging[Create an address plan custom resource using the {KubePlatform} console]
-
