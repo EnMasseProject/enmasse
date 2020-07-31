@@ -45,6 +45,9 @@ https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion
 The tenant admin would be able to CRUDWL `ManagementTask` from the CLI using `kubectl`/`oc` tooling (usual RBAC permissions
 apply), or later an EnMasse CLI tool might abstract away some details. 
 
+The operator would orchestrate the task.  The precise details of the orchestration would vary from task to task.   For some
+tasks we might delegate the work of the to a Kubernetes job in the infra namespace.
+
 From the Console. functions such as purge queue/subscription would, behind the button cause an instance of this object to
 be created.  There would be an area of the UI which lists running/recently finsihed tasks.  From this page, you'd be able
 to cancel running tasks too.
