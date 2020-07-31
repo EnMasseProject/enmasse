@@ -101,9 +101,9 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
   const onConfirmConnectionType = () => {
     let actionType;
     if (connectiontype === DeviceConnectionType.CONNECTED_DIRECTLY) {
-      actionType = DeviceActionType.CHANGE_CONNECTION_TYPE_CONNECTED_DIRECTLY;
-    } else if (connectiontype === DeviceConnectionType.VIA_GATEWAYS) {
       actionType = DeviceActionType.CHANGE_CONNECTION_TYPE_VIA_GATEWAYS;
+    } else if (connectiontype === DeviceConnectionType.VIA_GATEWAYS) {
+      actionType = DeviceActionType.CHANGE_CONNECTION_TYPE_CONNECTED_DIRECTLY;
     }
 
     if (actionType) {
@@ -124,7 +124,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
         onConfirm: onConfirmConnectionType,
         option: "change-button",
         detail:
-          "This action can not be undone. After you changed the setting, all data under this setting will also be deleted and is uncoverable.",
+          "This action can not be undone. After you change the setting, all data under this setting will also be deleted and is uncoverable.",
         header: "Do you want to change the connection type?"
       }
     });

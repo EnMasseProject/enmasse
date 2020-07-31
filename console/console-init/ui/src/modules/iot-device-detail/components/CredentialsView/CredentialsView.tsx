@@ -111,14 +111,14 @@ export const Credential: React.FC<ICredentialProps> = ({
       </GridItem>
       <SecretsViewContainer
         secrets={secrets}
-        id={"credetials-view-secrets-" + authId}
+        id={"credentials-view-secrets-" + authId}
         heading={"Secrets"}
         authId={authId}
         credentialType={type}
         enableActions={enableActions}
       />
       <ExtensionsView
-        id={"credetials-view-extensions-" + authId}
+        id={"credentials-view-extensions-" + authId}
         ext={ext}
         heading={"Ext"}
       />
