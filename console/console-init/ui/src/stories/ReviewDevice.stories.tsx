@@ -19,6 +19,7 @@ export const ReviewDevicePage = () => {
       status: false,
       metadata: []
     },
+    connectionType: "N/A",
     gateways: {
       gateways: ["Device-1"],
       gatewayGroups: []

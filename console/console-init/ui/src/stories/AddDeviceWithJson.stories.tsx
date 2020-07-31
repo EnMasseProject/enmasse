@@ -18,7 +18,6 @@ export const AddDevice = () => {
           setDeviceDetail={action("setDeviceDetail")}
           onLeave={action("onLeave")}
           onSave={action("onSave")}
-          onPreview={action("onPreview")}
         />
       </Page>
     </MemoryRouter>

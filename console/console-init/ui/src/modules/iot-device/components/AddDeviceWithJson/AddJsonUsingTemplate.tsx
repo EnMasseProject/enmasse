@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Title,
   Radio,
@@ -39,13 +39,38 @@ interface IAddJsonUsingTemplate {
   setDetail: (value: string) => void;
   selectedTemplate: string;
   setSelectedTemplate: (value: string) => void;
+  setErrorMessage: (value: string) => void;
 }
 const AddJsonUsingTemplate: React.FunctionComponent<IAddJsonUsingTemplate> = ({
   setDetail,
   selectedTemplate,
-  setSelectedTemplate
+  setSelectedTemplate,
+  setErrorMessage
 }) => {
   const [showModal, setShowModal] = useState<boolean>(false);
+  const [value, setValue] = useState<string | File>("");
+  const [filename, setFilename] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (showModal && value)
+      try {
+        const detail = JSON.parse(value.toString());
+        setDetail(getFormattedJsonString(detail));
+        onResetFile();
+      } catch {
+        //TODO: Error handling for invalid json
+        setErrorMessage("Invalid JSON, unable to parse JSON file");
+        onResetFile();
+      }
+  }, [value, filename, isLoading, showModal]);
+
+  const onResetFile = () => {
+    setShowModal(false);
+    setValue("");
+    setFilename("");
+    setIsLoading(false);
+  };
   const onChange = (event: any) => {
     const name: string = event.target.name;
     if (name === "device-connected-directly") {
@@ -61,26 +86,22 @@ const AddJsonUsingTemplate: React.FunctionComponent<IAddJsonUsingTemplate> = ({
       setDetail(getFormattedJsonString(connectedViaGatewayDeviceTemplate));
     }
   };
-  const onReaderLoad = (event: any) => {
-    try {
-      const detail = JSON.parse(event.target.result);
-      setDetail(getFormattedJsonString(detail));
-    } catch {
-      //TODO: Error handling for invalid json
-      console.log("Invalid Json");
-    }
-  };
 
   const onClickUpload = () => {
     setShowModal(true);
   };
 
   const onUploadFile = (value: string | File, filename: string, event: any) => {
-    var reader = new FileReader();
-    reader.onload = onReaderLoad;
-    reader.readAsText(event.target.files[0]);
-    setShowModal(false);
+    setFilename(filename);
+    setValue(value);
   };
+
+  const handleFileRejected = (rejectedFiles: any, event: any) => {
+    setErrorMessage("Invalid File! Please upload .json file to continue");
+    onResetFile();
+  };
+  const handleFileReadStarted = (_: File) => setIsLoading(true);
+  const handleFileReadFinished = (_: File) => setIsLoading(false);
 
   return (
     <>
@@ -129,14 +150,24 @@ const AddJsonUsingTemplate: React.FunctionComponent<IAddJsonUsingTemplate> = ({
         <UploadIcon /> Upload a JSON file
       </Button>
       {showModal && (
-        <Modal title="" isOpen={showModal} onClose={() => setShowModal(false)}>
+        <Modal
+          title="Upload a Json File"
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          width={"50%"}
+        >
           <FileUpload
             id="add-json-template-file-upload"
-            value={""}
-            filename={""}
+            type="text"
+            value={value}
+            filename={filename}
             onChange={onUploadFile}
+            onReadStarted={handleFileReadStarted}
+            onReadFinished={handleFileReadFinished}
+            isLoading={isLoading}
             dropzoneProps={{
-              accept: ".json"
+              accept: ".json",
+              onDropRejected: handleFileRejected
             }}
           />
         </Modal>

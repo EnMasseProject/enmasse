@@ -9,7 +9,9 @@ import {
   PageSectionVariants,
   Button,
   Grid,
-  GridItem
+  GridItem,
+  Split,
+  SplitItem
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
 import { JsonEditor } from "components";
@@ -22,6 +24,11 @@ import { compareObject, getFormattedJsonString } from "utils";
 import { types, MODAL_TYPES, useStoreContext } from "context-state-reducer";
 import { DeviceListAlert } from "modules/iot-device";
 import { TemplateType } from "constant";
+import {
+  IDeviceProp,
+  ReviewDeviceContainer
+} from "modules/iot-device/containers";
+import { INVALID_JSON_ERROR } from "modules/iot-device/utils";
 
 const styles = StyleSheet.create({
   box_align_style: {
@@ -31,6 +38,9 @@ const styles = StyleSheet.create({
     borderColor: "grey",
     padding: 20,
     marginRight: 20
+  },
+  padding_left: {
+    paddingLeft: 30
   }
 });
 interface IAddDeviceWithJsonProps {
@@ -38,27 +48,24 @@ interface IAddDeviceWithJsonProps {
   setDeviceDetail: (detail?: string) => void;
   onLeave: () => void;
   onSave: (detail: string) => void;
-  onPreview: (detail: string) => void;
 }
 
 const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
   deviceDetail,
   setDeviceDetail,
   onLeave,
-  onSave,
-  onPreview
+  onSave
 }) => {
   const { dispatch } = useStoreContext();
   const [selectedTemplate, setSelectedTemplate] = useState<string>(
     TemplateType.DIRECTLY_CONNECTED
   );
-  const [showJsonValidationError, setShowJsonValidationError] = useState<
-    boolean
-  >(false);
+  const [isPreviewEnabled, setIsPreviewEnabled] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const setDeviceInfoInDetail = (value?: string) => {
-    if (showJsonValidationError) {
-      setShowJsonValidationError(false);
+    if (errorMessage !== "") {
+      setErrorMessage("");
     }
     setDeviceDetail(value);
   };
@@ -114,22 +121,58 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
       return false;
     }
   };
+
   const onFinish = () => {
     if (deviceDetail)
       if (!isJsonValid()) {
-        setShowJsonValidationError(true);
+        setErrorMessage(INVALID_JSON_ERROR);
       } else {
         onSave(deviceDetail);
       }
   };
-  const handleOnPreview = () => {
+
+  const onPreview = () => {
     if (deviceDetail) {
       if (!isJsonValid()) {
-        setShowJsonValidationError(true);
+        setErrorMessage(INVALID_JSON_ERROR);
       } else {
-        onPreview(deviceDetail);
+        setIsPreviewEnabled(true);
       }
     }
+  };
+
+  const onBack = () => {
+    setIsPreviewEnabled(false);
+  };
+
+  const getDeviceDetail = () => {
+    const device: IDeviceProp = {
+      deviceInformation: {
+        metadata: []
+      },
+      connectionType: "",
+      credentials: [],
+      gateways: { gateways: [], gatewayGroups: [] }
+    };
+    if (deviceDetail) {
+      const parseDeviceDetail = JSON.parse(deviceDetail);
+      //add deviceId to device object from the parseDeviceDetail
+      device.deviceInformation.deviceId = parseDeviceDetail.id;
+      //add registration.enabled field to device object from the parseDeviceDetail
+      if (parseDeviceDetail?.registration.enabled !== undefined) {
+        device.deviceInformation.status =
+          parseDeviceDetail.registration.enabled;
+      }
+      //add credentials field to device object from the parseDeviceDetail
+      if (device.credentials && parseDeviceDetail.credentials) {
+        device.credentials = parseDeviceDetail.credentials;
+      }
+      //add registration.via field to device object from the parseDeviceDetail
+      if (device.gateways?.gateways && parseDeviceDetail?.registration?.via) {
+        device.gateways.gateways = parseDeviceDetail.registration.via;
+      }
+    }
+    return device;
   };
 
   return (
@@ -138,61 +181,87 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
         id="add-device-json-invalid-device-list-alert"
         variant="danger"
         isInline
-        visible={showJsonValidationError}
+        visible={errorMessage !== ""}
         title="Error"
-        description="Invalid JSON syntax, unable to parse JSON"
+        description={errorMessage}
       />
       <br />
       <Grid>
-        <GridItem span={9} className={css(styles.box_align_style)}>
-          <JsonEditor
-            value={deviceDetail}
-            readOnly={false}
-            name={"editor-add-device"}
-            setDetail={setDeviceInfoInDetail}
-            style={{
-              minHeight: "39em"
-            }}
-          />
-        </GridItem>
-        <GridItem span={3} className={css(styles.box_align_style)}>
-          <PageSection variant={PageSectionVariants.light}>
-            <AddJsonUsingTemplate
-              setDetail={setDeviceInfoInDetail}
-              selectedTemplate={selectedTemplate}
-              setSelectedTemplate={setSelectedTemplate}
-            />
-          </PageSection>
-        </GridItem>
+        {isPreviewEnabled ? (
+          <div className={css(styles.padding_left)}>
+            <ReviewDeviceContainer device={getDeviceDetail()} />
+          </div>
+        ) : (
+          <>
+            <GridItem span={9} className={css(styles.box_align_style)}>
+              <JsonEditor
+                value={deviceDetail}
+                readOnly={false}
+                name={"editor-add-device"}
+                setDetail={setDeviceInfoInDetail}
+                style={{
+                  minHeight: "39em"
+                }}
+              />
+            </GridItem>
+            <GridItem span={3} className={css(styles.box_align_style)}>
+              <PageSection variant={PageSectionVariants.light}>
+                <AddJsonUsingTemplate
+                  setDetail={setDeviceInfoInDetail}
+                  selectedTemplate={selectedTemplate}
+                  setSelectedTemplate={setSelectedTemplate}
+                  setErrorMessage={setErrorMessage}
+                />
+              </PageSection>
+            </GridItem>
+          </>
+        )}
       </Grid>
       <br />
-
-      <Button
-        id="add-device-json-finish-button"
-        aria-label="Finish button"
-        variant="primary"
-        onClick={onFinish}
-      >
-        Finish
-      </Button>
-      {"  "}
-      <Button
-        id="add-device-json-preview-button"
-        aria-label="Preview button"
-        variant="secondary"
-        onClick={handleOnPreview}
-      >
-        Preview
-      </Button>
-      {"  "}
-      <Button
-        id="add-device-json-cancel-button"
-        aria-label="cancel button"
-        variant="link"
-        onClick={onCancel}
-      >
-        Cancel
-      </Button>
+      <Split className={css(styles.padding_left)} hasGutter>
+        <SplitItem>
+          <Button
+            id="add-device-json-finish-button"
+            aria-label="finish button"
+            variant="primary"
+            onClick={onFinish}
+          >
+            Finish
+          </Button>
+        </SplitItem>
+        <SplitItem>
+          {isPreviewEnabled ? (
+            <Button
+              id="add-device-json-back-button"
+              aria-label="Back button"
+              variant="secondary"
+              onClick={onBack}
+            >
+              Back
+            </Button>
+          ) : (
+            <Button
+              id="add-device-json-preview-button"
+              aria-label="Preview button"
+              variant="secondary"
+              onClick={onPreview}
+              disabled={!deviceDetail || deviceDetail?.trim() === ""}
+            >
+              Preview
+            </Button>
+          )}
+        </SplitItem>
+        <SplitItem>
+          <Button
+            id="add-device-json-cancel-button"
+            aria-label="cancel button"
+            variant="link"
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+        </SplitItem>
+      </Split>
     </PageSection>
   );
 };
