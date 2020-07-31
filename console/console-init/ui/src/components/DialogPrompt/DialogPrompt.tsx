@@ -101,8 +101,12 @@ export const DialogPrompt: React.FunctionComponent<{}> = () => {
         {header}
       </Title>
       <br />
-      <b>{nameString}</b>
-      <br />
+      {nameString && (
+        <>
+          <b>{nameString}</b>
+          <br />
+        </>
+      )}
       {detail}
     </Modal>
   );

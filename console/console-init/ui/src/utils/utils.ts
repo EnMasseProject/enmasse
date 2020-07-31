@@ -337,7 +337,7 @@ const getDeviceConnectionType = (
   viaGateway: boolean,
   credentials: ICredential[]
 ) => {
-  let connectionType: string = "";
+  let connectionType;
   if (viaGateway && !credentials?.length) {
     connectionType = DeviceConnectionType.VIA_GATEWAYS;
   } else if (!viaGateway && credentials?.length > 0) {
