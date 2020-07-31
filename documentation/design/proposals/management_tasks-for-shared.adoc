@@ -31,8 +31,8 @@ Introduce a new CRD `ManagementTask`.  A `ManagementTask` executes a management 
 tenant namespace within EnMasse.  It would be rather similar to
 https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/[Jobs] from Kubernetes.
 
-1. The Tenant Admin would create an instance of the resource in order to cause the task to occur.  The contents of the
-   resource describe the jobs and its parameters.
+1. The Tenant Admin would create an instance of the resource in the tenant namespace in order to cause the task to occur.
+   The contents of the resource describe the jobs and its parameters.  The name of the resource is not significant.
 1. The EnMasse Operator actions the tasks - initiating requests to Brokers or Routers as necessary.  This might invoke
   the invocation of Router/Broker management functions (close connection, clear queue etc), or might involve putting down
   router wiring to implement a move message task.
@@ -43,7 +43,7 @@ https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion
    level) would allow the Operator to clean up the ManagementTasks automatically.
 
 The tenant admin would be able to CRUDWL `ManagementTask` from the CLI using `kubectl`/`oc` tooling (usual RBAC permissions
-apply), or later an EnMasse CLI tool might abstract away some details.
+apply), or later an EnMasse CLI tool might abstract away some details. 
 
 From the Console. functions such as purge queue/subscription would, behind the button cause an instance of this object to
 be created.  There would be an area of the UI which lists running/recently finsihed tasks.  From this page, you'd be able
