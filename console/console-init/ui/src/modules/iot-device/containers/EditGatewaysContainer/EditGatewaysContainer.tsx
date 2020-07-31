@@ -22,7 +22,8 @@ const styles = StyleSheet.create({
 export const EditGatewaysContainer = () => {
   const { deviceid, projectname, namespace } = useParams();
   const { dispatch } = useStoreContext();
-  const [gateways, addGateways] = useState<string[]>([]);
+  const [gatewayDevices, addGatewayDevices] = useState<string[]>([]);
+  const [gatewayGroups, setGatewayGroups] = useState<string[]>([]);
 
   const { data } = useQuery<IDeviceDetailResponse>(
     RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid)
@@ -32,21 +33,23 @@ export const EditGatewaysContainer = () => {
     devices: { total: 0, devices: [] }
   };
 
-  const { via: gatewayList } = devices?.devices[0] || {};
+  const { via: gatewayList, viaGroups: gatewayGroupList } =
+    devices?.devices[0] || {};
 
-  const getGateways = (gateway: string[]) => {
-    addGateways(gateway);
+  const getGatewayDevices = (gateway: string[]) => {
+    addGatewayDevices(gateway);
+  };
+
+  const getGatewayGroups = (groups: string[]) => {
+    setGatewayGroups(groups);
   };
 
   const resetActionType = () => {
     dispatch({ type: types.RESET_DEVICE_ACTION_TYPE });
   };
 
-  const onSave = () => {
-    /**
-     * TODO: implement save query
-     */
-    resetActionType();
+  const onGatewaysSave = () => {
+    // TODO: Call the `update iot project` mutation
   };
 
   const onCancel = () => {
@@ -56,16 +59,18 @@ export const EditGatewaysContainer = () => {
   return (
     <>
       <AddGateways
-        gateways={gatewayList}
+        gatewayDevices={gatewayList}
+        gatewayGroups={gatewayGroupList}
         header={`Edit gateways of device ${deviceid}`}
-        returnGateways={getGateways}
+        returnGatewayDevices={getGatewayDevices}
+        returnGatewayGroups={getGatewayGroups}
       />
       <Flex className={css(styles.button_padding)}>
         <FlexItem>
           <Button
             id="edit-gateways-container-save-button"
             variant={ButtonVariant.primary}
-            onClick={onSave}
+            onClick={onGatewaysSave}
           >
             Save
           </Button>

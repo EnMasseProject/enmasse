@@ -20,10 +20,15 @@ const styles = StyleSheet.create({
 export const AddGatewaysContainer = () => {
   const { deviceid } = useParams();
   const { dispatch } = useStoreContext();
-  const [gateways, addGateways] = useState<string[]>([]);
+  const [gatewayDevices, addGatewayDevices] = useState<string[]>([]);
+  const [gatewayGroups, addGatewayGroups] = useState<string[]>([]);
 
-  const getGateways = (gateway: string[]) => {
-    addGateways(gateway);
+  const getGatewayDevices = (gateway: string[]) => {
+    addGatewayDevices(gateway);
+  };
+
+  const getGatewayGroups = (gateway: string[]) => {
+    addGatewayGroups(gateway);
   };
 
   const resetActionType = () => {
@@ -45,7 +50,8 @@ export const AddGatewaysContainer = () => {
     <>
       <AddGateways
         header={`Add gateways of device ${deviceid}`}
-        returnGateways={getGateways}
+        returnGatewayDevices={getGatewayDevices}
+        returnGatewayGroups={getGatewayGroups}
       />
       <Flex className={css(styles.button_padding)}>
         <FlexItem>

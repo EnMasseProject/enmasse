@@ -51,6 +51,23 @@ const credentialTypeOptions: ISelectOption[] = [
   { key: "psk", label: "PSK", value: "psk" }
 ];
 
+const gatewayTypeOptions: ISelectOption[] = [
+  {
+    key: "deviceid",
+    label: "Gateway Device ID",
+    value: "device_id",
+    isDisabled: false,
+    id: "add-gateway-deviceid-dropdownitem"
+  },
+  {
+    key: "gatewaygroup",
+    label: "Gateway group name",
+    value: "gateway_group",
+    isDisabled: false,
+    id: "add-gateway-gatewaygroup-dropdownitem"
+  }
+];
+
 const getInitialFilter = () => {
   let filter: IDeviceFilter = {
     deviceId: "",
@@ -124,6 +141,7 @@ export {
   HIDE_ADVANCE_SETTING,
   SHOW_ADVANCE_SETTING,
   credentialTypeOptions,
+  gatewayTypeOptions,
   deviceRegistrationTypeOptions,
   getInitialMetadataState,
   MAX_DEVICE_LIST_COUNT,
