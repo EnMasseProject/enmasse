@@ -116,6 +116,10 @@ export default function DeviceListPage() {
     changeDeviceAlert();
   }, [totalDevices]);
 
+  useEffect(() => {
+    setIsAllSelected(false);
+  }, [page]);
+
   useSearchParamsPageChange([appliedFilter]);
 
   const onSelectDevice = (
@@ -123,6 +127,9 @@ export default function DeviceListPage() {
     isSelected: boolean,
     isAllSelected?: boolean
   ) => {
+    if (!isSelected) {
+      setIsAllSelected(false);
+    }
     if (isSelected === true && selectedDevices.indexOf(data) === -1) {
       setSelectedDevices(prevState => [...prevState, data]);
     } else if (isSelected === false) {
@@ -362,6 +369,7 @@ export default function DeviceListPage() {
             projectname={projectname}
             perPage={perPage}
             setTotalDevices={setTotalDevices}
+            setIsAllSelected={setIsAllSelected}
             selectedDevices={selectedDevices}
             onSelectDevice={onSelectDevice}
             selectAllDevices={selectAllDevices}

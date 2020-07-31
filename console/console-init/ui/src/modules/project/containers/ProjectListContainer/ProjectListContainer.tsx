@@ -29,7 +29,6 @@ import {
   RETURN_ALL_PROJECTS,
   DOWNLOAD_CERTIFICATE
 } from "graphql-module";
-// import { IAddressSpace } from "modules/address-space";
 import { IAllProjectsResponse } from "schema/iot_project";
 import { POLL_INTERVAL, FetchPolicy } from "constant";
 
@@ -49,6 +48,7 @@ export interface IProjectListContainerProps {
   isAllProjectSelected: boolean;
   selectAllProjects: (projects: IProject[]) => void;
   setCount: (count: IProjectCount, type: ProjectType) => void;
+  setIsAllSelected: (value: boolean) => void;
 }
 
 export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
@@ -62,7 +62,8 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   selectedProjects,
   isAllProjectSelected,
   selectAllProjects,
-  setCount
+  setCount,
+  setIsAllSelected
 }) => {
   useDocumentTitle("Addressspace List");
   useA11yRouteChange();
@@ -367,6 +368,10 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
     }
     onSelectProject(project, isSelected);
   };
+
+  if (projectList.every(row => row.selected === true)) {
+    setIsAllSelected(true);
+  }
 
   //TODO: logic will be removed after implementation of query
   for (let project of projectList) {
