@@ -124,7 +124,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
         onConfirm: onConfirmConnectionType,
         option: "change-button",
         detail:
-          "This action can not be undone. After you change the setting, all data under this setting will also be deleted and is uncoverable.",
+          "This action can not be undone. After you change the setting, all data under this setting will also be deleted and is unrecoverable.",
         header: "Do you want to change the connection type?"
       }
     });
