@@ -97,7 +97,11 @@ export const MessagingProjectHeader: React.FunctionComponent<IMessagingProjectHe
         <SplitItem>
           <Split hasGutter>
             <SplitItem>
-              <Title headingLevel="h1" size="4xl" id="as-header-title">
+              <Title
+                headingLevel="h1"
+                size="4xl"
+                id="messaging-project-header-name-title"
+              >
                 {name}
               </Title>
             </SplitItem>
