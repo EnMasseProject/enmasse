@@ -643,7 +643,7 @@ Artemis.prototype.createConnectorService = function (connector) {
         parameters.direction = connector.direction;
     }
     if (connector.consumerPriority !== undefined) {
-        parameters.consumerPriority = connector.consumerPriority;
+        parameters.consumerPriority = '' + connector.consumerPriority;
     }
     return this._request('broker', 'createConnectorService', [connector.name, "org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory", parameters]);
 };
