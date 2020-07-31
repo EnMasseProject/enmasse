@@ -158,10 +158,11 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
     };
     if (deviceDetail) {
       const parseDeviceDetail = JSON.parse(deviceDetail);
+
       //add deviceId to device object from the parseDeviceDetail
       device.deviceInformation.deviceId = parseDeviceDetail.id;
       //add registration.enabled field to device object from the parseDeviceDetail
-      if (parseDeviceDetail?.registration.enabled !== undefined) {
+      if (parseDeviceDetail?.registration?.enabled !== undefined) {
         device.deviceInformation.status =
           parseDeviceDetail.registration.enabled;
       }
@@ -203,33 +204,37 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
         description={errorMessage}
       />
       <br />
+
       <Grid>
         {isPreviewEnabled ? (
           <div className={css(styles.padding_left)}>
             <ReviewDeviceContainer device={getDeviceDetail()} />
           </div>
         ) : (
-      {allowTemplate ? (
           <>
-            <GridItem span={9} className={css(styles.box_align_style)}>
-              {getEditor()}
-            </GridItem>
-            <GridItem span={3} className={css(styles.box_align_style)}>
-              <PageSection variant={PageSectionVariants.light}>
-                <AddJsonUsingTemplate
-                  setDetail={setDeviceInfoInDetail}
-                  selectedTemplate={selectedTemplate}
-                  setSelectedTemplate={setSelectedTemplate}
-                  setErrorMessage={setErrorMessage}
-                />
-              </PageSection>
-            </GridItem>
+            {allowTemplate ? (
+              <>
+                <GridItem span={9} className={css(styles.box_align_style)}>
+                  {getEditor()}
+                </GridItem>
+                <GridItem span={3} className={css(styles.box_align_style)}>
+                  <PageSection variant={PageSectionVariants.light}>
+                    <AddJsonUsingTemplate
+                      setDetail={setDeviceInfoInDetail}
+                      selectedTemplate={selectedTemplate}
+                      setSelectedTemplate={setSelectedTemplate}
+                      setErrorMessage={setErrorMessage}
+                    />
+                  </PageSection>
+                </GridItem>
+              </>
+            ) : (
+              getEditor()
+            )}
           </>
-          ) : (
-                  getEditor()
-                )}
         )}
       </Grid>
+
       <br />
       <Split className={css(styles.padding_left)} hasGutter>
         <SplitItem>

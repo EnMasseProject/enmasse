@@ -45,8 +45,6 @@ export default function CreateDeviceUsingJsonPage() {
     history.push(deviceListRouteLink);
   };
 
-  const onPreview = (detail: string) => {};
-
   const onLeave = () => {
     history.push(previousDeviceLink);
   };
@@ -66,7 +64,6 @@ export default function CreateDeviceUsingJsonPage() {
         setDeviceDetail={setDeviceDetail}
         onLeave={onLeave}
         onSave={onSave}
-        onPreview={onPreview}
         allowTemplate={false}
       />
     </Page>

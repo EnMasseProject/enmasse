@@ -35,13 +35,16 @@ import {
 
 const getInitialDeviceForm = () => {
   const device: IDeviceProp = {
-    connectionType: "directly"
+    connectionType: "directly",
+    deviceInformation: {},
+    gateways: {}
   };
   return device;
 };
 
 export default function CloneDevicePage() {
   const history = useHistory();
+  // TODO : will be use once we integrate server
   // const [connectionType, setConnectionType] = useState<string>("directly");
   const [addedGateways, setAddedGateways] = useState<string[]>([]);
   const { projectname, namespace, deviceid } = useParams();
@@ -268,7 +271,7 @@ export default function CloneDevicePage() {
               id={"create-device-page-view-json-switchtoggle"}
               labelOff={"View JSON Format"}
               onChange={() => {
-                console.log("View in JSON");
+                //TODO: Add handler to allow User to view in JSON
               }}
               label={"View Form Format"}
             />

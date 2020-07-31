@@ -9,4 +9,4 @@ export * from "./DeviceInfo";
 export * from "./CredentialsView";
 export * from "./ConfigurationInfo";
 export * from "./ActionManager";
-export * from "./CloneDeviceOption";
+export * from "./CloneDeviceDialog";

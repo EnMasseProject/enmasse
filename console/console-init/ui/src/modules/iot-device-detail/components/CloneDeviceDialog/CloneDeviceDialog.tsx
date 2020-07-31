@@ -12,26 +12,30 @@ import {
   ButtonVariant,
   Radio
 } from "@patternfly/react-core";
-import { useParams, useHistory } from "react-router";
+import { useHistory } from "react-router";
 
-const CloneDeviceOption: React.FunctionComponent<{}> = () => {
+const CloneDeviceDialog: React.FunctionComponent<{}> = () => {
   const { state, dispatch } = useStoreContext();
   const { modalProps } = state && state.modal;
   const { projectname, namespace, deviceid } = modalProps;
-  //   const { projectname, namespace } = useParams();
   const history = useHistory();
-  const WIZARD = "wizard";
-  const JSON = "json";
-  const [selectedOption, setSelectedOption] = useState<string>(WIZARD);
+  enum CloneType {
+    WIZARD = "wizard",
+    JSON = "json"
+  }
+  const [selectedOption, setSelectedOption] = useState<string>(
+    CloneType.WIZARD
+  );
   const onCloseDialog = () => {
     dispatch({ type: types.HIDE_MODAL });
   };
-  let addDeviceRoute = "";
+
   const onConfirmDialog = () => {
     onCloseDialog();
-    if (selectedOption === WIZARD) {
+    let addDeviceRoute = "";
+    if (selectedOption === CloneType.WIZARD) {
       addDeviceRoute = `/iot-projects/${namespace}/${projectname}/devices/${deviceid}/cloneform`;
-    } else if (selectedOption === JSON) {
+    } else if (selectedOption === CloneType.JSON) {
       addDeviceRoute = `/iot-projects/${namespace}/${projectname}/devices/${deviceid}/clonejson`;
     }
     history.push(addDeviceRoute);
@@ -40,10 +44,10 @@ const CloneDeviceOption: React.FunctionComponent<{}> = () => {
   const onChange = (checked: boolean, event: any) => {
     const radioValue = event.target.value;
     if (checked) {
-      if (radioValue === WIZARD) {
-        setSelectedOption(WIZARD);
-      } else if (radioValue === JSON) {
-        setSelectedOption(JSON);
+      if (radioValue === CloneType.WIZARD) {
+        setSelectedOption(CloneType.WIZARD);
+      } else if (radioValue === CloneType.JSON) {
+        setSelectedOption(CloneType.JSON);
       }
     }
   };
@@ -76,8 +80,8 @@ const CloneDeviceOption: React.FunctionComponent<{}> = () => {
         ]}
       >
         <Radio
-          value={WIZARD}
-          isChecked={selectedOption === WIZARD}
+          value={CloneType.WIZARD}
+          isChecked={selectedOption === CloneType.WIZARD}
           onChange={onChange}
           label={"Edit in Wizard"}
           name="radio-directly-connected-option"
@@ -85,8 +89,8 @@ const CloneDeviceOption: React.FunctionComponent<{}> = () => {
           key="wizard-radio-option"
         />
         <Radio
-          value={JSON}
-          isChecked={selectedOption === JSON}
+          value={CloneType.JSON}
+          isChecked={selectedOption === CloneType.JSON}
           onChange={onChange}
           label={"Edit in Json"}
           name="radio-directly-connected-option"
@@ -98,4 +102,4 @@ const CloneDeviceOption: React.FunctionComponent<{}> = () => {
   );
 };
 
-export { CloneDeviceOption };
+export { CloneDeviceDialog };
