@@ -90,10 +90,15 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
       <Grid>
         <GridItem span={6}>
           <Form>
-            <FormGroup label="Namespace" isRequired={true} fieldId="name-space">
+            <FormGroup
+              label="Namespace"
+              isRequired={true}
+              fieldId="messaging-project-config-namespace-dropdown"
+            >
               <br />
               <DropdownWithToggle
-                id="cas-dropdown-namespace"
+                id="messaging-project-config-namespace-dropdown"
+                toggleId="messaging-project-config-namespace-dropdowntoggle"
                 className={css(dropdown_item_styles.dropdown_align)}
                 toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
                 dropdownItemClass={css(dropdown_item_styles.dropdown_item)}
@@ -106,7 +111,7 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
             <FormGroup
               label="Name"
               isRequired={true}
-              fieldId="address-space"
+              fieldId="messaging-project-config-addressspace-input"
               helperText={getHelperText()}
             >
               <TextInput
@@ -115,7 +120,7 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
                   name.trim() === "" || isNameValid ? "default" : "error"
                 }
                 type="text"
-                id="address-space"
+                id="messaging-project-config-addressspace-input"
                 name="address-space"
                 onChange={handleNameChange}
                 value={name}
@@ -124,21 +129,21 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
             <FormGroup
               isInline
               label="Type"
-              fieldId="simple-form-name"
+              fieldId="messaging-project-config-type-radio"
               isRequired={true}
             >
               <Radio
                 isChecked={type === "standard"}
                 onChange={handleTypeChange}
                 value={"standard"}
-                id="cas-standard-radio"
+                id="messaging-project-config-type-standard-radio"
                 label="Standard"
                 name="radio-5"
               />
               <Radio
                 isChecked={type === "brokered"}
                 onChange={handleTypeChange}
-                id="cas-brokered-radio"
+                id="messaging-project-config-type-brokered-radio"
                 value={"brokered"}
                 label="Brokered"
                 name="radio-6"
@@ -147,11 +152,12 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
             <FormGroup
               label="Address space plan"
               isRequired={true}
-              fieldId="address-space-plan"
+              fieldId="messaging-project-config-addressspace-plan-dropdown"
             >
               <br />
               <DropdownWithToggle
-                id="cas-dropdown-plan"
+                id="messaging-project-config-addressspace-plan-dropdown"
+                toggleId="messaging-project-config-addressspace-plan-dropdowntoggle"
                 position={DropdownPosition.left}
                 onSelectItem={onPlanSelect}
                 className={css(dropdown_item_styles.dropdown_align)}
@@ -165,11 +171,12 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
             <FormGroup
               label="Authentication service"
               isRequired={true}
-              fieldId="authentication-service"
+              fieldId="messaging-project-config-authentication-service-dropdown"
             >
               <br />
               <DropdownWithToggle
-                id="cas-dropdown-auth-service"
+                id="messaging-project-config-authentication-service-dropdown"
+                toggleId="messaging-project-config-authentication-service-dropdowntoggle"
                 position={DropdownPosition.left}
                 onSelectItem={onAuthenticationServiceSelect}
                 className={css(dropdown_item_styles.dropdown_align)}
@@ -184,7 +191,7 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
             <FormGroup fieldId="customize-endpoint">
               <br />
               <Switch
-                id="asc-switch-customize-endpoint"
+                id="messaging-project-config-customize-endpoint-switch"
                 label={"Customize Endpoint"}
                 isChecked={customizeEndpoint}
                 onChange={handleCustomEndpointChange}

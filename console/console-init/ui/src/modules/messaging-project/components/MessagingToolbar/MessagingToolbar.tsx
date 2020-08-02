@@ -118,7 +118,7 @@ const MessagingToolbar: React.FunctionComponent<IMessageToolbarProps &
 
   return (
     <Toolbar
-      id="data-toolbar-with-filter"
+      id="messaging-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
       clearAllFilters={onClearAllFilters}

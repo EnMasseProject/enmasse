@@ -41,14 +41,15 @@ export const EditMessagingProject: React.FC<IEditMessagingProjectProps> = ({
   return (
     <Modal
       variant="large"
-      id="as-list-edit-modal"
+      id="edit-messaging-project-modal"
       title="Edit"
       isOpen={true}
       onClose={onCloseDialog}
       actions={[
         <Button
           key="confirm"
-          id="as-list-edit-confirm"
+          id="edit-messaging-project-confirm-button"
+          aria-label="confirm"
           variant="primary"
           onClick={onConfirmDialog}
         >
@@ -56,7 +57,8 @@ export const EditMessagingProject: React.FC<IEditMessagingProjectProps> = ({
         </Button>,
         <Button
           key="cancel"
-          id="as-list-edit-cancel"
+          id="edit-messaging-project-cancel-button"
+          aria-label="cancel"
           variant="link"
           onClick={onCloseDialog}
         >
@@ -70,7 +72,7 @@ export const EditMessagingProject: React.FC<IEditMessagingProjectProps> = ({
         </TextContent>
         <FormGroup label="Namespace" fieldId="name-space" isRequired={true}>
           <FormSelect
-            id="edit-namespace"
+            id="edit-messaging-project-namespace-select"
             isDisabled
             value={addressSpace.nameSpace}
             aria-label="FormSelect Input"
@@ -81,17 +83,21 @@ export const EditMessagingProject: React.FC<IEditMessagingProjectProps> = ({
             />
           </FormSelect>
         </FormGroup>
-        <FormGroup label="Name" fieldId="address-space" isRequired={true}>
+        <FormGroup
+          label="Name"
+          fieldId="edit-messaging-project-name-input"
+          isRequired={true}
+        >
           <TextInput
             type="text"
-            id="as-name"
+            id="edit-messaging-project-name-input"
             isDisabled
             value={addressSpace.name}
           />
         </FormGroup>
         <FormGroup
           label="Type"
-          fieldId="address-space-type"
+          fieldId="edit-messaging-project-type-radio"
           isInline
           isRequired={true}
         >
@@ -99,7 +105,7 @@ export const EditMessagingProject: React.FC<IEditMessagingProjectProps> = ({
             name="radio-1"
             isDisabled
             label="Standard"
-            id="radio-standard"
+            id="edit-messaging-project-standard-type-radio"
             value="standard"
             isChecked={addressSpace.type === "standard"}
           />
@@ -107,18 +113,18 @@ export const EditMessagingProject: React.FC<IEditMessagingProjectProps> = ({
             name="radio-2"
             isDisabled
             label="Brokered"
-            id="radio-brokered"
+            id="edit-messaging-project-brokered-type-radio"
             value="brokered"
             isChecked={addressSpace.type === "brokered"}
           />
         </FormGroup>
         <FormGroup
           label="Address space plan"
-          fieldId="simple-form-name"
+          fieldId="edit-messaging-project-plan-select"
           isRequired={true}
         >
           <FormSelect
-            id="edit-addr-plan"
+            id="edit-messaging-project-plan-select"
             value={addressSpace.planValue}
             onChange={val => onPlanChange(val)}
             aria-label="FormSelect Input"
@@ -135,14 +141,14 @@ export const EditMessagingProject: React.FC<IEditMessagingProjectProps> = ({
         </FormGroup>
         <FormGroup
           label="Authentication Service"
-          fieldId="simple-form-name"
+          fieldId="edit-messaging-project-auth-service-select"
           isRequired={true}
         >
           <FormSelect
-            id="edit-addr-auth"
+            id="edit-messaging-project-auth-service-select"
             value={addressSpace.authenticationService}
             onChange={val => onAuthServiceChange(val)}
-            aria-label="FormSelect Input"
+            aria-label="Authentication service"
           >
             {authServiceOptions.map((option, index) => (
               <FormSelectOption

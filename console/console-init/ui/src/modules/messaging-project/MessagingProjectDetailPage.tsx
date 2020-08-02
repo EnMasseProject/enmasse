@@ -52,7 +52,9 @@ export interface IObjectMeta_v1_Input {
 const breadcrumb = (
   <Breadcrumb>
     <BreadcrumbItem>
-      <Link to={"/"}>Home</Link>
+      <Link id="home-link" to={"/"}>
+        Home
+      </Link>
     </BreadcrumbItem>
     <BreadcrumbItem isActive={true}>Address Space</BreadcrumbItem>
   </Breadcrumb>

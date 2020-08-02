@@ -124,7 +124,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
-                id="al-filter-input-name"
+                id="messaging-data-toolbar-name-input"
                 typeAheadAriaLabel={"Select name"}
                 aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
@@ -136,7 +136,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
                 setInput={setNameInput}
               />
               <Button
-                id="al-filter-search-name"
+                id="messaging-data-toolbar-search-name-button"
                 variant={ButtonVariant.control}
                 aria-label="search button for search name"
                 onClick={onSearch}
@@ -156,7 +156,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           {filterSelected && filterSelected.toLowerCase() === "namespace" && (
             <InputGroup>
               <TypeAheadSelect
-                id="al-filter-input-namespace"
+                id="messaging-data-toolbar-namespace-input"
                 typeAheadAriaLabel={"Select namespace"}
                 aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onNamespaceSelect}
@@ -168,7 +168,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
                 setInput={setNameSpaceInput}
               />
               <Button
-                id="al-filter-search-namespace"
+                id="messaging-data-toolbar-search-namespace-button"
                 variant={ButtonVariant.control}
                 aria-label="search button for search namespace"
                 onClick={onSearch}
@@ -187,7 +187,8 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
         >
           {filterSelected && filterSelected.toLowerCase() === "type" && (
             <DropdownWithToggle
-              id={"al-filter-dropdown-type"}
+              id={"messaging-data-toolbar-type-dropdown"}
+              toggleId={"messaging-data-toolbar-type-dropdowntoggle"}
               dropdownItemIdPrefix={"al-filter-dropdown-item-type"}
               position={DropdownPosition.left}
               onSelectItem={onTypeSelect}
@@ -205,7 +206,8 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
         >
           {filterSelected && filterSelected.toLowerCase() === "status" && (
             <DropdownWithToggle
-              id={"al-filter-dropdown-status"}
+              id={"messaging-data-toolbar-status-dropdown"}
+              toggleId={"messaging-data-toolbar-status-dropdown"}
               dropdownItemIdPrefix={"al-filter-dropdown-item-status"}
               position={DropdownPosition.left}
               onSelectItem={onStatusSelect}
@@ -222,8 +224,8 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
     <ToolbarGroup variant="filter-group" data-codemods="true">
       <ToolbarFilter categoryName="Filter">
         <DropdownWithToggle
-          id="al-filter-dropdown"
-          toggleId={"al-filter-dropdown"}
+          id={"messaging-data-toolbar-filter-dropdown"}
+          toggleId={"messaging-data-toolbar-filter-dropdowntoggle"}
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}
           dropdownItems={filterMenuItems}
