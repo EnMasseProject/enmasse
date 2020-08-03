@@ -1116,9 +1116,11 @@ mutation {
        namespace: "app1_ns"
     },
     device: {
-      deviceId: "Jens-phone"
-      enabled: true
-      ext: "{brand: samsung}"
+      deviceId: "Jens-phone",
+      registration : {
+        enabled: true
+        ext: "{brand: samsung}"
+      },
       credentials: "[{auth-id: \"pin\", type: \"password\", pwd-plain: \"1234\"}]"
     }
 	) {
@@ -1145,9 +1147,11 @@ mutation {
   updateIotDevice(
     iotproject: { name: "iotProjectFrance", namespace:"app1_ns" },
     device: {
-      deviceId: "Jens-phone"
-      enabled: true
-      ext: "{brand: apple, headphone-jack: false}"
+      deviceId: "Jens-phone",
+      registration : {
+        enabled: true
+        ext: "{brand: apple, headphone-jack: false}"
+      }
     }
 	) {
     deviceId
