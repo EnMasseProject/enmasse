@@ -36,6 +36,7 @@ replace (
 require (
 	github.com/99designs/gqlgen v0.11.3
 	github.com/Nerzal/gocloak/v3 v3.7.0
+	github.com/RHsyseng/operator-utils v0.0.0-20200709142328-d5a5812a443f
 	github.com/alexedwards/scs/v2 v2.2.0
 	github.com/coreos/prometheus-operator v0.34.0
 	github.com/fabric8io/kubernetes-client v4.9.0+incompatible
