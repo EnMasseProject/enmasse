@@ -108,4 +108,100 @@ const mock_adapters: any = [
   { type: "coap", value: coapAdapter }
 ];
 
-export { mock_iot_device, mock_adapters };
+// TODO: Remove mock gateway devices and mock gateway groups once the query to populate add gateway typeahead is ready.
+const mockGatewayGroups: any[] = [
+  {
+    id: "group-1",
+    isDisabled: false,
+    key: "group-1",
+    value: "group-1"
+  },
+  {
+    id: "group-2",
+    isDisabled: false,
+    key: "group-2",
+    value: "group-2"
+  },
+  {
+    id: "group-3",
+    isDisabled: false,
+    key: "group-3",
+    value: "group-3"
+  },
+  {
+    id: "group-4",
+    isDisabled: false,
+    key: "group-4",
+    value: "group-4"
+  },
+  {
+    id: "group-5",
+    isDisabled: false,
+    key: "group-5",
+    value: "group-5"
+  },
+  {
+    id: "group-6",
+    isDisabled: false,
+    key: "group-6",
+    value: "group-6"
+  },
+  {
+    id: "group-7",
+    isDisabled: false,
+    key: "group-7",
+    value: "group-7"
+  }
+];
+
+const mockGatewayDevices: any[] = [
+  {
+    id: "device-1",
+    isDisabled: false,
+    key: "device-1",
+    value: "device-1"
+  },
+  {
+    id: "device-2",
+    isDisabled: false,
+    key: "device-2",
+    value: "device-2"
+  },
+  {
+    id: "device-3",
+    isDisabled: false,
+    key: "device-3",
+    value: "device-3"
+  },
+  {
+    id: "device-4",
+    isDisabled: false,
+    key: "device-4",
+    value: "device-4"
+  },
+  {
+    id: "device-5",
+    isDisabled: false,
+    key: "device-5",
+    value: "device-5"
+  },
+  {
+    id: "device-6",
+    isDisabled: false,
+    key: "device-6",
+    value: "device-6"
+  },
+  {
+    id: "device-7",
+    isDisabled: false,
+    key: "device-7",
+    value: "device-7"
+  }
+];
+
+export {
+  mock_iot_device,
+  mock_adapters,
+  mockGatewayDevices,
+  mockGatewayGroups
+};

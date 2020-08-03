@@ -19,6 +19,7 @@ const RETURN_IOT_DEVICE_DETAIL = (
           deviceId
           enabled
           via
+          viaGroups
           status{
             lastSeen
             updated

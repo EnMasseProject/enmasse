@@ -45,7 +45,8 @@ const getInitialDeviceForm = () => {
 export default function CreateDevicePage() {
   const history = useHistory();
   // const [connectionType, setConnectionType] = useState<string>("directly");
-  const [addedGateways, setAddedGateways] = useState<string[]>([]);
+  const [gatewayDevices, setGatewayDevices] = useState<string[]>([]);
+  const [gatewayGroups, setGatewayGroups] = useState<string[]>([]);
   const { projectname, namespace } = useParams();
   const deviceListRouteLink = `/iot-projects/${namespace}/${projectname}/devices`;
   const [device, setDevice] = useState<IDeviceProp>(getInitialDeviceForm());
@@ -66,7 +67,11 @@ export default function CreateDevicePage() {
   useBreadcrumb(breadcrumb);
 
   const getGateways = (gateways: string[]) => {
-    setAddedGateways(gateways);
+    setGatewayDevices(gateways);
+  };
+
+  const getGatewayGroups = (groups: string[]) => {
+    setGatewayGroups(groups);
   };
 
   const onCloseDialog = () => {
@@ -75,7 +80,14 @@ export default function CreateDevicePage() {
 
   const addGateway = {
     name: "Add gateways",
-    component: <AddGateways returnGateways={getGateways} />
+    component: (
+      <AddGateways
+        gatewayDevices={gatewayDevices}
+        gatewayGroups={gatewayGroups}
+        returnGatewayDevices={getGateways}
+        returnGatewayGroups={getGatewayGroups}
+      />
+    )
   };
 
   const AddCredentialWrapper = () => (

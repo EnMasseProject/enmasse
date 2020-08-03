@@ -16,10 +16,11 @@ import { initalSelectOption } from "utils";
 
 export interface ITypeAheadSelectProps extends Omit<SelectProps, "onToggle"> {
   id?: string;
-  selected?: string;
+  selected?: string | string[];
   inputData?: string;
   onChangeInput?: (value: string) => Promise<any>;
   setInput?: (value: string) => void;
+  isMultiple?: boolean;
 }
 
 const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
@@ -32,10 +33,15 @@ const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
   placeholderText,
   onChangeInput,
   setInput,
-  id
+  id,
+  isMultiple = false
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [options, setOptions] = useState<any[]>([initalSelectOption]);
+
+  const variant = isMultiple
+    ? SelectVariant.typeaheadMulti
+    : SelectVariant.typeahead;
 
   const onToggle = (isExpanded: boolean) => {
     setIsExpanded(isExpanded);
@@ -43,7 +49,7 @@ const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
 
   const onTypeAheadSelect = (e: any, selection: SelectOptionObject) => {
     onSelect && onSelect(e, selection);
-    setIsExpanded(false);
+    !isMultiple && setIsExpanded(false);
   };
 
   const onFilter = (e: any) => {
@@ -98,7 +104,7 @@ const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
   return (
     <Select
       id={id}
-      variant={SelectVariant.typeahead}
+      variant={variant}
       typeAheadAriaLabel={typeAheadAriaLabel}
       onToggle={onToggle}
       onSelect={onTypeAheadSelect}
