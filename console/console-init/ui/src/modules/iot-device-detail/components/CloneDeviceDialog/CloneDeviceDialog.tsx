@@ -57,7 +57,7 @@ const CloneDeviceDialog: React.FunctionComponent<{}> = () => {
       <Modal
         id="dialogue-prompt-modal"
         variant={ModalVariant.small}
-        title={"Choose a way to edit the info of this device before clone it"}
+        title={"Choose a way to edit the info of this device before cloning it"}
         isOpen={true}
         onClose={onCloseDialog}
         actions={[
