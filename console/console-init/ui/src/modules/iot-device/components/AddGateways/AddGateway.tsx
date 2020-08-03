@@ -20,6 +20,7 @@ import { InfoCircleIcon } from "@patternfly/react-icons";
 import { DropdownWithToggle, TypeAheadSelect } from "components";
 import "./pf-overrides.css";
 import { gatewayTypeOptions } from "modules/iot-device/utils";
+import { mockGatewayDevices, mockGatewayGroups } from "mock-data/iot_device";
 
 export interface IGatewaysProps {
   header?: string;
@@ -39,8 +40,7 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
   const [gatewayDevices, setGatewayDevices] = useState<string[]>(deviceList);
   const [gatewayGroups, setGatewayGroups] = useState<string[]>(groupList);
   const [inputType, setInputType] = useState<string>("device_id");
-  const [selectedGroups, setSelectedGroups] = useState<any[]>([]);
-  const [selectedIDs, setSelectedIDs] = useState<any[]>([]);
+  const [gatewaySelections, setGatewaySelections] = useState<string[]>([]);
 
   useEffect(() => {
     returnGatewayDevices && returnGatewayDevices(gatewayDevices);
@@ -50,157 +50,68 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
     returnGatewayGroups && returnGatewayGroups(gatewayGroups);
   }, [gatewayGroups]);
 
-  const addGateway = async () => {
-    if (selectedIDs?.length) {
-      const gatewayIDs: string[] = [];
-
-      selectedIDs.forEach(device => {
-        !gatewayDevices.includes(device) && gatewayIDs.push(device);
-      });
-
-      setGatewayDevices([...gatewayDevices, ...gatewayIDs]);
-      setSelectedIDs([]);
+  const addGateway = () => {
+    let newSelections: string[];
+    if (inputType === "device_id" && gatewaySelections?.length > 0) {
+      newSelections = Array.from(
+        new Set(gatewayDevices?.concat(gatewaySelections))
+      );
+      setGatewayDevices(newSelections);
+    } else if (inputType === "gateway_group" && gatewaySelections?.length > 0) {
+      newSelections = Array.from(
+        new Set(gatewayGroups?.concat(gatewaySelections))
+      );
+      setGatewayGroups(newSelections);
     }
-    if (selectedGroups?.length) {
-      const groupNames: string[] = [];
-
-      selectedGroups.forEach(group => {
-        !gatewayGroups.includes(group) && groupNames.push(group);
-      });
-
-      setGatewayGroups([...gatewayGroups, ...groupNames]);
-      setSelectedGroups([]);
-    }
+    setGatewaySelections([]);
   };
 
   const removeDevice = (id: string) => {
     const idIndex = gatewayDevices.indexOf(id);
-    idIndex >= 0 && gatewayDevices.splice(idIndex, 1);
-    setGatewayDevices([...gatewayDevices]);
+    if (idIndex >= 0) {
+      gatewayDevices.splice(idIndex, 1);
+      setGatewayDevices([...gatewayDevices]);
+    }
   };
 
   const removeGatewayGroup = (group: string) => {
     const idIndex = gatewayGroups.indexOf(group);
-    idIndex >= 0 && gatewayGroups.splice(idIndex, 1);
-    setGatewayGroups([...gatewayGroups]);
+    if (idIndex >= 0) {
+      gatewayGroups.splice(idIndex, 1);
+      setGatewayGroups([...gatewayGroups]);
+    }
   };
 
   const onTypeSelect = (val: string) => {
     setInputType(val);
-    setSelectedGroups([]);
-    setSelectedIDs([]);
+    setGatewaySelections([]);
   };
 
   const isDisableAddGatewayButton = () => {
-    if (
-      (inputType === "gateway_group" && selectedGroups?.length > 0) ||
-      (inputType === "device_id" && selectedIDs?.length > 0)
-    ) {
+    if (gatewaySelections?.length > 0) {
       return false;
     }
     return true;
   };
 
-  const onSelectGroup = (_: any, selection: any) => {
-    if (selectedGroups.includes(selection)) {
-      setSelectedGroups(selectedGroups.filter(item => item !== selection));
+  const onSelectGateway = (_: any, selection: any) => {
+    if (gatewaySelections.includes(selection)) {
+      setGatewaySelections(
+        gatewaySelections.filter(item => item !== selection)
+      );
     } else {
-      setSelectedGroups([...selectedGroups, selection]);
-    }
-  };
-
-  const onSelectID = (_: any, selection: any) => {
-    if (selectedIDs.includes(selection)) {
-      setSelectedIDs(selectedIDs.filter(item => item !== selection));
-    } else {
-      setSelectedIDs([...selectedIDs, selection]);
+      setGatewaySelections([...gatewaySelections, selection]);
     }
   };
 
   const onChangeDeviceIdInput = async (value: string) => {
     // TODO: Use the backend query to populate opions in TypeAhead.
-    return [
-      {
-        id: "id-juno:57966",
-        isDisabled: false,
-        key: "key-juno:57966",
-        value: "juno:57966"
-      },
-      {
-        id: "device-1",
-        isDisabled: false,
-        key: "device-1",
-        value: "device-1"
-      },
-      {
-        id: "device-2",
-        isDisabled: false,
-        key: "device-2",
-        value: "device-2"
-      },
-      {
-        id: "device-3",
-        isDisabled: false,
-        key: "device-3",
-        value: "device-3"
-      },
-      {
-        id: "device-4",
-        isDisabled: false,
-        key: "device-4",
-        value: "device-4"
-      },
-      {
-        id: "device-4",
-        isDisabled: false,
-        key: "device-4",
-        value: "device-4"
-      },
-      {
-        id: "device-5",
-        isDisabled: false,
-        key: "device-5",
-        value: "device-5"
-      },
-      {
-        id: "device-5",
-        isDisabled: false,
-        key: "device-5",
-        value: "device-5"
-      }
-    ];
+    if (inputType === "device_id") return mockGatewayDevices;
+    else return mockGatewayGroups;
   };
 
-  const onChangeGroupInput = async (value: string) => {
-    // TODO: Use the backend query to populate opions in TypeAhead.
-    return [
-      {
-        id: "id-juno:57966",
-        isDisabled: false,
-        key: "key-juno:57966",
-        value: "juno:57966"
-      },
-      {
-        id: "group-1",
-        isDisabled: false,
-        key: "group-1",
-        value: "group-1"
-      },
-      {
-        id: "group-2",
-        isDisabled: false,
-        key: "group-2",
-        value: "group-2"
-      }
-    ];
-  };
-
-  const clearGroupSelection = () => {
-    setSelectedGroups([]);
-  };
-
-  const clearDeviceSelection = () => {
-    setSelectedIDs([]);
+  const clearGatewaySelections = () => {
+    setGatewaySelections([]);
   };
 
   return (
@@ -252,31 +163,17 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
                 />
               </GridItem>
               <GridItem span={9}>
-                {inputType === "device_id" ? (
-                  <TypeAheadSelect
-                    id="add-gateway-deviceid-typeahead"
-                    aria-label="Input device ID"
-                    aria-describedby="Input device ID"
-                    onSelect={onSelectID}
-                    onClear={clearDeviceSelection}
-                    selected={selectedIDs}
-                    typeAheadAriaLabel={"Typeahead to select gateway devices"}
-                    isMultiple={true}
-                    onChangeInput={onChangeDeviceIdInput}
-                  />
-                ) : (
-                  <TypeAheadSelect
-                    id="add-gateway-group-typeahead"
-                    onSelect={onSelectGroup}
-                    aria-label="Input group name"
-                    aria-describedby="Input group name"
-                    onClear={clearGroupSelection}
-                    selected={selectedGroups}
-                    typeAheadAriaLabel={"Typeahead to select gateway groups"}
-                    isMultiple={true}
-                    onChangeInput={onChangeGroupInput}
-                  />
-                )}
+                <TypeAheadSelect
+                  id="add-gateway-typeahead"
+                  aria-label="Input gateway"
+                  aria-describedby="Input gateway"
+                  onSelect={onSelectGateway}
+                  onClear={clearGatewaySelections}
+                  selected={gatewaySelections}
+                  typeAheadAriaLabel={"Typeahead to select gateway devices"}
+                  isMultiple={true}
+                  onChangeInput={onChangeDeviceIdInput}
+                />
               </GridItem>
               <GridItem span={1}>
                 <Button

@@ -80,6 +80,8 @@ export default function CreateDevicePage() {
     name: "Add gateways",
     component: (
       <AddGateways
+        gatewayDevices={gatewayDevices}
+        gatewayGroups={gatewayGroups}
         returnGatewayDevices={getGateways}
         returnGatewayGroups={getGatewayGroups}
       />
