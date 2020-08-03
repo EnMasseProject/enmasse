@@ -13,6 +13,7 @@ import {
 import { EditAddress, CreateAddress } from "modules/address/dialogs";
 import { UpdatePassword } from "components/UpdatePassword";
 import { EditMsgProjectContainer } from "modules/project/dailogs/EditMsgProject";
+import { CloneDeviceDialog } from "modules/iot-device-detail";
 
 const MODAL_COMPONENTS: any = {
   [MODAL_TYPES.CREATE_ADDRESS_SPACE]: CreateMessagingProject,
@@ -30,7 +31,8 @@ const MODAL_COMPONENTS: any = {
   [MODAL_TYPES.UPDATE_DEVICE_STATUS]: DialogPrompt,
   [MODAL_TYPES.EDIT_PROJECT]: EditMsgProjectContainer,
   [MODAL_TYPES.UPDATE_DEVICE_CREDENTIAL_STATUS]: DialogPrompt,
-  [MODAL_TYPES.CHANGE_CONNECTION_TYPE]: DialogPrompt
+  [MODAL_TYPES.CHANGE_CONNECTION_TYPE]: DialogPrompt,
+  [MODAL_TYPES.CLONE_DEVICE]: CloneDeviceDialog
 };
 
 export const RootModal: React.FC<{}> = () => {

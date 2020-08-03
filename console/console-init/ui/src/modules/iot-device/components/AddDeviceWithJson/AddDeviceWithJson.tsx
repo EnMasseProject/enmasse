@@ -48,13 +48,15 @@ interface IAddDeviceWithJsonProps {
   setDeviceDetail: (detail?: string) => void;
   onLeave: () => void;
   onSave: (detail: string) => void;
+  allowTemplate?: boolean;
 }
 
 const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
   deviceDetail,
   setDeviceDetail,
   onLeave,
-  onSave
+  onSave,
+  allowTemplate = true
 }) => {
   const { dispatch } = useStoreContext();
   const [selectedTemplate, setSelectedTemplate] = useState<string>(
@@ -156,10 +158,11 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
     };
     if (deviceDetail) {
       const parseDeviceDetail = JSON.parse(deviceDetail);
+
       //add deviceId to device object from the parseDeviceDetail
       device.deviceInformation.deviceId = parseDeviceDetail.id;
       //add registration.enabled field to device object from the parseDeviceDetail
-      if (parseDeviceDetail?.registration.enabled !== undefined) {
+      if (parseDeviceDetail?.registration?.enabled !== undefined) {
         device.deviceInformation.status =
           parseDeviceDetail.registration.enabled;
       }
@@ -175,6 +178,21 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
     return device;
   };
 
+  const getEditor = () => {
+    return (
+      <JsonEditor
+        value={deviceDetail}
+        readOnly={false}
+        name={"editor-add-device"}
+        setDetail={setDeviceInfoInDetail}
+        style={{
+          minHeight: "39em"
+        }}
+        className={css(styles.box_align_style)}
+      />
+    );
+  };
+
   return (
     <PageSection variant={PageSectionVariants.light}>
       <DeviceListAlert
@@ -186,6 +204,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
         description={errorMessage}
       />
       <br />
+
       <Grid>
         {isPreviewEnabled ? (
           <div className={css(styles.padding_left)}>
@@ -193,30 +212,29 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
           </div>
         ) : (
           <>
-            <GridItem span={9} className={css(styles.box_align_style)}>
-              <JsonEditor
-                value={deviceDetail}
-                readOnly={false}
-                name={"editor-add-device"}
-                setDetail={setDeviceInfoInDetail}
-                style={{
-                  minHeight: "39em"
-                }}
-              />
-            </GridItem>
-            <GridItem span={3} className={css(styles.box_align_style)}>
-              <PageSection variant={PageSectionVariants.light}>
-                <AddJsonUsingTemplate
-                  setDetail={setDeviceInfoInDetail}
-                  selectedTemplate={selectedTemplate}
-                  setSelectedTemplate={setSelectedTemplate}
-                  setErrorMessage={setErrorMessage}
-                />
-              </PageSection>
-            </GridItem>
+            {allowTemplate ? (
+              <>
+                <GridItem span={9} className={css(styles.box_align_style)}>
+                  {getEditor()}
+                </GridItem>
+                <GridItem span={3} className={css(styles.box_align_style)}>
+                  <PageSection variant={PageSectionVariants.light}>
+                    <AddJsonUsingTemplate
+                      setDetail={setDeviceInfoInDetail}
+                      selectedTemplate={selectedTemplate}
+                      setSelectedTemplate={setSelectedTemplate}
+                      setErrorMessage={setErrorMessage}
+                    />
+                  </PageSection>
+                </GridItem>
+              </>
+            ) : (
+              getEditor()
+            )}
           </>
         )}
       </Grid>
+
       <br />
       <Split className={css(styles.padding_left)} hasGutter>
         <SplitItem>
