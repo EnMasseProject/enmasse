@@ -20,9 +20,9 @@ export const directlyConnectedDeviceTemplate = {
   registration: {
     enabled: true,
     defaults: {},
-    ext: {},
-    credentials: []
-  }
+    ext: {}
+  },
+  credentials: []
 };
 export const connectedViaGatewayDeviceTemplate = {
   id: "<optional-id>",
@@ -32,6 +32,7 @@ export const connectedViaGatewayDeviceTemplate = {
       "content-type": "text/plain"
     },
     via: [],
+    viaGroups: [],
     ext: {}
   }
 };

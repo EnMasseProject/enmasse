@@ -17,12 +17,17 @@ import {
 } from "@patternfly/react-core";
 import { useBreadcrumb } from "use-patternfly";
 import { Link } from "react-router-dom";
+import { getDeviceFromDeviceString } from "modules/iot-device/utils";
+import { useMutationQuery } from "hooks";
+import { CREATE_IOT_DEVICE } from "graphql-module";
+import { ICreateDeviceRequest } from "schema";
 
 export default function AddDeviceUsingJsonPage() {
   const history = useHistory();
   const { projectname, namespace } = useParams();
   const [deviceDetail, setDeviceDetail] = useState<string>();
   const deviceListRouteLink = `/iot-projects/${namespace}/${projectname}/devices`;
+  const [setCreateDeviceQueryVariables] = useMutationQuery(CREATE_IOT_DEVICE);
   const breadcrumb = useMemo(
     () => (
       <Breadcrumb>
@@ -39,8 +44,19 @@ export default function AddDeviceUsingJsonPage() {
 
   useBreadcrumb(breadcrumb);
 
-  const onSave = (detail: string) => {
+  const onSave = async (_detail: string) => {
     //TODO: Add query to save iot device
+    if (deviceDetail) {
+      const device: ICreateDeviceRequest = getDeviceFromDeviceString(
+        deviceDetail
+      );
+      const variable = {
+        iotproject: { name: projectname, namespace },
+        device: device
+      };
+      console.log(variable);
+      await setCreateDeviceQueryVariables(variable);
+    }
     history.push(deviceListRouteLink);
   };
 

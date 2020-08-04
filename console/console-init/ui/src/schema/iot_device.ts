@@ -49,3 +49,16 @@ export interface IIoTDevicesResponse {
     }>;
   };
 }
+
+export interface ICreateDeviceRequest {
+  deviceId?: string;
+  registration: {
+    enabled: boolean;
+    via?: string[];
+    viaGroups?: string[];
+    memberOf?: string[];
+    defaults?: string;
+    ext?: string;
+  };
+  credentials?: string; //A Json array with the devices credentials.
+}

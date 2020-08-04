@@ -14,6 +14,7 @@ import {
   IExtension
 } from "modules/iot-device/components";
 import { CredentialsType } from "constant";
+import { ICreateDeviceRequest } from "schema/iot_device";
 
 const getHeaderForDialog = (devices: any[], dialogType: string) => {
   return devices && devices.length > 1
@@ -184,6 +185,65 @@ const getFormInitialStateByProperty = (
   return initialState;
 };
 
+const getDeviceFromDeviceString = (device: string) => {
+  const deviceDetail: ICreateDeviceRequest = {
+    registration: {
+      enabled: true
+    }
+  };
+  let parsedDevice: any;
+  try {
+    parsedDevice = JSON.parse(device);
+  } catch (_err) {
+    // Inavalid json string
+  }
+  if (parsedDevice) {
+    const { id, registration, credentials } = parsedDevice;
+    if (id && id !== "") {
+      deviceDetail.deviceId = id;
+    }
+    if (registration) {
+      if (registration.enabled !== undefined) {
+        deviceDetail.registration.enabled = registration.enabled;
+      }
+      if (registration.defaults && registration.defaults.length > 0) {
+        try {
+          deviceDetail.registration.defaults = JSON.stringify(
+            registration.defaults
+          );
+        } catch (_err) {
+          // Inavalid json string
+        }
+      }
+      if (registration.via && registration.via.length > 0) {
+        deviceDetail.registration.via = registration.via;
+      }
+      if (registration.viaGroups && registration.viaGroups.length > 0) {
+        deviceDetail.registration.viaGroups = registration.viaGroups;
+      }
+      if (registration.memberOf && registration.memberOf.length > 0) {
+        deviceDetail.registration.memberOf = registration.memberOf;
+      }
+
+      if (registration.ext && registration.ext.length > 0) {
+        try {
+          deviceDetail.registration.ext = JSON.stringify(registration.ext);
+        } catch (_err) {
+          // Inavalid json string
+        }
+      }
+    }
+    if (credentials && credentials.length > 0) {
+      try {
+        deviceDetail.credentials = JSON.stringify(credentials);
+      } catch (_err) {
+        // Inavalid json string
+      }
+    }
+  }
+  return deviceDetail;
+};
+
 export {
   getHeaderForDialog,
   getDetailForDialog,
@@ -192,5 +252,6 @@ export {
   getCredentialsFieldsInitialState,
   getExtensionsFieldsInitialState,
   getSecretsFieldsInitialState,
-  deserializeCredentials
+  deserializeCredentials,
+  getDeviceFromDeviceString
 };
