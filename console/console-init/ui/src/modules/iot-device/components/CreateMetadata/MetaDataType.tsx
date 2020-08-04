@@ -11,7 +11,7 @@ import { isObjectOrArray } from "utils";
 import { ValidationStatusType } from "modules/iot-device/utils";
 import { css, StyleSheet } from "aphrodite";
 
-const dropdown_item_styles = StyleSheet.create({
+const styles = StyleSheet.create({
   dropdown_align: { display: "flex" },
   dropdown_toggle_align: { flex: "1" }
 });
@@ -42,9 +42,9 @@ export const MetaDataType: React.FC<IMetaDataTypeProps> = ({
   return (
     <DropdownWithToggle
       id="metadata-row-type-dropdowntoggle"
-      className={css(dropdown_item_styles.dropdown_align)}
+      className={css(styles.dropdown_align)}
       toggleId="metadata-row-type-dropdown-toggle"
-      toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
+      toggleClass={css(styles.dropdown_toggle_align)}
       position={DropdownPosition.left}
       onSelectItem={handleTypeChange}
       dropdownItems={deviceRegistrationTypeOptions}

@@ -48,7 +48,7 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
     <Grid>
       <GridItem span={8}>
         <Form>
-          <Title id="cd-device-info-title" headingLevel="h3" size="xl">
+          <Title id="device-info-title" headingLevel="h3" size="xl">
             Enter your device information{" "}
             <small className={css(styles.lighter_text)}>(Optional)</small>
           </Title>
@@ -84,7 +84,7 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
               </FlexItem>
               <FlexItem align={{ default: "alignRight" }}>
                 <Switch
-                  id="cd-device-info-switch"
+                  id="device-info-status-switch"
                   label="Enabled"
                   labelOff="Disabled"
                   isChecked={isChecked}
