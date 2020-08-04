@@ -35,31 +35,46 @@ export default {
 const rows: IDevice[] = [
   {
     deviceId: "littlesensor1",
-    viaGateway: true,
-    enabled: true,
-    selected: true,
-    lastSeen: "2020-01-20T11:44:28.607Z",
-    updated: "2020-01-20T11:44:28.607Z",
-    created: "2020-01-20T11:44:28.607Z"
-  },
-  {
-    deviceId: "littlesensor235",
-    viaGateway: false,
+    via: ["device-1", "device-2"],
     enabled: true,
     selected: true,
     lastSeen: "2020-01-20T11:44:28.607Z",
     updated: "2020-01-20T11:44:28.607Z",
     created: "2020-01-20T11:44:28.607Z",
-    credentials: '[{"auth-id":"10-id","type":"psk"}]'
+    viaGroups: ["Group 1", "Group 2"]
   },
-  ...new Array(15).fill({
+  {
     deviceId: "jboss20",
-    viaGateway: false,
+    via: [],
     enabled: false,
     selected: false,
     lastSeen: "2020-04-20T11:44:28.607Z",
     updated: "2020-04-29T11:44:28.607Z",
+    created: "2020-04-30T11:44:28.607Z",
+    viaGroups: []
+  },
+  {
+    deviceId: "jboss20",
+    selected: true
+  },
+  {
+    deviceId: "jboss20",
+    via: [],
+    enabled: null,
+    selected: null,
+    lastSeen: "2020-04-20T11:44:28.607Z",
+    updated: undefined,
     created: "2020-04-30T11:44:28.607Z"
+  },
+  ...new Array(15).fill({
+    deviceId: "amq12",
+    via: [],
+    enabled: false,
+    selected: false,
+    lastSeen: "2020-04-20T11:44:28.607Z",
+    updated: "2020-04-29T11:44:28.607Z",
+    created: "2020-04-30T11:44:28.607Z",
+    viaGroups: []
   })
 ];
 

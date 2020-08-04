@@ -206,7 +206,7 @@ const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
       }
       enabled
       via
-      credentials
+      viaGroups
     }
   `;
 
