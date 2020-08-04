@@ -92,7 +92,7 @@ class ForwardersTest extends BridgingBase {
                         .withName("forwarder1")
                         .withRemoteAddress(REMOTE_NAME + "/" + REMOTE_QUEUE1)
                         .withDirection(AddressSpecForwarderDirection.out)
-                        .withNewPriority(priority)
+                        .withPriority(priority)
                         .build())
                 .endSpec()
                 .build();
