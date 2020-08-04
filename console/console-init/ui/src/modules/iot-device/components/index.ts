@@ -18,3 +18,4 @@ export * from "./CreateMetadata";
 export * from "./AddGateways";
 export * from "./AddDeviceWithJson";
 export * from "./ReviewDevice";
+export * from "./MangeColumnModal";

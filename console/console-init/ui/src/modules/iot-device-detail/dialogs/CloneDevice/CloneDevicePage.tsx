@@ -77,7 +77,7 @@ export default function CloneDevicePage() {
 
   const addGateway = {
     name: "Add gateways",
-    component: <AddGateways returnGateways={getGateways} />
+    component: <AddGateways />
   };
 
   const AddCredentialWrapper = () => (

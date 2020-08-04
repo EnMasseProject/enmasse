@@ -49,6 +49,7 @@ export interface IDeviceListContainerProps {
   resetFilter: () => void;
   projectname: string;
   namespace: string;
+  selectedColumns?: string[];
   setIsAllSelected: (value: boolean) => void;
 }
 
@@ -66,7 +67,8 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   resetFilter,
   projectname,
   namespace,
-  setIsAllSelected
+  setIsAllSelected,
+  selectedColumns
 }) => {
   const [sortBy, setSortBy] = useState<ISortBy>();
 
