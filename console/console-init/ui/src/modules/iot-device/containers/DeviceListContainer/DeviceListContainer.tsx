@@ -22,7 +22,13 @@ import {
   getDetailForDialog,
   getInitialFilter
 } from "modules/iot-device/utils";
-import { IRowData, SortByDirection, ISortBy } from "@patternfly/react-table";
+import {
+  IRowData,
+  SortByDirection,
+  ISortBy,
+  IExtraData,
+  IExtraColumnData
+} from "@patternfly/react-table";
 import { getTableCells } from "modules/iot-device";
 import { compareObject } from "utils";
 import { DialogTypes } from "constant";
@@ -43,14 +49,17 @@ export interface IDeviceListContainerProps {
   selectedDevices: IDevice[];
   areAllDevicesSelected: boolean;
   selectAllDevices: (devices: IDevice[]) => void;
-  sortValue?: ISortBy;
-  setSortValue: (value: ISortBy) => void;
+  sortValue?: ISortByWrapper;
+  setSortValue: (value: ISortByWrapper) => void;
   appliedFilter: IDeviceFilter;
   resetFilter: () => void;
   projectname: string;
   namespace: string;
-  selectedColumns?: string[];
+  selectedColumns: string[];
   setIsAllSelected: (value: boolean) => void;
+}
+export interface ISortByWrapper extends ISortBy {
+  property?: string;
 }
 
 export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
@@ -70,8 +79,6 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   setIsAllSelected,
   selectedColumns
 }) => {
-  const [sortBy, setSortBy] = useState<ISortBy>();
-
   const { dispatch } = useStoreContext();
 
   const { loading, data } = useQuery<IIoTDevicesResponse>(
@@ -80,7 +87,7 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
       perPage,
       projectname,
       namespace,
-      sortBy,
+      sortValue,
       appliedFilter
     ),
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
@@ -196,17 +203,21 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
     ];
   };
 
-  if (sortValue && sortBy !== sortValue) {
-    setSortBy(sortValue);
-  }
-
-  const onSort = (_event: any, index: number, direction: SortByDirection) => {
-    setSortBy({ index: index, direction: direction });
-    setSortValue({ index: index, direction: direction });
+  const onSort = (
+    _event: any,
+    index: number,
+    direction: SortByDirection,
+    extraData: IExtraColumnData
+  ) => {
+    setSortValue({
+      index: index,
+      direction: direction,
+      property: extraData.property
+    });
   };
 
-  const rows =
-    devices?.map(({ deviceId, enabled, via, viaGroups, status }) => {
+  const rows: IDevice[] =
+    devices?.map(({ deviceId, enabled, via,viaGroups, credentials, status }) => {
       return {
         deviceId,
         enabled,
@@ -231,11 +242,12 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   return (
     <>
       <DeviceList
-        deviceRows={rows.map(getTableCells)}
+        rows={rows}
         onSelectDevice={onSelect}
         actionResolver={actionResolver}
         onSort={onSort}
-        sortBy={sortBy}
+        sortBy={sortValue}
+        selectedColumns={selectedColumns}
       />
       {total === 0 && !compareObject(appliedFilter, getInitialFilter()) ? (
         <NoResultFound clearFilters={resetFilter} />

@@ -14,7 +14,11 @@ import {
 } from "modules/iot-device";
 import { text, boolean } from "@storybook/addon-knobs";
 import { action } from "@storybook/addon-actions";
-import { getTableCells, getInitialFilter } from "modules/iot-device/utils";
+import {
+  getTableCells,
+  getInitialFilter,
+  getInitialSelectedColumns
+} from "modules/iot-device/utils";
 import {
   PageSection,
   Page,
@@ -145,9 +149,10 @@ const Data = (
       />
       <Divider />
       <DeviceList
-        deviceRows={rows.map(getTableCells)}
+        rows={rows}
         onSelectDevice={async () => {}}
         actionResolver={actionResolver}
+        selectedColumns={getInitialSelectedColumns()}
       />
     </GridItem>
   </Grid>

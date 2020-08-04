@@ -13,26 +13,37 @@ import {
   sortable,
   TableProps,
   IRowData,
-  SortByDirection
+  SortByDirection,
+  ICell,
+  truncate,
+  IExtraColumnData
 } from "@patternfly/react-table";
 import { StyleSheet, css } from "aphrodite";
-
+import { getTableCells } from "modules/iot-device/utils";
 export interface IDeviceListProps
   extends Pick<TableProps, "actionResolver" | "sortBy"> {
-  deviceRows: IRowData[];
+  rows: IDevice[];
   onSelectDevice: (device: IDevice, isSelected: boolean) => void;
-  onSort?: (_event: any, index: number, direction: SortByDirection) => void;
+  onSort?: (
+    event: any,
+    index: number,
+    direction: SortByDirection,
+    extraData: IExtraColumnData
+  ) => void;
+  selectedColumns: string[];
 }
 
 export interface IDevice {
   deviceId?: string | null;
   via?: string[];
   viaGroups?: string[];
+  memberOf?: string[];
   enabled?: boolean | null;
   selected?: boolean | null;
   lastSeen?: string | Date;
   updated?: string | Date;
   created?: string | Date;
+  credentials?: string;
 }
 
 export const StyleForFooteredTable = StyleSheet.create({
@@ -42,20 +53,49 @@ export const StyleForFooteredTable = StyleSheet.create({
 });
 
 export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
-  deviceRows,
+  rows,
   sortBy,
   onSort,
   actionResolver,
-  onSelectDevice
+  onSelectDevice,
+  selectedColumns
 }) => {
-  const tableColumns = [
-    { title: "Device ID", transforms: [sortable] },
-    { title: "Connection type" },
-    { title: "Status", transforms: [sortable] },
-    { title: "Last seen", transforms: [sortable] },
-    { title: "Last updated", transforms: [sortable] },
-    { title: "Added date", transforms: [sortable] }
-  ];
+  const tableColumns: (string | ICell)[] = [];
+  selectedColumns.forEach(column => {
+    switch (column) {
+      case "deviceId":
+        tableColumns.push({ title: "Device ID", transforms: [sortable] });
+        break;
+      case "connectionType":
+        tableColumns.push({ title: "Connection type" });
+        break;
+      case "status":
+        tableColumns.push({ title: "Status", transforms: [sortable] });
+        break;
+      case "lastUpdated":
+        tableColumns.push({ title: "Last updated", transforms: [sortable] });
+        break;
+      case "lastSeen":
+        tableColumns.push({ title: "Last seen", transforms: [sortable] });
+        break;
+      case "addedDate":
+        tableColumns.push({ title: "Added date", transforms: [sortable] });
+        break;
+      case "memberOf":
+        tableColumns.push({ title: "MemberOf", cellTransforms: [truncate] });
+        break;
+      case "viaGateways":
+        tableColumns.push({
+          title: "Via Gateways",
+          cellTransforms: [truncate]
+        });
+        break;
+      default:
+        break;
+    }
+  });
+
+  const deviceRows = rows.map(row => getTableCells(row, selectedColumns));
 
   const onSelect = (
     _: React.FormEvent<HTMLInputElement>,

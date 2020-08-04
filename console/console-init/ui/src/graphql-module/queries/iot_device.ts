@@ -4,7 +4,11 @@
  */
 
 import gql from "graphql-tag";
-import { IDeviceFilter, getInitialFilter } from "modules/iot-device";
+import {
+  IDeviceFilter,
+  getInitialFilter,
+  ISortByWrapper
+} from "modules/iot-device";
 import { ISortBy } from "@patternfly/react-table";
 
 const RETURN_IOT_DEVICE_DETAIL = (
@@ -111,32 +115,35 @@ const DELETE_CREDENTIALS_FOR_IOT_DEVICE = gql(
   }`
 );
 
-const SORT_RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (sortBy?: ISortBy) => {
+const SORT_RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (sortBy?: ISortByWrapper) => {
   let orderBy = "";
   if (sortBy) {
-    switch (sortBy.index) {
-      case 1:
-        orderBy = "`$.deviceId` ";
-        break;
-      case 2:
-        break;
-      case 3:
-        orderBy = "`$.enabled` ";
-        break;
-      case 4:
-        orderBy = "`$.status.lastSeen` ";
-        break;
-      case 5:
-        orderBy = "`$.status.updated` ";
-        break;
-      case 6:
-        orderBy = "`$.status.created` ";
-        break;
-      default:
-        break;
+    const { property, direction } = sortBy;
+    if (property && property !== "") {
+      switch (property) {
+        case "deviceId":
+          orderBy = "`$.deviceId` ";
+          break;
+        case "status":
+          orderBy = "`$.enabled` ";
+          break;
+        case "connection-type":
+          break;
+        case "last-seen":
+          orderBy = "`$.status.lastSeen` ";
+          break;
+        case "last-updated":
+          orderBy = "`$.status.updated` ";
+          break;
+        case "added-date":
+          orderBy = "`$.status.created` ";
+          break;
+        default:
+          break;
+      }
     }
-    if (orderBy !== "" && sortBy.direction) {
-      orderBy += sortBy.direction;
+    if (orderBy !== "" && direction) {
+      orderBy += direction;
     }
   }
   return orderBy;
@@ -191,7 +198,7 @@ const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
   perPage: number,
   projectName: string,
   namespace: string,
-  sortBy?: ISortBy,
+  sortBy?: ISortByWrapper,
   filterObj?: IDeviceFilter,
   queryResolver?: string
 ) => {

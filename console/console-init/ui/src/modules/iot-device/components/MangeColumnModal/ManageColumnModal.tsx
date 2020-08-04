@@ -19,6 +19,7 @@ import {
 } from "@patternfly/react-core";
 import { getInitialManageColumnsForDevices } from "modules/iot-device/utils";
 import { createDeepCopy } from "utils";
+import { ISortByWrapper } from "modules/iot-device/containers";
 
 export interface IManageCoulmnOption {
   key: string;
@@ -30,12 +31,14 @@ interface IManageColumnModalProps {
   isModalOpen: boolean;
   handleModalToggle: () => void;
   setSelectedColumns: (columns: string[]) => void;
+  setSortValue: (value?: ISortByWrapper) => void;
 }
 
 const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
   isModalOpen,
   handleModalToggle,
-  setSelectedColumns
+  setSelectedColumns,
+  setSortValue
 }) => {
   const [manageColumnsOptions, setManageColumnsOptions] = useState<
     IManageCoulmnOption[]
@@ -56,6 +59,7 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
     const columns = manageColumnsOptions
       .filter((column: IManageCoulmnOption) => column.isChecked === true)
       .map((column: IManageCoulmnOption) => column.value);
+    setSortValue(undefined);
     setSelectedColumns(columns);
     handleModalToggle();
   };

@@ -15,7 +15,7 @@ import {
 } from "modules/iot-device";
 import { text, select, boolean } from "@storybook/addon-knobs";
 
-import { getTableCells } from "modules/iot-device/utils";
+import { getInitialSelectedColumns } from "modules/iot-device/utils";
 import { action } from "@storybook/addon-actions";
 import { IRowData } from "@patternfly/react-table";
 import { DeviceDetailNavigation } from "modules/iot-device-detail";
@@ -106,9 +106,10 @@ export const deviceAlert = () => (
 export const deviceTable = () => (
   <MemoryRouter>
     <DeviceList
-      deviceRows={rows.map(getTableCells)}
+      rows={rows}
       onSelectDevice={action("Device selected")}
       actionResolver={actionResolver}
+      selectedColumns={getInitialSelectedColumns()}
     />
   </MemoryRouter>
 );
