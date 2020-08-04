@@ -15,6 +15,8 @@ import {
   AddGatewaysContainer
 } from "modules/iot-device/containers";
 import { DeviceActionType } from "modules/iot-device-detail/utils";
+import { ConnectedDirectlyContainer } from "modules/iot-device-detail/containers";
+import { AddGateways } from "modules/iot-device/components";
 
 export interface IActionManagerProps {
   actionType: DeviceActionType;
@@ -22,8 +24,7 @@ export interface IActionManagerProps {
 }
 
 export const ActionManager: React.FC<IActionManagerProps> = ({
-  actionType,
-  viaGateway
+  actionType
 }) => {
   const { deviceid } = useParams();
 
@@ -42,9 +43,9 @@ export const ActionManager: React.FC<IActionManagerProps> = ({
       case DeviceActionType.ADD_GATEWAYS:
         return <AddGatewaysContainer />;
       case DeviceActionType.CHANGE_CONNECTION_TYPE_CONNECTED_DIRECTLY:
-        return <AddCredentialsContainer />;
+        return <ConnectedDirectlyContainer />;
       case DeviceActionType.CHANGE_CONNECTION_TYPE_VIA_GATEWAYS:
-        return <AddGatewaysContainer />;
+        return <AddGateways />;
       default:
         return null;
     }
@@ -55,14 +56,13 @@ export const ActionManager: React.FC<IActionManagerProps> = ({
       <Title
         headingLevel="h2"
         size="xl"
-        id="action-manager-edit-device-title"
-        aria-label="Edit device Title"
+        id="edit-device-title"
+        aria-label="edit device title"
       >
         Edit device {deviceid}
       </Title>
       <br />
       <Divider />
-      <br />
       <br />
       {renderComponent()}
     </>
