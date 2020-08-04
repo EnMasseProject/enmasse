@@ -148,8 +148,8 @@ class ForwardersTest extends BridgingBase {
             assertTrue(localSendingClient.run());
 
             assertThat("Receiving client not complete with timeout", receiverDone.get(timeout, TimeUnit.SECONDS), is(true));
-            assertThat("Unexpected number of messages at expected receiving client", receivingClient.getMessages().size(), is(messagesBatch));
-            assertThat("Unexpected number of messages at expected non-receiving client", nonReceivingClient.getMessages().size(), is(0));
+            assertThat("Unexpected number of messages at receiving client", receivingClient.getMessages().size(), is(messagesBatch));
+            assertThat("Unexpected number of messages at non-receiving client", nonReceivingClient.getMessages().size(), is(0));
         }
     }
 
