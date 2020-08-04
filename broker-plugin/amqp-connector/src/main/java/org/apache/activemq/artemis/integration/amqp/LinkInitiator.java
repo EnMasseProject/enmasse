@@ -277,24 +277,30 @@ public class LinkInitiator implements EventHandler {
       if (!linkInfo.getCapabilities().isEmpty()) {
          source.setCapabilities(Symbol.getSymbol("qd.waypoint"));
       }
-      if (linkInfo.getConsumerPriority() != null) {
-          Map<Symbol, Object> properties = sender.getRemoteProperties();
-          if (properties == null) {
-             properties = new HashMap<>();
-          }
-          properties.put(Symbol.getSymbol("priority"), linkInfo.getConsumerPriority());
-      }
+
+      // We really ought to apply the consumer priority to the link properties here, but Artemis takes the link
+      // priority from the remote properties (which are set from the wire as the link attach response performative
+      // arrives).
+
       sender.setSource(source);
 
       sender.open();
       return sender;
    }
 
-   public void preserveInitiatedSourceTargetInfo(Link link) {
+   // This is hack - Artemis allows the definitive view of the target (receiving links), and source (sending links)
+   // to be overwritten by the peer's view.
+   public void processLinkDuringAttach(Link link) {
       if (initiatedReceivingLinks.containsKey(link)) {
          LinkMutator.setRemoteTarget(link, initiatedReceivingLinks.get(link));
       } else if (initiatedSendingLinks.containsKey(link)) {
+         // 2nd hack.  Add the consumer priority to the *remote* priorities.
          LinkMutator.setRemoteSource(link, initiatedSendingLinks.get(link));
+         if (linkInfo.getConsumerPriority() != null) {
+            Map<Symbol, Object> remoteProperties = link.getRemoteProperties() == null ? new HashMap<>() : new HashMap<>(link.getRemoteProperties());
+            remoteProperties.put(Symbol.getSymbol("priority"), linkInfo.getConsumerPriority());
+            LinkMutator.setRemoteProperties(link, remoteProperties);
+         }
       }
    }
 }

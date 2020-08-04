@@ -74,7 +74,7 @@ class ForwardersTest extends BridgingBase {
     }
 
     @ParameterizedTest(name = "testForwardToRemoteQueueWithConsumerPriority-{0}")
-    @ValueSource(ints = {10})
+    @ValueSource(ints = {10, -10})
     void testForwardToRemoteQueueWithConsumerPriority(int priority) throws Exception {
         assertThat("Unsupported priority for test", priority, not(is(0)));
 
@@ -102,7 +102,8 @@ class ForwardersTest extends BridgingBase {
         UserCredentials localUser = new UserCredentials("test", "test");
         resourcesManager.createOrUpdateUser(space, localUser);
 
-        int messagesBatch = 20;
+        int messagesBatch = 10;
+        int timeout = 60;
 
         Endpoint internalEndpointByName = AddressSpaceUtils.getInternalEndpointByName(space, "messaging", "amqps");
         try (ExternalMessagingClient localReceivingClient = new ExternalMessagingClient()
@@ -110,9 +111,11 @@ class ForwardersTest extends BridgingBase {
                 .withMessagingRoute(Objects.requireNonNull(internalEndpointByName))
                 .withCount(messagesBatch)
                 .withAddress(forwarder.getSpec().getAddress())
-                .withCredentials(localUser);
+                .withCredentials(localUser)
+                .withTimeout(timeout);
              ExternalMessagingClient remoteReceivingClient = createOnClusterClientToRemoteBroker(new ProtonJMSClientReceiver(), messagesBatch)
-                     .withAddress(REMOTE_QUEUE1);
+                     .withAddress(REMOTE_QUEUE1)
+                     .withTimeout(timeout);
              ExternalMessagingClient localSendingClient = new ExternalMessagingClient()
                      .withClientEngine(new ProtonJMSClientSender())
                      .withMessagingRoute(Objects.requireNonNull(internalEndpointByName))
@@ -123,13 +126,13 @@ class ForwardersTest extends BridgingBase {
             final ExternalMessagingClient receivingClient;
             final ExternalMessagingClient nonReceivingClient;
             if (priority > 0) {
-                // the forwarder's consumer has raised priority therefore we expect all messages to flow across connector
-                receivingClient = localReceivingClient;
-                nonReceivingClient = remoteReceivingClient;
-            } else {
-                // the forwarder's consumer has lowered priority therefore we expect no messages to flow across connector
+                // the forwarder's consumer has raised priority therefore we expect all messages to flow across the connector
                 receivingClient = remoteReceivingClient;
                 nonReceivingClient = localReceivingClient;
+            } else {
+                // the forwarder's consumer has lowered priority therefore we expect no messages to flow across the connector
+                receivingClient = localReceivingClient;
+                nonReceivingClient = remoteReceivingClient;
             }
 
             receivingClient.withCount(messagesBatch);
@@ -139,13 +142,14 @@ class ForwardersTest extends BridgingBase {
             CompletableFuture<Void> receiversReady = CompletableFuture.allOf(((CompletableFuture<Void>) localReceivingClient.getLinkAttachedProbe()),
                     ((CompletableFuture<Void>) remoteReceivingClient.getLinkAttachedProbe()));
 
-            receiversReady.get(30, TimeUnit.SECONDS);
+            receiversReady.get(timeout, TimeUnit.SECONDS);
             assertThat("Receivers are not attached within timeout", receiversReady.isDone(), is(true));
 
             assertTrue(localSendingClient.run());
 
-            assertThat("Receiver not complete with timeout", receiverDone.get(30, TimeUnit.SECONDS), is(true));
-            assertThat("Unexpected number of messages at expected receiver", receivingClient.getMessages().size(), is(messagesBatch));
+            assertThat("Receiving client not complete with timeout", receiverDone.get(timeout, TimeUnit.SECONDS), is(true));
+            assertThat("Unexpected number of messages at expected receiving client", receivingClient.getMessages().size(), is(messagesBatch));
+            assertThat("Unexpected number of messages at expected non-receiving client", nonReceivingClient.getMessages().size(), is(0));
         }
     }
 
