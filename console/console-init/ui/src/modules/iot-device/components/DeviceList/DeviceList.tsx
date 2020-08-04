@@ -62,7 +62,7 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
 }) => {
   const tableColumns: (string | ICell)[] = [];
   selectedColumns.forEach(column => {
-    switch (column) {
+    switch (column?.toLowerCase()) {
       case "deviceId":
         tableColumns.push({ title: "Device ID", transforms: [sortable] });
         break;

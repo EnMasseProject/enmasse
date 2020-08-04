@@ -119,29 +119,28 @@ const SORT_RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (sortBy?: ISortByWrapper) => {
   let orderBy = "";
   if (sortBy) {
     const { property, direction } = sortBy;
-    if (property && property !== "") {
-      switch (property) {
-        case "deviceId":
-          orderBy = "`$.deviceId` ";
-          break;
-        case "status":
-          orderBy = "`$.enabled` ";
-          break;
-        case "connection-type":
-          break;
-        case "last-seen":
-          orderBy = "`$.status.lastSeen` ";
-          break;
-        case "last-updated":
-          orderBy = "`$.status.updated` ";
-          break;
-        case "added-date":
-          orderBy = "`$.status.created` ";
-          break;
-        default:
-          break;
-      }
+    switch (property?.toLowerCase()) {
+      case "deviceId":
+        orderBy = "`$.deviceId` ";
+        break;
+      case "status":
+        orderBy = "`$.enabled` ";
+        break;
+      case "connection-type":
+        break;
+      case "last-seen":
+        orderBy = "`$.status.lastSeen` ";
+        break;
+      case "last-updated":
+        orderBy = "`$.status.updated` ";
+        break;
+      case "added-date":
+        orderBy = "`$.status.created` ";
+        break;
+      default:
+        break;
     }
+
     if (orderBy !== "" && direction) {
       orderBy += direction;
     }
