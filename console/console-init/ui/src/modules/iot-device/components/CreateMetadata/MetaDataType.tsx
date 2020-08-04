@@ -9,6 +9,12 @@ import { DropdownPosition } from "@patternfly/react-core";
 import { deviceRegistrationTypeOptions } from "modules/iot-device";
 import { isObjectOrArray } from "utils";
 import { ValidationStatusType } from "modules/iot-device/utils";
+import { css, StyleSheet } from "aphrodite";
+
+const dropdown_item_styles = StyleSheet.create({
+  dropdown_align: { display: "flex" },
+  dropdown_toggle_align: { flex: "1" }
+});
 
 interface IMetaDataTypeProps {
   metadataList: any;
@@ -23,7 +29,7 @@ export const MetaDataType: React.FC<IMetaDataTypeProps> = ({
   rowIndex,
   updateMetadataList,
   getValidationStatus,
-  setValidationStatus,
+  setValidationStatus
 }) => {
   const currentRow = metadataList[rowIndex];
 
@@ -36,7 +42,9 @@ export const MetaDataType: React.FC<IMetaDataTypeProps> = ({
   return (
     <DropdownWithToggle
       id="metadata-row-type-dropdowntoggle"
+      className={css(dropdown_item_styles.dropdown_align)}
       toggleId="metadata-row-type-dropdown-toggle"
+      toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
       position={DropdownPosition.left}
       onSelectItem={handleTypeChange}
       dropdownItems={deviceRegistrationTypeOptions}
