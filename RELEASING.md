@@ -60,9 +60,10 @@ Travis will detect that the tag has been created, and then build and publish the
 
 ## Updating documentation
 
-* Checkout the [website documentation](https://github.com/EnMasseProject/enmasse.io)
-* Add the new version to the documentation [build file](https://github.com/EnMasseProject/enmasse.io/blob/master/build.rb#L5)
-* Push changes to website, travis CI will build and publish the new docs
+* Checkout the [website documentation](https://github.com/EnMasseProject/enmasseproject.github.io)
+* Update _data/releases.yaml with the new version
+* Add book index files (.md files) to documentation/releases/<version> (i.e.  documentation/releases/0.32.0). Copy from an earlier version and update the content if the same documentation structure is used.
+* Commit and push changes.
 
 ## Update release tag changelog
 
