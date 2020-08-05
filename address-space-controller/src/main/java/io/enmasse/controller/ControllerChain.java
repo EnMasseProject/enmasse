@@ -85,11 +85,9 @@ public class ControllerChain implements Watcher<AddressSpace> {
             return;
         }
 
-        List<AddressSpace> updatedResources = new ArrayList<>();
-
-
         boolean requeue;
         do {
+            List<AddressSpace> updatedResources = new ArrayList<>();
             requeue = false;
             for (final AddressSpace original : resources) {
 
@@ -100,7 +98,7 @@ public class ControllerChain implements Watcher<AddressSpace> {
 
                     log.debug("Controller chain input: {}", original);
 
-                    log.info("Checking address space {}", addressSpaceName);
+                    log.info("Checking address space : {} creationTimestamp: {} deletionTimestamp: {}", addressSpaceName, addressSpace.getMetadata().getCreationTimestamp(), addressSpace.getMetadata().getDeletionTimestamp());
                     for (Controller controller : chain) {
                         log.info("Controller {}", controller);
                         log.debug("Address space input: {}", addressSpace);

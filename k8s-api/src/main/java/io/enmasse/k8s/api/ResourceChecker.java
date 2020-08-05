@@ -9,16 +9,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 public class ResourceChecker<T> implements CacheWatcher<T>, Runnable {
     private static final Logger log = LoggerFactory.getLogger(ResourceChecker.class.getName());
     private final Watcher<T> watcher;
-    private volatile ResourceCache<T> resourceCache;
+    private final Semaphore signal = new Semaphore(0);
     private final Duration recheckInterval;
-    private final Object monitor = new Object();
+    private volatile ResourceCache<T> resourceCache;
     private volatile boolean synced = false;
     private volatile boolean running = false;
-
     private Thread thread;
 
     public ResourceChecker(Watcher<T> watcher, Duration recheckInterval) {
@@ -43,20 +44,19 @@ public class ResourceChecker<T> implements CacheWatcher<T>, Runnable {
     }
 
     void doWork() {
-        synchronized (monitor) {
-            try {
-                monitor.wait(recheckInterval.toMillis());
-                log.debug("Woke up from monitor");
-                if (synced) {
-                    watcher.onUpdate(resourceCache.getItems());
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                running = false;
-                log.warn("ResourceChecker interrupted, stopping.");
-            } catch (Exception e) {
-                log.warn("Exception in checker task", e);
+        try {
+            signal.tryAcquire(recheckInterval.toMillis(), TimeUnit.MILLISECONDS);
+            // update even if we didn't acquire (RouteStatusCheck relies on this).
+            if (synced) {
+                signal.drainPermits();
+                watcher.onUpdate(resourceCache.getItems());
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            running = false;
+            log.warn("ResourceChecker interrupted, stopping.");
+        } catch (Exception e) {
+            log.warn("Exception in checker task", e);
         }
     }
 
@@ -78,8 +78,6 @@ public class ResourceChecker<T> implements CacheWatcher<T>, Runnable {
     @Override
     public void onUpdate() {
         synced = true;
-        synchronized (monitor) {
-            monitor.notifyAll();
-        }
+        signal.release();
     }
 }
