@@ -9,7 +9,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/monitoring"
