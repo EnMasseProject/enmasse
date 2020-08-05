@@ -122,7 +122,7 @@ public class RouterConfigControllerTest {
         assertEquals(8, actual.getListeners().size());
         assertEquals(0, actual.getLinkRoutes().size());
         assertEquals(1, actual.getAutoLinks().size());
-        assertEquals(5, actual.getAddresses().size());
+        assertEquals(3, actual.getAddresses().size());
         assertEquals(1, actual.getConnectors().size());
         assertEquals(1, actual.getPolicies().size());
         assertEquals(2, actual.getVhosts().size());
