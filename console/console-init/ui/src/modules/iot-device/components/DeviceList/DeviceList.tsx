@@ -103,9 +103,9 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
     isSelected: boolean,
     rowIndex: number
   ) => {
-    const rows = [...mappedDeviceRows];
-    rows[rowIndex].selected = isSelected;
-    onSelectDevice(rows[rowIndex].originalData, isSelected);
+    const deviceRows = [...mappedDeviceRows];
+    deviceRows[rowIndex].selected = isSelected;
+    onSelectDevice(deviceRows[rowIndex].originalData, isSelected);
   };
 
   return (
