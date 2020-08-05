@@ -10,6 +10,7 @@ import { FormatDistance } from "use-patternfly";
 import { IRowData } from "@patternfly/react-table";
 import { IDevice } from "modules/iot-device/components";
 import { Label } from "@patternfly/react-core";
+import { DeviceConnectionType } from "constant";
 
 const renderDeviceType = (type: string) => {
   return type === "N/A" ? (
@@ -24,26 +25,14 @@ const renderDeviceType = (type: string) => {
 };
 
 export const getTableCells = (row: IDevice) => {
-  const {
-    enabled,
-    via,
-    credentials,
-    deviceId,
-    updated,
-    created,
-    lastSeen
-  } = row;
+  const { enabled, via, viaGroups, deviceId, updated, created, lastSeen } = row;
 
-  const viaGateway = via && via?.length > 0;
+  let deviceType: DeviceConnectionType;
 
-  let deviceType: string;
-
-  if (!via?.length === !credentials?.length) {
-    deviceType = "N/A";
-  } else if (viaGateway) {
-    deviceType = "Via gateways";
+  if (via?.length || viaGroups?.length) {
+    deviceType = DeviceConnectionType.VIA_GATEWAYS;
   } else {
-    deviceType = "Connected directly";
+    deviceType = DeviceConnectionType.CONNECTED_DIRECTLY;
   }
 
   const tableRow: IRowData = {

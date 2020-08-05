@@ -44,6 +44,7 @@ export interface IIoTDevicesResponse {
       };
       enabled: boolean;
       via: string[];
+      viaGroups: string[];
       credentials: string;
     }>;
   };

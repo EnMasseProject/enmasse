@@ -27,12 +27,12 @@ export interface IDeviceListProps
 export interface IDevice {
   deviceId?: string | null;
   via?: string[];
+  viaGroups?: string[];
   enabled?: boolean | null;
   selected?: boolean | null;
   lastSeen?: string | Date;
   updated?: string | Date;
   created?: string | Date;
-  credentials?: string;
 }
 
 export const StyleForFooteredTable = StyleSheet.create({
