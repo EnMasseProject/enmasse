@@ -9,7 +9,6 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Phase;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.manager.IsolatedIoTManager;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.platform.Kubernetes;

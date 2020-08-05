@@ -14,17 +14,6 @@
         <excludeGroups></excludeGroups>
         <skip.tests>true</skip.tests>
     </properties>
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>io.enmasse</groupId>
-                <artifactId>iot</artifactId>
-                <version>${project.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>org.keycloak</groupId>
@@ -167,7 +156,6 @@
                         <enmasse.olm.about.name>${olm.csv.about.name}</enmasse.olm.about.name>
                         <enmasse.olm.about.url>${olm.csv.about.url}</enmasse.olm.about.url>
                         <enmasse.olm.doc.configure.url>${olm.csv.doc.configure.url}</enmasse.olm.doc.configure.url>
-                        <enmasse.olm.doc.iot.url>${olm.csv.doc.iot.url}</enmasse.olm.doc.iot.url>
                         <enmasse.olm.replaces>${olm.csv.replaces}</enmasse.olm.replaces>
                     </systemProperties>
                     <includes>
@@ -223,7 +211,7 @@
             <id>systemtests</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>(shared-standard | shared-brokered | isolated | soak | shared-iot | isolated-iot | isolated-shared-infra) &amp; !upgrade</groups>
+                <groups>(shared-standard | shared-brokered | isolated | soak | isolated-shared-infra) &amp; !upgrade</groups>
             </properties>
         </profile>
         <profile>
@@ -231,21 +219,21 @@
             <properties>
                 <skip.tests>false</skip.tests>
                 <groups>(shared-standard | shared-brokered) &amp; !isolated &amp; !smoke &amp; !soak
-                    &amp; !shared-iot &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework
+                    &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework
                 </groups>
             </properties>
         </profile>
         <profile>
             <id>isolated-shared-infra</id>
             <properties>
-                <groups>(isolated-shared-infra) &amp; !soak &amp; !shared-iot &amp; !olm &amp; !upgrade &amp; !scale</groups>
+                <groups>(isolated-shared-infra) &amp; !soak &amp; !olm &amp; !upgrade &amp; !scale</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
             <id>isolated</id>
             <properties>
-                <groups>(isolated | isolated-broker | isolated-standard) &amp; !soak &amp; !shared-iot &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework</groups>
+                <groups>(isolated | isolated-broker | isolated-standard) &amp; !soak &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
@@ -254,36 +242,8 @@
             <properties>
                 <skip.tests>false</skip.tests>
                 <groups>(shared-standard | shared-brokered | isolated) &amp; !nonPR &amp; !smoke &amp; !soak
-                    &amp; !shared-iot &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework
+                    &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework
                 </groups>
-            </properties>
-        </profile>
-        <profile>
-            <id>iot</id>
-            <properties>
-                <groups>(isolated-iot | shared-iot) &amp; !soak &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>shared-iot</id>
-            <properties>
-                <groups>shared-iot &amp; !soak &amp; !olm &amp; !upgrade &amp; !framework</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>isolated-iot</id>
-            <properties>
-                <groups>isolated-iot &amp; !soak &amp; !olm &amp; !upgrade &amp; !framework</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>smoke-iot</id>
-            <properties>
-                <groups>(shared-iot | isolated-iot) &amp; smoke &amp; !soak &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework</groups>
-                <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
@@ -296,7 +256,7 @@
         <profile>
             <id>smoke</id>
             <properties>
-                <groups>smoke &amp; !shared-iot &amp; !isolated-iot &amp; !soak &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework</groups>
+                <groups>smoke &amp; !soak &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
@@ -322,13 +282,6 @@
             </properties>
         </profile>
         <profile>
-            <id>iot-release</id>
-            <properties>
-                <groups>(shared-iot | isolated-iot) &amp; !noneAuth &amp; !smoke &amp; !soak &amp; !olm &amp; !upgrade &amp; !framework</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
             <id>acceptance</id>
             <properties>
                 <groups>acceptance &amp; !soak &amp; !upgrade &amp; !scale &amp; !framework</groups>
@@ -338,7 +291,7 @@
         <profile>
             <id>acceptance-no-iot</id>
             <properties>
-                <groups>acceptance &amp; !soak &amp; !upgrade &amp; !shared-iot &amp; !isolated-iot &amp; !scale &amp; !framework</groups>
+                <groups>acceptance &amp; !soak &amp; !upgrade &amp; !scale &amp; !framework</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>

@@ -14,7 +14,3 @@ using a set of environment variables, listed in the order of processing:
 * `CONTROLLER_DISABLE_ALL` – Disable all remaining modules. Defaults to `false`.
 
 By default this will simply enable all modules.
-
-### IoT
-
-The IoT modules has the name `IOT`, and it will process the CRDs for `IoTProject` and `IoTConfig`.

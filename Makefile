@@ -3,7 +3,6 @@ include $(TOPDIR)/Makefile.env.mk
 
 GO_DIRS = \
 	controller-manager \
-	iot/iot-proxy-configurator \
 	console/console-server \
 	broker-plugin
 
@@ -17,12 +16,6 @@ DOCKER_DIRS = \
 	service-broker \
 	console/console-init \
 	olm-manifest \
-	iot/iot-tenant-service \
-	iot/iot-auth-service \
-	iot/iot-tenant-cleaner \
-	iot/images/iot-adapters \
-	iot/images/iot-device-registry \
-
 
 FULL_BUILD       = true
 GOOPTS          ?= -mod=vendor

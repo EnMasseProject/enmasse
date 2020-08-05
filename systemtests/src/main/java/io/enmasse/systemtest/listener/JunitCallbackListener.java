@@ -19,9 +19,7 @@ import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.manager.IsolatedIoTManager;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
-import io.enmasse.systemtest.manager.SharedIoTManager;
 import io.enmasse.systemtest.manager.SharedResourceManager;
 import io.enmasse.systemtest.messaginginfra.ResourceManager;
 import io.enmasse.systemtest.operator.EnmasseOperatorManager;
@@ -42,8 +40,6 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     private final TestInfo testInfo = TestInfo.getInstance();
     private final IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
     private final SharedResourceManager sharedResourcesManager = SharedResourceManager.getInstance();
-    private final SharedIoTManager sharedIoTManager = SharedIoTManager.getInstance();
-    private final IsolatedIoTManager isolatedIoTManager = IsolatedIoTManager.getInstance();
     private final EnmasseOperatorManager operatorManager = EnmasseOperatorManager.getInstance();
     private static Exception beforeAllException; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
 
@@ -89,9 +85,6 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                     if (!operatorManager.isEnmasseBundleDeployed()) {
                         operatorManager.installEnmasseBundle();
                     }
-                    if (testInfo.isClassIoT()) {
-                        operatorManager.installIoTOperator();
-                    }
                 }
             });
         } catch (Exception ex) {
@@ -111,16 +104,13 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                 KubeClusterManager.getInstance().restoreClassConfigurations();
             }
             if (env.skipCleanup() || env.skipUninstall()) {
-                LOGGER.info("Skip cleanup/uninstall is set, enmasse and iot operators won't be deleted");
+                LOGGER.info("Skip cleanup/uninstall is set, enmasse operator won't be deleted");
             } else if (testInfo.isOLMTest()) {
                 LOGGER.info("Test is OLM");
                 if (operatorManager.isEnmasseOlmDeployed()) {
                     operatorManager.deleteEnmasseOlm();
                 }
             } else if (env.installType() == EnmasseInstallType.BUNDLE) {
-                if (testInfo.isEndOfIotTests()) {
-                    operatorManager.removeIoT();
-                }
                 if (operatorManager.isEnmasseOlmDeployed()) {
                     operatorManager.deleteEnmasseOlm();
                 }
@@ -147,10 +137,6 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
             KubeClusterManager.getInstance().restoreMethodConfigurations();
             if (testInfo.isTestShared()) {
                 tearDownSharedResources();
-            } else if (testInfo.isTestIoT()) {
-                if (testInfo.needsIoTCleanup()) {
-                    isolatedIoTManager.tearDown(testInfo.getActualTest());
-                }
             } else {
                 tearDownCommonResources();
             }
@@ -166,18 +152,8 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
 
     private void tearDownSharedResources() throws Exception {
         if (testInfo.isAddressSpaceDeleteable() || testInfo.getActualTest().getExecutionException().isPresent()) {
-            if (testInfo.isTestIoT()) {
-                if (testInfo.needsIoTCleanup()) {
-                    LOGGER.info("Teardown shared IoT!");
-                    sharedIoTManager.tearDown(testInfo.getActualTest());
-                } else {
-                    LOGGER.info("Self-cleaning IoT test");
-                    sharedIoTManager.closeAmqpFactory();
-                }
-            } else {
-                LOGGER.info("Teardown shared!");
-                sharedResourcesManager.tearDown(testInfo.getActualTest());
-            }
+            LOGGER.info("Teardown shared!");
+            sharedResourcesManager.tearDown(testInfo.getActualTest());
         } else if (sharedResourcesManager.getSharedAddressSpace() != null) {
             sharedResourcesManager.tearDownShared();
         }

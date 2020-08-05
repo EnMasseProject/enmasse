@@ -12,14 +12,7 @@ INSTALLDIR=$(BUILDDIR)/$(INSTALLNAME)
 PACKAGE_INSTALL_DIR=$(INSTALLDIR)/install
 HASHMARK = $(shell echo "\#")
 
-IOT_MODULES=\
-	iot/api \
-	iot/common \
-	iot/operator \
-
 MODULES=\
-	$(IOT_MODULES) \
-	shared-infra \
 	enmasse-operator \
 	crds \
 	address-space-controller \
@@ -29,7 +22,6 @@ MODULES=\
 	example-console \
 	example-authservices \
 	example-olm \
-	iot/examples \
 	monitoring-operator \
 	monitoring-deployment \
 	service-broker \
@@ -39,7 +31,6 @@ MODULES=\
 prepare:
 	mkdir -p $(PACKAGE_INSTALL_DIR)
 	mkdir -p $(PACKAGE_INSTALL_DIR)/bundles
-	mkdir -p $(PACKAGE_INSTALL_DIR)/preview-bundles
 	mkdir -p $(PACKAGE_INSTALL_DIR)/components
 
 replace_images: prepare
@@ -81,18 +72,6 @@ replace_images: prepare
 					  -e 's,\$${APPLICATION_MONITORING_OPERATOR_IMAGE},$(APPLICATION_MONITORING_OPERATOR_IMAGE),g' \
 					  -e 's,\$${KUBE_STATE_METRICS_IMAGE},$(KUBE_STATE_METRICS_IMAGE),g' \
 					  -e 's,\$${HONO_IMAGE},$(HONO_IMAGE),g' \
-					  -e 's,\$${IOT_TENANT_CLEANER_IMAGE},$(IOT_TENANT_CLEANER_IMAGE),g' \
-					  -e 's,\$${IOT_TENANT_SERVICE_IMAGE},$(IOT_TENANT_SERVICE_IMAGE),g' \
-					  -e 's,\$${IOT_AUTH_SERVICE_IMAGE},$(IOT_AUTH_SERVICE_IMAGE),g' \
-					  -e 's,\$${IOT_DEVICE_CONNECTION_INFINISPAN_IMAGE},$(IOT_DEVICE_CONNECTION_INFINISPAN_IMAGE),g' \
-					  -e 's,\$${IOT_DEVICE_CONNECTION_JDBC_IMAGE},$(IOT_DEVICE_CONNECTION_JDBC_IMAGE),g' \
-					  -e 's,\$${IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE},$(IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE),g' \
-					  -e 's,\$${IOT_DEVICE_REGISTRY_JDBC_IMAGE},$(IOT_DEVICE_REGISTRY_JDBC_IMAGE),g' \
-					  -e 's,\$${IOT_HTTP_ADAPTER_IMAGE},$(IOT_HTTP_ADAPTER_IMAGE),g' \
-					  -e 's,\$${IOT_MQTT_ADAPTER_IMAGE},$(IOT_MQTT_ADAPTER_IMAGE),g' \
-					  -e 's,\$${IOT_LORAWAN_ADAPTER_IMAGE},$(IOT_LORAWAN_ADAPTER_IMAGE),g' \
-					  -e 's,\$${IOT_SIGFOX_ADAPTER_IMAGE},$(IOT_SIGFOX_ADAPTER_IMAGE),g' \
-					  -e 's,\$${IOT_PROXY_CONFIGURATOR_IMAGE},$(IOT_PROXY_CONFIGURATOR_IMAGE),g' \
 					  -e 's,\$${CONTROLLER_MANAGER_IMAGE},$(CONTROLLER_MANAGER_IMAGE),g' \
 					  -e 's,\$${OLM_MANIFEST_IMAGE},$(OLM_MANIFEST_IMAGE),g' \
 					  -e 's,\$${CONSOLE_SERVER_IMAGE},$(CONSOLE_SERVER_IMAGE),g' \
@@ -122,21 +101,7 @@ $(ENMASSE_BUNDLE): replace_images
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_BUNDLE)/; \
 	done
 
-ENMASSE_PREVIEW_BUNDLE=$(PACKAGE_INSTALL_DIR)/preview-bundles/enmasse
-$(ENMASSE_PREVIEW_BUNDLE): replace_images
-	mkdir -p $(ENMASSE_PREVIEW_BUNDLE)
-	for i in shared-infra; do \
-		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_PREVIEW_BUNDLE)/; \
-	done
-
-IOT_BUNDLE=$(PACKAGE_INSTALL_DIR)/preview-bundles/iot
-$(IOT_BUNDLE): replace_images
-	mkdir -p $(IOT_BUNDLE)
-	for i in $(IOT_MODULES); do \
-		cp $(BUILDDIR)/replaced/$$i/*.yaml $(IOT_BUNDLE)/; \
-	done
-
-install: ansible_install scripts_install component_install $(ENMASSE_BUNDLE) $(IOT_BUNDLE) $(ENMASSE_PREVIEW_BUNDLE)
+install: ansible_install scripts_install component_install $(ENMASSE_BUNDLE)
 	@echo "Preparing installation bundle"
 
 package: prepare install
@@ -144,4 +109,4 @@ package: prepare install
 
 coverage:
 
-.PHONY: prepare package clean $(ENMASSE_BUNDLE) $(IOT_BUNDLE) $(ENMASSE_PREVIEW_BUNDLE)
+.PHONY: prepare package clean $(ENMASSE_BUNDLE)

@@ -14,7 +14,7 @@ oc adm policy add-cluster-role-to-user cluster-admin developer
 oc login -u developer -p developer https://localhost:8443
 ```
 
-Systemtests framework installs enmasse and iot operators by default with latest templates and images, you can also generate templates yourself into templates/build/enmasse-latest
+Systemtests framework installs enmasse operator by default with latest templates and images, you can also generate templates yourself into templates/build/enmasse-latest
 or you can use downloaded templates of release, in this case you need to provide custom path to your install bundle via env variable TEMPLATES
 
 #### Generate templates
@@ -44,13 +44,9 @@ make PROFILE=${PROFILE} TESTCASE="**.SmokeTest" systemtests
 Where $PROFILE can be:
 * systemtests
 * soak
-* iot
 * shared
 * isolated
-* shared-iot
-* isolated-iot
 * smoke
-* smoke-iot
 * upgrade
 * olm
 
@@ -70,7 +66,7 @@ make PROFILE=upgrade systemtests
 
 ## Test process
 1. Tests are stored into TestPlan
-2. [OperatorManager](systemtests/src/main/java/io/enmasse/systemtest/operator/OperatorManager.java) installs enmasse operator, example plans, example auth services and roles (if test is iot is also deploy iot components).
+2. [OperatorManager](systemtests/src/main/java/io/enmasse/systemtest/operator/OperatorManager.java) installs enmasse operator, example plans, example auth services and roles
 3. Test is triggered and evaluated.
 4. If test is latest [OperatorManager](systemtests/src/main/java/io/enmasse/systemtest/operator/OperatorManager.java) uninstall operators and clean kubernetes env, else continue with step 2.
 
@@ -109,5 +105,3 @@ All environment variables can be seen in [Environment](systemtests/src/main/java
 | PRODUCT_NAME         | name of product                                                                    | enmasse                                     |
 | INSTALL_TYPE         | type of installation enmasse operator                                                                   | BUNDLE                                     |
 | OLM_INSTALL_TYPE         | type of olm installation enmasse operator                                                                    | SPECIFIC                                     |
-| SKIP_DEPLOY_INFINISPAN         | skip deployment of infinispan iot component                                                                    | false                                     |
-| INFINISPAN_PROJECT         | project where infinispan deployment is deployed                                                                   | systemtests-infinispan                                     |

@@ -20,8 +20,6 @@ public class TestTag {
     public static final String ISOLATED_BROKER = "isolated-broker";
     public static final String SHARED_STANDARD = "shared-standard";
     public static final String SHARED_BROKERED = "shared-brokered";
-    public static final String SHARED_IOT = "shared-iot";
-    public static final String ISOLATED_IOT = "isolated-iot";
     public static final String SOAK = "soak";
     public static final String NON_PR = "nonPR";
     public static final String UPGRADE = "upgrade";
@@ -30,7 +28,6 @@ public class TestTag {
     public static final String SCALE = "scale";
     public static final String OLM = "olm";
     public static final String FRAMEWORK = "framework";
-    public static final Set<String> SHARED_TAGS = new HashSet<>(Arrays.asList(SHARED_BROKERED, SHARED_STANDARD, SHARED_IOT));
-    public static final Set<String> IOT_TAGS = new HashSet<>(Arrays.asList(SHARED_IOT, ISOLATED_IOT));
+    public static final Set<String> SHARED_TAGS = new HashSet<>(Arrays.asList(SHARED_BROKERED, SHARED_STANDARD));
     public static final Set<String> SHARED_INFRA_TAGS = new HashSet<>(Arrays.asList(ISOLATED_SHARED_INFRA));
 }

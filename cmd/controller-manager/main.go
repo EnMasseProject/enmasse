@@ -162,16 +162,6 @@ func main() {
 			Version: "v1beta1",
 			Kind:    "AddressList",
 		},
-		schema.GroupVersionKind{
-			Group:   "iot.enmasse.io",
-			Version: "v1alpha1",
-			Kind:    "IoTProject",
-		},
-		schema.GroupVersionKind{
-			Group:   "iot.enmasse.io",
-			Version: "v1alpha1",
-			Kind:    "IoTProjectList",
-		},
 	}
 
 	if util.IsModuleEnabled("MESSAGING_INFRASTRUCTURE") {
@@ -276,7 +266,6 @@ func main() {
 
 	// Add the Metrics Service
 	if monitoringEnabled {
-		monitoring.StartIoTMetrics(mgr)
 		addMetrics(ctx, cfg, namespace)
 	}
 

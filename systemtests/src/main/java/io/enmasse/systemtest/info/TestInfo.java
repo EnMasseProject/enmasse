@@ -30,7 +30,6 @@ import io.enmasse.systemtest.condition.AssumeKubernetesCondition;
 import io.enmasse.systemtest.condition.AssumeOpenshiftCondition;
 import io.enmasse.systemtest.condition.SupportedInstallType;
 import io.enmasse.systemtest.condition.SupportedInstallTypeCondition;
-import io.enmasse.systemtest.iot.IoTTests;
 import io.enmasse.systemtest.logs.CustomLogger;
 
 /**
@@ -189,42 +188,6 @@ public class TestInfo {
         return currentTestClass.getTags().stream().anyMatch(TestTag.SHARED_INFRA_TAGS::contains);
     }
 
-    public boolean isTestIoT() {
-        for (String tag : currentTest.getTags()) {
-            if (TestTag.IOT_TAGS.contains(tag)) {
-                LOGGER.info("Test is IoT");
-                return true;
-            }
-        }
-        LOGGER.info("Test is not IoT!");
-        return false;
-    }
-
-    /**
-     * Checks the test framework should clean up after the test ran.
-     * @return {@code true} if the test framework should clean up, {@code false} otherwise.
-     */
-    public boolean needsIoTCleanup() {
-        return currentTestClass
-                .getTestClass()
-                // the current indicator of "self cleanup" is inheritance from "IoTTests"
-                .map(IoTTests.class::isAssignableFrom).map(b -> !b)
-                // if there is no test class, there is no need to clean up
-                .orElse(false);
-    }
-
-    public boolean isClassIoT() {
-        return currentTestClass.getTags().stream().anyMatch(TestTag.IOT_TAGS::contains);
-    }
-
-    public boolean isEndOfIotTests() {
-        int currentClassIndex = getCurrentClassIndex();
-        if (currentClassIndex + 1 < testClasses.size()) {
-            return getTags(testClasses.get(currentClassIndex + 1)).stream().noneMatch(TestTag.IOT_TAGS::contains);
-        }
-        return true;
-    }
-
     public boolean isUpgradeTest() {
         return currentTestClass.getTags().stream().anyMatch(TestTag.UPGRADE::equals);
     }
@@ -251,8 +214,7 @@ public class TestInfo {
         Set<String> currentTestTags = test2.getTags();
 
         return (nextTestTags.contains(TestTag.SHARED_BROKERED) && currentTestTags.contains(TestTag.SHARED_BROKERED))
-                || (nextTestTags.contains(TestTag.SHARED_STANDARD) && currentTestTags.contains(TestTag.SHARED_STANDARD))
-                || (nextTestTags.contains(TestTag.SHARED_IOT) && currentTestTags.contains(TestTag.SHARED_IOT));
+                || (nextTestTags.contains(TestTag.SHARED_STANDARD) && currentTestTags.contains(TestTag.SHARED_STANDARD));
     }
 
     private int getCurrentTestIndex() {

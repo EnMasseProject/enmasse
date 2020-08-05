@@ -136,7 +136,6 @@
         <module>broker-plugin</module>
         <module>service-broker</module>
         <module>bundle</module>
-        <module>iot</module>
         <module>controller-manager</module>
         <module>console</module>
         <module>olm-manifest</module>

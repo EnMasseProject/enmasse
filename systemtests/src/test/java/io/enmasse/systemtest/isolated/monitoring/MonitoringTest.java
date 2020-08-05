@@ -16,8 +16,6 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
-import io.enmasse.systemtest.iot.DeviceManagementApi;
-import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -75,7 +73,6 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     @AfterAll
     void uninstallMonitoring() throws Exception {
         beforeAllException = null; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
-        EnmasseOperatorManager.getInstance().removeIoT();
         if (!Kubernetes.isOpenShiftCompatible(OCP4) || Kubernetes.isCRC()) {
             EnmasseOperatorManager.getInstance().deleteMonitoringOperator();
         }
@@ -205,34 +202,4 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_COMPONENT_HEALTH, "1", Map.ofEntries(Map.entry("endpoint", "cr-metrics"), Map.entry("job", "enmasse-operator-metrics"))));
         assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_COMPONENT_HEALTH, "1", Map.ofEntries(Map.entry("endpoint", "http-metrics"), Map.entry("job", "enmasse-operator-metrics"))));
     }
-
-    @Test
-    @OpenShift(version = OpenShiftVersion.OCP4)
-    void testMonitoringIoTComponents() throws Exception {
-        EnmasseOperatorManager.getInstance().installIoTOperator();
-        DeviceManagementApi.createManagementServiceAccount();
-        IoTTestSession.deployDefaultCerts();
-        IoTTestSession
-                .createDefault()
-                .adapters(IoTTestSession.Adapter.HTTP)
-                .config(config -> config
-                        .editOrNewSpec()
-                        .editOrNewAdapters()
-                        .editOrNewDefaults()
-                        .withMaxPayloadSize(256)
-                        .endDefaults()
-                        .endAdapters()
-                        .endSpec())
-                .run(session -> {
-                    assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_IOT_CONFIG, "1"));
-                    assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_IOT_CONFIG_ACTIVE, "1"));
-                    assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_IOT_PROJECT, "1"));
-                    assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_IOT_PROJECT_ACTIVE, "1"));
-                });
-        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_IOT_CONFIG, "0"));
-        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_IOT_CONFIG_ACTIVE, "0"));
-        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_IOT_PROJECT, "0"));
-        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_IOT_PROJECT_ACTIVE, "0"));
-    }
-
 }
