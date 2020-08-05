@@ -31,6 +31,8 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.message.Message;
+import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -76,9 +78,20 @@ class ForwardersTest extends BridgingBase {
     @ParameterizedTest(name = "testForwardToRemoteQueueWithConsumerPriority-{0}")
     @ValueSource(ints = {10, -10})
     void testForwardToRemoteQueueWithConsumerPriority(int priority) throws Exception {
+        doTestForwardRemoteQueueWithConsumerPriority(AddressSpecForwarderDirection.out, priority);
+    }
+
+    @ParameterizedTest(name = "testForwardFromRemoteQueueWithConsumerPriority-{0}")
+    @ValueSource(ints = {10, -10})
+    @Disabled("Requires https://issues.apache.org/jira/browse/DISPATCH-1745")
+    void testForwardFromRemoteQueueWithConsumerPriority(int priority) throws Exception {
+        doTestForwardRemoteQueueWithConsumerPriority(AddressSpecForwarderDirection.in, priority);
+    }
+
+    private void doTestForwardRemoteQueueWithConsumerPriority(AddressSpecForwarderDirection direction, int priority) throws Exception {
         assertThat("Unsupported priority for test", priority, not(is(0)));
 
-        AddressSpace space = createAddressSpace("forward-to-remote", "*", null, defaultCredentials());
+        AddressSpace space = createAddressSpace("forward-remote", "*", null, defaultCredentials());
         Address forwarder = new AddressBuilder()
                 .withNewMetadata()
                 .withName(AddressUtils.generateAddressMetadataName(space, "forwarder-queue1"))
@@ -91,7 +104,7 @@ class ForwardersTest extends BridgingBase {
                 .addToForwarders(new AddressSpecForwarderBuilder()
                         .withName("forwarder1")
                         .withRemoteAddress(REMOTE_NAME + "/" + REMOTE_QUEUE1)
-                        .withDirection(AddressSpecForwarderDirection.out)
+                        .withDirection(direction)
                         .withPriority(priority)
                         .build())
                 .endSpec()
@@ -121,18 +134,19 @@ class ForwardersTest extends BridgingBase {
                      .withMessagingRoute(Objects.requireNonNull(internalEndpointByName))
                      .withCount(messagesBatch)
                      .withAddress(forwarder.getSpec().getAddress())
-                     .withCredentials(localUser)
+                     .withCredentials(localUser);
+             ExternalMessagingClient removeSendingClient = createOnClusterClientToRemoteBroker(new ProtonJMSClientSender(), messagesBatch)
+                     .withAddress(REMOTE_QUEUE1)
         ) {
             final ExternalMessagingClient receivingClient;
             final ExternalMessagingClient nonReceivingClient;
-            if (priority > 0) {
-                // the forwarder's consumer has raised priority therefore we expect all messages to flow across the connector
-                receivingClient = remoteReceivingClient;
-                nonReceivingClient = localReceivingClient;
+
+            if (direction == AddressSpecForwarderDirection.out) {
+                receivingClient = priority > 0 ? remoteReceivingClient : localReceivingClient;
+                nonReceivingClient = priority > 0 ? localReceivingClient : remoteReceivingClient;
             } else {
-                // the forwarder's consumer has lowered priority therefore we expect no messages to flow across the connector
-                receivingClient = localReceivingClient;
-                nonReceivingClient = remoteReceivingClient;
+                receivingClient = priority > 0 ? localReceivingClient : remoteReceivingClient;
+                nonReceivingClient = priority > 0 ? remoteReceivingClient : localReceivingClient;
             }
 
             receivingClient.withCount(messagesBatch);
@@ -145,7 +159,11 @@ class ForwardersTest extends BridgingBase {
             receiversReady.get(timeout, TimeUnit.SECONDS);
             assertThat("Receivers are not attached within timeout", receiversReady.isDone(), is(true));
 
-            assertTrue(localSendingClient.run());
+            if (direction == AddressSpecForwarderDirection.out) {
+                assertTrue(localSendingClient.run());
+            } else {
+                assertTrue(removeSendingClient.run());
+            }
 
             assertThat("Receiving client not complete with timeout", receiverDone.get(timeout, TimeUnit.SECONDS), is(true));
             assertThat("Unexpected number of messages at receiving client", receivingClient.getMessages().size(), is(messagesBatch));
