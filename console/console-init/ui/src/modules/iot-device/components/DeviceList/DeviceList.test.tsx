@@ -11,7 +11,7 @@ import { getInitialSelectedColumns } from "modules/iot-device/utils";
 import { IRowData } from "@patternfly/react-table";
 
 describe("<DeviceList />", () => {
-  const rows: IRowData[] = [
+  const deviceRows: IRowData[] = [
     {
       id: "littlesensor1",
       viaGateway: true,
@@ -63,7 +63,7 @@ describe("<DeviceList />", () => {
   const onSelectDevice = jest.fn();
 
   const props: IDeviceListProps = {
-    rows,
+    deviceRows: deviceRows,
     actionResolver,
     onSelectDevice,
     selectedColumns: getInitialSelectedColumns()

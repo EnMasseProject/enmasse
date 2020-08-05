@@ -12,7 +12,6 @@ import {
   TableBody,
   sortable,
   TableProps,
-  IRowData,
   SortByDirection,
   ICell,
   truncate,
@@ -22,7 +21,7 @@ import { StyleSheet, css } from "aphrodite";
 import { getTableCells } from "modules/iot-device/utils";
 export interface IDeviceListProps
   extends Pick<TableProps, "actionResolver" | "sortBy"> {
-  rows: IDevice[];
+  deviceRows: IDevice[];
   onSelectDevice: (device: IDevice, isSelected: boolean) => void;
   onSort?: (
     event: any,
@@ -53,7 +52,7 @@ export const StyleForFooteredTable = StyleSheet.create({
 });
 
 export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
-  rows,
+  deviceRows,
   sortBy,
   onSort,
   actionResolver,
@@ -63,28 +62,28 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
   const tableColumns: (string | ICell)[] = [];
   selectedColumns.forEach(column => {
     switch (column?.toLowerCase()) {
-      case "deviceId":
+      case "deviceid":
         tableColumns.push({ title: "Device ID", transforms: [sortable] });
         break;
-      case "connectionType":
+      case "connectiontype":
         tableColumns.push({ title: "Connection type" });
         break;
       case "status":
         tableColumns.push({ title: "Status", transforms: [sortable] });
         break;
-      case "lastUpdated":
+      case "lastupdated":
         tableColumns.push({ title: "Last updated", transforms: [sortable] });
         break;
-      case "lastSeen":
+      case "lastseen":
         tableColumns.push({ title: "Last seen", transforms: [sortable] });
         break;
-      case "addedDate":
+      case "addeddate":
         tableColumns.push({ title: "Added date", transforms: [sortable] });
         break;
-      case "memberOf":
+      case "memberof":
         tableColumns.push({ title: "MemberOf", cellTransforms: [truncate] });
         break;
-      case "viaGateways":
+      case "viagateways":
         tableColumns.push({
           title: "Via Gateways",
           cellTransforms: [truncate]
@@ -95,14 +94,16 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
     }
   });
 
-  const deviceRows = rows.map(row => getTableCells(row, selectedColumns));
+  const mappedDeviceRows = deviceRows.map(row =>
+    getTableCells(row, selectedColumns)
+  );
 
   const onSelect = (
     _: React.FormEvent<HTMLInputElement>,
     isSelected: boolean,
     rowIndex: number
   ) => {
-    const rows = [...deviceRows];
+    const rows = [...mappedDeviceRows];
     rows[rowIndex].selected = isSelected;
     onSelectDevice(rows[rowIndex].originalData, isSelected);
   };
@@ -117,7 +118,7 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
         canSelectAll={false}
         onSelect={onSelect}
         cells={tableColumns}
-        rows={deviceRows}
+        rows={mappedDeviceRows}
         aria-label="device list"
         sortBy={sortBy}
         onSort={onSort}

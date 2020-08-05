@@ -36,7 +36,7 @@ export default {
   title: "Device List Page"
 };
 
-const rows: IDevice[] = [
+const deviceRows: IDevice[] = [
   {
     deviceId: "littlesensor1",
     via: ["device-1", "device-2"],
@@ -149,7 +149,7 @@ const Data = (
       />
       <Divider />
       <DeviceList
-        rows={rows}
+        deviceRows={deviceRows}
         onSelectDevice={async () => {}}
         actionResolver={actionResolver}
         selectedColumns={getInitialSelectedColumns()}

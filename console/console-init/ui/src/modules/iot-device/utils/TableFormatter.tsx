@@ -47,8 +47,8 @@ export const getTableCells = (row: IDevice, selectedColumns: string[]) => {
 
   const cells: ICell[] = [];
   selectedColumns.forEach(column => {
-    switch (column) {
-      case "deviceId":
+    switch (column?.toLowerCase()) {
+      case "deviceid":
         cells.push({
           header: "id",
           title: (
@@ -58,7 +58,7 @@ export const getTableCells = (row: IDevice, selectedColumns: string[]) => {
           )
         });
         break;
-      case "connectionType":
+      case "connectiontype":
         cells.push({
           header: "type",
           title: renderDeviceType(deviceType)
@@ -80,7 +80,7 @@ export const getTableCells = (row: IDevice, selectedColumns: string[]) => {
           )
         });
         break;
-      case "lastUpdated":
+      case "lastupdated":
         cells.push({
           header: "lastUpdated",
           title: updated && (
@@ -90,7 +90,7 @@ export const getTableCells = (row: IDevice, selectedColumns: string[]) => {
           )
         });
         break;
-      case "lastSeen":
+      case "lastseen":
         cells.push({
           header: "lastSeen",
           title: lastSeen && (
@@ -100,7 +100,7 @@ export const getTableCells = (row: IDevice, selectedColumns: string[]) => {
           )
         });
         break;
-      case "addedDate":
+      case "addeddate":
         cells.push({
           header: "addedDate",
           title: created && (
@@ -110,13 +110,13 @@ export const getTableCells = (row: IDevice, selectedColumns: string[]) => {
           )
         });
         break;
-      case "memberOf":
+      case "memberof":
         cells.push({
           header: "memberOf",
           title: memberOf && memberOf.length > 0 ? memberOf.join(", ") : "-"
         });
         break;
-      case "viaGateways":
+      case "viagateways":
         cells.push({
           header: "memberOf",
           title: via && via.length > 0 ? via.join(", ") : "-"

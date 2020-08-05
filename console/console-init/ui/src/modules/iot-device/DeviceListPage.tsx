@@ -15,7 +15,6 @@ import {
   PageSectionVariants,
   PageSection
 } from "@patternfly/react-core";
-import { ISortBy } from "@patternfly/react-table";
 import {
   DeviceFilter,
   DeviceListAlert,

@@ -119,8 +119,9 @@ const SORT_RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (sortBy?: ISortByWrapper) => {
   let orderBy = "";
   if (sortBy) {
     const { property, direction } = sortBy;
+    console.log(property);
     switch (property?.toLowerCase()) {
-      case "deviceId":
+      case "device-id":
         orderBy = "`$.deviceId` ";
         break;
       case "status":
@@ -145,6 +146,7 @@ const SORT_RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (sortBy?: ISortByWrapper) => {
       orderBy += direction;
     }
   }
+  console.log(orderBy);
   return orderBy;
 };
 

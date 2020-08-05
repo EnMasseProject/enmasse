@@ -25,7 +25,7 @@ export default {
   title: "Device List Table"
 };
 
-const rows: IDevice[] = [
+const deviceRows: IDevice[] = [
   {
     deviceId: "littlesensor1",
     via: ["device-1", "device-2"],
@@ -106,7 +106,7 @@ export const deviceAlert = () => (
 export const deviceTable = () => (
   <MemoryRouter>
     <DeviceList
-      rows={rows}
+      deviceRows={deviceRows}
       onSelectDevice={action("Device selected")}
       actionResolver={actionResolver}
       selectedColumns={getInitialSelectedColumns()}

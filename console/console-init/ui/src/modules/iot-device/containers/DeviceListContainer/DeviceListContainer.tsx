@@ -97,28 +97,6 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
 
   total !== undefined && setTotalDevices(total);
 
-  const onSelect = (device: IDevice, isSelected: boolean) => {
-    if (!areAllDevicesSelected && isSelected) {
-      if (selectedDevices.length === rows.length - 1) {
-        let allSelected = true;
-        for (let row of rows) {
-          for (let selectedDevice of selectedDevices) {
-            if (compareObject(row.deviceId, selectedDevice.deviceId)) {
-              if (device.deviceId === row.deviceId) {
-                allSelected = true;
-              } else if (row.selected === false) allSelected = false;
-              break;
-            }
-          }
-        }
-        if (allSelected) {
-          onSelectDevice(device, isSelected, true);
-        }
-      }
-    }
-    onSelectDevice(device, isSelected);
-  };
-
   const [setDeleteDeviceQueryVariables] = useMutationQuery(DELETE_IOT_DEVICE, [
     "devices_for_iot_project"
   ]);
@@ -216,8 +194,8 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
     });
   };
 
-  const rows: IDevice[] =
-    devices?.map(({ deviceId, enabled, via,viaGroups, credentials, status }) => {
+  const deviceRows: IDevice[] =
+    devices?.map(({ deviceId, enabled, via, viaGroups, credentials, status }) => {
       return {
         deviceId,
         enabled,
@@ -232,17 +210,39 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
     }) || [];
 
   if (areAllDevicesSelected && selectedDevices.length !== devices?.length) {
-    selectAllDevices(rows || []);
+    selectAllDevices(deviceRows || []);
   }
 
-  if (rows.every(row => row.selected === true)) {
+  if (deviceRows.every(row => row.selected === true)) {
     setIsAllSelected(true);
   }
+
+  const onSelect = (device: IDevice, isSelected: boolean) => {
+    if (!areAllDevicesSelected && isSelected) {
+      if (selectedDevices.length === deviceRows.length - 1) {
+        let allSelected = true;
+        for (let row of deviceRows) {
+          for (let selectedDevice of selectedDevices) {
+            if (compareObject(row.deviceId, selectedDevice.deviceId)) {
+              if (device.deviceId === row.deviceId) {
+                allSelected = true;
+              } else if (row.selected === false) allSelected = false;
+              break;
+            }
+          }
+        }
+        if (allSelected) {
+          onSelectDevice(device, isSelected, true);
+        }
+      }
+    }
+    onSelectDevice(device, isSelected);
+  };
 
   return (
     <>
       <DeviceList
-        rows={rows}
+        deviceRows={deviceRows}
         onSelectDevice={onSelect}
         actionResolver={actionResolver}
         onSort={onSort}
