@@ -226,7 +226,8 @@ func detectOpenshift4() bool {
 		return false
 	}
 
-	return v.Major == "1" && minor > 11
+	// server version can be Openshift or Kubernetes version, so we need to account for both cases
+	return v.Major == "4" || (v.Major == "1" && minor > 11)
 
 }
 
