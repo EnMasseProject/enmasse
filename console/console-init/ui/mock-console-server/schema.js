@@ -779,13 +779,18 @@ const typeDefs = gql`
 
   type Device {
     deviceId: String!
-    enabled: Boolean!
-    via: [String!]
-    viaGroups: [String!]
-    memberOf: [String!]
+    registration: Device_registration_iot_console!
     status: Device_status!
-    ext: String! #The Json representation of the ext field for this device.
+    credentials: String #A Json array with the devices credentials.
+  }
+
+  type Device_registration_iot_console {
+    enabled: Boolean
+    via: [String]
+    viaGroups: [String]
+    memberOf: [String]
     defaults: String
+    ext: String #The Json representation of the ext field for this device.
   }
 
   type Device_status {
@@ -829,6 +834,7 @@ const typeDefs = gql`
     via: [String]
     viaGroups: [String]
     memberOf: [String]
+    defaults: String
     ext: String #The Json representation of the ext field for this device.
   }
 
