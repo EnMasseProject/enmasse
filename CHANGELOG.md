@@ -2,6 +2,9 @@
 ## 1.0.0
 * #5013: Bump RESTeasy from 3.6.1.SP2 to 4.5.3.Final
 
+## 0.33.0
+* #5076, #5068: Prevent stale record from cache leading to incomplete address space deletion (#5084)
+
 ## 0.32.2
 * #4839: [Agent] ensure that router disconnect cancels the timer and doesn't accumulate Rhea listeners (#4840)
 * #4873: Prevent unexpected fields at the root of addresspace, address and message from causing the controller loops to fail
