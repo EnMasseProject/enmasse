@@ -184,10 +184,6 @@ public class TestInfo {
         return false;
     }
 
-    public boolean isTestSharedInfra() {
-        return currentTestClass.getTags().stream().anyMatch(TestTag.SHARED_INFRA_TAGS::contains);
-    }
-
     public boolean isUpgradeTest() {
         return currentTestClass.getTags().stream().anyMatch(TestTag.UPGRADE::equals);
     }

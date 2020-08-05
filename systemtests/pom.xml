@@ -211,7 +211,7 @@
             <id>systemtests</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>(shared-standard | shared-brokered | isolated | soak | isolated-shared-infra) &amp; !upgrade</groups>
+                <groups>(shared-standard | shared-brokered | isolated | soak ) &amp; !upgrade</groups>
             </properties>
         </profile>
         <profile>
@@ -221,13 +221,6 @@
                 <groups>(shared-standard | shared-brokered) &amp; !isolated &amp; !smoke &amp; !soak
                     &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework
                 </groups>
-            </properties>
-        </profile>
-        <profile>
-            <id>isolated-shared-infra</id>
-            <properties>
-                <groups>(isolated-shared-infra) &amp; !soak &amp; !olm &amp; !upgrade &amp; !scale</groups>
-                <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>

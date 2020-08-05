@@ -72,13 +72,6 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                         operatorManager.installExamplesBundleOlm();
                         operatorManager.waitUntilOperatorReadyOlm();
                     }
-                } else if (testInfo.isTestSharedInfra()) {
-                    if (operatorManager.isEnmasseBundleDeployed()) {
-                        operatorManager.deleteEnmasseBundle();
-                    } else if (operatorManager.isEnmasseOlmDeployed()) {
-                        operatorManager.deleteEnmasseOlm();
-                    }
-                    operatorManager.installEnmasseSharedInfraBundle();
                 } else {
                     if (!operatorManager.isEnmasseBundleDeployed()) {
                         operatorManager.installEnmasseBundle();

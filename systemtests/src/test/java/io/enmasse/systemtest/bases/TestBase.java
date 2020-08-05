@@ -56,7 +56,6 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.listener.JunitCallbackListener;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.messaginginfra.ResourceManager;
 import io.enmasse.systemtest.mqtt.MqttUtils;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.time.TimeoutBudget;
@@ -83,7 +82,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected io.enmasse.systemtest.manager.ResourceManager resourcesManager;
     protected UserCredentials defaultCredentials = null;
     protected UserCredentials managementCredentials = null;
-    protected ResourceManager infraResourceManager = ResourceManager.getInstance();
 
     protected List<ThrowingCallable> cleanup = new LinkedList<>();
 

@@ -16,7 +16,6 @@ import java.util.Set;
 public class TestTag {
     public static final String ISOLATED = "isolated";
     public static final String ISOLATED_STANDARD = "isolated-standard";
-    public static final String ISOLATED_SHARED_INFRA = "isolated-shared-infra";
     public static final String ISOLATED_BROKER = "isolated-broker";
     public static final String SHARED_STANDARD = "shared-standard";
     public static final String SHARED_BROKERED = "shared-brokered";
@@ -29,5 +28,4 @@ public class TestTag {
     public static final String OLM = "olm";
     public static final String FRAMEWORK = "framework";
     public static final Set<String> SHARED_TAGS = new HashSet<>(Arrays.asList(SHARED_BROKERED, SHARED_STANDARD));
-    public static final Set<String> SHARED_INFRA_TAGS = new HashSet<>(Arrays.asList(ISOLATED_SHARED_INFRA));
 }
