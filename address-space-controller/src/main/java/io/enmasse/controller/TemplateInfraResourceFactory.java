@@ -4,6 +4,37 @@
  */
 package io.enmasse.controller;
 
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceSettings;
+import io.enmasse.address.model.CertSpec;
+import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.KubeUtil;
+import io.enmasse.admin.model.v1.BrokeredInfraConfig;
+import io.enmasse.admin.model.v1.InfraConfig;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.config.AnnotationKeys;
+import io.enmasse.config.LabelKeys;
+import io.enmasse.controller.common.Kubernetes;
+import io.enmasse.controller.common.TemplateParameter;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
 import static io.enmasse.address.model.KubeUtil.applyCpuMemory;
 import static io.enmasse.address.model.KubeUtil.applyPodTemplate;
 import static io.enmasse.address.model.KubeUtil.lookupResource;
@@ -11,51 +42,13 @@ import static io.enmasse.address.model.KubeUtil.overrideFsGroup;
 import static io.enmasse.config.Apps.setConnectsTo;
 import static io.enmasse.config.Apps.setPartOf;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.util.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceSettings;
-import io.enmasse.address.model.CertSpec;
-import io.enmasse.address.model.EndpointSpec;
-import io.enmasse.address.model.KubeUtil;
-import io.enmasse.admin.model.v1.BrokeredInfraConfig;
-import io.enmasse.admin.model.v1.ConsoleService;
-import io.enmasse.admin.model.v1.ConsoleServiceSpec;
-import io.enmasse.admin.model.v1.ConsoleServiceStatus;
-import io.enmasse.admin.model.v1.InfraConfig;
-import io.enmasse.admin.model.v1.StandardInfraConfig;
-import io.enmasse.config.AnnotationKeys;
-import io.enmasse.config.LabelKeys;
-import io.enmasse.controller.common.Kubernetes;
-import io.enmasse.controller.common.TemplateParameter;
-import io.enmasse.k8s.api.SchemaProvider;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.SecretReference;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-
 public class TemplateInfraResourceFactory implements InfraResourceFactory {
-    private static final Logger log = LoggerFactory.getLogger(TemplateInfraResourceFactory.class);
-    private final String WELL_KNOWN_CONSOLE_SERVICE_NAME = "console";
-
     private final Kubernetes kubernetes;
     private final Map<String, String> env;
-    private final SchemaProvider schemaProvider;
 
-    public TemplateInfraResourceFactory(Kubernetes kubernetes, Map<String, String> env, SchemaProvider schemaProvider) {
+    public TemplateInfraResourceFactory(Kubernetes kubernetes, Map<String, String> env) {
         this.kubernetes = kubernetes;
         this.env = env;
-        this.schemaProvider = schemaProvider;
     }
 
     private void prepareParameters(AddressSpace addressSpace,
@@ -118,30 +111,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         parameters.put(TemplateParameter.BROKER_SUPPORT_USER, Base64.getEncoder().encodeToString(brokerSupportUser.getBytes()));
         parameters.put(TemplateParameter.BROKER_SUPPORT_PWD, Base64.getEncoder().encodeToString(brokerSupportPwd.getBytes()));
     }
-
-    private void prepareMqttParameters(AddressSpace addressSpace, Map<String, String> parameters) {
-        String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
-        parameters.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getMetadata().getName());
-        parameters.put(TemplateParameter.INFRA_UUID, infraUuid);
-        Map<String, CertSpec> serviceCertMapping = new HashMap<>();
-        for (EndpointSpec endpoint : addressSpace.getSpec().getEndpoints()) {
-            if (endpoint.getCert() != null) {
-                serviceCertMapping.put(endpoint.getService(), endpoint.getCert());
-            }
-        }
-        parameters.put(TemplateParameter.MQTT_SECRET, serviceCertMapping.get("mqtt").getSecretName());
-        setIfEnvPresent(parameters, TemplateParameter.AGENT_IMAGE);
-        setIfEnvPresent(parameters, TemplateParameter.MQTT_GATEWAY_IMAGE);
-        setIfEnvPresent(parameters, TemplateParameter.MQTT_LWT_IMAGE);
-        setIfEnvPresent(parameters, TemplateParameter.IMAGE_PULL_POLICY);
-    }
-
-    private List<HasMetadata> createStandardInfraMqtt(AddressSpace addressSpace, String templateName) {
-        Map<String, String> parameters = new HashMap<>();
-        prepareMqttParameters(addressSpace, parameters);
-        return new ArrayList<>(kubernetes.processTemplate(templateName, parameters).getItems());
-    }
-
 
     private List<HasMetadata> createStandardInfra(AddressSpace addressSpace, StandardInfraConfig standardInfraConfig, AuthenticationServiceSettings authenticationServiceSettings) {
 
@@ -213,11 +182,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         }
         setPartOf(routerSet, addressSpace);
         setConnectsTo(adminDeployment, routerSet.getMetadata().getName());
-
-        if (Boolean.parseBoolean(getAnnotation(infraAnnotations, AnnotationKeys.WITH_MQTT, "false"))) {
-            String mqttTemplateName = getAnnotation(infraAnnotations, AnnotationKeys.MQTT_TEMPLATE_NAME, "standard-space-infra-mqtt");
-            items.addAll(createStandardInfraMqtt(addressSpace, mqttTemplateName));
-        }
 
         if (standardInfraConfig.getSpec().getBroker() != null) {
             return applyStorageClassName(standardInfraConfig.getSpec().getBroker().getStorageClassName(), items);

@@ -721,10 +721,6 @@ spec:
                   value: ${env.BROKER_PLUGIN_IMAGE}
                 - name: RELATED_IMAGE_TOPIC_FORWARDER
                   value: ${env.TOPIC_FORWARDER_IMAGE}
-                - name: RELATED_IMAGE_MQTT_GATEWAY
-                  value: ${env.MQTT_GATEWAY_IMAGE}
-                - name: RELATED_IMAGE_MQTT_LWT
-                  value: ${env.MQTT_LWT_IMAGE}
                 - name: RELATED_IMAGE_NONE_AUTHSERVICE
                   value: ${env.NONE_AUTHSERVICE_IMAGE}
                 - name: RELATED_IMAGE_KEYCLOAK

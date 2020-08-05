@@ -24,13 +24,6 @@ spec:
           name: myconfig
         - kind: Service
           name: myservice
-    - name: mqtt
-      service: mqtt
-      expose:
-        type: loadbalancer
-        loadBalancerPorts:
-        - mqtt
-        - mqtts
       cert:
         provider: selfsigned
     - name: console

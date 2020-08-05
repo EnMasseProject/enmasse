@@ -203,8 +203,6 @@ func ApplyDeployment(deployment *appsv1.Deployment) error {
 		applyImageEnv(container, "BROKER_IMAGE", "broker")
 		applyImageEnv(container, "BROKER_PLUGIN_IMAGE", "broker-plugin")
 		applyImageEnv(container, "TOPIC_FORWARDER_IMAGE", "topic-forwarder")
-		applyImageEnv(container, "MQTT_GATEWAY_IMAGE", "mqtt-gateway")
-		applyImageEnv(container, "MQTT_LWT_IMAGE", "mqtt-lwt")
 		if util.IsOpenshift() {
 			install.ApplyEnvSimple(container, util.EnMasseOpenshiftEnvVar, "true")
 		}

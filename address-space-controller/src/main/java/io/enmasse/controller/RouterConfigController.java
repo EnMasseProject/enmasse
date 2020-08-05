@@ -482,18 +482,6 @@ public class RouterConfigController implements Controller {
 
         // Addresses
         List<Address> addresses = new ArrayList<>();
-        Address mqttAddress = new Address();
-        mqttAddress.setName("override.mqtt");
-        mqttAddress.setPrefix("$mqtt");
-        mqttAddress.setDistribution(Distribution.balanced);
-        addresses.add(mqttAddress);
-
-        Address subctrlAddress = new Address();
-        subctrlAddress.setName("override.subctrl");
-        subctrlAddress.setPrefix("$subctrl");
-        subctrlAddress.setDistribution(Distribution.balanced);
-        addresses.add(subctrlAddress);
-
         Address tempAddress = new Address();
         tempAddress.setName("override.temp");
         tempAddress.setPrefix("$temp");
@@ -510,7 +498,7 @@ public class RouterConfigController implements Controller {
         Address routerHealthCheckAddress = new Address();
         routerHealthCheckAddress.setName("!!HEALTH_CHECK_ROUTER");
         routerHealthCheckAddress.setPrefix("!!HEALTH_CHECK_ROUTER");
-        mqttAddress.setDistribution(Distribution.balanced);
+        routerHealthCheckAddress.setDistribution(Distribution.balanced);
         addresses.add(routerHealthCheckAddress);
 
         // Autolinks
@@ -524,19 +512,6 @@ public class RouterConfigController implements Controller {
 
         // LinkRoutes
         List<LinkRoute> linkRoutes = new ArrayList<>();
-        LinkRoute mqttLwtInLinkRoute = new LinkRoute();
-        mqttLwtInLinkRoute.setName("override.lwt_in");
-        mqttLwtInLinkRoute.setPrefix("$lwt");
-        mqttLwtInLinkRoute.setDirection(LinkDirection.in);
-        mqttLwtInLinkRoute.setContainerId("lwt-service");
-        linkRoutes.add(mqttLwtInLinkRoute);
-
-        LinkRoute mqttLwtOutLinkRoute = new LinkRoute();
-        mqttLwtOutLinkRoute.setName("override.lwt_out");
-        mqttLwtOutLinkRoute.setPrefix("$lwt");
-        mqttLwtOutLinkRoute.setDirection(LinkDirection.out);
-        mqttLwtOutLinkRoute.setContainerId("lwt-service");
-        linkRoutes.add(mqttLwtOutLinkRoute);
 
         // Connectors and addresses based on Connectors configured by user
         for (AddressSpaceSpecConnector connector : addressSpace.getSpec().getConnectors()) {

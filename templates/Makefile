@@ -78,8 +78,6 @@ replace_images: prepare
 					  -e 's,\$${API_SERVER_IMAGE},$(API_SERVER_IMAGE),g' \
 					  -e 's,\$${SERVICE_BROKER_IMAGE},$(SERVICE_BROKER_IMAGE),g' \
 					  -e 's,\$${AGENT_IMAGE},$(AGENT_IMAGE),g' \
-					  -e 's,\$${MQTT_GATEWAY_IMAGE},$(MQTT_GATEWAY_IMAGE),g' \
-					  -e 's,\$${MQTT_LWT_IMAGE},$(MQTT_LWT_IMAGE),g' \
 					  -e 's,\$${APPLICATION_MONITORING_OPERATOR_IMAGE},$(APPLICATION_MONITORING_OPERATOR_IMAGE),g' \
 					  -e 's,\$${KUBE_STATE_METRICS_IMAGE},$(KUBE_STATE_METRICS_IMAGE),g' \
 					  -e 's,\$${HONO_IMAGE},$(HONO_IMAGE),g' \

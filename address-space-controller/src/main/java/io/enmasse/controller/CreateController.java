@@ -64,14 +64,9 @@ public class CreateController implements Controller {
     private List<EndpointSpec> validateEndpoints(AddressSpaceResolver addressSpaceResolver, AddressSpace addressSpace) {
         // Set default endpoints from type
         AddressSpaceType addressSpaceType = addressSpaceResolver.getType(addressSpace.getSpec().getType());
-        AddressSpacePlan addressSpacePlan = addressSpaceResolver.getPlan(addressSpaceType, addressSpace.getSpec().getPlan());
-        InfraConfig infraConfig = addressSpaceType.findInfraConfig(addressSpacePlan.getInfraConfigRef()).orElse(null);
         List<EndpointSpec> defaultEndpoints = new ArrayList<>(addressSpaceType.getAvailableEndpoints());
 
-        Map<String, String> infraAnnotations = infraConfig != null ? infraConfig.getMetadata().getAnnotations() : Collections.emptyMap();
-        if (!Boolean.parseBoolean(getAnnotation(infraAnnotations, AnnotationKeys.WITH_MQTT, "false"))) {
-            defaultEndpoints.removeIf(spec -> "mqtt".equals(spec.getService()));
-        }
+        defaultEndpoints.removeIf(spec -> "mqtt".equals(spec.getService()));
 
         if (addressSpace.getSpec().getEndpoints().isEmpty()) {
             return defaultEndpoints;
