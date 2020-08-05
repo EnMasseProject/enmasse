@@ -12,27 +12,37 @@ import {
   TableBody,
   sortable,
   TableProps,
-  IRowData,
-  SortByDirection
+  SortByDirection,
+  ICell,
+  truncate,
+  IExtraColumnData
 } from "@patternfly/react-table";
 import { StyleSheet, css } from "aphrodite";
-
+import { getTableCells } from "modules/iot-device/utils";
 export interface IDeviceListProps
   extends Pick<TableProps, "actionResolver" | "sortBy"> {
-  deviceRows: IRowData[];
+  deviceRows: IDevice[];
   onSelectDevice: (device: IDevice, isSelected: boolean) => void;
-  onSort?: (_event: any, index: number, direction: SortByDirection) => void;
+  onSort?: (
+    event: any,
+    index: number,
+    direction: SortByDirection,
+    extraData: IExtraColumnData
+  ) => void;
+  selectedColumns: string[];
 }
 
 export interface IDevice {
   deviceId?: string | null;
   via?: string[];
   viaGroups?: string[];
+  memberOf?: string[];
   enabled?: boolean | null;
   selected?: boolean | null;
   lastSeen?: string | Date;
   updated?: string | Date;
   created?: string | Date;
+  credentials?: string;
 }
 
 export const StyleForFooteredTable = StyleSheet.create({
@@ -46,25 +56,56 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
   sortBy,
   onSort,
   actionResolver,
-  onSelectDevice
+  onSelectDevice,
+  selectedColumns
 }) => {
-  const tableColumns = [
-    { title: "Device ID", transforms: [sortable] },
-    { title: "Connection type" },
-    { title: "Status", transforms: [sortable] },
-    { title: "Last seen", transforms: [sortable] },
-    { title: "Last updated", transforms: [sortable] },
-    { title: "Added date", transforms: [sortable] }
-  ];
+  const tableColumns: (string | ICell)[] = [];
+  selectedColumns.forEach(column => {
+    switch (column?.toLowerCase()) {
+      case "deviceid":
+        tableColumns.push({ title: "Device ID", transforms: [sortable] });
+        break;
+      case "connectiontype":
+        tableColumns.push({ title: "Connection type" });
+        break;
+      case "status":
+        tableColumns.push({ title: "Status", transforms: [sortable] });
+        break;
+      case "lastupdated":
+        tableColumns.push({ title: "Last updated", transforms: [sortable] });
+        break;
+      case "lastseen":
+        tableColumns.push({ title: "Last seen", transforms: [sortable] });
+        break;
+      case "addeddate":
+        tableColumns.push({ title: "Added date", transforms: [sortable] });
+        break;
+      case "memberof":
+        tableColumns.push({ title: "MemberOf", cellTransforms: [truncate] });
+        break;
+      case "viagateways":
+        tableColumns.push({
+          title: "Via Gateways",
+          cellTransforms: [truncate]
+        });
+        break;
+      default:
+        break;
+    }
+  });
+
+  const mappedDeviceRows = deviceRows.map(row =>
+    getTableCells(row, selectedColumns)
+  );
 
   const onSelect = (
     _: React.FormEvent<HTMLInputElement>,
     isSelected: boolean,
     rowIndex: number
   ) => {
-    const rows = [...deviceRows];
-    rows[rowIndex].selected = isSelected;
-    onSelectDevice(rows[rowIndex].originalData, isSelected);
+    const deviceRows = [...mappedDeviceRows];
+    deviceRows[rowIndex].selected = isSelected;
+    onSelectDevice(deviceRows[rowIndex].originalData, isSelected);
   };
 
   return (
@@ -77,7 +118,7 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
         canSelectAll={false}
         onSelect={onSelect}
         cells={tableColumns}
-        rows={deviceRows}
+        rows={mappedDeviceRows}
         aria-label="device list"
         sortBy={sortBy}
         onSort={onSort}

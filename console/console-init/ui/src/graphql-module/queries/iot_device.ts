@@ -4,7 +4,11 @@
  */
 
 import gql from "graphql-tag";
-import { IDeviceFilter, getInitialFilter } from "modules/iot-device";
+import {
+  IDeviceFilter,
+  getInitialFilter,
+  ISortByWrapper
+} from "modules/iot-device";
 import { ISortBy } from "@patternfly/react-table";
 
 const RETURN_IOT_DEVICE_DETAIL = (
@@ -111,34 +115,38 @@ const DELETE_CREDENTIALS_FOR_IOT_DEVICE = gql(
   }`
 );
 
-const SORT_RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (sortBy?: ISortBy) => {
+const SORT_RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (sortBy?: ISortByWrapper) => {
   let orderBy = "";
   if (sortBy) {
-    switch (sortBy.index) {
-      case 1:
+    const { property, direction } = sortBy;
+    console.log(property);
+    switch (property?.toLowerCase()) {
+      case "device-id":
         orderBy = "`$.deviceId` ";
         break;
-      case 2:
-        break;
-      case 3:
+      case "status":
         orderBy = "`$.enabled` ";
         break;
-      case 4:
+      case "connection-type":
+        break;
+      case "last-seen":
         orderBy = "`$.status.lastSeen` ";
         break;
-      case 5:
+      case "last-updated":
         orderBy = "`$.status.updated` ";
         break;
-      case 6:
+      case "added-date":
         orderBy = "`$.status.created` ";
         break;
       default:
         break;
     }
-    if (orderBy !== "" && sortBy.direction) {
-      orderBy += sortBy.direction;
+
+    if (orderBy !== "" && direction) {
+      orderBy += direction;
     }
   }
+  console.log(orderBy);
   return orderBy;
 };
 
@@ -191,7 +199,7 @@ const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
   perPage: number,
   projectName: string,
   namespace: string,
-  sortBy?: ISortBy,
+  sortBy?: ISortByWrapper,
   filterObj?: IDeviceFilter,
   queryResolver?: string
 ) => {

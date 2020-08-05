@@ -7,7 +7,7 @@ import React from "react";
 import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { IDeviceListProps, DeviceList } from "modules/iot-device/components";
-import { getTableCells } from "modules/iot-device/utils";
+import { getInitialSelectedColumns } from "modules/iot-device/utils";
 import { IRowData } from "@patternfly/react-table";
 
 describe("<DeviceList />", () => {
@@ -42,12 +42,12 @@ describe("<DeviceList />", () => {
       id: null,
       viaGateway: null,
       enabled: false,
-      selected: null,
+      selected: undefined,
       lastSeen: undefined,
       updated: undefined,
       created: undefined
     }
-  ].map(getTableCells);
+  ];
 
   const actionResolver = (rowData: IRowData) => [
     {
@@ -63,9 +63,10 @@ describe("<DeviceList />", () => {
   const onSelectDevice = jest.fn();
 
   const props: IDeviceListProps = {
-    deviceRows,
+    deviceRows: deviceRows,
     actionResolver,
-    onSelectDevice
+    onSelectDevice,
+    selectedColumns: getInitialSelectedColumns()
   };
 
   const { getByText } = render(

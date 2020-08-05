@@ -15,7 +15,6 @@ import {
   PageSectionVariants,
   PageSection
 } from "@patternfly/react-core";
-import { ISortBy } from "@patternfly/react-table";
 import {
   DeviceFilter,
   DeviceListAlert,
@@ -34,7 +33,8 @@ import {
 } from "modules/iot-device/utils";
 import {
   DeviceListContainer,
-  EmptyDeviceContainer
+  EmptyDeviceContainer,
+  ISortByWrapper
 } from "modules/iot-device/containers";
 import { compareObject } from "utils";
 import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
@@ -160,7 +160,7 @@ export default function DeviceListPage() {
     }
   };
 
-  const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
+  const [sortDropDownValue, setSortDropdownValue] = useState<ISortByWrapper>();
 
   const onSelectAllDevices = (isSelected: boolean) => {
     if (isSelected === true) {
@@ -397,6 +397,7 @@ export default function DeviceListPage() {
           isModalOpen={isModalOpen}
           handleModalToggle={handleToggleModal}
           setSelectedColumns={setSelectedColumns}
+          setSortValue={setSortDropdownValue}
         />
       </GridItem>
     </Grid>
