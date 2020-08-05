@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.fabric8.kubernetes.client.Config;
-import org.eclipse.hono.util.Strings;
 import org.slf4j.Logger;
 
 import java.io.File;
