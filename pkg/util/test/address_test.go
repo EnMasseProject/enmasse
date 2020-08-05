@@ -10,7 +10,7 @@ import (
 
 	"github.com/enmasseproject/enmasse/pkg/util"
 
-	"github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -26,7 +26,7 @@ func TestBuildName1(t *testing.T) {
 	}
 
 	for _, entry := range data {
-		actual := util.AddressName(&v1alpha1.IoTProject{ObjectMeta: v1.ObjectMeta{
+		actual := util.AddressName(&v1beta1.AddressSpace{ObjectMeta: v1.ObjectMeta{
 			Namespace: entry.namespace,
 			Name:      entry.name,
 		}}, entry.prefix)
