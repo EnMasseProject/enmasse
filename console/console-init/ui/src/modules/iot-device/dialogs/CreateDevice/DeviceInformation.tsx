@@ -10,12 +10,15 @@ import {
   TextInput,
   Title,
   Divider,
+  Switch,
+  Flex,
   Grid,
   GridItem,
-  SelectOptionObject
+  SelectOptionObject,
+  FlexItem
 } from "@patternfly/react-core";
 import { CreateMetadata } from "modules/iot-device/components";
-import { SwitchWithToggle } from "components/SwitchWithToggle/SwitchWithToggle";
+import { StyleSheet, css } from "aphrodite";
 
 export interface IDeviceInfo {
   onPropertySelect?: (e: any, selection: SelectOptionObject) => void;
@@ -35,12 +38,19 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
   const handleChange = () => {
     setIsChecked(!isChecked);
   };
+
+  const styles = StyleSheet.create({
+    lighter_text: {
+      fontWeight: "lighter"
+    }
+  });
   return (
     <Grid>
       <GridItem span={8}>
         <Form>
-          <Title id="cd-device-info-title" headingLevel="h3" size="2xl">
-            Enter your device information
+          <Title id="device-info-title" headingLevel="h3" size="xl">
+            Enter your device information{" "}
+            <small className={css(styles.lighter_text)}>(Optional)</small>
           </Title>
           <FormGroup
             id="cd-device-info-device-id"
@@ -67,16 +77,23 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
             label="Status"
             fieldId="device-info-switchtoggle"
           >
-            <br />
-            Enable or disable this device{" "}
-            <SwitchWithToggle
-              id="device-info-switchtoggle"
-              label="Enabled"
-              labelOff="Disabled"
-              isChecked={isChecked}
-              onChange={handleChange}
-            />
+            <Flex>
+              <FlexItem>
+                {" "}
+                <small> Enable or disable this device. </small>
+              </FlexItem>
+              <FlexItem align={{ default: "alignRight" }}>
+                <Switch
+                  id="device-info-status-switch"
+                  label="Enabled"
+                  labelOff="Disabled"
+                  isChecked={isChecked}
+                  onChange={handleChange}
+                />
+              </FlexItem>
+            </Flex>
           </FormGroup>
+          <br />
           <Divider />
           Metadata
           <CreateMetadata />
