@@ -20,7 +20,7 @@ import { Link } from "react-router-dom";
 import { getDeviceFromDeviceString } from "modules/iot-device/utils";
 import { useMutationQuery } from "hooks";
 import { CREATE_IOT_DEVICE } from "graphql-module";
-import { ICreateDeviceRequest } from "schema";
+import { ICreateDeviceResponse } from "schema";
 
 export default function AddDeviceUsingJsonPage() {
   const history = useHistory();
@@ -58,7 +58,7 @@ export default function AddDeviceUsingJsonPage() {
   const onSave = async (_detail: string) => {
     //TODO: Add query to save iot device
     if (deviceDetail) {
-      const device: ICreateDeviceRequest = getDeviceFromDeviceString(
+      const device: ICreateDeviceResponse = getDeviceFromDeviceString(
         deviceDetail
       );
       const variable = {

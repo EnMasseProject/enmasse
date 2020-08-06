@@ -6,6 +6,8 @@
 import React from "react";
 import { HashRouter as Router } from "react-router-dom";
 import { DeviceInfo } from "modules/iot-device-detail/components";
+import { ApolloProvider } from "@apollo/react-hooks";
+import ApolloClient from "apollo-boost";
 
 export default {
   title: "Device Info view"
@@ -150,13 +152,17 @@ const dataList = [
   }
 ];
 
+const client = new ApolloClient();
+
 export const DeviceInfoView = () => (
-  <Router>
-    <DeviceInfo
-      id={"device-info"}
-      metadataList={dataList}
-      deviceList={deviceList}
-      credentials={credentials}
-    />
-  </Router>
+  <ApolloProvider client={client}>
+    <Router>
+      <DeviceInfo
+        id={"device-info"}
+        metadataList={dataList}
+        deviceList={deviceList}
+        credentials={credentials}
+      />
+    </Router>
+  </ApolloProvider>
 );

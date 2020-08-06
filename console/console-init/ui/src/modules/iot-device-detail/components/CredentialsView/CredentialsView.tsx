@@ -217,7 +217,7 @@ export const CredentialsView: React.FC<ICredentialsViewProps> = ({
         </CardTitle>
       )}
       <CardBody>
-        {credentials &&
+        {Array.isArray(credentials) &&
           credentials.map((credential: ICredentialView, index: number) => {
             const { "auth-id": authId, type } = credential;
             return (

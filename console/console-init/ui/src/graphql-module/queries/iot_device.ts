@@ -21,15 +21,17 @@ const RETURN_IOT_DEVICE_DETAIL = (
         total
         devices{
           deviceId
-          enabled
-          via
-          viaGroups
+          registration{
+            enabled
+            via
+            viaGroups
+            ext
+          } 
           status{
             lastSeen
             updated
             created
           }
-          ext
           credentials 
         }`;
 
@@ -207,14 +209,16 @@ const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
     total
     devices {
       deviceId
+      registration{
+        enabled
+        via
+      }
       status{
         lastSeen
         updated
         created
       }
-      enabled
-      via
-      viaGroups
+      credentials
     }
   `;
 
@@ -272,6 +276,17 @@ const SET_IOT_CREDENTIAL_FOR_DEVICE = gql(
   `
 );
 
+const UPDATE_IOT_DEVICE = gql`
+  mutation updateIotDevice(
+    $iotproject: ObjectMeta_v1_Input!
+    $device: Device_iot_console_input!
+  ) {
+    updateIotDevice(iotproject: $iotproject, device: $device) {
+      deviceId
+    }
+  }
+`;
+
 export {
   RETURN_IOT_DEVICE_DETAIL,
   RETURN_IOT_CREDENTIALS,
@@ -280,5 +295,6 @@ export {
   DELETE_CREDENTIALS_FOR_IOT_DEVICE,
   TOGGLE_IOT_DEVICE_STATUS,
   CREATE_IOT_DEVICE,
-  SET_IOT_CREDENTIAL_FOR_DEVICE
+  SET_IOT_CREDENTIAL_FOR_DEVICE,
+  UPDATE_IOT_DEVICE
 };

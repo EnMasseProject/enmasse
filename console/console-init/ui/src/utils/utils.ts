@@ -375,6 +375,30 @@ const isObjectOrArray = (type: DataType.ARRAY | DataType.OBJECT) => {
   return type === DataType.OBJECT || type === DataType.ARRAY;
 };
 
+const convertStringToJsonAndValidate = (str: string) => {
+  let hasError = false;
+  let value = {};
+  try {
+    value = JSON.parse(str);
+    return { hasError, value };
+  } catch (e) {
+    hasError = true;
+    return { hasError, value };
+  }
+};
+
+const convertJsonToStringAndValidate = (json: any) => {
+  let hasError = false;
+  let value = "";
+  try {
+    value = JSON.stringify(json);
+    return { hasError, value };
+  } catch (e) {
+    hasError = true;
+    return { hasError, value };
+  }
+};
+
 export {
   getSelectOptionList,
   compareObject,
@@ -393,5 +417,7 @@ export {
   getFormattedJsonString,
   getLabelByKey,
   getDeviceConnectionType,
-  deepClean
+  deepClean,
+  convertStringToJsonAndValidate,
+  convertJsonToStringAndValidate
 };

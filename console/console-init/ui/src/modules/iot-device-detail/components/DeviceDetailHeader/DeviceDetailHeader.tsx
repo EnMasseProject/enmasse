@@ -27,8 +27,8 @@ import { DeviceConnectionType } from "constant";
 
 interface IDeviceDetailHeaderProps {
   deviceName?: string;
-  addedDate: string;
-  lastTimeSeen: string;
+  addedDate?: string;
+  lastTimeSeen?: string;
   deviceStatus?: boolean;
   onChange: (enabled: boolean) => void;
   onDelete: () => void;
@@ -58,8 +58,8 @@ const styles = StyleSheet.create({
 
 const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
   deviceName,
-  addedDate,
-  lastTimeSeen,
+  addedDate = "",
+  lastTimeSeen = "",
   onDelete,
   onChange,
   onClone,

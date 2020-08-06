@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Editor } from "components";
 import {
   Tooltip,
@@ -15,12 +15,12 @@ import { CopyIcon } from "@patternfly/react-icons";
 import { IAceEditorProps } from "react-ace";
 
 interface IJsonEditorProps extends IAceEditorProps {
-  setDetail?: (detail: string) => void;
+  setDetail?: (detail: string | undefined) => void;
   tooltipKey?: string;
 }
 
 const JsonEditor: React.FunctionComponent<IJsonEditorProps> = ({
-  value,
+  value: jsonValue,
   readOnly,
   style,
   name,
@@ -30,10 +30,17 @@ const JsonEditor: React.FunctionComponent<IJsonEditorProps> = ({
   tooltipKey = "",
   className
 }) => {
-  const onChange = (value: string) => {
-    setDetail && setDetail(value.trim());
-  };
   const [isCopied, setIsCopied] = useState<boolean>(false);
+  const [value, setValue] = useState<string | undefined>(jsonValue);
+
+  const onChange = (value: string) => {
+    setValue(value);
+  };
+
+  useEffect(() => {
+    setDetail && setDetail(value);
+  }, [value]);
+
   return (
     <>
       <Flex>

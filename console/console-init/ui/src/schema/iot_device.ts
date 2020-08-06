@@ -8,14 +8,16 @@ export interface IDeviceDetailResponse {
     total: number;
     devices: Array<{
       deviceId?: string;
-      enabled?: boolean;
+      registration: {
+        enabled?: boolean;
+        via?: string[];
+        ext?: string;
+        viaGroups?: string[];
+        memberOf?: string[];
+        defaults?: string;
+      };
       jsonData?: string;
-      via?: string[];
-      ext?: string;
-      defaults?: string;
       credentials?: string;
-      viaGroups?: string[];
-      memberOf?: string[];
       status?: {
         created?: string;
         updated?: string;
@@ -50,7 +52,7 @@ export interface IIoTDevicesResponse {
   };
 }
 
-export interface ICreateDeviceRequest {
+export interface ICreateDeviceResponse {
   deviceId?: string;
   registration: {
     enabled: boolean;

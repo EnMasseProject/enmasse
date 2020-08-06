@@ -78,6 +78,10 @@ enum OperationType {
   EDIT = "edit"
 }
 
+enum Messages {
+  InvalidJson = "Invalid json, please try again with valid json"
+}
+
 export {
   UNKNOWN,
   POLL_INTERVAL,
@@ -97,5 +101,6 @@ export {
   CredentialsType,
   WIZARD_HEIGHT,
   DeviceConnectionType,
-  OperationType
+  OperationType,
+  Messages
 };
