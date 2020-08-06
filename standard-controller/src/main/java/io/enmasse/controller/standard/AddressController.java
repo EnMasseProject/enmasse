@@ -4,29 +4,38 @@
  */
 package io.enmasse.controller.standard;
 
+import static io.enmasse.address.model.Phase.Active;
+import static io.enmasse.address.model.Phase.Configuring;
+import static io.enmasse.address.model.Phase.Failed;
+import static io.enmasse.address.model.Phase.Pending;
+import static io.enmasse.address.model.Phase.Terminating;
+import static io.enmasse.controller.standard.ControllerKind.Broker;
+import static io.enmasse.controller.standard.ControllerReason.BrokerUpgraded;
+import static io.enmasse.k8s.api.EventLogger.Type.Normal;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import io.enmasse.address.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.address.model.AddressResolver;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceResolver;
-import io.enmasse.address.model.AddressSpaceSpecConnector;
-import io.enmasse.address.model.AddressSpaceType;
-import io.enmasse.address.model.AddressSpecForwarder;
-import io.enmasse.address.model.AddressSpecForwarderDirection;
-import io.enmasse.address.model.AddressStatus;
-import io.enmasse.address.model.AddressStatusBuilder;
-import io.enmasse.address.model.AddressStatusForwarder;
-import io.enmasse.address.model.AddressStatusForwarderBuilder;
-import io.enmasse.address.model.AddressType;
-import io.enmasse.address.model.BrokerState;
-import io.enmasse.address.model.BrokerStatus;
-import io.enmasse.address.model.MessageTtl;
-import io.enmasse.address.model.MessageTtlBuilder;
-import io.enmasse.address.model.Phase;
-import io.enmasse.address.model.Schema;
+
 import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.admin.model.AddressSpacePlan;
+import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.amqp.RouterManagement;
@@ -53,31 +62,6 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.vertx.core.Vertx;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
-import static io.enmasse.address.model.Phase.Active;
-import static io.enmasse.address.model.Phase.Configuring;
-import static io.enmasse.address.model.Phase.Failed;
-import static io.enmasse.address.model.Phase.Pending;
-import static io.enmasse.address.model.Phase.Terminating;
-import static io.enmasse.controller.standard.ControllerKind.Broker;
-import static io.enmasse.controller.standard.ControllerReason.BrokerUpgraded;
-import static io.enmasse.k8s.api.EventLogger.Type.Normal;
 
 /**
  * Controller for a single standard address space
