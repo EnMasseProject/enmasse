@@ -542,10 +542,12 @@ query {
     total
     devices {
       deviceId
-      enabled
+      registration {
+        enabled
+      }
       status {
-        created
-        updated
+          created
+          updated
       }
     }
   }
@@ -564,13 +566,15 @@ query {
     total
     devices {
       deviceId
-      enabled
-      via
-      status{
-        created
-        lastUser
+      registration {
+          enabled
+          via
       }
-    }
+       status {
+          created
+          updated
+       }
+      }
   }
 }
 ```
@@ -586,10 +590,12 @@ query {
     total
     devices {
       deviceId
-      enabled
+      registration {
+          enabled
+      }
       status {
-        created
-        updated
+          created
+          updated
       }
     }
   }
@@ -607,10 +613,12 @@ query {
     total
     devices {
       deviceId
-      enabled
+      registration {
+          enabled
+      }
       status {
-        created
-        updated
+          created
+          updated
       }
     }
   }
