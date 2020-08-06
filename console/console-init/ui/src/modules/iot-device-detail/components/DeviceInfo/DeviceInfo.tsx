@@ -21,6 +21,8 @@ import {
   CardTitle
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
+import { ConnectionGateway } from "modules/iot-device-detail/components/ConnectionGateway";
+import { GatewayMembership } from "modules/iot-device-detail/components/GatewayMembership";
 import {
   CredentialsView,
   ICredentialsViewProps
@@ -45,12 +47,16 @@ export interface IDeviceInfoProps
     IErrorStateAlertProps {
   id: string;
   deviceList?: any;
+  deviceGroup?: any;
+  memberGroup?: any;
   metadataList?: any;
 }
 
 export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
   id,
   deviceList,
+  deviceGroup,
+  memberGroup,
   metadataList: metadetaJson,
   credentials,
   errorState,
@@ -63,6 +69,8 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
 
   const jsonViewData = {
     via: deviceList,
+    viaGroups: deviceGroup,
+    memberOf: memberGroup,
     ...metadetaJson,
     credentials
   };
@@ -121,44 +129,11 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
         ) : (
           <Grid hasGutter>
             <GridItem span={5}>
-              <Card>
-                <CardTitle>
-                  <Title
-                    id="device-info-gateways-title"
-                    headingLevel="h1"
-                    size="2xl"
-                  >
-                    Via gateways
-                  </Title>
-                </CardTitle>
-                <CardBody>
-                  <Grid>
-                    {deviceList &&
-                      deviceList.map((deviceId: string) => {
-                        return (
-                          <GridItem span={2} key={deviceId}>
-                            <Link
-                              id="device-info-id-link"
-                              to={`/iot-projects/${namespace}/${projectname}/devices/${deviceId}/device-info`}
-                            >
-                              {deviceId}
-                            </Link>
-                          </GridItem>
-                        );
-                      })}
-                    {!(deviceList?.length > 0) && (
-                      <Text
-                        component={TextVariants.p}
-                        id="device-info-no-gateways-text"
-                      >
-                        There are no gateways for this device. This device is
-                        connected to the cloud directly.
-                      </Text>
-                    )}
-                  </Grid>
-                </CardBody>
-              </Card>
-              <br />
+              <ConnectionGateway
+                deviceList={deviceList}
+                deviceGroup={deviceGroup}
+              />
+
               <CredentialsView
                 id={"deice-info-credentials-view"}
                 credentials={credentials}
@@ -166,6 +141,9 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
               />
             </GridItem>
             <GridItem span={7}>
+              {memberGroup?.length > 0 && (
+                <GatewayMembership memberGroup={memberGroup} />
+              )}
               <Card id={id}>
                 <CardTitle>
                   <Title

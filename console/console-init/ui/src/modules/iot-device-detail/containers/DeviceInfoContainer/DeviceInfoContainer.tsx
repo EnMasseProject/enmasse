@@ -29,6 +29,8 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
   const queryResolver = `
     devices{
       via
+      viaGroups
+      memberOf
       credentials
       ext
       defaults
@@ -53,7 +55,7 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
     setUpdateCredentialQueryVariable
   ] = useMutationQuery(SET_IOT_CREDENTIAL_FOR_DEVICE, ["iot_device_detail"]);
 
-  const { credentials, ext: extString, via, defaults } =
+  const { credentials, ext: extString, via, viaGroups, memberOf, defaults } =
     data?.devices?.devices[0] || {};
   const parsecredentials = credentials && JSON.parse(credentials);
 
@@ -127,6 +129,8 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
     <DeviceInfo
       id={id}
       deviceList={via}
+      deviceGroup={viaGroups}
+      memberGroup={memberOf}
       metadataList={metadetaJson}
       credentials={parsecredentials}
       errorState={getErrorState()}
