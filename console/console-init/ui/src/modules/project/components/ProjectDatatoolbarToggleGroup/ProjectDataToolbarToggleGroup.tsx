@@ -26,6 +26,7 @@ import {
 } from "components";
 import { typeOptions, filterMenuItems } from "modules/project/utils";
 import { ISelectOption } from "utils";
+import { StyleSheet, css } from "aphrodite";
 
 export interface IProjectToolbarToggleGroupProps {
   totalRecords: number;
@@ -58,6 +59,10 @@ export interface IProjectToolbarToggleGroupProps {
   isAllProjectSelected: boolean;
   onSelectAllProjects: (val: boolean) => void;
 }
+const styles = StyleSheet.create({
+  bulk_select_alignment: { paddingRight: 10, marginBottom: 1 },
+  search_btn: { marginBottom: 1 }
+});
 const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGroupProps> = ({
   totalRecords,
   filterSelected,
@@ -120,6 +125,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
                 setInput={setNameInput}
               />
               <Button
+                className={css(styles.search_btn)}
                 id="project-data-togglegrp-search-name-button"
                 variant={ButtonVariant.control}
                 aria-label="search button for search name"
@@ -228,6 +234,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
         breakpoint="xl"
       >
         <ToolbarItem
+          className={css(styles.bulk_select_alignment)}
           variant="bulk-select"
           id="project-data-togglegrp-device-list-toolbaritem"
           key="bulk-select"
