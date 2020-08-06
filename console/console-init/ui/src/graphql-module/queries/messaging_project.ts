@@ -8,7 +8,7 @@ import { ISortBy } from "@patternfly/react-table";
 import { removeForbiddenChars } from "utils";
 import { generateFilterPattern } from "./query";
 
-const DELETE_ADDRESS_SPACE = gql`
+const DELETE_MESSAGING_PROJECT = gql`
   mutation delete_as($as: [ObjectMeta_v1_Input!]!) {
     deleteAddressSpaces(input: $as)
   }
@@ -268,7 +268,7 @@ const RETURN_ADDRESS_SPACE_SCHEMAS = gql`
 `;
 
 export {
-  DELETE_ADDRESS_SPACE,
+  DELETE_MESSAGING_PROJECT,
   RETURN_ALL_ADDRESS_SPACES,
   RETURN_ADDRESS_SPACE_DETAIL,
   CREATE_ADDRESS_SPACE,

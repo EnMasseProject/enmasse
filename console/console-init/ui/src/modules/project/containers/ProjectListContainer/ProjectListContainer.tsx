@@ -23,7 +23,7 @@ import {
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { useMutationQuery } from "hooks";
 import {
-  DELETE_ADDRESS_SPACE,
+  DELETE_MESSAGING_PROJECT,
   DELETE_IOT_PROJECT,
   TOGGLE_IOT_PROJECTS_STATUS,
   RETURN_ALL_PROJECTS,
@@ -72,7 +72,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   const [sortBy, setSortBy] = useState<ISortBy>();
   const refetchQueries: string[] = ["allProjects"];
   const [setDeleteMsgProjectQueryVariables] = useMutationQuery(
-    DELETE_ADDRESS_SPACE,
+    DELETE_MESSAGING_PROJECT,
     refetchQueries
   );
   const [

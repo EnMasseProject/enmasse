@@ -28,7 +28,7 @@ import {
 } from "modules/messaging-project/components";
 import {
   DOWNLOAD_CERTIFICATE,
-  DELETE_ADDRESS_SPACE,
+  DELETE_MESSAGING_PROJECT,
   RETURN_ADDRESS_SPACE_DETAIL
 } from "graphql-module/queries";
 import { POLL_INTERVAL, FetchPolicy } from "constant";
@@ -82,7 +82,7 @@ export default function AddressSpaceDetailPage() {
     }
   };
   const [setDeleteAddressSpaceQueryVariables] = useMutationQuery(
-    DELETE_ADDRESS_SPACE,
+    DELETE_MESSAGING_PROJECT,
     undefined,
     resetFormState,
     resetFormState
@@ -173,7 +173,7 @@ export default function AddressSpaceDetailPage() {
   const onChangeDelete = () => {
     dispatch({
       type: types.SHOW_MODAL,
-      modalType: MODAL_TYPES.DELETE_ADDRESS_SPACE,
+      modalType: MODAL_TYPES.DELETE_MESSAGING_PROJECT,
       modalProps: {
         selectedItems: [addressSpaceDetails.name],
         data: addressSpace,

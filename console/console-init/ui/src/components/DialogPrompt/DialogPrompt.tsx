@@ -52,7 +52,7 @@ export const DialogPrompt: React.FunctionComponent<{}> = () => {
   let nameString = "";
 
   if (Array.isArray(selectedItems)) {
-    nameString = selectedItems.join(",");
+    nameString = selectedItems.join(", ");
   }
 
   const onCloseDialog = () => {
@@ -83,7 +83,6 @@ export const DialogPrompt: React.FunctionComponent<{}> = () => {
           variant={getConfirmButtonVariant(confirmButtonLabel, iconType)}
           onClick={onConfirmDialog}
         >
-          {/* Confirm */}
           {confirmButtonLabel || "Confirm"}
         </Button>,
         <Button

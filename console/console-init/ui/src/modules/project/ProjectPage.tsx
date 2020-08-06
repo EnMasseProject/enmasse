@@ -16,7 +16,7 @@ import {
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import {
-  DELETE_ADDRESS_SPACE,
+  DELETE_MESSAGING_PROJECT,
   DELETE_IOT_PROJECT
 } from "graphql-module/queries";
 import { compareObject, ISelectOption } from "utils";
@@ -88,7 +88,7 @@ export default function ProjectPage() {
 
   const refetchQueries: string[] = ["allProjects"];
   const [setDeleteProjectQueryVariables] = useMutationQuery(
-    DELETE_ADDRESS_SPACE,
+    DELETE_MESSAGING_PROJECT,
     refetchQueries,
     undefined,
     resetFormState
@@ -104,7 +104,7 @@ export default function ProjectPage() {
   const onDeleteAll = () => {
     dispatch({
       type: types.SHOW_MODAL,
-      modalType: MODAL_TYPES.DELETE_ADDRESS_SPACE,
+      modalType: MODAL_TYPES.DELETE_MESSAGING_PROJECT,
       modalProps: {
         onConfirm: onConfirmDeleteAll,
         selectedItems: selectedProjects.map(as => as.name),
