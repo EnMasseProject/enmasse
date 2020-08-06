@@ -3,6 +3,7 @@
 * #5013: Bump RESTeasy from 3.6.1.SP2 to 4.5.3.Final
 
 ## 0.33.0
+* #4815: Allow specifying forwarder priority relative to other consumers 
 * #5076, #5068: Prevent stale record from cache leading to incomplete address space deletion (#5084)
 
 ## 0.32.2
