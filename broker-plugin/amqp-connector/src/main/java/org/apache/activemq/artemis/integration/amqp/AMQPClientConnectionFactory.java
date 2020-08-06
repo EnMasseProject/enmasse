@@ -26,7 +26,6 @@ import org.apache.activemq.artemis.protocol.amqp.sasl.ClientSASLFactory;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.engine.Link;
-import org.jboss.logging.Logger;
 
 import java.util.Map;
 import java.util.Optional;
@@ -70,7 +69,7 @@ public class AMQPClientConnectionFactory {
          @Override
          public void onRemoteOpen(Link link) throws Exception {
             if (preserveInitiatedLinksSourceTargetInfo) {
-               linkInitiator.ifPresent(initiator -> initiator.preserveInitiatedSourceTargetInfo(link));
+               linkInitiator.ifPresent(initiator -> initiator.processLinkDuringAttach(link));
             }
             super.onRemoteOpen(link);
          }

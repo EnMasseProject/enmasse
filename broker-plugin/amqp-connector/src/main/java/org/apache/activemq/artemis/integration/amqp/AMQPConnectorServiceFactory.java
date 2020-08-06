@@ -42,6 +42,7 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
    private static final String CLUSTER = "clusterId";
    private static final String SOURCE_ADDRESS = "sourceAddress";
    private static final String TARGET_ADDRESS = "targetAddress";
+   private static final String CONSUMER_PRIORITY = "consumerPriority";
    private static final String LINK_NAME = "linkName";
    private static final String DIRECTION = "direction";
    private static final String NETTY_THREADS = "nettyThreads";
@@ -59,6 +60,7 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
       properties.add(LINK_NAME);
       properties.add(CONTAINER_ID);
       properties.add(LINK_CAPABILITIES);
+      properties.add(CONSUMER_PRIORITY);
       properties.add(TransportConstants.SSL_ENABLED_PROP_NAME);
       properties.add(TransportConstants.SSL_PROVIDER);
       properties.add(TransportConstants.VERIFY_HOST_PROP_NAME);
@@ -123,10 +125,11 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
 
       int nettyThreads = Optional.ofNullable((String)configuration.get(NETTY_THREADS)).map(Integer::parseInt).orElse(4);
       int idleTimeout = Optional.ofNullable((String)configuration.get(IDLE_TIMEOUT)).map(Integer::parseInt).orElse(16_000);
+      Integer consumerPriority = Optional.ofNullable((String)configuration.get(CONSUMER_PRIORITY)).map(Integer::parseInt).orElse(null);
 
       Optional<LinkInfo> linkInfo = sourceAddress.flatMap(s ->
               targetAddress.flatMap(t ->
-                      direction.map(d -> new LinkInfo(linkName, s, t, d, capabilities))));
+                      direction.map(d -> new LinkInfo(linkName, s, t, d, capabilities, consumerPriority))));
 
       if (linkInfo.isPresent()) {
          ActiveMQAMQPLogger.LOGGER.infof("Creating connector host %s port %s with link %s", configuration.get(TransportConstants.HOST_PROP_NAME), configuration.get(TransportConstants.PORT_PROP_NAME), linkInfo.get());

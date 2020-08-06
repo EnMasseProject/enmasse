@@ -41,6 +41,7 @@ import org.apache.qpid.proton.engine.Session;
 import org.apache.qpid.proton.engine.Transport;
 import org.apache.qpid.proton.engine.impl.LinkMutator;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -48,6 +49,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Event handler for establishing outgoing links
  */
 public class LinkInitiator implements EventHandler {
+   private static final Symbol PRIORITY = Symbol.getSymbol("priority");
    private final LinkInfo linkInfo;
    private final Map<Link, org.apache.qpid.proton.amqp.transport.Target> initiatedReceivingLinks = new ConcurrentHashMap<>();
    private final Map<Link, org.apache.qpid.proton.amqp.transport.Source> initiatedSendingLinks = new ConcurrentHashMap<>();
@@ -250,6 +252,14 @@ public class LinkInitiator implements EventHandler {
          source.setCapabilities(linkInfo.getCapabilities().toArray(new Symbol[0]));
          source.setCapabilities(Symbol.getSymbol("qd.waypoint"));
       }
+
+      // Requires https://issues.apache.org/jira/browse/DISPATCH-1745
+      if (linkInfo.getConsumerPriority() != null) {
+         Map<Symbol, Object> props = receiver.getProperties() == null ? new HashMap<>() : new HashMap<>(receiver.getProperties());
+         props.put(PRIORITY, linkInfo.getConsumerPriority());
+         receiver.setProperties(props);
+      }
+
       receiver.setSource(source);
       receiver.open();
       return receiver;
@@ -276,17 +286,30 @@ public class LinkInitiator implements EventHandler {
       if (!linkInfo.getCapabilities().isEmpty()) {
          source.setCapabilities(Symbol.getSymbol("qd.waypoint"));
       }
+
+      // We really ought to apply the consumer priority to the link properties here, but Artemis takes the link
+      // priority from the remote properties (which are set from the wire as the link attach response performative
+      // arrives).
+
       sender.setSource(source);
 
       sender.open();
       return sender;
    }
 
-   public void preserveInitiatedSourceTargetInfo(Link link) {
+   // This is hack - Artemis allows the definitive view of the target (receiving links), and source (sending links)
+   // to be overwritten by the peer's view.
+   public void processLinkDuringAttach(Link link) {
       if (initiatedReceivingLinks.containsKey(link)) {
          LinkMutator.setRemoteTarget(link, initiatedReceivingLinks.get(link));
       } else if (initiatedSendingLinks.containsKey(link)) {
+         // 2nd hack.  Add the consumer priority to the *remote* priorities.
          LinkMutator.setRemoteSource(link, initiatedSendingLinks.get(link));
+         if (linkInfo.getConsumerPriority() != null) {
+            Map<Symbol, Object> remoteProperties = link.getRemoteProperties() == null ? new HashMap<>() : new HashMap<>(link.getRemoteProperties());
+            remoteProperties.put(PRIORITY, linkInfo.getConsumerPriority());
+            LinkMutator.setRemoteProperties(link, remoteProperties);
+         }
       }
    }
 }

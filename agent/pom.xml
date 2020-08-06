@@ -87,7 +87,7 @@
             <phase>test</phase>
             <configuration>
               <installDirectory>${agent-node-install-directory}</installDirectory>
-              <arguments>run test</arguments>
+              <arguments>run test --verbose --useStderr</arguments>
             </configuration>
           </execution>
         </executions>

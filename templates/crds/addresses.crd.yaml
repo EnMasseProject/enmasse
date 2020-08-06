@@ -119,6 +119,9 @@ spec:
                   remoteAddress:
                     type: string
                     description: "Remote address to forward to. Must be prefixed with connector name."
+                  priority:
+                    type: integer
+                    description: "Priority of forwarder consumer (Only applied to outgoing forwarders)."
                   direction:
                     type: string
                     enum:

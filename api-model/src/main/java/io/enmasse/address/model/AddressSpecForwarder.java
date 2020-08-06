@@ -37,6 +37,8 @@ public class AddressSpecForwarder extends AbstractWithAdditionalProperties {
     @NotNull
     private AddressSpecForwarderDirection direction;
 
+    private Integer priority;
+
     public String getName() {
         return name;
     }
@@ -61,12 +63,21 @@ public class AddressSpecForwarder extends AbstractWithAdditionalProperties {
         this.direction = direction;
     }
 
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
     @Override
     public String toString() {
         return "AddressSpecForwarder{" +
                 "name='" + name + '\'' +
                 ", remoteAddress='" + remoteAddress + '\'' +
                 ", direction=" + direction +
+                ", priority=" + priority +
                 '}';
     }
 }

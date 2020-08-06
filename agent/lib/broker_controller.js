@@ -697,7 +697,8 @@ BrokerController.prototype._sync_broker_forwarders = function () {
                             linkName: forwarder_name,
                             targetAddress: targetAddress,
                             sourceAddress: sourceAddress,
-                            direction: forwarder.direction
+                            direction: forwarder.direction,
+                            consumerPriority: forwarder.priority
                         };
                         desired.push(forwarder_entry);
                     }
