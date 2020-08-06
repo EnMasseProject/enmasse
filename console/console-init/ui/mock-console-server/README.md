@@ -544,10 +544,10 @@ query {
       deviceId
       registration {
         enabled
-        status {
-            created
-            updated
-        }
+      }
+      status {
+          created
+          updated
       }
     }
   }
@@ -569,12 +569,12 @@ query {
       registration {
           enabled
           via
-          status {
-              created
-              updated
-          }
       }
-    }
+       status {
+          created
+          updated
+       }
+      }
   }
 }
 ```
@@ -592,10 +592,10 @@ query {
       deviceId
       registration {
           enabled
-          status {
-              created
-              updated
-          }
+      }
+      status {
+          created
+          updated
       }
     }
   }
@@ -615,10 +615,10 @@ query {
       deviceId
       registration {
           enabled
-          status {
-              created
-              updated
-          }
+      }
+      status {
+          created
+          updated
       }
     }
   }
