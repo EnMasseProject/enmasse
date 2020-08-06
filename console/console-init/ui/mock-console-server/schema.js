@@ -836,7 +836,6 @@ const typeDefs = gql`
     memberOf: [String]
     defaults: String
     ext: String #The Json representation of the ext field for this device.
-    defaults: String #The Json representation of the defaults field for this device.
   }
 
   input IotProject_iot_enmasse_io_v1alpha1_input {

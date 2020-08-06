@@ -27,7 +27,18 @@ export default function AddDeviceUsingJsonPage() {
   const { projectname, namespace } = useParams();
   const [deviceDetail, setDeviceDetail] = useState<string>();
   const deviceListRouteLink = `/iot-projects/${namespace}/${projectname}/devices`;
-  const [setCreateDeviceQueryVariables] = useMutationQuery(CREATE_IOT_DEVICE);
+
+  const onSuccess = () => {
+    history.push(deviceListRouteLink);
+  };
+
+  const [setCreateDeviceQueryVariables] = useMutationQuery(
+    CREATE_IOT_DEVICE,
+    undefined,
+    undefined,
+    onSuccess
+  );
+
   const breadcrumb = useMemo(
     () => (
       <Breadcrumb>
@@ -54,10 +65,8 @@ export default function AddDeviceUsingJsonPage() {
         iotproject: { name: projectname, namespace },
         device: device
       };
-      console.log(variable);
       await setCreateDeviceQueryVariables(variable);
     }
-    history.push(deviceListRouteLink);
   };
 
   const onLeave = () => {
