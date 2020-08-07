@@ -20,5 +20,7 @@ include::../modules/proc-enable-protocol-trace-broker.adoc[leveloffset=+1]
 
 include::../modules/proc-examine-broker-state.adoc[leveloffset=+1]
 
+include::../modules/proc-change-logging-level-broker.adoc[leveloffset=+1]
+
 :context: {parent-context}
 
