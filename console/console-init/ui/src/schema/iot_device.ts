@@ -39,14 +39,16 @@ export interface IIoTDevicesResponse {
     total: number;
     devices: Array<{
       deviceId: string;
-      status: {
-        lastSeen: string;
-        updated: string;
-        created: string;
+      registration: {
+        enabled: boolean;
+        via: string[];
+        viaGroups: string[];
       };
-      enabled: boolean;
-      via: string[];
-      viaGroups: string[];
+      status: {
+        lastSeen: Date;
+        updated: Date;
+        created: Date;
+      };
       credentials: string;
     }>;
   };

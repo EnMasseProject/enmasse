@@ -62,8 +62,10 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
   const { projectname, namespace } = useParams();
 
   const jsonViewData = {
-    via: deviceList,
-    ...metadetaJson,
+    registration: {
+      via: deviceList,
+      ...metadetaJson
+    },
     credentials
   };
 

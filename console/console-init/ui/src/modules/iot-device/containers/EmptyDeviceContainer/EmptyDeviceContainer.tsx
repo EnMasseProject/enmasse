@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   IEmptyDeviceListProps,
   EmptyDeviceList
@@ -12,9 +12,16 @@ import { useQuery } from "@apollo/react-hooks";
 import { POLL_INTERVAL, FetchPolicy } from "constant";
 import { IIoTDevicesResponse } from "schema/iot_device";
 import { RETURN_ALL_DEVICES_FOR_IOT_PROJECT } from "graphql-module/queries";
+import { StyleSheet, css } from "aphrodite";
+
+const styles = StyleSheet.create({
+  min_height: {
+    "min-height": "25rem"
+  }
+});
 
 export interface IEmptyDeviceContainerProps extends IEmptyDeviceListProps {
-  setTotalDevices: (val: number) => void;
+  setShowEmptyDevice: (val: boolean) => void;
   projectname: string;
   namespace: string;
 }
@@ -22,7 +29,7 @@ export interface IEmptyDeviceContainerProps extends IEmptyDeviceListProps {
 export const EmptyDeviceContainer: React.FC<IEmptyDeviceContainerProps> = ({
   handleInputDeviceInfo,
   handleJSONUpload,
-  setTotalDevices,
+  setShowEmptyDevice,
   projectname,
   namespace
 }) => {
@@ -42,12 +49,24 @@ export const EmptyDeviceContainer: React.FC<IEmptyDeviceContainerProps> = ({
 
   const total = data?.devices?.total || 0;
 
-  total > 0 && setTotalDevices(total);
+  useEffect(() => {
+    if (total === 0) {
+      setShowEmptyDevice(true);
+    } else if (total > 0) {
+      setShowEmptyDevice(false);
+    }
+  }, [total]);
 
   return (
-    <EmptyDeviceList
-      handleInputDeviceInfo={handleInputDeviceInfo}
-      handleJSONUpload={handleJSONUpload}
-    />
+    <>
+      {total === 0 && (
+        <div className={css(styles.min_height)}>
+          <EmptyDeviceList
+            handleInputDeviceInfo={handleInputDeviceInfo}
+            handleJSONUpload={handleJSONUpload}
+          />
+        </div>
+      )}
+    </>
   );
 };

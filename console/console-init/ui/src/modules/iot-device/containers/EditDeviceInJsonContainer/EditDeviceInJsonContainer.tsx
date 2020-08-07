@@ -26,6 +26,7 @@ import { IDeviceDetailResponse } from "schema";
 import { Messages, FetchPolicy } from "constant";
 import { serialize_IoT_Device } from "modules/iot-device/utils";
 import { useMutationQuery } from "hooks";
+import { convertStringToJsonAndValidate } from "utils";
 
 const styles = StyleSheet.create({
   editor_border: {
@@ -74,7 +75,7 @@ export const EditDeviceInJsonContainer = () => {
     devices: { total: 0, devices: [] }
   };
 
-  const { credentials, registration, status } = devices?.devices[0] || {};
+  const { credentials, registration } = devices?.devices[0] || {};
   const { enabled, via, ext, memberOf, viaGroups, defaults } =
     registration || {};
 
@@ -86,12 +87,24 @@ export const EditDeviceInJsonContainer = () => {
         enabled,
         via,
         memberOf: memberOf || [],
-        viaGroups: viaGroups || [],
-        defaults: JSON.parse(defaults || "{}"),
-        ext: JSON.parse(ext || "{}")
-      },
-      credentials: JSON.parse(credentials || "[]")
+        viaGroups: viaGroups || []
+      }
     };
+    if (defaults) {
+      const { hasError, value } = convertStringToJsonAndValidate(defaults);
+      Object.assign(deviceinfo.registration, { defaults: value });
+      hasError && setHasError(hasError);
+    }
+    if (ext) {
+      const { hasError, value } = convertStringToJsonAndValidate(ext);
+      Object.assign(deviceinfo.registration, { ext: value });
+      hasError && setHasError(hasError);
+    }
+    if (credentials) {
+      const { hasError, value } = convertStringToJsonAndValidate(credentials);
+      Object.assign(deviceinfo, { credentials: value });
+      hasError && setHasError(hasError);
+    }
     return deviceinfo;
   };
 

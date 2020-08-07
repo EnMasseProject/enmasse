@@ -28,7 +28,7 @@ import { DeviceConnectionType } from "constant";
 interface IDeviceDetailHeaderProps {
   deviceName?: string;
   addedDate?: string;
-  lastTimeSeen?: string;
+  lastSeen?: string;
   deviceStatus?: boolean;
   onChange: (enabled: boolean) => void;
   onDelete: () => void;
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
 const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
   deviceName,
   addedDate = "",
-  lastTimeSeen = "",
+  lastSeen = "",
   onDelete,
   onChange,
   onClone,
@@ -155,7 +155,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
           <FlexItem id="device-detail-header-last-time-seen-flexitem">
             Last time seen :{" "}
             <b>
-              <FormatDistance date={lastTimeSeen} />
+              <FormatDistance date={lastSeen} />
             </b>
           </FlexItem>
         </Flex>

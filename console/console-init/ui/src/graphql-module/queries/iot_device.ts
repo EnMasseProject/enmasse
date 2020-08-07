@@ -212,12 +212,14 @@ const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
       registration{
         enabled
         via
+        memberOf
+        viaGroups
       }
       status{
-        lastSeen
-        updated
-        created
-      }
+          lastSeen
+          updated
+          created
+        }
       credentials
     }
   `;

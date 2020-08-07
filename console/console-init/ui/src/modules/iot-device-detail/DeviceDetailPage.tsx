@@ -217,7 +217,7 @@ export default function DeviceDetailPage() {
             <DeviceDetailHeader
               deviceName={deviceId}
               addedDate={status?.created || ""}
-              lastTimeSeen={status?.lastSeen || ""}
+              lastSeen={status?.lastSeen || ""}
               onChange={onChangeDeviceStatus}
               onDelete={onDeleteDevice}
               onClone={onCloneDevice}

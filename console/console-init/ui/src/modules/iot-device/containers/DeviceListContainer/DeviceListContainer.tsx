@@ -93,9 +93,10 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
 
-  const { total, devices } = data?.devices || {};
-
-  total !== undefined && setTotalDevices(total);
+  const { total, devices } = data?.devices || {
+    devices: [],
+    total: 0
+  };
 
   const [setDeleteDeviceQueryVariables] = useMutationQuery(DELETE_IOT_DEVICE, [
     "devices_for_iot_project"
@@ -108,6 +109,8 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   if (loading) {
     return <Loading />;
   }
+
+  setTotalDevices(total);
 
   const onConfirmDeleteDevice = async (deviceId: string) => {
     const variable = {
@@ -195,7 +198,8 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   };
 
   const deviceRows: IDevice[] =
-    devices?.map(({ deviceId, enabled, via, viaGroups, credentials, status }) => {
+    devices?.map(({ deviceId, registration, status }) => {
+      const { enabled, via, viaGroups } = registration || {};
       return {
         deviceId,
         enabled,

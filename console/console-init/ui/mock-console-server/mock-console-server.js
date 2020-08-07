@@ -1981,7 +1981,7 @@ function toggleIoTProjectStatus(iotProject, status) {
 }
 
 function toggleIoTDevicesStatus(iotProject, iotDevice, status) {
-  getIotDevice(iotProject, iotDevice).enabled = status;
+  getIotDevice(iotProject, iotDevice).registration.enabled = status;
 }
 
 function getMockIotDownstreamMessagingAddresses() {
@@ -2111,7 +2111,9 @@ function createIotDevice(iotProject, newDevice) {
   ) {
     throw `Iot device with deviceId  '${newDevice.deviceId}' already exists in iot project ${iotProject}`;
   }
-
+  newDevice.status = getIotDeviceStatusSection();
+  Object.setPrototypeOf(newDevice, {});
+  Object.setPrototypeOf(newDevice.registration, {});
   iotdevices[devIndex].devices.push(newDevice);
   return getIotDevice(iotProject, newDevice.deviceId);
 }

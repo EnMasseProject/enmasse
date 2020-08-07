@@ -17,7 +17,7 @@ export const deviceDetailHeader = () => (
     <DeviceDetailHeader
       deviceName={text("Device Name", "Device foo")}
       addedDate="2019-11-25T05:24:05.755Z"
-      lastTimeSeen="2019-11-25T05:24:05.755Z"
+      lastSeen="2019-11-25T05:24:05.755Z"
       onChange={action("onEnableChange Clicked")}
       onDelete={action("onDelete Clicked")}
       onClone={action("onClone Clicked")}
