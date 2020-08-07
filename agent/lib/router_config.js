@@ -86,7 +86,7 @@ function listener_compare(a, b) {
 }
 
 function same_listener_definition(a, b) {
-    // NOTE: Special comparsion needed for legacy probe as schema for listener changed between
+    // NOTE: Special comparision needed for legacy probe as schema for listener changed between
     // router versions
     if (a.port === '56711' && b.port === '56711') {
         return a.host === b.host &&
@@ -390,6 +390,15 @@ function desired_address_config(high_level_address_definitions, brokers) {
             } else {
                 log.debug("Constructing old config for queue %s", def.address);
                 config.add_autolink_pair({address:def.address, containerId: def.address});
+            }
+        } else if (def.type === 'deadletter') {
+            config.add_address({prefix:def.address, distribution:'balanced', waypoint:true});
+            if (def.allocated_to) {
+                log.debug("Constructing config for deadletter %s allocated to: %j", def.address, def.allocated_to);
+                for (var j in def.allocated_to) {
+                    var brokerStatus = def.allocated_to[j];
+                    config.add_autolink_in({address:def.address, containerId: brokerStatus.containerId});
+                }
             }
         } else if (def.type === 'topic') {
             if (def.allocated_to) {

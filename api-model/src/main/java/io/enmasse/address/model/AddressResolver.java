@@ -43,9 +43,13 @@ public class AddressResolver {
         if (address.getStatus().getPlanStatus() != null) {
             found = addressType.findAddressPlan(address.getStatus().getPlanStatus().getName());
         }
+        if (found.isEmpty()) {
+            found = addressType.findAddressPlan(AppliedConfig.getCurrentAppliedPlanFromAddress(address).orElse(null));
+        }
         return found.orElse(addressType.findAddressPlan(address.getAnnotation(AnnotationKeys.APPLIED_PLAN))
                 .orElse(addressType.findAddressPlan(address.getSpec().getPlan()).orElseThrow(() -> new UnresolvedAddressException("Unknown address plan " + address.getSpec().getPlan() + " for address type " + address.getSpec().getType()))));
     }
+
 
     public AddressType getType(Address address) {
         return addressSpaceType.findAddressType(address.getSpec().getType()).orElseThrow(() -> new UnresolvedAddressException("Unknown address type " + address.getSpec().getType()));

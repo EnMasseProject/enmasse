@@ -57,7 +57,7 @@ class RouterStatus {
         return ok;
     }
 
-    public int checkAutoLinks(Address address) {
+    public int checkAutoLinks(Address address, int expectedAutoLinks) {
 
         int ok = 0;
         final String addressName = address.getSpec().getAddress();
@@ -70,12 +70,12 @@ class RouterStatus {
             }
         }
 
-        if (ok < 2) {
+        if (ok < expectedAutoLinks) {
             var msg = "Address " + addressName + " is missing autoLinks on " + routerId;
             log.debug(msg);
             address.getStatus().setReady(false).appendMessage(msg);
         } else {
-            log.debug("Address {} has all required auto links: {}", addressName);
+            log.debug("Address {} has all required auto links", addressName);
         }
 
         return ok;
@@ -101,13 +101,13 @@ class RouterStatus {
             log.debug(msg);
             address.getStatus().setReady(false).appendMessage(msg);
         } else {
-            log.debug("Address {} has all required link routes: {}", addressName);
+            log.debug("Address {} has all required link routes", addressName);
         }
 
         return ok;
     }
 
-    public static int checkActiveAutoLink(Address address, List<RouterStatus> routerStatusList) {
+    public static int checkActiveAutoLink(Address address, List<RouterStatus> routerStatusList, int expectedActiveAutoLink) {
         int ok = 0;
         final Set<String> active = new HashSet<>();
         final String addressName = address.getSpec().getAddress();
@@ -132,7 +132,7 @@ class RouterStatus {
             }
         }
 
-        if (active.size() < 2) {
+        if (active.size() < expectedActiveAutoLink) {
             var msg = "Address " + addressName + " is missing active autoLink (active in dirs: " + active + ")";
             log.debug(msg);
             address.getStatus().setReady(false).appendMessage(msg);

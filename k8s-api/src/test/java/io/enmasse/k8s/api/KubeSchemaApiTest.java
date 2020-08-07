@@ -5,6 +5,7 @@
 package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.AddressSpaceType;
+import io.enmasse.address.model.AddressType;
 import io.enmasse.address.model.Phase;
 import io.enmasse.address.model.Schema;
 import io.enmasse.admin.model.v1.*;
@@ -35,6 +36,7 @@ public class KubeSchemaApiTest {
     private CrdApi<BrokeredInfraConfig> brokeredInfraConfigApi;
     private CrdApi<AuthenticationService> authenticationServiceApi;
     private CrdApi<ConsoleService> consoleServiceApi;
+    private AddressType deadletter;
 
     @BeforeEach
     public void setup() {
@@ -58,7 +60,7 @@ public class KubeSchemaApiTest {
                         .editOrNewSpec()
                         .withInfraConfigRef("infra1")
                         .withAddressSpaceType("standard")
-                        .withAddressPlans(Arrays.asList("plan1", "plan2", "plan4"))
+                        .withAddressPlans(Arrays.asList("plan1", "plan2", "plan4", "plan5"))
                         .withResourceLimits(Map.of("broker", 1.0, "router", 1.0, "aggregate", 1.0))
                         .endSpec()
                         .build(),
@@ -132,6 +134,14 @@ public class KubeSchemaApiTest {
                         .withAddressType("queue")
                         .withResources(Map.of("broker", 0.1))
                         .endSpec()
+                        .build(),
+                new AddressPlanBuilder()
+                        .withNewMetadata()
+                        .withName("plan5")
+                        .endMetadata()
+                        .editOrNewSpec()
+                        .withAddressType("deadletter")
+                        .endSpec()
                         .build());
 
         List<StandardInfraConfig> standardInfraConfigs = Arrays.asList(
@@ -167,6 +177,7 @@ public class KubeSchemaApiTest {
             assertTrue(type.findAddressSpacePlan("spaceplan1").get().getAddressPlans().contains("plan1"));
             assertTrue(type.findAddressSpacePlan("spaceplan1").get().getAddressPlans().contains("plan2"));
             assertTrue(type.findAddressSpacePlan("spaceplan1").get().getAddressPlans().contains("plan4"));
+            assertTrue(type.findAddressSpacePlan("spaceplan1").get().getAddressPlans().contains("plan5"));
             assertTrue(type.findInfraConfig("infra1").isPresent());
 
             assertTrue(type.findAddressType("queue").get().findAddressPlan("plan1").isPresent());

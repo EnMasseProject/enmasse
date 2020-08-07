@@ -141,7 +141,7 @@ public class StandardController {
                 vertx,
                 metrics,
                 new RandomBrokerIdGenerator(),
-                brokerClientFactory);
+                () -> new BrokerStatusCollector(kubernetes, brokerClientFactory, options));
 
         log.info("Starting standard controller for " + options.getAddressSpace());
         addressController.start();

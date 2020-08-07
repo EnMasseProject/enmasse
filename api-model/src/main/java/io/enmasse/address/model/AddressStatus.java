@@ -49,6 +49,7 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
     private AddressPlanStatus planStatus;
     private SubscriptionStatus subscription;
     private MessageTtl messageTtl;
+    private MessageRedelivery messageRedelivery;
 
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid AddressStatusForwarder> forwarders;
@@ -124,12 +125,13 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
                 Objects.equals(planStatus, status.planStatus) &&
                 Objects.equals(forwarders, status.forwarders) &&
                 Objects.equals(subscription, status.subscription) &&
-                Objects.equals(messageTtl, status.messageTtl);
+                Objects.equals(messageTtl, status.messageTtl) &&
+                Objects.equals(messageRedelivery, status.messageRedelivery);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ready, phase, messages, brokerStatuses, planStatus, forwarders, subscription);
+        return Objects.hash(ready, phase, messages, brokerStatuses, planStatus, forwarders, subscription, messageTtl, messageRedelivery);
     }
 
 
@@ -144,6 +146,7 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
                 .append(",").append("forwarders=").append(forwarders)
                 .append(",").append("subscription=").append(subscription)
                 .append(",").append("messageTtl=").append(messageTtl)
+                .append(",").append("messageRedelivery=").append(messageRedelivery)
                 .append("}")
                 .toString();
     }
@@ -183,4 +186,13 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
     public void setMessageTtl(MessageTtl messageTtl) {
         this.messageTtl = messageTtl;
     }
+
+    public MessageRedelivery getMessageRedelivery() {
+        return messageRedelivery;
+    }
+
+    public void setMessageRedelivery(MessageRedelivery messageRedelivery) {
+        this.messageRedelivery = messageRedelivery;
+    }
+
 }

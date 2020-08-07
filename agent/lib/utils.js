@@ -335,6 +335,14 @@ module.exports.same_ttl = function (a, b) {
     return a && b && a.minimum === b.minimum && a.maximum === b.maximum;
 };
 
+module.exports.same_message_redelivery = function (a, b) {
+    if (a === b) return true;
+    return a && b && a.maximumDeliveryAttempts === b.maximumDeliveryAttempts
+        && a.redeliveryDelay === b.redeliveryDelay
+        && a.redeliveryDelayMultiplier === b.redeliveryDelayMultiplier
+        && a.maximumDeliveryDelay === b.maximumDeliveryDelay;
+};
+
 module.exports.description = function description(list, name) {
     const max = 5;
     if (list.length > max) {

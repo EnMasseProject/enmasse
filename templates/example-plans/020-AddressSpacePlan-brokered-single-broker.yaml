@@ -16,3 +16,4 @@ spec:
   addressPlans:
   - brokered-queue
   - brokered-topic
+  - brokered-deadletter

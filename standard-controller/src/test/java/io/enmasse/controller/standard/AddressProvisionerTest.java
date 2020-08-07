@@ -43,7 +43,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.internal.util.collections.Sets;
 
 import io.enmasse.admin.model.v1.ResourceAllowance;
-import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.EventLogger;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
@@ -503,13 +502,13 @@ public class AddressProvisionerTest {
         addresses.add(a1);
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
-        assertNotEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
-        assertNotEquals(a1.getSpec().getPlan(), a1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertNotEquals(q1.getSpec().getPlan(), AppliedConfig.getCurrentAppliedPlanFromAddress(q1).orElse(null));
+        assertNotEquals(a1.getSpec().getPlan(), AppliedConfig.getCurrentAppliedPlanFromAddress(a1).orElse(null));
         @SuppressWarnings("unused")
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(a1, q1), Sets.newSet(a1, q1));
 
-        assertEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
-        assertEquals(a1.getSpec().getPlan(), a1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertEquals(q1.getSpec().getPlan(), AppliedConfig.getCurrentAppliedPlanFromAddress(q1).orElse(null));
+        assertEquals(a1.getSpec().getPlan(), AppliedConfig.getCurrentAppliedPlanFromAddress(a1).orElse(null));
     }
 
     @Test
@@ -524,7 +523,7 @@ public class AddressProvisionerTest {
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
 
         provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
-        assertEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertEquals(q1.getSpec().getPlan(), AppliedConfig.getCurrentAppliedPlanFromAddress(q1).orElse(null));
 
         q1 = new AddressBuilder(q1)
                 .editOrNewSpec()
@@ -537,7 +536,7 @@ public class AddressProvisionerTest {
         usageMap = provisioner.checkUsage(Sets.newSet(q1));
         @SuppressWarnings("unused")
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
-        assertEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertEquals(q1.getSpec().getPlan(), AppliedConfig.getCurrentAppliedPlanFromAddress(q1).orElse(null));
     }
 
     @Test
@@ -552,7 +551,7 @@ public class AddressProvisionerTest {
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
 
         provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
-        assertEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertEquals(q1.getSpec().getPlan(), AppliedConfig.getCurrentAppliedPlanFromAddress(q1).orElse(null));
 
         q1.getStatus().setPhase(Active);
         q1 = new AddressBuilder(q1)
@@ -566,7 +565,7 @@ public class AddressProvisionerTest {
         provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
         assertTrue(q1.getStatus().getMessages().isEmpty());
         assertThat(q1.getStatus().getPhase(), is(Configuring));
-        assertEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertEquals(q1.getSpec().getPlan(), AppliedConfig.getCurrentAppliedPlanFromAddress(q1).orElse(null));
     }
 
     /*

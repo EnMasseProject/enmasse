@@ -343,6 +343,56 @@ describe('address source', function() {
             });
         });
     });
+    it('updates status - messageRedelivery from plan', function(done) {
+        address_server.add_address_definition({address:'foo', type:'queue', plan: 'myplan'});
+        var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default'});
+        source.start(address_plans_source);
+        address_plans_source.emit("addressplans_defined", [{
+            kind: 'AddressPlan',
+            metadata: {name: 'myplan'},
+            spec: {
+                addressType: 'queue',
+                messageRedelivery: {
+                    maximumDeliveryAttempts: 2,
+                },
+            }
+        }]);
+
+        source.once('addresses_defined', function (addresses) {
+            source.check_status({foo:{propagated:100}}).then(function (add) {
+                var address = address_server.find_resource('addresses', 'foo');
+                assert.equal(address.status.isReady, true);
+                assert.equal(address.status.messageRedelivery.maximumDeliveryAttempts, 2);
+                done();
+            });
+        });
+    });
+    it('updates status - messageRedelivery address overrides plan', function(done) {
+        address_server.add_address_definition({address:'foo', type:'queue', plan: 'myplan', messageRedelivery: {maximumDeliveryAttempts: 3, }});
+        var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default'});
+        source.start(address_plans_source);
+        address_plans_source.emit("addressplans_defined", [{
+            kind: 'AddressPlan',
+            metadata: {name: 'myplan'},
+            spec: {
+                addressType: 'queue',
+                messageRedelivery: {
+                    maximumDeliveryAttempts: 2,
+                    redeliveryDelay: 1000,
+                },
+            }
+        }]);
+
+        source.once('addresses_defined', function (addresses) {
+            source.check_status({foo:{propagated:100}}).then(function (add) {
+                var address = address_server.find_resource('addresses', 'foo');
+                assert.equal(address.status.isReady, true);
+                assert.equal(address.status.messageRedelivery.maximumDeliveryAttempts, 3);
+                assert.equal(address.status.messageRedelivery.redeliveryDelay, 1000);
+                done();
+            });
+        });
+    });
 
     function equal_properties (a, b) {
         for (let k in a) {

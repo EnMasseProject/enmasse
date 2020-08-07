@@ -128,12 +128,16 @@ public class KubeSchemaApi implements SchemaApi {
         List<String> supportedTypes = new ArrayList<>();
         List<String> requiredResources = new ArrayList<>();
         if ("brokered".equals(addressSpaceType)) {
-            supportedTypes.addAll(Arrays.asList("queue", "topic"));
-            requiredResources.add("broker");
+            supportedTypes.addAll(Arrays.asList("queue", "topic", "deadletter"));
+            if (!"deadletter".equals(addressPlan.getAddressType())) {
+                requiredResources.add("broker");
+            }
         } else if ("standard".equals(addressSpaceType)) {
-            supportedTypes.addAll(Arrays.asList("queue", "topic", "subscription", "anycast", "multicast"));
-            requiredResources.add("router");
-            if (!Arrays.asList("anycast", "multicast").contains(addressPlan.getAddressType())) {
+            supportedTypes.addAll(Arrays.asList("queue", "topic", "subscription", "anycast", "multicast", "deadletter"));
+            if (!"deadletter".equals(addressPlan.getAddressType())) {
+                requiredResources.add("router");
+            }
+            if (!Arrays.asList("anycast", "multicast", "deadletter").contains(addressPlan.getAddressType())) {
                 if (!"queue".equals(addressPlan.getAddressType()) && addressPlan.getPartitions() > 1) {
                     String error = "Error validating address plan " + addressPlan.getMetadata().getName() + ": address type " + addressPlan.getAddressType() + " does not support more than 1 partition";
                     log.warn(error);
@@ -213,6 +217,10 @@ public class KubeSchemaApi implements SchemaApi {
 
         builder.withAddressTypes(Arrays.asList(
                 createAddressType(
+                        "deadletter",
+                        "A deadletter queue.",
+                        filteredAddressPlans),
+                createAddressType(
                         "anycast",
                         "A direct messaging address type. Messages sent to an anycast address are not " +
                                 "stored but forwarded directly to a consumer.",
@@ -268,11 +276,15 @@ public class KubeSchemaApi implements SchemaApi {
 
         builder.withAddressTypes(Arrays.asList(
                 createAddressType(
+                        "deadletter",
+                        "A deadletter queue",
+                        filteredAddressPlans),
+                createAddressType(
                         "queue",
                         "A queue that supports selectors, message grouping and transactions",
                         filteredAddressPlans),
                 createAddressType(
-                    "topic",
+                        "topic",
                     "A topic supports pub-sub semantics. Messages sent to a topic address is forwarded to all subscribes on that address.",
                     filteredAddressPlans)));
 
