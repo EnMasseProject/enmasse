@@ -5,10 +5,13 @@ import {
   Flex,
   FlexItem,
   Card,
+  Popover,
+  Button,
   CardBody,
   Title,
   CardTitle
 } from "@patternfly/react-core";
+import { OutlinedQuestionCircleIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "aphrodite";
 
 export interface IGatewayMembershipProps {
@@ -21,6 +24,9 @@ const styles = StyleSheet.create({
   flex_item_margin: {
     marginLeft: 10,
     paddingLeft: 0
+  },
+  tooltip_margin: {
+    paddingRight: 50
   }
 });
 
@@ -28,13 +34,31 @@ export const GatewayMembership: React.FC<IGatewayMembershipProps> = ({
   memberGroup
 }) => {
   const { projectname, namespace } = useParams();
+
   return (
     <Card className={css(styles.card_body)}>
       <CardTitle>
-        <Title id="device-info-gateways-title" headingLevel="h1" size="2xl">
-          Gateway Group Membership
+        <Title
+          className={css(styles.tooltip_margin)}
+          id="device-info-gateways-title"
+          headingLevel="h1"
+          size="2xl"
+        >
+          Gateway Group Membership &nbsp;&nbsp;
+          <Popover
+            enableFlip={false}
+            bodyContent={<div>Gateway groups to which the device belongs</div>}
+            aria-label="gateway group membership info popover"
+            closeBtnAriaLabel="close gateway membership info popover"
+          >
+            <Button
+              variant="link"
+              icon={<OutlinedQuestionCircleIcon />}
+            ></Button>
+          </Popover>
         </Title>
       </CardTitle>
+
       <CardBody className={css(styles.flex_item_margin)}>
         <Flex>
           <br />

@@ -8,9 +8,12 @@ import {
   CardBody,
   Title,
   Text,
+  Popover,
+  Button,
   TextVariants,
   CardTitle
 } from "@patternfly/react-core";
+import { OutlinedQuestionCircleIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "aphrodite";
 export interface IConnectionGatewayProps {
   deviceList?: any;
@@ -35,7 +38,18 @@ export const ConnectionGateway: React.FC<IConnectionGatewayProps> = ({
     <Card className={css(styles.card_body)}>
       <CardTitle>
         <Title id="device-info-gateways-title" headingLevel="h1" size="2xl">
-          Connection Gateways
+          Connection Gateways&nbsp;&nbsp;
+          <Popover
+            enableFlip={false}
+            bodyContent={<div>Gateway Groups to which the device belongs</div>}
+            aria-label="Add gateway devices info popover"
+            closeBtnAriaLabel="Close Gateway Devices info popover"
+          >
+            <Button
+              variant="link"
+              icon={<OutlinedQuestionCircleIcon />}
+            ></Button>
+          </Popover>
         </Title>
       </CardTitle>
       {deviceList.length > 0 && (
