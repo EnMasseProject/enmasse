@@ -2552,9 +2552,11 @@ const resolvers = {
     },
 
     createIotDevice: (parent, args) => {
-      let reg = args.device.registration;
-      reg.deviceId = args.device.deviceId;
       let creds = args.device.credentials;
+
+      if (args.device.deviceId == undefined) {
+        args.device.deviceId = uuidv1();
+      }
 
       let result = createIotDevice(args.iotproject.name, args.device);
       if (result != undefined) {
