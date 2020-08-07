@@ -183,7 +183,7 @@ function transform_topic_stats(topic) {
 }
 
 function transform_address_stats(address) {
-    return address.type === 'queue' ? transform_queue_stats(address) : transform_topic_stats(address);
+    return address.type === 'queue' || address.type === 'deadletter' ? transform_queue_stats(address) : transform_topic_stats(address);
 }
 
 BrokerController.prototype.transform_connection_stats = function(raw) {
@@ -402,7 +402,8 @@ function is_durable_subscription(a) {
  * Translate from the address details we get back from artemis to the
  * structure used for the definition, for easier comparison.
  */
-function translate(addresses_in, excluded_names, excluded_types) {
+BrokerController.prototype._translate = function (addresses_in, excluded_names, excluded_types) {
+    var deadletters = values(this.addresses).filter((o) => o.type === 'deadletter');
     var addresses_out = {};
     for (var name in addresses_in) {
         if (excluded_names && excluded_names(name)) continue;
@@ -417,6 +418,9 @@ function translate(addresses_in, excluded_names, excluded_types) {
             continue;
         }
         if (a.name) {
+            if (deadletters.find(dla => dla.address === a.name)) {
+                a.type = "deadletter";
+            }
             addresses_out[name] = {address:a.name, type: a.type};
         } else {
             log.warn('Skipping address with no name: %j', a);
@@ -461,17 +465,17 @@ BrokerController.prototype.update_address_setting = function (a) {
 
 BrokerController.prototype.delete_address = function (a) {
     var self = this;
-    if (a.type === 'queue') {
-        log.info('[%s] Deleting queue "%s"...', self.id, a.address);
+    if (a.type === 'queue' || a.type === 'deadletter') {
+        log.info('[%s] Deleting %s "%s"...', self.id, a.type, a.address);
         return self.broker.destroyQueue(a.address).then(function () {
-            log.info('[%s] Deleted queue "%s"', self.id, a.address);
+            log.info('[%s] Deleted %s "%s"', self.id, a.type, a.address);
             self.post_event(myevents.address_delete(a));
         }).catch(function (error) {
-            log.error('[%s] Failed to delete queue %s: %s', self.id, a.address, error);
+            log.error('[%s] Failed to delete %s %s: %s', self.id, a.type, a.address, error);
             return self.broker.deleteAddress(a.address).then(function () {
-                log.info('[%s] Deleted anycast address %s', self.id, a.address);
+                log.info('[%s] Deleted %s address %s', self.id, a.type, a.address);
             }).catch(function (error) {
-                log.error('[%s] Failed to delete queue address %s: %s', self.id, a.address, error);
+                log.error('[%s] Failed to delete %s address %s: %s', self.id, a.type, a.address, error);
                 self.post_event(myevents.address_failed_delete(a, error));
             });
         });
@@ -515,13 +519,13 @@ BrokerController.prototype.delete_addresses = function (addresses) {
 
 BrokerController.prototype.create_address = function (a) {
     var self = this;
-    if (a.type === 'queue') {
-        log.info('[%s] Creating queue "%s"...', self.id, a.address);
+    if (a.type === 'queue' || a.type === 'deadletter') {
+        log.info('[%s] Creating %s "%s"...', self.id, a.type, a.address);
         return self.broker.createQueue(a.address).then(function () {
-            log.info('[%s] Created queue "%s"', self.id, a.address);
+            log.info('[%s] Created %s "%s"', self.id, a.type, a.address);
             self.post_event(myevents.address_create(a));
         }).catch(function (error) {
-            log.error('[%s] Failed to create queue "%s": %s', self.id, a.address, error);
+            log.error('[%s] Failed to create %s "%s": %s', self.id, a.type, a.address, error);
             self.post_event(myevents.address_failed_create(a, error));
         });
     } else if (a.type === 'topic') {
@@ -606,8 +610,9 @@ BrokerController.prototype._set_sync_status = function (stale, missing) {
 BrokerController.prototype._sync_broker_addresses = function (retry) {
     var self = this;
     return this.broker.listAddresses().then(function (results) {
-        var addrSettings = self.sync_addresssettings(values(self.addresses).filter((o) => o.type === 'subscription' || o.type === 'queue' || o.type === 'topic'));
-        var actual = translate(results, excluded_addresses, self.excluded_types);
+        var addrSettings = self.sync_addresssettings(values(self.addresses).filter((o) => o.type === 'subscription' || o.type === 'queue' || o.type === 'deadletter' || o.type === 'topic'));
+        var actual = self._translate(results, excluded_addresses, self.excluded_types);
+
         var stale = values(difference(actual, self.addresses, same_address));
         var missing = values(difference(self.addresses, actual, same_address));
         log.debug('[%s] checking addresses, desired=%j, actual=%j => delete %j and create %j', self.id, values(self.addresses).map(address_and_type), values(actual),
@@ -756,7 +761,7 @@ BrokerController.prototype.generate_address_settings = function (address, global
                 upd++;
             }
         }
-        if (address.status.messageTtl && (address.type === 'topic' || address.type === 'queue')) {
+        if (address.status.messageTtl && (address.type === 'topic' || address.type === 'queue' || address.type === 'deadletter')) {
             if (address.status.messageTtl.minimum) {
                 addressSettings.minExpiryDelay = address.status.messageTtl.minimum;
                 upd++;
@@ -764,6 +769,36 @@ BrokerController.prototype.generate_address_settings = function (address, global
             if (address.status.messageTtl.maximum) {
                 addressSettings.maxExpiryDelay = address.status.messageTtl.maximum;
                 upd++;
+            }
+        }
+        var notTopic = address.type === 'subscription' || address.type === 'queue' || address.type === 'deadletter';
+
+        if (notTopic) {
+            if (address.deadLetterAddress) {
+                addressSettings.DLA = address.deadLetterAddress;
+                upd++;
+            }
+            if (address.expiryAddress) {
+                addressSettings.expiryAddress = address.expiryAddress;
+                upd++;
+            }
+            if (address.status.messageRedelivery) {
+                if (address.status.messageRedelivery.maximumDeliveryAttempts) {
+                    addressSettings.maxDeliveryAttempts = address.status.messageRedelivery.maximumDeliveryAttempts;
+                    upd++;
+                }
+                if (address.status.messageRedelivery.redeliveryDelay) {
+                    addressSettings.redeliveryDelay = address.status.messageRedelivery.redeliveryDelay;
+                    upd++;
+                }
+                if (address.status.messageRedelivery.redeliveryMultiplier) {
+                    addressSettings.redeliveryMultiplier = address.status.messageRedelivery.redeliveryMultiplier;
+                    upd++;
+                }
+                if (address.status.messageRedelivery.maximumDeliveryDelay) {
+                    addressSettings.maxRedeliveryDelay = address.status.messageRedelivery.maximumDeliveryDelay;
+                    upd++;
+                }
             }
         }
         return upd ? addressSettings : undefined;

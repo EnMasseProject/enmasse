@@ -6,6 +6,7 @@
 package io.enmasse.admin.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.enmasse.address.model.MessageRedelivery;
 import io.enmasse.address.model.MessageTtl;
 import io.enmasse.common.model.DefaultCustomResource;
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -98,6 +99,12 @@ public class AddressPlan extends AbstractHasMetadataWithAdditionalProperties<Add
     @JsonIgnore
     public MessageTtl getTtl() {
         return spec == null ? null : spec.getMessageTtl();
+    }
+
+    @Override
+    @JsonIgnore
+    public MessageRedelivery getMessageRedelivery() {
+        return spec == null ? null : spec.getMessageRedelivery();
     }
 
     public AddressPlanStatus getStatus() {

@@ -25,7 +25,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 
-import io.enmasse.address.model.SubscriptionStatus;
 import io.enmasse.address.model.SubscriptionStatusBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,13 +36,14 @@ import io.enmasse.address.model.AddressSpaceResolver;
 import io.enmasse.address.model.AddressStatus;
 import io.enmasse.address.model.AddressStatusBuilder;
 import io.enmasse.address.model.AddressType;
+import io.enmasse.address.model.AppliedConfig;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.address.model.Phase;
+
 import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.admin.model.AddressSpacePlan;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
-import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.EventLogger;
 
 public class AddressProvisioner {
@@ -178,7 +178,7 @@ public class AddressProvisioner {
                     address.getStatus().setSubscription(new SubscriptionStatusBuilder()
                             .withMaxConsumers(maxConsumers)
                             .build());
-                    address.putAnnotation(AnnotationKeys.APPLIED_PLAN, address.getSpec().getPlan());
+                    AppliedConfig.setCurrentAppliedConfig(address, AppliedConfig.create(address.getSpec()));
                 } else {
                     address.getStatus().setBrokerStatuses(previousStatus.getBrokerStatuses());
                 }
@@ -402,16 +402,6 @@ public class AddressProvisioner {
 
     static int getQueuePartitions(double credits, int partitions) {
         return (int)Math.max(partitions, Math.ceil(credits));
-    }
-
-    static boolean hasPlansChanged(AddressResolver addressResolver, Address address) {
-        AddressPlan addressPlan = addressResolver.getDesiredPlan(address);
-        return hasPlansChanged(addressPlan, address);
-    }
-
-    static boolean hasPlansChanged(AddressPlan addressPlan, Address address) {
-        return !AddressPlanStatus.fromAddressPlan(addressPlan).equals(address.getStatus().getPlanStatus()) ||
-                !address.getSpec().getPlan().equals(address.getAnnotation(AnnotationKeys.APPLIED_PLAN));
     }
 
     static int sumTotalNeeded(Map<String, Map<String, UsageInfo>> usageMap) {

@@ -144,4 +144,30 @@ describe('addressplan source', function() {
             });
         });
     });
+    it('watches for changes - redefined plan - messageRedelivery', function(done) {
+
+        address_server.add_address_plan({plan_name:'small', address_type:'queue', messageRedelivery: {maximumDeliveryAttempts: 1}});
+
+        var source = new AddressPlanSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE_PLAN: 'space', ADDRESS_SPACE_PREFIX: 's1.'});
+        source.start(address_space_plan_source);
+        address_space_plan_source.emit("addressspaceplan_defined", {
+            kind: 'AddressPlan',
+            metadata: {name: 'spaceplan'},
+            spec: {
+                addressPlans: ['small'],
+            }
+        });
+        source.once('addressplans_defined', (addressplans) => {
+            assert.equal(addressplans.length, 1);
+            process.nextTick(() => {
+                    address_server.update_address_plan({plan_name:'small', address_type:'queue', messageRedelivery: {maximumDeliveryAttempts: 2}});
+            });
+
+            source.on('addressplans_defined', (update) => {
+                source.watcher.close();
+                assert.equal(update.length, 1);
+                done();
+            });
+        });
+    });
 });

@@ -7,11 +7,11 @@ package io.enmasse.controller.standard;
 
 import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,12 +35,13 @@ import io.enmasse.address.model.AddressSpec;
 import io.enmasse.address.model.AddressSpecBuilder;
 import io.enmasse.address.model.AddressSpecForwarderDirection;
 import io.enmasse.address.model.AddressStatus;
+import io.enmasse.address.model.AppliedConfig;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
+import io.enmasse.address.model.MessageRedeliveryBuilder;
 import io.enmasse.address.model.MessageTtlBuilder;
 import io.enmasse.address.model.Phase;
 
-import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.EventLogger;
@@ -55,6 +57,7 @@ public class AddressControllerTest {
     private Kubernetes mockHelper;
     private AddressApi mockApi;
     private AddressController controller;
+    private BrokerStatusCollector mockBrokerStatusCollector;
     @SuppressWarnings("unused")
     private OpenShiftClient mockClient;
     private BrokerSetGenerator mockGenerator;
@@ -67,6 +70,7 @@ public class AddressControllerTest {
     public void setUp() throws IOException {
         id = 0;
         mockHelper = mock(Kubernetes.class);
+        mockBrokerStatusCollector = mock(BrokerStatusCollector.class);
         mockGenerator = mock(BrokerSetGenerator.class);
         mockApi = mock(AddressApi.class);
         AddressSpaceApi mockSpaceApi = mock(AddressSpaceApi.class);
@@ -81,7 +85,7 @@ public class AddressControllerTest {
         options.setResyncInterval(Duration.ofSeconds(5));
         options.setVersion("1.0");
         vertx = Vertx.vertx();
-        controller = new AddressController(options, mockSpaceApi, mockApi, mockHelper, mockGenerator, eventLogger, standardControllerSchema, vertx, new Metrics(), idGenerator, new MutualTlsBrokerClientFactory(vertx, options));
+        controller = new AddressController(options, mockSpaceApi, mockApi, mockHelper, mockGenerator, eventLogger, standardControllerSchema, vertx, new Metrics(), idGenerator, () -> mockBrokerStatusCollector);
     }
 
     @AfterEach
@@ -97,7 +101,6 @@ public class AddressControllerTest {
                 .withNewMetadata()
                 .withName("myspace.q1")
                 .withNamespace("ns")
-                .addToAnnotations(AnnotationKeys.APPLIED_PLAN, "small-queue")
                 .endMetadata()
 
                 .withNewSpec()
@@ -121,12 +124,13 @@ public class AddressControllerTest {
                 .endStatus()
 
                 .build();
+        AppliedConfig.setCurrentAppliedConfig(alive, AppliedConfig.create(alive.getSpec()));
+
 
         Address terminating = new AddressBuilder()
                 .withNewMetadata()
                 .withName("myspace.q2")
                 .withNamespace("ns")
-                .addToAnnotations(AnnotationKeys.APPLIED_PLAN, "small-queue")
                 .endMetadata()
 
                 .withNewSpec()
@@ -148,6 +152,9 @@ public class AddressControllerTest {
                 .endStatus()
 
                 .build();
+        AppliedConfig.setCurrentAppliedConfig(terminating, AppliedConfig.create(terminating.getSpec()));
+
+
         when(mockHelper.listClusters()).thenReturn(Arrays.asList(new BrokerCluster("broker-infra-0", new KubernetesList())));
         controller.onUpdate(Arrays.asList(alive, terminating));
         verify(mockApi).deleteAddress(any());
@@ -408,12 +415,11 @@ public class AddressControllerTest {
     }
 
     @Test
-    public void testChangedPlanIsReplaced() throws Exception {
+    public void testUpdatedPlan() throws Exception {
         Address a = new AddressBuilder()
                 .withNewMetadata()
                 .withName("myspace.a1")
                 .withNamespace("ns")
-                .addToAnnotations(AnnotationKeys.APPLIED_PLAN, "")
                 .endMetadata()
 
                 .withNewSpec()
@@ -429,15 +435,15 @@ public class AddressControllerTest {
                 .build();
 
 
-        assertNotEquals(a.getSpec().getPlan(), a.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertNotEquals(a.getSpec().getPlan(), AppliedConfig.getCurrentAppliedPlanFromAddress(a).orElse(null));
         controller.onUpdate(Arrays.asList(a));
         ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
         verify(mockApi).replaceAddress(captor.capture());
         Address captured = captor.getValue();
         // ensure that the replaced address has the correct plan
-        assertEquals(captured.getSpec().getPlan(), captured.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertEquals(captured.getSpec().getPlan(), AppliedConfig.getCurrentAppliedPlanFromAddress(captured).orElse(null));
         // but the instance provided to onUpdate did not change
-        assertNotEquals(a.getSpec().getPlan(), a.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertNotEquals(a.getSpec().getPlan(), AppliedConfig.getCurrentAppliedPlanFromAddress(a).orElse(null));
     }
 
     @Test
@@ -631,6 +637,172 @@ public class AddressControllerTest {
         sub = captured.get(0);
         assertEquals(Phase.Pending, sub.getStatus().getPhase());
         assertThat(sub.getStatus().getMessages(), is(singletonList("Subscription address 'a1' (resource name 'myspace.a1') references a topic address 'myanycast' (resource name 'myspace.myanycast') that is not of expected type 'topic' (found type 'anycast' instead).")));
+    }
+
+    @Test
+    public void testQueueRefersToUnknownDeadLetterAddress() throws Exception {
+        Address sub = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("a1")
+                .withDeadLetterAddress("unknown")
+                .withType("queue")
+                .withPlan("small-queue")
+                .endSpec()
+                .build();
+
+        controller.onUpdate(singletonList(sub));
+
+        List<Address> captured = captureAddresses(1);
+
+        sub = captured.get(0);
+        assertEquals(Phase.Pending, sub.getStatus().getPhase());
+        assertThat(sub.getStatus().getMessages(), is(singletonList("Address 'a1' (resource name 'myspace.a1') references a dead letter address 'unknown' that does not exist.")));
+    }
+
+    @Test
+    public void testQueueRefersToDeadLetterAddressWithWrongType() throws Exception {
+        Address nonDeadLetter = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.myanycast")
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("myanycast")
+                .withType("anycast")
+                .withPlan("small-anycast")
+                .endSpec()
+                .editOrNewStatus()
+                .withPhase(Phase.Active)
+                .endStatus()
+                .build();
+
+        Address sub = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("a1")
+                .withDeadLetterAddress(nonDeadLetter.getSpec().getAddress())
+                .withType("queue")
+                .withPlan("small-queue")
+                .endSpec()
+                .build();
+
+        controller.onUpdate(Arrays.asList(sub, nonDeadLetter));
+
+        List<Address> captured = captureAddresses(2);
+
+        sub = captured.get(0);
+        assertEquals(Phase.Pending, sub.getStatus().getPhase());
+        assertThat(sub.getStatus().getMessages(), is(singletonList("Address 'a1' (resource name 'myspace.a1') references a dead letter address 'myanycast' (resource name 'myspace.myanycast') that is not of expected type 'deadletter' (found type 'anycast' instead).")));
+    }
+
+    @Test
+    public void testInvalidAddressTypeRefersToDeadLetterAddress() throws Exception {
+        Address sub = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("a1")
+                .withDeadLetterAddress("illegal")
+                .withType("anycast")
+                .withPlan("small-anycast")
+                .endSpec()
+                .build();
+
+        controller.onUpdate(singletonList(sub));
+
+        List<Address> captured = captureAddresses(1);
+
+        sub = captured.get(0);
+        assertEquals(Phase.Pending, sub.getStatus().getPhase());
+        assertThat(sub.getStatus().getMessages(), is(singletonList("Address 'a1' (resource name 'myspace.a1') of type 'anycast' cannot reference a dead letter address.")));
+    }
+
+    @Test
+    public void testQueueRefersToUnknownExpiryAddress() throws Exception {
+        Address sub = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("a1")
+                .withExpiryAddress("unknown")
+                .withType("queue")
+                .withPlan("small-queue")
+                .endSpec()
+                .build();
+
+        controller.onUpdate(singletonList(sub));
+
+        List<Address> captured = captureAddresses(1);
+
+        sub = captured.get(0);
+        assertEquals(Phase.Pending, sub.getStatus().getPhase());
+        assertThat(sub.getStatus().getMessages(), is(singletonList("Address 'a1' (resource name 'myspace.a1') references an expiry address 'unknown' that does not exist.")));
+    }
+
+    @Test
+    public void testQueueRefersToExpiryAddressWithWrongType() throws Exception {
+        Address nonDeadLetter = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.myanycast")
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("myanycast")
+                .withType("anycast")
+                .withPlan("small-anycast")
+                .endSpec()
+                .editOrNewStatus()
+                .withPhase(Phase.Active)
+                .endStatus()
+                .build();
+
+        Address sub = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("a1")
+                .withExpiryAddress(nonDeadLetter.getSpec().getAddress())
+                .withType("queue")
+                .withPlan("small-queue")
+                .endSpec()
+                .build();
+
+        controller.onUpdate(Arrays.asList(sub, nonDeadLetter));
+
+        List<Address> captured = captureAddresses(2);
+
+        sub = captured.get(0);
+        assertEquals(Phase.Pending, sub.getStatus().getPhase());
+        assertThat(sub.getStatus().getMessages(), is(singletonList("Address 'a1' (resource name 'myspace.a1') references an expiry address 'myanycast' (resource name 'myspace.myanycast') that is not of expected type 'deadletter' (found type 'anycast' instead).")));
+    }
+
+    @Test
+    public void testTopicRefersToExpiryAddress() throws Exception {
+        Address sub = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("a1")
+                .withExpiryAddress("illegal")
+                .withType("topic")
+                .withPlan("small-topic")
+                .endSpec()
+                .build();
+
+        controller.onUpdate(singletonList(sub));
+
+        List<Address> captured = captureAddresses(1);
+
+        sub = captured.get(0);
+        assertEquals(Phase.Pending, sub.getStatus().getPhase());
+        assertThat(sub.getStatus().getMessages(), is(singletonList("Address 'a1' (resource name 'myspace.a1') of type 'topic' cannot reference an expiry address.")));
     }
 
     @Test
@@ -881,6 +1053,193 @@ public class AddressControllerTest {
         assertNull(status2.getMessageTtl().getMaximum());
         assertEquals(10000, status2.getMessageTtl().getMinimum());  // From plan - not overridden by address
 
+    }
+
+    @Test
+    public void testAddressDeadLetterStatus() throws Exception {
+        Address deadLetter = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.mydeadletter")
+                .withNamespace("ns")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress("mydeadletter")
+                .withAddressSpace("myspace")
+                .withType("deadletter")
+                .withPlan("deadletter")
+                .endSpec()
+
+                .withNewStatus()
+                .withReady(false)
+                .withPhase(Phase.Active)
+                .addNewBrokerStatus()
+                .withClusterId("broker-infra-1")
+                .withContainerId("broker-infra-1-0")
+                .endBrokerStatus()
+                .withPlanStatus(AddressPlanStatus.fromAddressPlan(standardControllerSchema.getType().findAddressType("deadletter").get().findAddressPlan("deadletter").get()))
+
+                .endStatus()
+
+                .build();
+        AppliedConfig.setCurrentAppliedConfig(deadLetter, AppliedConfig.create(deadLetter.getSpec()));
+
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.q1")
+                .withNamespace("ns")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress("q1")
+                .withAddressSpace("myspace")
+                .withType("queue")
+                .withPlan("small-queue")
+                .withDeadLetterAddress(deadLetter.getSpec().getAddress())
+                .endSpec()
+
+                .withNewStatus()
+                .withReady(true)
+                .withPhase(Phase.Active)
+                .addNewBrokerStatus()
+                .withClusterId("broker-infra-0")
+                .withContainerId("broker-infra-0-0")
+                .endBrokerStatus()
+                .withPlanStatus(AddressPlanStatus.fromAddressPlan(standardControllerSchema.getType().findAddressType("queue").get().findAddressPlan("small-queue").get()))
+                .editOrNewPlanStatus()
+                .withName("small-queue")
+                .endPlanStatus()
+                .endStatus()
+
+                .build();
+        AppliedConfig.setCurrentAppliedConfig(queue, AppliedConfig.create(queue.getSpec()));
+
+        when(mockHelper.listClusters()).thenReturn(List.of(new BrokerCluster("broker-infra-0", new KubernetesList()), new BrokerCluster("broker-infra-1", new KubernetesList())));
+        when(mockBrokerStatusCollector.getQueueMessageCount(deadLetter.getSpec().getAddress(), deadLetter.getStatus().getBrokerStatuses().get(0).getClusterId())).thenReturn(1L);
+        controller.onUpdate(Arrays.asList(queue, deadLetter));
+
+        List<Address> captured = captureAddresses(2);
+
+        Address a1 = captured.get(0);
+        assertThat(a1.getMetadata().getName(), is(queue.getMetadata().getName()));
+        AddressStatus status1 = a1.getStatus();
+        assertThat(status1.getPhase(), is(Phase.Active));
+
+        Address a2 = captured.get(1);
+        assertThat(a2.getMetadata().getName(), is(deadLetter.getMetadata().getName()));
+        AddressStatus status2 = a2.getStatus();
+        assertThat(status2.getPhase(), is(Phase.Active));
+
+        Optional<BrokerStatus> newContainer = status2.getBrokerStatuses().stream().filter(s -> "broker-infra-0-0".equals(s.getContainerId())).findFirst();
+        assertThat(newContainer.isPresent(), is(true));
+        assertThat(newContainer.get().getState(), is(BrokerState.Active));
+
+        // The existing container still has messages on the DLQ, so it has to be retained in a draining state.
+        Optional<BrokerStatus> existingContainer = status2.getBrokerStatuses().stream().filter(s -> "broker-infra-1-0".equals(s.getContainerId())).findFirst();
+        assertThat(existingContainer.isPresent(), is(true));
+        assertThat(existingContainer.get().getState(), is(BrokerState.Draining));
+    }
+
+    @Test
+    public void testAddressSpecifiedMessageRedeliveryStatus() throws Exception {
+        when(mockHelper.listClusters()).thenReturn(List.of(
+                new BrokerCluster("broker-infra-0", new KubernetesList()),
+                new BrokerCluster("broker-infra-1", new KubernetesList())));
+
+        AddressSpec t = new AddressSpecBuilder()
+                .withType("queue")
+                .withPlan("small-queue")
+                .build();
+
+        Address a1 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .endMetadata()
+                .withNewSpecLike(t)
+                .withAddress("a1")
+                .withMessageRedelivery(new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(1).build())
+                .endSpec()
+                .build();
+
+        Address a2 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a2")
+                .endMetadata()
+                .withNewSpecLike(t)
+                .withAddress("a2")
+                .withMessageRedelivery(new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(-1).build())
+                .endSpec()
+                .build();
+
+        Address a3 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a3")
+                .endMetadata()
+                .withNewSpecLike(t)
+                .withAddress("a3")
+                .endSpec()
+                .build();
+
+        controller.onUpdate(List.of(a1, a2, a3));
+
+        List<Address> captured = captureAddresses(3);
+
+        Address address1 = captured.get(0);
+        assertThat(a1.getMetadata().getName(), is(a1.getMetadata().getName()));
+        assertThat(address1.getStatus().getMessageRedelivery().getMaximumDeliveryAttempts(), is(1));
+
+        Address address2 = captured.get(1);
+        assertThat(a2.getMetadata().getName(), is(a2.getMetadata().getName()));
+        assertThat(address2.getStatus().getMessageRedelivery().getMaximumDeliveryAttempts(), is(-1));
+
+        Address address3 = captured.get(2);
+        assertThat(a3.getMetadata().getName(), is(a3.getMetadata().getName()));
+        assertThat(address3.getStatus().getMessageRedelivery(), nullValue());
+    }
+
+    @Test
+    public void testAddressPlanSpecifiedMessageRedeliveryStatus() throws Exception {
+        when(mockHelper.listClusters()).thenReturn(List.of(
+                new BrokerCluster("broker-infra-0", new KubernetesList()),
+                new BrokerCluster("broker-infra-1", new KubernetesList())));
+
+        AddressSpec t = new AddressSpecBuilder()
+                .withType("queue")
+                .withPlan("small-queue-with-redelivery")
+                .build();
+
+        Address a1 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .endMetadata()
+                .withNewSpecLike(t)
+                .withAddress("a1")
+                .withMessageRedelivery(new MessageRedeliveryBuilder().withRedeliveryDelay(100L).build())  // Override the plan
+                .endSpec()
+                .build();
+
+        Address a2 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a2")
+                .endMetadata()
+                .withNewSpecLike(t)
+                .withAddress("a2")
+                .endSpec()
+                .build();
+
+        controller.onUpdate(List.of(a1, a2));
+
+        List<Address> captured = captureAddresses(2);
+
+        Address address1 = captured.get(0);
+        assertThat(a1.getMetadata().getName(), is(a1.getMetadata().getName()));
+        assertThat(address1.getStatus().getMessageRedelivery().getMaximumDeliveryAttempts(), is(10));
+        assertThat(address1.getStatus().getMessageRedelivery().getRedeliveryDelay(), is(100L));
+
+        Address address2 = captured.get(1);
+        assertThat(a2.getMetadata().getName(), is(a2.getMetadata().getName()));
+        assertThat(address2.getStatus().getMessageRedelivery().getMaximumDeliveryAttempts(), is(10));
+        assertThat(address2.getStatus().getMessageRedelivery().getRedeliveryDelay(), is(1000L));
     }
 
     private List<Address> captureAddresses(int expectedAddresses) {

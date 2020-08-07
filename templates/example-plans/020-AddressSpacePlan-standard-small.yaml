@@ -31,3 +31,4 @@ spec:
   - standard-small-subscription
   - standard-medium-subscription
   - standard-large-subscription
+  - standard-deadletter

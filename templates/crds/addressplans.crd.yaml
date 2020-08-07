@@ -46,6 +46,7 @@ spec:
       description: AddressPlan describes the resource usage and common properties of an address. This resource is created by the service administrator.
       properties:
         status:
+          type: object
           properties:
             phase:
               type: string
@@ -55,9 +56,6 @@ spec:
               description: "Status and error messages for the address plan."
         spec:
           type: object
-          required:
-            - addressType
-            - resources
           properties:
             displayName:
               type: string
@@ -69,6 +67,13 @@ spec:
               type: string
             addressType:
               type: string
+              enum:
+                - queue
+                - topic
+                - subscription
+                - anycast
+                - multicast
+                - deadletter
             partitions:
               type: integer
             resources:
@@ -80,7 +85,7 @@ spec:
                   type: number
             messageTtl:
               type: object
-              description: "Restricts message time-to-live (TTL). Applies to address types queue and topic only."
+              description: "Restricts message time-to-live (TTL). Applies to address types queue, topic, and deadletter only."
               properties:
                 maximum:
                   description: "Imposes a maximum TTL value (in milliseconds) for messages arriving at the address.  Messages arriving with TTL values greater than this value (or no TTL value) will have their expiration adjusted."
@@ -88,6 +93,34 @@ spec:
                 minimum:
                   description: "Imposes a minimum TTL value (in milliseconds) for messages arriving at the address.  Messages arriving with TTL values less than this value will have their expiration adjusted."
                   type: integer
+            messageRedelivery:
+              type: object
+              description: "Configures message redelivery options.  Applies to address types queue, subscription and deadletter only."
+              properties:
+                maximumDeliveryAttempts:
+                  description: "Maximum number of delivery attempts that will be made for a message before message is directed to a deadLetterAddress (or dropped). Set to -1 for infinite re-deliveries."
+                  type: integer
+                redeliveryDelay:
+                  description: "The number of milliseconds to wait before redelivery. Set to 0 for no redelivery delay."
+                  type: integer
+                redeliveryDelayMultiplier:
+                  description: "The redelivery multiplier. This factor is applied to last redelivery delay."
+                  type: number
+                maximumDeliveryDelay:
+                  description: "The maximum delivery delay in milliseconds. Imposes an upper limit on the delivery delay."
+                  type: integer
+          anyOf:
+            - properties:
+                addressType:
+                  pattern: (queue|topic|subscription|anycast|multicast)
+              required:
+                - addressType
+                - resources
+            - properties:
+                type:
+                  pattern: deadletter
+              required:
+                - addressType
         displayName:
           type: string
         displayOrder:

@@ -80,6 +80,7 @@ spec:
                 - queue
                 - topic
                 - subscription
+                - deadletter
             plan:
               type: string
               description: "Plan referenced by this address."
@@ -93,6 +94,12 @@ spec:
                 maxConsumers:
                   type: integer
                   description: "Maximum number of concurrent consumers that can be attached to this subscription. If unspecified, 1 consumer is allowed per subscription"
+            deadLetterAddress:
+              type: string
+              description: "Dead letter address (only applicable to queue and subscription types)."
+            expiryAddress:
+              type: string
+              description: "Expiry address (only applicable to queue and subscription types)."
             messageTtl:
               type: object
               description: "Further restricts message time-to-live (TTL). Applies to address types queue and topic only. The maximum and minimum values must fall with the minimum/maximum range described by the plan's TTL settings."
@@ -102,6 +109,22 @@ spec:
                   type: integer
                 minimum:
                   description: "Imposes a minimum TTL value (in milliseconds) for messages arriving at the address.  Messages arriving with TTL values less than this value will have their expiration adjusted."
+                  type: integer
+            messageRedelivery:
+              type: object
+              description: "Configures message redelivery options.  Applies to address types queue, subscription and deadletter only."
+              properties:
+                maximumDeliveryAttempts:
+                  description: "Maximum number of delivery attempts that will be made for a message before message is directed to a deadLetterAddress (or dropped). Set to -1 for infinite re-deliveries."
+                  type: integer
+                redeliveryDelay:
+                  description: "The number of milliseconds to wait before redelivery. Set to 0 for no redelivery delay."
+                  type: integer
+                redeliveryDelayMultiplier:
+                  description: "The redelivery multiplier. This factor is applied to last redelivery delay."
+                  type: number
+                maximumDeliveryDelay:
+                  description: "The maximum delivery delay in milliseconds. Imposes an upper limit on the delivery delay."
                   type: integer
             forwarders:
               type: array
@@ -186,6 +209,18 @@ spec:
                   type: integer
                 minimum:
                   description: "Minimum TTL value"
+                  type: integer
+            messageRedelivery:
+              type: object
+              description: "Applied message redelivery properties"
+              properties:
+                maximumDeliveryAttempts:
+                  type: integer
+                redeliveryDelay:
+                  type: integer
+                redeliveryDelayMultiplier:
+                  type: number
+                maximumDeliveryDelay:
                   type: integer
             forwarders:
               type: array

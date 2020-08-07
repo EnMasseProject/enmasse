@@ -80,7 +80,7 @@ function same_addressplan_definition_and_status(a, b) {
 
 function same_addressplan_definition(a, b) {
     if (a === b) return true;
-    return a && b && a.addressType === b.addressType && same_addressplan_resources(a.resources, b.resources) && myutils.same_ttl(a.messageTtl, b.messageTtl);
+    return a && b && a.addressType === b.addressType && same_addressplan_resources(a.resources, b.resources) && myutils.same_ttl(a.messageTtl, b.messageTtl) && myutils.same_message_redelivery(a.messageRedelivery, b.messageRedelivery);
 }
 
 function same_addressplan_resources(a, b) {
@@ -90,7 +90,7 @@ function same_addressplan_resources(a, b) {
 
 function same_addressplan_status(a, b) {
     if (a === b) return true;
-    return a && b && a.isReady === b.isReady && a.phase === b.phase && myutils.same_status_messages(a.messages, b.messages) && myutils.same_ttl(a.messageTtl, b.messageTtl);
+    return a && b && a.isReady === b.isReady && a.phase === b.phase && myutils.same_status_messages(a.messages, b.messages);
 }
 
 function addressplan_compare(a, b) {

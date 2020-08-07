@@ -5,6 +5,7 @@
 
 package io.enmasse.admin.model;
 
+import io.enmasse.address.model.MessageRedelivery;
 import io.enmasse.address.model.MessageTtl;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 
@@ -16,4 +17,5 @@ public interface AddressPlan extends HasMetadata {
     Map<String, Double> getResources();
     int getPartitions();
     MessageTtl getTtl();
+    MessageRedelivery getMessageRedelivery();
 }
