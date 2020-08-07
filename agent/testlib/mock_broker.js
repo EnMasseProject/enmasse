@@ -231,12 +231,19 @@ MockBroker.prototype.connect = function (port) {
     return this.container.connect({port:port, properties:{product:'apache-activemq-artemis'}});
 };
 
-MockBroker.prototype.close = function (callback) {
-    if (this.server) {
-        this.server.close();
-    }
+MockBroker.prototype.close = function () {
     for (var i in this.clients) {
         this.clients[i].destroy();
+    }
+    if (this.server) {
+        var connection = this.server;
+        return new Promise(function (resolve) {
+            connection.on('connection_close', resolve);
+            connection.on('connection_error', resolve);
+            connection.close();
+        });
+    } else {
+        return Promise.resolve();
     }
 };
 
