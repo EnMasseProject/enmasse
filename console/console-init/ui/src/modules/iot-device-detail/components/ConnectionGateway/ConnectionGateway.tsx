@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useParams } from "react-router";
 import {
-  Grid,
-  GridItem,
   Card,
+  Flex,
+  FlexItem,
   CardBody,
   Title,
   Text,
@@ -19,6 +19,9 @@ export interface IConnectionGatewayProps {
 const styles = StyleSheet.create({
   card_body: {
     marginBottom: 20
+  },
+  text_margin: {
+    marginLeft: 25
   }
 });
 
@@ -35,57 +38,49 @@ export const ConnectionGateway: React.FC<IConnectionGatewayProps> = ({
           Connection Gateways
         </Title>
       </CardTitle>
+      {deviceList.length > 0 && (
+        <text className={css(styles.text_margin)}>Gateway Devices</text>
+      )}
       <CardBody>
-        <Grid>
-          {deviceList.length > 0 && (
-            <GridItem>
-              <text>Gateway Devices</text>
-              <br />
-            </GridItem>
-          )}
-          <br />
+        <Flex>
           {deviceList &&
             deviceList.map((deviceId: string) => {
               return (
-                <GridItem span={2} key={deviceId}>
+                <FlexItem span={2} key={deviceId}>
                   <Link
                     id="device-info-id-link"
                     to={`/iot-projects/${namespace}/${projectname}/devices/${deviceId}/device-info`}
                   >
                     {deviceId}
                   </Link>
-                </GridItem>
+                </FlexItem>
               );
             })}
-          <br />
-          <br />
-          {deviceGroup.length > 0 && (
-            <GridItem>
-              <text>Gateway groups</text>
-              <br />
-            </GridItem>
-          )}
-          <br />
+        </Flex>
+        <br />
+        {deviceList.length > 0 && <text>Gateway Groups</text>}
+        <br />
+        <Flex>
           {deviceGroup &&
             deviceGroup.map((deviceId: string) => {
               return (
-                <GridItem span={2} key={deviceId}>
+                <FlexItem span={2} key={deviceId}>
                   <Link
                     id="device-info-id-link"
                     to={`/iot-projects/${namespace}/${projectname}/devices/${deviceId}/device-info`}
                   >
                     {deviceId}
                   </Link>
-                </GridItem>
+                </FlexItem>
               );
             })}
-          {deviceList?.length <= 0 && deviceGroup?.length <= 0 && (
-            <Text component={TextVariants.p} id="device-info-no-gateways-text">
-              There are no gateways for this device. This device is connected to
-              the cloud directly.
-            </Text>
-          )}
-        </Grid>
+        </Flex>
+        {deviceList?.length <= 0 && deviceGroup?.length <= 0 && (
+          <Text component={TextVariants.p} id="device-info-no-gateways-text">
+            There are no gateways for this device. This device is connected to
+            the cloud directly.
+          </Text>
+        )}
       </CardBody>
     </Card>
   );

@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useParams } from "react-router";
 import {
-  Grid,
-  GridItem,
+  Flex,
+  FlexItem,
   Card,
   CardBody,
   Title,
@@ -17,6 +17,10 @@ export interface IGatewayMembershipProps {
 const styles = StyleSheet.create({
   card_body: {
     marginBottom: 20
+  },
+  flex_item_margin: {
+    marginLeft: 10,
+    paddingLeft: 0
   }
 });
 
@@ -31,23 +35,23 @@ export const GatewayMembership: React.FC<IGatewayMembershipProps> = ({
           Gateway Group Membership
         </Title>
       </CardTitle>
-      <CardBody>
-        <Grid>
+      <CardBody className={css(styles.flex_item_margin)}>
+        <Flex>
           <br />
           {memberGroup &&
             memberGroup.map((deviceId: string) => {
               return (
-                <GridItem span={2} key={deviceId}>
+                <FlexItem span={2} key={deviceId}>
                   <Link
                     id="device-info-id-link"
                     to={`/iot-projects/${namespace}/${projectname}/devices/${deviceId}/device-info`}
                   >
                     {deviceId}
                   </Link>
-                </GridItem>
+                </FlexItem>
               );
             })}
-        </Grid>
+        </Flex>
       </CardBody>
     </Card>
   );
