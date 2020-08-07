@@ -140,6 +140,7 @@
         <module>controller-manager</module>
         <module>console</module>
         <module>olm-manifest</module>
+        <module>olm-index</module>
         <module>templates</module>
     </modules>
 
@@ -193,14 +194,19 @@
                 <artifactId>sasl-delegation</artifactId>
                 <version>${project.version}</version>
             </dependency>
-          <dependency>
-            <groupId>io.enmasse</groupId>
-            <artifactId>broker-cli</artifactId>
-            <version>${project.version}</version>
-          </dependency>
+            <dependency>
+              <groupId>io.enmasse</groupId>
+              <artifactId>broker-cli</artifactId>
+              <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>io.enmasse</groupId>
                 <artifactId>keycloak-user-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.enmasse</groupId>
+                <artifactId>olm-manifest</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
