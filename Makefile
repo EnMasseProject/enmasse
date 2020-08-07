@@ -16,6 +16,7 @@ DOCKER_DIRS = \
 	service-broker \
 	console/console-init \
 	olm-manifest \
+	olm-index
 
 FULL_BUILD       = true
 GOOPTS          ?= -mod=vendor

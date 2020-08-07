@@ -34,7 +34,7 @@ buildpush:
 	$(MAKE) docker_tag
 	$(MAKE) docker_push
 
-docker_build: package
+docker_build: package image_deps
 	if [ -f Dockerfile ]; then $(DOCKER) build $(DOCKER_BUILD_ARGS) --build-arg maven_version=$(MAVEN_VERSION) --build-arg version=$(VERSION) --build-arg revision=$(REVISION) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(VERSION) . ; fi
 	if [ -f Dockerfile ]; then $(DOCKER) images | grep $(PROJECT_PREFIX); fi
 
@@ -57,5 +57,8 @@ kind_load_image:
 buildpushkind: all docker_build docker_tag kind_load_image
 	:
 
+image_deps::
+	:
 
-.PHONY: all init build test package clean docker_build docker_tag docker_push kind_load_image buildpushkind buildpush
+
+.PHONY: all init build test package clean docker_build docker_tag docker_push kind_load_image buildpushkind buildpush image_deps
