@@ -4,7 +4,6 @@
  */
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import { useParams } from "react-router";
 import {
   Page,
@@ -32,10 +31,10 @@ import { ErrorStateAlert, IErrorStateAlertProps } from "./ErrorStateAlert";
 
 const styles = StyleSheet.create({
   card_body: {
-    paddingLeft: 0,
-    paddingRight: 0,
-    paddingBottom: 0,
-    minHeight: 336
+    paddingLeft: "0rem",
+    paddingRight: "0rem",
+    paddingBottom: "0rem",
+    minHeight: "336rem"
   }
 });
 
@@ -47,16 +46,16 @@ export interface IDeviceInfoProps
     IErrorStateAlertProps {
   id: string;
   deviceList?: any;
-  deviceGroup?: any;
-  memberGroup?: any;
+  gatewayGroups?: any;
+  memberOf?: any;
   metadataList?: any;
 }
 
 export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
   id,
   deviceList,
-  deviceGroup,
-  memberGroup,
+  gatewayGroups,
+  memberOf,
   metadataList: metadetaJson,
   credentials,
   errorState,
@@ -69,8 +68,8 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
 
   const jsonViewData = {
     via: deviceList,
-    viaGroups: deviceGroup,
-    memberOf: memberGroup,
+    viaGroups: gatewayGroups,
+    memberOf: memberOf,
     ...metadetaJson,
     credentials
   };
@@ -129,10 +128,12 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
         ) : (
           <Grid hasGutter>
             <GridItem span={5}>
-              <ConnectionGateway
-                deviceList={deviceList}
-                deviceGroup={deviceGroup}
-              />
+              {(deviceList?.length > 0 || gatewayGroups?.length > 0) && (
+                <ConnectionGateway
+                  deviceList={deviceList}
+                  gatewayGroups={gatewayGroups}
+                />
+              )}
 
               <CredentialsView
                 id={"deice-info-credentials-view"}
@@ -141,8 +142,8 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
               />
             </GridItem>
             <GridItem span={7}>
-              {memberGroup?.length > 0 && (
-                <GatewayMembership memberGroup={memberGroup} />
+              {memberOf?.length > 0 && (
+                <GatewayMembership memberOf={memberOf} />
               )}
               <Card id={id}>
                 <CardTitle>

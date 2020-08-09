@@ -1,4 +1,8 @@
-import React, { useState } from "react";
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+import React from "react";
 import { Link } from "react-router-dom";
 import { useParams } from "react-router";
 import {
@@ -15,23 +19,23 @@ import { OutlinedQuestionCircleIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "aphrodite";
 
 export interface IGatewayMembershipProps {
-  memberGroup?: any;
+  memberOf?: any;
 }
 const styles = StyleSheet.create({
   card_body: {
-    marginBottom: 20
+    marginBottom: "20rem"
   },
   flex_item_margin: {
-    marginLeft: 10,
-    paddingLeft: 0
+    marginLeft: "10rem",
+    paddingLeft: "0rem"
   },
   tooltip_margin: {
-    paddingRight: 50
+    paddingRight: "50rem"
   }
 });
 
 export const GatewayMembership: React.FC<IGatewayMembershipProps> = ({
-  memberGroup
+  memberOf
 }) => {
   const { projectname, namespace } = useParams();
 
@@ -40,7 +44,7 @@ export const GatewayMembership: React.FC<IGatewayMembershipProps> = ({
       <CardTitle>
         <Title
           className={css(styles.tooltip_margin)}
-          id="device-info-gateways-title"
+          id="gateway-membership-title"
           headingLevel="h1"
           size="2xl"
         >
@@ -53,6 +57,7 @@ export const GatewayMembership: React.FC<IGatewayMembershipProps> = ({
           >
             <Button
               variant="link"
+              id="gateway-membership-help-button"
               icon={<OutlinedQuestionCircleIcon />}
             ></Button>
           </Popover>
@@ -62,8 +67,8 @@ export const GatewayMembership: React.FC<IGatewayMembershipProps> = ({
       <CardBody className={css(styles.flex_item_margin)}>
         <Flex>
           <br />
-          {memberGroup &&
-            memberGroup.map((deviceId: string) => {
+          {memberOf &&
+            memberOf.map((deviceId: string) => {
               return (
                 <FlexItem span={2} key={deviceId}>
                   <Link

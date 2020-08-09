@@ -129,8 +129,8 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
     <DeviceInfo
       id={id}
       deviceList={via}
-      deviceGroup={viaGroups}
-      memberGroup={memberOf}
+      gatewayGroups={viaGroups}
+      memberOf={memberOf}
       metadataList={metadetaJson}
       credentials={parsecredentials}
       errorState={getErrorState()}

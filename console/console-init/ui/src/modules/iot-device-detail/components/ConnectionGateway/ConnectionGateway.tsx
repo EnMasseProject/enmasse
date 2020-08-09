@@ -1,4 +1,8 @@
-import React, { useState } from "react";
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+import React from "react";
 import { Link } from "react-router-dom";
 import { useParams } from "react-router";
 import {
@@ -17,20 +21,20 @@ import { OutlinedQuestionCircleIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "aphrodite";
 export interface IConnectionGatewayProps {
   deviceList?: any;
-  deviceGroup?: any;
+  gatewayGroups?: any;
 }
 const styles = StyleSheet.create({
   card_body: {
-    marginBottom: 20
+    marginBottom: "20rem"
   },
   text_margin: {
-    marginLeft: 25
+    marginLeft: "25rem"
   }
 });
 
 export const ConnectionGateway: React.FC<IConnectionGatewayProps> = ({
   deviceList,
-  deviceGroup
+  gatewayGroups
 }) => {
   const { projectname, namespace } = useParams();
 
@@ -47,6 +51,7 @@ export const ConnectionGateway: React.FC<IConnectionGatewayProps> = ({
           >
             <Button
               variant="link"
+              id="connection-gateway-help-button"
               icon={<OutlinedQuestionCircleIcon />}
             ></Button>
           </Popover>
@@ -75,8 +80,8 @@ export const ConnectionGateway: React.FC<IConnectionGatewayProps> = ({
         {deviceList.length > 0 && <text>Gateway Groups</text>}
         <br />
         <Flex>
-          {deviceGroup &&
-            deviceGroup.map((deviceId: string) => {
+          {gatewayGroups &&
+            gatewayGroups.map((deviceId: string) => {
               return (
                 <FlexItem span={2} key={deviceId}>
                   <Link
@@ -89,12 +94,6 @@ export const ConnectionGateway: React.FC<IConnectionGatewayProps> = ({
               );
             })}
         </Flex>
-        {deviceList?.length <= 0 && deviceGroup?.length <= 0 && (
-          <Text component={TextVariants.p} id="device-info-no-gateways-text">
-            There are no gateways for this device. This device is connected to
-            the cloud directly.
-          </Text>
-        )}
       </CardBody>
     </Card>
   );
