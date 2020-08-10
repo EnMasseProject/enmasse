@@ -29,8 +29,11 @@ const styles = StyleSheet.create({
   checkbox_margin: {
     marginLeft: 10,
     marginRight: 10
-  }
+  },
+  bulk_select_alignment: { paddingRight: 10, marginBottom: 1 },
+  search_btn: { marginBottom: 1 }
 });
+
 export interface IProjectToolbarToggleGroupProps {
   totalRecords: number;
   filterSelected?: string;
@@ -62,10 +65,7 @@ export interface IProjectToolbarToggleGroupProps {
   isAllProjectSelected: boolean;
   onSelectAllProjects: (val: boolean) => void;
 }
-const styles = StyleSheet.create({
-  bulk_select_alignment: { paddingRight: 10, marginBottom: 1 },
-  search_btn: { marginBottom: 1 }
-});
+
 const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGroupProps> = ({
   totalRecords,
   filterSelected,
