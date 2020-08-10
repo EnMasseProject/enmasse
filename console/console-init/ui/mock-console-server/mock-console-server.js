@@ -125,6 +125,20 @@ const availableAddressTypes = [
   },
   {
     metadata: {
+      name: "brokered.deadletter",
+      uid: uuidv1(),
+      creationTimestamp: getRandomCreationDate()
+    },
+    spec: {
+      addressSpaceType: "brokered",
+      displayName: "deadletter",
+      shortDescription: "A deadletter queue",
+      longDescription: "A deadletter queue",
+      displayOrder: 1,
+    }
+  },
+  {
+    metadata: {
       name: "standard.anycast",
       uid: uuidv1(),
       creationTimestamp: getRandomCreationDate()
@@ -191,6 +205,20 @@ const availableAddressTypes = [
       shortDescription: "A publish-subscribe topic",
       longDescription: "The topic address type supports the publish-subscribe messaging pattern where there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.",
       displayOrder: 4,
+    }
+  },
+  {
+    metadata: {
+      name: "standard.deadletter",
+      uid: uuidv1(),
+      creationTimestamp: getRandomCreationDate()
+    },
+    spec: {
+      addressSpaceType: "standard",
+      displayName: "deadletter",
+      shortDescription: "A deadletter queue",
+      longDescription: "A deadletter queue",
+      displayOrder: 1,
     }
   },
 ];
@@ -411,6 +439,12 @@ const availableAddressPlans = [
         "broker": 0
       },
       10),
+  createAddressPlan("standard-deadletter",
+      "deadletter",
+      "Dead Letter",
+      "Creates a deadletter queue.",
+      "Creates a deadletter queue.",
+      11),
   createAddressPlan("brokered-queue",
       "queue",
       "Brokered Queue",
@@ -428,7 +462,13 @@ const availableAddressPlans = [
       {
         "broker": 0
       },
-      1)
+      1),
+  createAddressPlan("brokered-deadletter",
+      "deadletter",
+      "Dead Letter",
+      "Creates a deadletter queue.",
+      "Creates a deadletter queue.",
+      2),
 ];
 
 
@@ -1145,7 +1185,7 @@ function createAddress(addr, addressSpaceName) {
     throw `Unrecognised address space '${addressSpaceName}', known ones are : ${addressspacenames}`;
   }
 
-  var knownTypes = ['queue', 'topic', 'subscription', 'multicast', 'anycast'];
+  var knownTypes = ['queue', 'topic', 'subscription', 'multicast', 'anycast', 'deadletter'];
   if (knownTypes.find(t => t === addr.spec.type) === undefined) {
     throw `Unrecognised address type '${addr.spec.type}', known ones are : '${knownTypes}'`;
   }
@@ -1167,6 +1207,25 @@ function createAddress(addr, addressSpaceName) {
   } else {
       if (addr.spec.topic) {
         throw `spec.topic is not allowed for the address type '${addr.spec.type}'.`;
+      }
+  }
+
+  if (addr.spec.type === 'queue' || addr.spec.type === 'subscription') {
+      var deadletters  = addresses.filter(a => a.metadata.name.startsWith(addressSpaceName) && a.spec.type === "deadletter");
+      if (addr.spec.deadLetterAddress && deadletters.find(t => t.spec.address === addr.spec.deadLetterAddress) === undefined) {
+        var deadletterNames  = deadletters.map(t => t.spec.address);
+        throw `Unrecognised deadletter address '${addr.spec.deadLetterAddress}', known ones are : '${deadletterNames}'`;
+      }
+      if (addr.spec.expiryAddress && deadletters.find(t => t.spec.address === addr.spec.expiryAddress) === undefined) {
+        var deadletterNames  = deadletters.map(t => t.spec.address);
+        throw `Unrecognised expiry address '${addr.spec.expiryAddress}', known ones are : '${deadletterNames}'`;
+      }
+  } else {
+      if (addr.spec.deadLetterAddress) {
+        throw `spec.deadLetterAddress is not allowed for the address type '${addr.spec.type}'.`;
+      }
+      if (addr.spec.expiryAddress) {
+        throw `spec.expiryAddress is not allowed for the address type '${addr.spec.type}'.`;
       }
   }
 
@@ -1203,7 +1262,9 @@ function createAddress(addr, addressSpaceName) {
       addressSpace: addr.spec.addressSpace,
       plan: plan,
       type: addr.spec.type,
-      topic: addr.spec.topic
+      topic: addr.spec.topic,
+      deadLetterAddress: addr.spec.deadLetterAddress,
+      expiryAddress: addr.spec.expiryAddress,
     },
     status: {
       phase:"",
@@ -1311,6 +1372,19 @@ function closeConnection(objectmeta) {
       }
     })));
 
+createAddress({
+  metadata: {
+    name: addressSpaces[0].metadata.name + ".kale",
+    namespace: addressSpaces[0].metadata.namespace
+  },
+  spec: {
+    address: "kale",
+    addressSpace: addressSpaces[0].metadata.name,
+    plan: "standard-deadletter",
+    type: "deadletter"
+  }
+});
+
 function createTopicWithSub(addressSpace, topicName) {
     createAddress({
       metadata: {
@@ -1377,6 +1451,19 @@ function createTopicWithSub(addressSpace, topicName) {
         type: "queue"
       }
     })));
+
+createAddress({
+  metadata: {
+    name: addressSpaces[2].metadata.name + ".eureka",
+    namespace: addressSpaces[2].metadata.namespace
+  },
+  spec: {
+    address: "eureka",
+    addressSpace: addressSpaces[2].metadata.name,
+    plan: "brokered-deadletter",
+    type: "deadletter"
+  }
+});
 
 function* makeAddrIter(namespace, addressspace) {
   var filter = addresses.filter(a => a.metadata.namespace === namespace && a.metadata.name.startsWith(addressspace + "."));
