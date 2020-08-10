@@ -249,7 +249,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
         >
           <InputGroup>
             <Checkbox
-              id="project-data-togglegrp-device-bulk-select-dropdown"
+              id="project-data-togglegrp-device-bulk-select-all-checkbox"
               isChecked={isAllProjectSelected}
               onChange={onSelectAll}
               className={css(styles.checkbox_margin)}
