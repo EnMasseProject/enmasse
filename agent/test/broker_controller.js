@@ -40,7 +40,9 @@ describe('broker controller', function() {
     });
 
     afterEach(function(done) {
-        Promise.all([controller.close, broker.close]).then(() => done());
+        Promise.all([controller.close, new Promise(function (resolve) {
+            setTimeout(resolve, 500);
+        }), broker.close]).then(() => done());
     });
 
     it('creates a queue', function(done) {
