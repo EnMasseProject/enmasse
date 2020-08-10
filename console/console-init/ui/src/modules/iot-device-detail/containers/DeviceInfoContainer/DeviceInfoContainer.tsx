@@ -28,10 +28,14 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
   const { projectname, deviceid, namespace } = useParams();
   const queryResolver = `
     devices{
-      via
-      credentials
-      ext
-      defaults
+      registration{
+        via
+        ext
+        defaults,
+        memberOf,
+        viaGroups
+      } 
+      credentials           
     }
   `;
 
@@ -42,7 +46,6 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
     }
   );
 
-  //const [setUpdatePasswordQueryVaribles]=useMutationQuery();
   const refetchQueries = ["iot_device_detail"];
   const [setDeleteCredentialsQueryVariables] = useMutationQuery(
     DELETE_CREDENTIALS_FOR_IOT_DEVICE,
@@ -53,8 +56,23 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
     setUpdateCredentialQueryVariable
   ] = useMutationQuery(SET_IOT_CREDENTIAL_FOR_DEVICE, ["iot_device_detail"]);
 
-  const { credentials, ext: extString, via, defaults } =
-    data?.devices?.devices[0] || {};
+  const { credentials, registration } = data?.devices?.devices[0] || {
+    credentials: "[]",
+    registration: {
+      ext: "",
+      via: [],
+      defaults: "",
+      memberOf: [],
+      viaGroups: []
+    }
+  };
+  const {
+    ext: extString,
+    via,
+    defaults,
+    memberOf = [],
+    viaGroups = []
+  } = registration;
   const parsecredentials = credentials && JSON.parse(credentials);
 
   const ext = extString && JSON.parse(extString);
@@ -84,13 +102,6 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
       await setUpdateCredentialQueryVariable(variable);
     }
   };
-
-  // const onConfirmSecretPassword = async (formdata: any, secretId: string) => {
-  //   /**
-  //    * TODO: add query for update password
-  //    */
-  //   //await setUpdatePasswordQueryVaribles("");
-  // };
 
   const deleteGateways = () => {
     /**
@@ -129,6 +140,8 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
       deviceList={via}
       metadataList={metadetaJson}
       credentials={parsecredentials}
+      memberOf={memberOf}
+      viaGroups={viaGroups}
       errorState={getErrorState()}
       deleteGateways={deleteGateways}
       deleteCredentials={deleteCredentials}

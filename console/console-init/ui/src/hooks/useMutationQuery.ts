@@ -30,7 +30,8 @@ export const useMutationQuery = <TData = any, TVariables = OperationVariables>(
       callbackOnCompleted && callbackOnCompleted(data);
     },
     refetchQueries,
-    awaitRefetchQueries: true
+    awaitRefetchQueries: true,
+    errorPolicy: "all"
   });
 
   useEffect(() => {

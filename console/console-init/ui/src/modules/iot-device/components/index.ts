@@ -19,3 +19,4 @@ export * from "./AddGateways";
 export * from "./AddDeviceWithJson";
 export * from "./ReviewDevice";
 export * from "./MangeColumnModal";
+export * from "./AddGatewayGroupMembership";

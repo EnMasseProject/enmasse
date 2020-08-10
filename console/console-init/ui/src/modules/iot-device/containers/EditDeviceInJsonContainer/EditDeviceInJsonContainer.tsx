@@ -3,16 +3,30 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router";
-import { Flex, FlexItem, Button, ButtonVariant } from "@patternfly/react-core";
+import {
+  Flex,
+  FlexItem,
+  Button,
+  ButtonVariant,
+  Alert,
+  AlertVariant
+} from "@patternfly/react-core";
 import { Loading } from "use-patternfly";
 import { StyleSheet, css } from "aphrodite";
 import { useQuery } from "@apollo/react-hooks";
 import { JsonEditor } from "components";
 import { useStoreContext, types } from "context-state-reducer";
-import { RETURN_IOT_DEVICE_DETAIL } from "graphql-module";
+import {
+  RETURN_IOT_DEVICE_DETAIL,
+  UPDATE_IOT_DEVICE
+} from "graphql-module/queries";
 import { IDeviceDetailResponse } from "schema";
+import { Messages, FetchPolicy } from "constant";
+import { serialize_IoT_Device } from "modules/iot-device/utils";
+import { useMutationQuery } from "hooks";
+import { convertStringToJsonAndValidate } from "utils";
 
 const styles = StyleSheet.create({
   editor_border: {
@@ -23,83 +37,118 @@ const styles = StyleSheet.create({
 export const EditDeviceInJsonContainer = () => {
   const { dispatch } = useStoreContext();
   const { projectname, deviceid, namespace } = useParams();
+  const [deviceJson, setDeviceJson] = useState<any>();
+  const [hasError, setHasError] = useState<boolean>(false);
 
   const queryResolver = `
     devices{
       deviceId
-      enabled
-      via
+      registration{
+        enabled
+        via
+        memberOf
+        viaGroups
+        ext
+        defaults
+      }
       status{
         lastSeen
         updated
         created
       }  
-      credentials
-      ext
-      defaults
-      memberOf
-      viaGroups
+      credentials 
     }
   `;
 
   const { loading, data } = useQuery<IDeviceDetailResponse>(
-    RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid, queryResolver)
+    RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid, queryResolver),
+    { fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
 
+  const [setCreateIoTDeviceQueryVariable] = useMutationQuery(
+    UPDATE_IOT_DEVICE,
+    ["iot_device_detail"],
+    undefined,
+    resetActionType
+  );
   const { devices } = data || {
     devices: { total: 0, devices: [] }
   };
 
-  const {
-    enabled,
-    via,
-    ext,
-    credentials,
-    memberOf,
-    viaGroups,
-    status,
-    defaults
-  } = devices?.devices[0] || {};
+  const { credentials, registration } = devices?.devices[0] || {};
+  const { enabled, via, ext, memberOf, viaGroups, defaults } =
+    registration || {};
 
   if (loading) return <Loading />;
 
   const getDeviceJson = () => {
     const deviceinfo = {
-      enabled,
-      via,
-      memberOf,
-      viaGroups,
-      status
+      registration: {
+        enabled,
+        via,
+        memberOf: memberOf || [],
+        viaGroups: viaGroups || []
+      }
     };
-    credentials &&
-      Object.assign(deviceinfo, { credentials: JSON.parse(credentials) });
-    defaults && Object.assign(deviceinfo, { defaults: JSON.parse(defaults) });
-    ext && Object.assign(deviceinfo, { ext: JSON.parse(ext) });
-
+    if (defaults) {
+      const { hasError, value } = convertStringToJsonAndValidate(defaults);
+      Object.assign(deviceinfo.registration, { defaults: value });
+      hasError && setHasError(hasError);
+    }
+    if (ext) {
+      const { hasError, value } = convertStringToJsonAndValidate(ext);
+      Object.assign(deviceinfo.registration, { ext: value });
+      hasError && setHasError(hasError);
+    }
+    if (credentials) {
+      const { hasError, value } = convertStringToJsonAndValidate(credentials);
+      Object.assign(deviceinfo, { credentials: value });
+      hasError && setHasError(hasError);
+    }
     return deviceinfo;
   };
 
-  const resetActionType = () => {
+  function resetActionType() {
     dispatch({ type: types.RESET_DEVICE_ACTION_TYPE });
-  };
+  }
 
-  const onSave = () => {
-    /**
-     * TODO: implement save query
-     */
-    resetActionType();
+  const onSave = async () => {
+    const { hasError, device } = serialize_IoT_Device(deviceJson, deviceid);
+    if (hasError) {
+      setHasError(true);
+    } else {
+      setHasError(false);
+      const variable = {
+        iotproject: { name: projectname, namespace },
+        device
+      };
+      await setCreateIoTDeviceQueryVariable(variable);
+    }
   };
 
   const onCancel = () => {
     resetActionType();
   };
 
+  const setDeviceDetail = (value: string | undefined) => {
+    setDeviceJson(value);
+  };
+
   return (
     <>
+      {hasError && (
+        <>
+          <Alert variant={AlertVariant.danger} title={"Error"} isInline>
+            {Messages.InvalidJson}
+          </Alert>
+          <br />
+        </>
+      )}
       <JsonEditor
         readOnly={false}
         value={JSON.stringify(getDeviceJson(), undefined, 2)}
         className={css(styles.editor_border)}
+        setDetail={setDeviceDetail}
       />
       <br />
       <br />

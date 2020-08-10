@@ -6,7 +6,9 @@ import {
   convertMetadataOptionsToJson,
   uniqueId,
   convertJsonToMetadataOptions,
-  deepClean
+  deepClean,
+  convertStringToJsonAndValidate,
+  convertJsonToStringAndValidate
 } from "utils";
 import {
   ICredential,
@@ -14,7 +16,7 @@ import {
   IExtension
 } from "modules/iot-device/components";
 import { CredentialsType } from "constant";
-import { ICreateDeviceRequest } from "schema/iot_device";
+import { ICreateDeviceResponse } from "schema/iot_device";
 
 const getHeaderForDialog = (devices: any[], dialogType: string) => {
   return devices && devices.length > 1
@@ -186,7 +188,7 @@ const getFormInitialStateByProperty = (
 };
 
 const getDeviceFromDeviceString = (device: string) => {
-  const deviceDetail: ICreateDeviceRequest = {
+  const deviceDetail: ICreateDeviceResponse = {
     registration: {
       enabled: true
     }
@@ -244,6 +246,55 @@ const getDeviceFromDeviceString = (device: string) => {
   return deviceDetail;
 };
 
+const serialize_IoT_Device = (device: string, deviceId: string) => {
+  const deviceDetail: any = {
+    deviceId,
+    registration: {
+      enabled: true
+    }
+  };
+  let { hasError, value } = convertStringToJsonAndValidate(device);
+  let parsedDevice: any = value;
+  if (hasError) {
+    return { hasError, deviceDetail };
+  }
+
+  if (parsedDevice) {
+    const { registration, credentials } = parsedDevice || {};
+    const { enabled, defaults, via, viaGroups, memberOf, ext } =
+      registration || {};
+    if (defaults) {
+      let { hasError, value } = convertJsonToStringAndValidate(defaults);
+      if (hasError) return { hasError, deviceDetail };
+      deviceDetail.registration.defaults = value;
+    }
+    if (ext) {
+      let { hasError, value } = convertJsonToStringAndValidate(ext);
+      if (hasError) return { hasError, deviceDetail };
+      deviceDetail.registration.ext = value;
+    }
+    if (Array.isArray(credentials)) {
+      let { hasError, value } = convertJsonToStringAndValidate(credentials);
+      if (hasError) return { hasError, deviceDetail };
+      deviceDetail.credentials = value;
+    }
+    if (enabled !== undefined && enabled != null) {
+      deviceDetail.registration.enabled = enabled;
+    }
+    if (Array.isArray(via)) {
+      deviceDetail.registration.via = via;
+    }
+    if (Array.isArray(viaGroups)) {
+      deviceDetail.registration.viaGroups = viaGroups;
+    }
+    if (Array.isArray(memberOf)) {
+      deviceDetail.registration.memberOf = memberOf;
+    }
+  }
+  hasError = false;
+  return { hasError, device: deviceDetail };
+};
+
 export {
   getHeaderForDialog,
   getDetailForDialog,
@@ -253,5 +304,6 @@ export {
   getExtensionsFieldsInitialState,
   getSecretsFieldsInitialState,
   deserializeCredentials,
-  getDeviceFromDeviceString
+  getDeviceFromDeviceString,
+  serialize_IoT_Device
 };

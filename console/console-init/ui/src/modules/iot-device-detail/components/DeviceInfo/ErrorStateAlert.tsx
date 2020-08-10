@@ -29,7 +29,7 @@ export const ErrorStateAlert: React.FC<IErrorStateAlertProps> = ({
   const getTitle = () => {
     let title =
       errorState === ErrorState.CONFLICTING
-        ? "Conflicting connection types"
+        ? "Opposing connection information"
         : "Missing gateways or credentials";
     return title;
   };
@@ -38,15 +38,15 @@ export const ErrorStateAlert: React.FC<IErrorStateAlertProps> = ({
     if (errorState === ErrorState.MISSING) {
       return (
         <>
-          In order to enable a device to connect, it either needs credentials or
-          gateways/a gateway.
+          To enable a device to connect, it needs direct connection credentials
+          or alt least one gateway.
         </>
       );
     } else if (ErrorState.CONFLICTING) {
       return (
         <>
-          This device has two connection types that are conflicting with each
-          other. You can choose actions to fix this issue.
+          This device has two opposing types of connection information. Would
+          you like to remove one connection?
         </>
       );
     }
@@ -72,7 +72,7 @@ export const ErrorStateAlert: React.FC<IErrorStateAlertProps> = ({
         <Flex>
           <FlexItem>
             <AlertActionLink onClick={addGateways}>
-              Add gateways
+              Add gateway assignment
             </AlertActionLink>
           </FlexItem>
           <FlexItem>or</FlexItem>
@@ -94,7 +94,7 @@ export const ErrorStateAlert: React.FC<IErrorStateAlertProps> = ({
               id="error-state-delete-gateways-actionlink"
               onClick={deleteGateways}
             >
-              Delete gateways
+              Remove gateways assignment
             </AlertActionLink>
           </FlexItem>
           <FlexItem>or</FlexItem>
@@ -103,7 +103,7 @@ export const ErrorStateAlert: React.FC<IErrorStateAlertProps> = ({
               id="error-state-delete-credentials-actionlink"
               onClick={deleteCredentials}
             >
-              Delete credentials
+              Remove credentials
             </AlertActionLink>
           </FlexItem>
         </Flex>

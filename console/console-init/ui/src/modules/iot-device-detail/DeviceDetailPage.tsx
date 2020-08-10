@@ -35,7 +35,7 @@ import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
 import { useMutationQuery } from "hooks";
 import { NoDataFound } from "components";
 import { ActionManager } from "modules/iot-device-detail/components";
-import { DialogTypes } from "constant";
+import { DialogTypes, FetchPolicy } from "constant";
 import {
   getDetailForDialog,
   getHeaderForDialog
@@ -60,7 +60,8 @@ export default function DeviceDetailPage() {
   useA11yRouteChange();
 
   const { loading, data } = useQuery<IDeviceDetailResponse>(
-    RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid)
+    RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid),
+    { fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
 
   const changePageState = (deleteIotDevice: boolean) => {
@@ -86,8 +87,9 @@ export default function DeviceDetailPage() {
   const { devices } = data || {
     devices: { total: 0, devices: [] }
   };
-  const { enabled, deviceId, via = [], credentials, status } =
+  const { registration, deviceId, credentials, status } =
     devices?.devices[0] || {};
+  const { enabled, via = [] } = registration || {};
   const parseCredentials = credentials && JSON.parse(credentials);
   const viaGateway = via?.length > 0;
 
@@ -215,7 +217,7 @@ export default function DeviceDetailPage() {
             <DeviceDetailHeader
               deviceName={deviceId}
               addedDate={status?.created || ""}
-              lastTimeSeen={status?.lastSeen || ""}
+              lastSeen={status?.lastSeen || ""}
               onChange={onChangeDeviceStatus}
               onDelete={onDeleteDevice}
               onClone={onCloneDevice}

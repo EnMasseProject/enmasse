@@ -60,6 +60,7 @@ export default function DeviceListPage() {
   const [appliedFilter, setAppliedFilter] = useState<IDeviceFilter>(
     getInitialFilter()
   );
+  const [showEmptyDevice, setShowEmptyDevice] = useState<boolean>(false);
 
   const createDeviceFormLink = `/iot-projects/${namespace}/${projectname}/devices/addform`;
   const createDeviceJsonLink = `/iot-projects/${namespace}/${projectname}/devices/addjson`;
@@ -321,85 +322,84 @@ export default function DeviceListPage() {
 
   const { isVisible, title, description, variant } = deviceAlert;
 
-  if (totalDevices === 0 && compareObject(appliedFilter, getInitialFilter())) {
-    return (
+  return (
+    <>
       <EmptyDeviceContainer
         handleInputDeviceInfo={handleInputDeviceInfo}
         handleJSONUpload={handleJSONUpload}
-        setTotalDevices={setTotalDevices}
+        setShowEmptyDevice={setShowEmptyDevice}
         projectname={projectname}
         namespace={namespace}
       />
-    );
-  }
-
-  return (
-    <Grid hasGutter>
-      <GridItem span={3}>
-        <Card>
-          <CardBody>
-            <DeviceFilter
-              filter={filter}
-              setFilter={setFilter}
-              runFilter={runFilter}
-              resetFilter={resetFilter}
-            />
-          </CardBody>
-        </Card>
-      </GridItem>
-      <GridItem span={9}>
-        <PageSection variant={PageSectionVariants.light}>
-          <DeviceListAlert
-            visible={isVisible}
-            variant={variant}
-            isInline={true}
-            title={title}
-            description={description}
-          />
-          <br />
-          <Grid>
-            <GridItem span={5}>
-              <DeviceListToolbar
-                kebabItems={kebabItems}
-                handleInputDeviceInfo={handleInputDeviceInfo}
-                handleJSONUpload={handleJSONUpload}
-                isOpen={isAllSelected}
-                isChecked={isAllSelected}
-                items={[]}
-                onChange={() => {}}
-                onSelectAllDevices={onSelectAllDevices}
-                handleToggleModal={handleToggleModal}
+      {!showEmptyDevice && (
+        <Grid hasGutter>
+          <GridItem span={3}>
+            <Card>
+              <CardBody>
+                <DeviceFilter
+                  filter={filter}
+                  setFilter={setFilter}
+                  runFilter={runFilter}
+                  resetFilter={resetFilter}
+                />
+              </CardBody>
+            </Card>
+          </GridItem>
+          <GridItem span={9}>
+            <PageSection variant={PageSectionVariants.light}>
+              <DeviceListAlert
+                visible={isVisible}
+                variant={variant}
+                isInline={true}
+                title={title}
+                description={description}
               />
-            </GridItem>
-            <GridItem span={7}>{renderPagination()}</GridItem>
-          </Grid>
-          <DeviceListContainer
-            page={page}
-            projectname={projectname}
-            perPage={perPage}
-            setTotalDevices={setTotalDevices}
-            setIsAllSelected={setIsAllSelected}
-            selectedDevices={selectedDevices}
-            onSelectDevice={onSelectDevice}
-            selectAllDevices={selectAllDevices}
-            areAllDevicesSelected={isAllSelected}
-            sortValue={sortDropDownValue}
-            setSortValue={setSortDropdownValue}
-            appliedFilter={appliedFilter}
-            resetFilter={resetFilter}
-            namespace={namespace}
-            selectedColumns={selectedColumns}
-          />
-          <br />
-          {renderPagination()}
-        </PageSection>
-        <ManageColumnModal
-          isModalOpen={isModalOpen}
-          handleModalToggle={handleToggleModal}
-          setSelectedColumns={setSelectedColumns}
-          setSortValue={setSortDropdownValue}
-        />
-      </GridItem>
-    </Grid>
+              <br />
+              <Grid>
+                <GridItem span={5}>
+                  <DeviceListToolbar
+                    kebabItems={kebabItems}
+                    handleInputDeviceInfo={handleInputDeviceInfo}
+                    handleJSONUpload={handleJSONUpload}
+                    isOpen={isAllSelected}
+                    isChecked={isAllSelected}
+                    items={[]}
+                    onChange={() => {}}
+                    onSelectAllDevices={onSelectAllDevices}
+                    handleToggleModal={handleToggleModal}
+                  />
+                </GridItem>
+                <GridItem span={7}>{renderPagination()}</GridItem>
+              </Grid>
+              <DeviceListContainer
+                page={page}
+                projectname={projectname}
+                perPage={perPage}
+                setTotalDevices={setTotalDevices}
+                setIsAllSelected={setIsAllSelected}
+                selectedDevices={selectedDevices}
+                onSelectDevice={onSelectDevice}
+                selectAllDevices={selectAllDevices}
+                areAllDevicesSelected={isAllSelected}
+                sortValue={sortDropDownValue}
+                setSortValue={setSortDropdownValue}
+                appliedFilter={appliedFilter}
+                resetFilter={resetFilter}
+                namespace={namespace}
+                selectedColumns={selectedColumns}
+              />
+              <br />
+              {renderPagination()}
+            </PageSection>
+            <ManageColumnModal
+              isModalOpen={isModalOpen}
+              handleModalToggle={handleToggleModal}
+              setSelectedColumns={setSelectedColumns}
+              setSortValue={setSortDropdownValue}
+            />
+          </GridItem>
+        </Grid>
+      )}
+    </>
   );
 }

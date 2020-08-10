@@ -13,9 +13,9 @@ describe("<DeviceDetailHeader />", () => {
     const props = {
       deviceName: "device-name",
       addedDate: "2019-11-25T05:24:05.755Z",
-      lastTimeSeen: "2019-11-25T05:24:05.755Z",
+      lastSeen: "2019-11-25T05:24:05.755Z",
       isEnabled: true,
-      changeEnable: jest.fn(),
+      onChange: jest.fn(),
       onEdit: jest.fn(),
       onDelete: jest.fn(),
       onClone: jest.fn()

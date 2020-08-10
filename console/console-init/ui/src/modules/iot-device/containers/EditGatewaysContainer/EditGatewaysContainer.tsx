@@ -33,8 +33,8 @@ export const EditGatewaysContainer = () => {
     devices: { total: 0, devices: [] }
   };
 
-  const { via: gatewayList, viaGroups: gatewayGroupList } =
-    devices?.devices[0] || {};
+  const { registration } = devices?.devices[0] || {};
+  const { via: gatewayList, viaGroups: gatewayGroupList } = registration || {};
 
   const getGatewayDevices = (gateway: string[]) => {
     addGatewayDevices(gateway);

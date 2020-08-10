@@ -16,11 +16,12 @@ import { initalSelectOption } from "utils";
 
 export interface ITypeAheadSelectProps extends Omit<SelectProps, "onToggle"> {
   id?: string;
-  selected?: string | string[];
+  selected?: string | SelectOptionObject | (string | SelectOptionObject)[];
   inputData?: string;
   onChangeInput?: (value: string) => Promise<any>;
   setInput?: (value: string) => void;
   isMultiple?: boolean;
+  threshold?: number;
 }
 
 const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
@@ -34,7 +35,9 @@ const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
   onChangeInput,
   setInput,
   id,
-  isMultiple = false
+  isMultiple = false,
+  isCreatable,
+  threshold
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [options, setOptions] = useState<any[]>([initalSelectOption]);
@@ -55,7 +58,7 @@ const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
   const onFilter = (e: any) => {
     const input = e.target.value && e.target.value.trim();
     setInput && setInput(input);
-    if (input.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
+    if (input.trim().length < (threshold || TYPEAHEAD_REQUIRED_LENGTH)) {
       setOptions([
         <SelectOption
           value={TypeAheadMessage.MORE_CHAR_REQUIRED}
@@ -79,24 +82,28 @@ const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
           if (options && options.length > 0) {
             setOptions(options);
           } else {
-            setOptions([
-              <SelectOption
-                key={0}
-                value={TypeAheadMessage.NO_RESULT_FOUND}
-                isDisabled={true}
-              />
-            ]);
+            !isCreatable &&
+              setOptions([
+                <SelectOption
+                  key={0}
+                  value={TypeAheadMessage.NO_RESULT_FOUND}
+                  isDisabled={true}
+                />
+              ]);
           }
         });
     }
 
-    const options = [
-      <SelectOption
-        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-        key="1"
-        isDisabled={true}
-      />
-    ];
+    let options: any[] = [];
+    if (!isCreatable) {
+      options = [
+        <SelectOption
+          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
+          key="1"
+          isDisabled={true}
+        />
+      ];
+    }
 
     return options;
   };
@@ -114,6 +121,7 @@ const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
       isOpen={isExpanded}
       // aria-labelledby={ariaLabelledBy}
       placeholderText={placeholderText}
+      isCreatable={isCreatable}
     >
       {options}
     </Select>
