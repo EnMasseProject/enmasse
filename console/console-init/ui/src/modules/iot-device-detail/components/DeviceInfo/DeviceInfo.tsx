@@ -15,8 +15,6 @@ import {
   Card,
   CardBody,
   Title,
-  Text,
-  TextVariants,
   CardTitle
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
@@ -45,9 +43,9 @@ export interface IDeviceInfoProps
     >,
     IErrorStateAlertProps {
   id: string;
-  deviceList?: any;
-  gatewayGroups?: any;
-  memberOf?: any;
+  deviceList?: string[];
+  gatewayGroups?: string[];
+  memberOf?: string[];
   metadataList?: any;
 }
 
@@ -128,7 +126,8 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
         ) : (
           <Grid hasGutter>
             <GridItem span={5}>
-              {(deviceList?.length > 0 || gatewayGroups?.length > 0) && (
+              {((deviceList && deviceList?.length > 0) ||
+                (gatewayGroups && gatewayGroups?.length > 0)) && (
                 <ConnectionGateway
                   deviceList={deviceList}
                   gatewayGroups={gatewayGroups}
@@ -142,7 +141,7 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
               />
             </GridItem>
             <GridItem span={7}>
-              {memberOf?.length > 0 && (
+              {memberOf && memberOf?.length > 0 && (
                 <GatewayMembership memberOf={memberOf} />
               )}
               <Card id={id}>

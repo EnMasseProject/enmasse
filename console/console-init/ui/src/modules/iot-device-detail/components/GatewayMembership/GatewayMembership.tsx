@@ -19,7 +19,7 @@ import { OutlinedQuestionCircleIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "aphrodite";
 
 export interface IGatewayMembershipProps {
-  memberOf?: any;
+  memberOf?: string[];
 }
 const styles = StyleSheet.create({
   card_body: {

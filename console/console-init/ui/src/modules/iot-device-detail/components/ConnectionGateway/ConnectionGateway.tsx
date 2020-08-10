@@ -20,8 +20,8 @@ import {
 import { OutlinedQuestionCircleIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "aphrodite";
 export interface IConnectionGatewayProps {
-  deviceList?: any;
-  gatewayGroups?: any;
+  deviceList?: string[];
+  gatewayGroups?: string[];
 }
 const styles = StyleSheet.create({
   card_body: {
@@ -57,8 +57,8 @@ export const ConnectionGateway: React.FC<IConnectionGatewayProps> = ({
           </Popover>
         </Title>
       </CardTitle>
-      {deviceList.length > 0 && (
-        <text className={css(styles.text_margin)}>Gateway Devices</text>
+      {deviceList && deviceList.length > 0 && (
+        <Text className={css(styles.text_margin)}>Gateway Devices</Text>
       )}
       <CardBody>
         <Flex>
@@ -77,7 +77,7 @@ export const ConnectionGateway: React.FC<IConnectionGatewayProps> = ({
             })}
         </Flex>
         <br />
-        {deviceList.length > 0 && <text>Gateway Groups</text>}
+        {deviceList && deviceList.length > 0 && <text>Gateway Groups</text>}
         <br />
         <Flex>
           {gatewayGroups &&
