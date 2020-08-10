@@ -9,7 +9,6 @@ import {
   getInitialFilter,
   ISortByWrapper
 } from "modules/iot-device";
-import { ISortBy } from "@patternfly/react-table";
 
 const RETURN_IOT_DEVICE_DETAIL = (
   iotproject: string,
@@ -26,6 +25,8 @@ const RETURN_IOT_DEVICE_DETAIL = (
             via
             viaGroups
             ext
+            memberOf
+            defaults
           } 
           status{
             lastSeen

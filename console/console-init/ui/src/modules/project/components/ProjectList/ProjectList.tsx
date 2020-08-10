@@ -20,7 +20,6 @@ import { StyleSheet, css } from "aphrodite";
 import {
   StatusTypes,
   ProjectStatus,
-  ProjectError,
   ProjectEntities,
   ProjectTypeLabel,
   ProjectTypes
@@ -128,13 +127,11 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
       namespace,
       status,
       creationTimestamp,
-      errorMessageRate,
       addressCount,
       connectionCount,
       deviceCount,
       activeCount,
       selected,
-      errorMessages,
       type
     } = row;
     const tableRow: IRowData = {

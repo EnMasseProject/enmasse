@@ -46,6 +46,8 @@ export interface IDeviceInfoProps
   id: string;
   deviceList?: any;
   metadataList?: any;
+  memberOf?: string[];
+  viaGroups?: string[];
 }
 
 export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
@@ -56,7 +58,9 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
   errorState,
   deleteGateways,
   deleteCredentials,
-  onConfirmCredentialsStatus
+  onConfirmCredentialsStatus,
+  memberOf = [],
+  viaGroups = []
 }) => {
   const [isHidden, setIsHidden] = useState<boolean>(false);
   const { projectname, namespace } = useParams();
@@ -64,6 +68,8 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
   const jsonViewData = {
     registration: {
       via: deviceList,
+      memberOf,
+      viaGroups,
       ...metadetaJson
     },
     credentials

@@ -162,6 +162,8 @@ export const DeviceInfoView = () => (
         metadataList={dataList}
         deviceList={deviceList}
         credentials={credentials}
+        memberOf={[]}
+        viaGroups={[]}
       />
     </Router>
   </ApolloProvider>
