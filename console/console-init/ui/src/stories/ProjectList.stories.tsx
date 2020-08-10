@@ -89,6 +89,7 @@ export const deviceTable = () => (
       onDisable={action("on DisbonDisable projects")}
       onDownload={action("on Download certificate projects")}
       onSelectProject={action("on Select poject")}
+      onSelectAllProject={action("on Select all poject")}
     />
   </MemoryRouter>
 );

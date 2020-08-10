@@ -16,8 +16,7 @@ import {
   DropdownPosition,
   Badge,
   ToolbarChipGroup,
-  ToolbarChip,
-  Checkbox
+  ToolbarChip
 } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import { DropdownWithToggle, TypeAheadSelect } from "components";
@@ -87,9 +86,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
   onChangeNameInput,
   onChangeNameSpaceInput,
   setNameInput,
-  setNameSpaceInput,
-  isAllProjectSelected,
-  onSelectAllProjects
+  setNameSpaceInput
 }) => {
   const isFilterApplied = () => {
     if (
@@ -101,9 +98,12 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
     }
     return false;
   };
-  const onSelectAll = (val: boolean) => {
-    onSelectAllProjects(val);
-  };
+
+  // TODO: Add toobar select all once backend support this feature
+  // const onSelectAll = (val: boolean) => {
+  //   onSelectAllProjects(val);
+  // };
+
   const toggleItems = (
     <>
       <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
@@ -236,7 +236,10 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
         }
         breakpoint="xl"
       >
-        <ToolbarItem
+        {/* 
+              TODO: Add toobar select all once backend support this feature
+        */}
+        {/* <ToolbarItem
           className={css(styles.bulk_select_alignment)}
           variant="bulk-select"
           id="project-data-togglegrp-device-list-toolbaritem"
@@ -252,7 +255,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
               className={css(styles.checkbox_margin)}
             />
           </InputGroup>
-        </ToolbarItem>
+        </ToolbarItem> */}
         {toggleGroupItems}
       </ToolbarToggleGroup>
     </>

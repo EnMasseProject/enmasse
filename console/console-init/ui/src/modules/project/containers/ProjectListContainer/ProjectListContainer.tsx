@@ -119,6 +119,10 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
 
   const onDeleteProject = (project: IProject) => {
     if (project && project.name && project.namespace) {
+      const index = selectedProjects.findIndex(
+        prj => prj.name === project.name && prj.namespace === project.namespace
+      );
+      selectAllProjects(selectedProjects.splice(index, 1));
       if (project.projectType === ProjectTypes.MESSAGING) {
         const queryVariable = {
           as: [
@@ -369,9 +373,17 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
     onSelectProject(project, isSelected);
   };
 
-  if (projectList.every(row => row.selected === true)) {
-    setIsAllSelected(true);
-  }
+  const onSelectAll = (isSelected: boolean) => {
+    setIsAllSelected(isSelected);
+    if (isSelected) {
+      selectAllProjects(projectList);
+    } else {
+      selectAllProjects([]);
+    }
+  };
+  // if (projectList.every((row) => row.selected === true)) {
+  //   setIsAllSelected(true);
+  // }
 
   //TODO: logic will be removed after implementation of query
   for (let project of projectList) {
@@ -400,6 +412,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
         onEnable={onEnable}
         onDisable={onDisable}
         onSelectProject={onSelect}
+        onSelectAllProject={onSelectAll}
       />
     </>
   );
