@@ -246,6 +246,17 @@ const TOGGLE_IOT_DEVICE_STATUS = gql(
   }`
 );
 
+const CREATE_IOT_DEVICE = gql`
+  mutation createIotDevice(
+    $iotproject: ObjectMeta_v1_Input!
+    $device: Device_iot_console_input!
+  ) {
+    createIotDevice(iotproject: $iotproject, device: $device) {
+      deviceId
+    }
+  }
+`;
+
 const SET_IOT_CREDENTIAL_FOR_DEVICE = gql(
   `mutation set_iot_credential_for_device(
     $iotproject: ObjectMeta_v1_Input!
@@ -268,5 +279,6 @@ export {
   RETURN_ALL_DEVICES_FOR_IOT_PROJECT,
   DELETE_CREDENTIALS_FOR_IOT_DEVICE,
   TOGGLE_IOT_DEVICE_STATUS,
+  CREATE_IOT_DEVICE,
   SET_IOT_CREDENTIAL_FOR_DEVICE
 };
