@@ -46,6 +46,7 @@ describe('broker controller', function() {
     });
 
     it('creates a queue', function(done) {
+        this.timeout(15000);
         controller.addresses_defined([{address:'foo',type:'queue'}]).then(function () {
             var addresses = broker.list_addresses();
             var queues = broker.list_queues();
@@ -56,6 +57,7 @@ describe('broker controller', function() {
         });
     });
     it('creates a topic', function(done) {
+        this.timeout(15000);
         controller.addresses_defined([{address:'bar',type:'topic'}]).then(function () {
             var addresses = broker.list_addresses();
             broker.verify_topic(addresses, 'bar');
@@ -64,6 +66,7 @@ describe('broker controller', function() {
         });
     });
     it('deletes a queue', function(done) {
+        this.timeout(15000);
         controller.addresses_defined([{address:'foo',type:'queue'}, {address:'bar',type:'topic'}]).then(function () {
             var addresses = broker.list_addresses();
             var queues = broker.list_queues();
@@ -82,6 +85,7 @@ describe('broker controller', function() {
         }).catch(done);
     });
     it('deletes a topic', function(done) {
+        this.timeout(15000);
         controller.addresses_defined([{address:'foo',type:'queue'}, {address:'bar',type:'topic'}]).then(function () {
             var addresses = broker.list_addresses();
             var queues = broker.list_queues();
@@ -100,6 +104,7 @@ describe('broker controller', function() {
         }).catch(done);
     });
     it('retrieves topic stats', function(done) {
+        this.timeout(15000);
         broker.add_topic_address('foo', {
             's1':{durable:true, messageCount:10, consumerCount:9, messagesAdded:8, deliveringCount:7, messagesAcked:6, messagesExpired:5, messagesKilled: 4},
             's2':{durable:false, messageCount:11, consumerCount:10, messagesAdded:9, deliveringCount:8, messagesAcked:7, messagesExpired:6, messagesKilled: 5},
@@ -162,6 +167,7 @@ describe('broker controller', function() {
     var config = { BROKER_GLOBAL_MAX_SIZE: "64MB" };
 
     it('get address settings async - returns setting maxSizeBytes calculated from infra', function(done) {
+        this.timeout(15000);
         config.BROKER_GLOBAL_MAX_SIZE="64MB";
         var brokerAddressSettings = new broker_controller.BrokerController(undefined, config);
         brokerAddressSettings.get_address_settings_async({address:'foo',type:'queue', plan: 'small-queue', status: {planStatus: {name: "small-queue", resources: {broker: 0.2}}}}).then(function (result) {
@@ -171,6 +177,7 @@ describe('broker controller', function() {
     });
 
     it('get address settings async - returns setting maxSizeBytes calculated from infra with partitions', function(done) {
+        this.timeout(15000);
         config.BROKER_GLOBAL_MAX_SIZE="64MB";
         var brokerAddressSettings =  new broker_controller.BrokerController(undefined, config);
         brokerAddressSettings.get_address_settings_async({address:'foo',type:'queue', plan: 'small-queue', status: {planStatus: {name: "small-queue", partitions: 2, resources: {broker: 0.2}}}}).then(function (result) {
@@ -180,6 +187,7 @@ describe('broker controller', function() {
     });
 
     it('get address settings async - returns setting maxSizeBytes calculated from broker', function(done) {
+        this.timeout(15000);
         config.BROKER_GLOBAL_MAX_SIZE=undefined;
         var brokerAddressSettings =  new broker_controller.BrokerController(undefined, config);
         brokerAddressSettings.get_address_settings_async({address:'foo',type:'queue', plan: 'small-queue', status: {planStatus: {name: "small-queue", resources: {broker: 0.1}}}}, Promise.resolve(1000000)).then(function (result) {
@@ -189,6 +197,7 @@ describe('broker controller', function() {
     });
 
     it('get address settings async - returns ttl settings', function(done) {
+        this.timeout(15000);
         var brokerAddressSettings =  new broker_controller.BrokerController(undefined, config);
         brokerAddressSettings.get_address_settings_async({address:'foo',type:'queue', plan: 'small-queue', status: {messageTtl: {minimum: 1000, maximum: 2000}}}, Promise.resolve(undefined)).then(function (result) {
             assert.equal(1000, result.minExpiryDelay);
