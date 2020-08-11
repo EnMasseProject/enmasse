@@ -35,12 +35,18 @@ export interface IAddressConfigurationProps {
   type: string;
   plan: string;
   topic: string;
+  Deadletters: string;
+  Expiryqueue: string;
   onTypeSelect?: (value: string) => void;
   onPlanSelect?: (value: string) => void;
   onTopicSelect?: (value: string) => void;
+  onDeadlettersSelect?: (value: string) => void;
+  onExpiryqueueSelect?: (value: string) => void;
   typeOptions: IDropdownOption[];
   planOptions: IDropdownOption[];
   topicsForSubscription: IDropdownOption[];
+  DeadlettersOptions: IDropdownOption[];
+  ExpiryqueueOptions: IDropdownOption[];
 }
 
 const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> = ({
@@ -50,11 +56,17 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
   type,
   plan,
   topic,
+  Deadletters,
+  Expiryqueue,
   onTypeSelect,
   onPlanSelect,
   onTopicSelect,
+  onDeadlettersSelect,
+  onExpiryqueueSelect,
   typeOptions,
   planOptions,
+  DeadlettersOptions,
+  ExpiryqueueOptions,
   topicsForSubscription
 }) => {
   const getHelperText = () => {
@@ -142,6 +154,51 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                   isDisabled={type.trim() !== "subscription"}
                   isDisplayLabelAndValue={true}
                 />
+              </FormGroup>
+            )}
+            {((type && type.toLowerCase() === "subscription") ||
+              (type && type.toLowerCase() === "queue")) && (
+              <FormGroup
+                label="Deadletter Queue"
+                isRequired={false}
+                fieldId="address-topic"
+              >
+                <br />
+                <DropdownWithToggle
+                  id="address-definition-topic-dropdown"
+                  className={styles.dropdown_align}
+                  toggleClass={styles.dropdown_toggle}
+                  dropdownItemClass={styles.dropdownItem}
+                  position={DropdownPosition.left}
+                  onSelectItem={onDeadlettersSelect}
+                  value={Deadletters}
+                  dropdownItems={DeadlettersOptions}
+                  dropdownItemId="address-definition-topic-dropdown-item"
+                  //isDisabled={type.trim() !== "subscription"}
+                  isDisplayLabelAndValue={true}
+                />
+                <br />
+
+                <FormGroup
+                  label="Expiry Queue"
+                  isRequired={false}
+                  fieldId="address-topic"
+                >
+                  <br />
+                  <DropdownWithToggle
+                    id="address-definition-topic-dropdown"
+                    className={styles.dropdown_align}
+                    toggleClass={styles.dropdown_toggle}
+                    dropdownItemClass={styles.dropdownItem}
+                    position={DropdownPosition.left}
+                    onSelectItem={onExpiryqueueSelect}
+                    value={Expiryqueue}
+                    dropdownItems={ExpiryqueueOptions}
+                    dropdownItemId="address-definition-topic-dropdown-item"
+                    //isDisabled={type.trim() !== "subscription"}
+                    isDisplayLabelAndValue={true}
+                  />
+                </FormGroup>
               </FormGroup>
             )}
           </Form>

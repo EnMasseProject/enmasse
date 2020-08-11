@@ -29,11 +29,20 @@ export const CreateAddress: React.FunctionComponent = () => {
   const [addressType, setAddressType] = useState(" ");
   const [plan, setPlan] = useState(" ");
   const [topic, setTopic] = useState(" ");
+  const [Deadletters, setDeadletters] = useState(" ");
+  const [Expiryqueue, setExpiryqueue] = useState(" ");
   const [addressTypes, setAddressTypes] = useState<IDropdownOption[]>([]);
   const [addressPlans, setAddressPlans] = useState<IDropdownOption[]>([]);
   const [topicsForSubscription, setTopicForSubscription] = useState<
     IDropdownOption[]
   >([]);
+  const [DeadlettersOptions, setDeadlettersOptions] = useState<
+    IDropdownOption[]
+  >([]);
+  const [ExpiryqueueOptions, setExpiryqueueOptions] = useState<
+    IDropdownOption[]
+  >([]);
+
   const [isNameValid, setIsNameValid] = useState<boolean>(true);
 
   const resetFormState = () => {
@@ -158,6 +167,14 @@ export const CreateAddress: React.FunctionComponent = () => {
           planOptions={addressPlans}
           setPlanOptions={setAddressPlans}
           topicsForSubscription={topicsForSubscription}
+          setDeadletters={setDeadletters}
+          Deadletters={Deadletters}
+          DeadlettersOptions={DeadlettersOptions}
+          setDeadlettersOptions={setDeadlettersOptions}
+          setExpiryqueue={setExpiryqueue}
+          Expiryqueue={Expiryqueue}
+          ExpiryqueueOptions={ExpiryqueueOptions}
+          setExpiryqueueOptions={setExpiryqueueOptions}
           setTopicForSubscripitons={setTopicForSubscription}
         />
       ),
@@ -172,6 +189,8 @@ export const CreateAddress: React.FunctionComponent = () => {
           plan={plan}
           type={addressType}
           topic={topic}
+          Deadletters={Deadletters}
+          Expiryqueue={Expiryqueue}
           namespace={namespace || ""}
           addressspace={name}
         />

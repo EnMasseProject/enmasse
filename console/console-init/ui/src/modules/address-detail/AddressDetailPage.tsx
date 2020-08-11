@@ -117,6 +117,8 @@ export default function AddressDetailPage() {
         addressDetail.spec.plan.metadata.name,
       planValue: addressDetail.spec.plan.metadata.name,
       topic: addressDetail.spec.topic,
+      //Deadletter:addressDetail.spec.deadLetterAddress,
+      //Expiryqueue:addressDetail.spec.expiryAddress,
       messageIn: getFilteredValue(addressDetail.metrics, "enmasse_messages_in"),
       messageOut: getFilteredValue(
         addressDetail.metrics,
@@ -228,6 +230,10 @@ export default function AddressDetailPage() {
           name={address.name}
           plan={address.planLabel}
           topic={address.topic}
+          Deadletters={address.topic}
+          /*Should be address.Deadletter. Not changed since deadLetter data is not available.
+          For now deadLetter and expiryqueue will display value of topic, if present in the header*/
+          Expiryqueue={address.topic}
           storedMessages={address.storedMessages}
           onEdit={onChangeEdit}
           onDelete={onChangeDelete}
