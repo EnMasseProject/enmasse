@@ -19,14 +19,19 @@ import {
   ToolbarChip
 } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import {
-  DropdownWithToggle,
-  TypeAheadSelect,
-  DropdownWithBulkSelect
-} from "components";
+import { DropdownWithToggle, TypeAheadSelect } from "components";
 import { typeOptions, filterMenuItems } from "modules/project/utils";
 import { ISelectOption } from "utils";
 import { StyleSheet, css } from "aphrodite";
+
+const styles = StyleSheet.create({
+  checkbox_margin: {
+    marginLeft: 10,
+    marginRight: 10
+  },
+  bulk_select_alignment: { paddingRight: 10, marginBottom: 1 },
+  search_btn: { marginBottom: 1 }
+});
 
 export interface IProjectToolbarToggleGroupProps {
   totalRecords: number;
@@ -59,10 +64,7 @@ export interface IProjectToolbarToggleGroupProps {
   isAllProjectSelected: boolean;
   onSelectAllProjects: (val: boolean) => void;
 }
-const styles = StyleSheet.create({
-  bulk_select_alignment: { paddingRight: 10, marginBottom: 1 },
-  search_btn: { marginBottom: 1 }
-});
+
 const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGroupProps> = ({
   totalRecords,
   filterSelected,
@@ -84,9 +86,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
   onChangeNameInput,
   onChangeNameSpaceInput,
   setNameInput,
-  setNameSpaceInput,
-  isAllProjectSelected,
-  onSelectAllProjects
+  setNameSpaceInput
 }) => {
   const isFilterApplied = () => {
     if (
@@ -98,9 +98,12 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
     }
     return false;
   };
-  const onSelectAll = (val: boolean) => {
-    onSelectAllProjects(val);
-  };
+
+  // TODO: Add toobar select all once backend support this feature
+  // const onSelectAll = (val: boolean) => {
+  //   onSelectAllProjects(val);
+  // };
+
   const toggleItems = (
     <>
       <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
@@ -233,7 +236,10 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
         }
         breakpoint="xl"
       >
-        <ToolbarItem
+        {/* 
+              TODO: Add toobar select all once backend support this feature
+        */}
+        {/* <ToolbarItem
           className={css(styles.bulk_select_alignment)}
           variant="bulk-select"
           id="project-data-togglegrp-device-list-toolbaritem"
@@ -241,15 +247,15 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
           aria-label="Select multiple devices"
           data-codemods="true"
         >
-          <DropdownWithBulkSelect
-            dropdownId="project-data-togglegrp-device-bulk-select-dropdown"
-            dropdownToggleId="device-bulk-select-toggle"
-            checkBoxId="device-bulk-select-checkbox"
-            ariaLabel="Bulk select dropdown for device list"
-            isChecked={isAllProjectSelected}
-            onChange={onSelectAll}
-          />
-        </ToolbarItem>
+          <InputGroup>
+            <Checkbox
+              id="project-data-togglegrp-device-bulk-select-all-checkbox"
+              isChecked={isAllProjectSelected}
+              onChange={onSelectAll}
+              className={css(styles.checkbox_margin)}
+            />
+          </InputGroup>
+        </ToolbarItem> */}
         {toggleGroupItems}
       </ToolbarToggleGroup>
     </>

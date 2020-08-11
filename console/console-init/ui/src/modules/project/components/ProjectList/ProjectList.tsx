@@ -63,6 +63,7 @@ export interface IProjectListProps extends Pick<TableProps, "sortBy"> {
   onDisable: (project: IProject) => void;
   onDownload: (project: IProject) => void;
   onSelectProject: (project: IProject, isSelected: boolean) => void;
+  onSelectAllProject: (isSelected: boolean) => void;
 }
 
 export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
@@ -74,7 +75,8 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
   onDownload,
   onEnable,
   onDisable,
-  onSelectProject
+  onSelectProject,
+  onSelectAllProject
 }) => {
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IProject;
@@ -127,11 +129,13 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
       namespace,
       status,
       creationTimestamp,
+      // errorMessageRate,
       addressCount,
       connectionCount,
       deviceCount,
       activeCount,
       selected,
+      // errorMessages,
       type
     } = row;
     const tableRow: IRowData = {
@@ -171,6 +175,7 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
           ),
           key: displayName + "-" + creationTimestamp
         },
+        // TODO: Will be added if backend support Error Percentage
         // {
         //   title: (
         //     <>
@@ -206,6 +211,7 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
     { title: "Type", transforms: [sortable] },
     { title: "Status", transforms: [sortable] },
     { title: "Time created", transforms: [sortable] },
+    // TODO: Will be added if backend support Error Percentage
     // {
     //   title: "Error messages"
     // },
@@ -220,8 +226,13 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
     rowIndex: number
   ) => {
     const rows = [...tableRows];
-    rows[rowIndex].selected = isSelected;
-    onSelectProject(rows[rowIndex].originalData, isSelected);
+    if (rowIndex === -1) {
+      rows.map(row => (row.selected = isSelected));
+      onSelectAllProject(isSelected);
+    } else {
+      rows[rowIndex].selected = isSelected;
+      onSelectProject(rows[rowIndex].originalData, isSelected);
+    }
   };
 
   return (
@@ -229,7 +240,7 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
       <div className={css(StyleForTable.scroll_overflow)}>
         <Table
           variant={TableVariant.compact}
-          canSelectAll={false}
+          canSelectAll={true}
           onSelect={onSelect}
           cells={tableColumns}
           rows={tableRows}

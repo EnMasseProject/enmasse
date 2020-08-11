@@ -19,7 +19,7 @@ import {
   MessagingProjectListContainer,
   MessagingToolbarContainer
 } from "./containers";
-import { DELETE_ADDRESS_SPACE } from "graphql-module/queries";
+import { DELETE_MESSAGING_PROJECT } from "graphql-module/queries";
 import { compareObject } from "utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { getHeaderForDeleteDialog, getDetailForDeleteDialog } from "./utils";
@@ -47,7 +47,7 @@ export default function AddressSpacePage() {
 
   const refetchQueries: string[] = ["all_address_spaces"];
   const [setDeleteAddressSpaceQueryVariables] = useMutationQuery(
-    DELETE_ADDRESS_SPACE,
+    DELETE_MESSAGING_PROJECT,
     refetchQueries
   );
 
@@ -61,7 +61,7 @@ export default function AddressSpacePage() {
   const onDeleteAll = () => {
     dispatch({
       type: types.SHOW_MODAL,
-      modalType: MODAL_TYPES.DELETE_ADDRESS_SPACE,
+      modalType: MODAL_TYPES.DELETE_MESSAGING_PROJECT,
       modalProps: {
         onConfirm: onConfirmDeleteAll,
         selectedItems: selectedAddressSpaces.map(as => as.name),

@@ -98,7 +98,7 @@ export const IoTProjectDetailHeaderContainer: React.FC = () => {
   const onDeleteProject = () => {
     if (projectname && namespace) {
       const queryVariable = {
-        as: [
+        a: [
           {
             name: projectname,
             namespace: namespace
@@ -120,8 +120,7 @@ export const IoTProjectDetailHeaderContainer: React.FC = () => {
         option: "Delete",
         detail: `Are you sure you want to delete this iot project: ${projectname} ?`,
         header: "Delete this IoT Project ?",
-        confirmButtonLabel: "Delete",
-        iconType: "danger"
+        confirmButtonLabel: "Delete"
       }
     });
   };
@@ -151,8 +150,7 @@ export const IoTProjectDetailHeaderContainer: React.FC = () => {
         option: title,
         detail: `Are you sure you want to ${title} this iot project: ${projectname} ?`,
         header: `${title} this IoT Project ?`,
-        confirmButtonLabel: title,
-        iconType: "danger"
+        confirmButtonLabel: title
       }
     });
   };

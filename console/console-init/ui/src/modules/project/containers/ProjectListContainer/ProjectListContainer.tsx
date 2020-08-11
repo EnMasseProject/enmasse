@@ -23,7 +23,7 @@ import {
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { useMutationQuery } from "hooks";
 import {
-  DELETE_ADDRESS_SPACE,
+  DELETE_MESSAGING_PROJECT,
   DELETE_IOT_PROJECT,
   TOGGLE_IOT_PROJECTS_STATUS,
   RETURN_ALL_PROJECTS,
@@ -72,7 +72,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   const [sortBy, setSortBy] = useState<ISortBy>();
   const refetchQueries: string[] = ["allProjects"];
   const [setDeleteMsgProjectQueryVariables] = useMutationQuery(
-    DELETE_ADDRESS_SPACE,
+    DELETE_MESSAGING_PROJECT,
     refetchQueries
   );
   const [
@@ -119,6 +119,10 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
 
   const onDeleteProject = (project: IProject) => {
     if (project && project.name && project.namespace) {
+      const index = selectedProjects.findIndex(
+        prj => prj.name === project.name && prj.namespace === project.namespace
+      );
+      selectAllProjects(selectedProjects.splice(index, 1));
       if (project.projectType === ProjectTypes.MESSAGING) {
         const queryVariable = {
           as: [
@@ -155,8 +159,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
           option: "Delete",
           detail: `Are you sure you want to delete this messaging project: ${project.name} ?`,
           header: "Delete this Messaging Project ?",
-          confirmButtonLabel: "Delete",
-          iconType: "danger"
+          confirmButtonLabel: "Delete"
         }
       });
     } else if (project.projectType === ProjectTypes.IOT) {
@@ -170,8 +173,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
           option: "Delete",
           detail: `Are you sure you want to delete this iot project: ${project.name} ?`,
           header: "Delete this IoT Project ?",
-          confirmButtonLabel: "Delete",
-          iconType: "danger"
+          confirmButtonLabel: "Delete"
         }
       });
     }
@@ -227,8 +229,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
         option: "Enable",
         detail: `Are you sure you want to enable this iot project: ${project.name} ?`,
         header: "Enable this IoT Project ?",
-        confirmButtonLabel: "Enable",
-        iconType: "danger"
+        confirmButtonLabel: "Enable"
       }
     });
   };
@@ -244,8 +245,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
         option: "Disable",
         detail: `Are you sure you want to disable this iot project: ${project.name} ?`,
         header: "Disable this IoT Project ?",
-        confirmButtonLabel: "Disable",
-        iconType: "danger"
+        confirmButtonLabel: "Disable"
       }
     });
   };
@@ -369,9 +369,17 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
     onSelectProject(project, isSelected);
   };
 
-  if (projectList.every(row => row.selected === true)) {
-    setIsAllSelected(true);
-  }
+  const onSelectAll = (isSelected: boolean) => {
+    setIsAllSelected(isSelected);
+    if (isSelected) {
+      selectAllProjects(projectList);
+    } else {
+      selectAllProjects([]);
+    }
+  };
+  // if (projectList.every((row) => row.selected === true)) {
+  //   setIsAllSelected(true);
+  // }
 
   //TODO: logic will be removed after implementation of query
   for (let project of projectList) {
@@ -400,6 +408,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
         onEnable={onEnable}
         onDisable={onDisable}
         onSelectProject={onSelect}
+        onSelectAllProject={onSelectAll}
       />
     </>
   );

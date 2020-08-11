@@ -118,7 +118,7 @@ const getDetailForDeleteDialog = (selectedItems: IProject[]) => {
   const detail =
     selectedItems.length > 1
       ? `Are you sure you want to delete all of these ${projectTypeValue} projects: ${selectedItems.map(
-          as => " " + as.name
+          as => "  " + as.name
         )} ?`
       : `Are you sure you want to delete this ${projectTypeValue} project: ${selectedItems[0].name} ?`;
   return detail;

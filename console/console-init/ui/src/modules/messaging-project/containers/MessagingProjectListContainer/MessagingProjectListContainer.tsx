@@ -13,7 +13,7 @@ import {
   SortByDirection
 } from "@patternfly/react-table";
 import {
-  DELETE_ADDRESS_SPACE,
+  DELETE_MESSAGING_PROJECT,
   RETURN_ALL_ADDRESS_SPACES,
   DOWNLOAD_CERTIFICATE
 } from "graphql-module/queries";
@@ -73,7 +73,7 @@ export const MessagingProjectListContainer: React.FC<IMessagingProjectListContai
   const [sortBy, setSortBy] = useState<ISortBy>();
   const refetchQueries: string[] = ["all_address_spaces"];
   const [setDeleteAddressSpaceQueryVariables] = useMutationQuery(
-    DELETE_ADDRESS_SPACE,
+    DELETE_MESSAGING_PROJECT,
     refetchQueries
   );
 
@@ -131,7 +131,7 @@ export const MessagingProjectListContainer: React.FC<IMessagingProjectListContai
   const onChangeDelete = (addressSpace: IAddressSpace) => {
     dispatch({
       type: types.SHOW_MODAL,
-      modalType: MODAL_TYPES.DELETE_ADDRESS_SPACE,
+      modalType: MODAL_TYPES.DELETE_MESSAGING_PROJECT,
       modalProps: {
         selectedItems: [addressSpace.name],
         data: addressSpace,
