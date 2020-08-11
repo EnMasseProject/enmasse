@@ -14,8 +14,6 @@ export const AddDevice = () => {
     <MemoryRouter>
       <Page>
         <AddDeviceWithJson
-          deviceDetail={text("device detail", "")}
-          setDeviceDetail={action("setDeviceDetail")}
           onLeave={action("onLeave")}
           onSave={action("onSave")}
         />

@@ -25,7 +25,6 @@ import { ICreateDeviceResponse } from "schema";
 export default function AddDeviceUsingJsonPage() {
   const history = useHistory();
   const { projectname, namespace } = useParams();
-  const [deviceDetail, setDeviceDetail] = useState<string>();
   const deviceListRouteLink = `/iot-projects/${namespace}/${projectname}/devices`;
 
   const onSuccess = () => {
@@ -55,12 +54,10 @@ export default function AddDeviceUsingJsonPage() {
 
   useBreadcrumb(breadcrumb);
 
-  const onSave = async (_detail: string) => {
+  const onSave = async (detail: string) => {
     //TODO: Add query to save iot device
-    if (deviceDetail) {
-      const device: ICreateDeviceResponse = getDeviceFromDeviceString(
-        deviceDetail
-      );
+    if (detail) {
+      const device: ICreateDeviceResponse = getDeviceFromDeviceString(detail);
       const variable = {
         iotproject: { name: projectname, namespace },
         device: device
@@ -83,12 +80,7 @@ export default function AddDeviceUsingJsonPage() {
         <br />
         <Divider />
       </PageSection>
-      <AddDeviceWithJson
-        deviceDetail={deviceDetail}
-        setDeviceDetail={setDeviceDetail}
-        onLeave={onLeave}
-        onSave={onSave}
-      />
+      <AddDeviceWithJson onLeave={onLeave} onSave={onSave} />
     </Page>
   );
 }

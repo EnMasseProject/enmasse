@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   PageSection,
   PageSectionVariants,
@@ -20,7 +20,11 @@ import {
   connectedViaGatewayDeviceTemplate,
   directlyConnectedDeviceTemplate
 } from "./AddJsonUsingTemplate";
-import { compareObject, getFormattedJsonString } from "utils";
+import {
+  compareObject,
+  getFormattedJsonString,
+  convertStringToJsonAndValidate
+} from "utils";
 import { types, MODAL_TYPES, useStoreContext } from "context-state-reducer";
 import { DeviceListAlert } from "modules/iot-device";
 import { TemplateType } from "constant";
@@ -29,6 +33,7 @@ import {
   ReviewDeviceContainer
 } from "modules/iot-device/containers";
 import { INVALID_JSON_ERROR } from "modules/iot-device/utils";
+import { IDeviceResponse } from "schema";
 
 const styles = StyleSheet.create({
   box_align_style: {
@@ -43,51 +48,110 @@ const styles = StyleSheet.create({
     paddingLeft: 30
   }
 });
+
+export interface IRegistration {
+  enabled?: boolean;
+  via?: string[];
+  ext?: any;
+  viaGroups?: string[];
+  memberOf?: string[];
+  defaults?: any;
+}
 interface IAddDeviceWithJsonProps {
-  deviceDetail?: string;
-  setDeviceDetail: (detail?: string) => void;
+  deviceDetail?: IDeviceResponse;
   onLeave: () => void;
   onSave: (detail: string) => void;
   allowTemplate?: boolean;
 }
+const getDeviceRegistrationString = (deviceDetail: IDeviceResponse) => {
+  let device: any = { registration: {} };
+  if (deviceDetail.registration) {
+    const {
+      enabled,
+      defaults,
+      memberOf,
+      via,
+      ext,
+      viaGroups
+    } = deviceDetail.registration;
+    const deviceRegistration: IRegistration = {};
+    if (enabled) {
+      deviceRegistration.enabled = enabled;
+    }
+    if (defaults) {
+      deviceRegistration.defaults = JSON.parse(defaults);
+    }
+    if (ext) {
+      deviceRegistration.ext = JSON.parse(ext);
+    }
+    if ((!via || via.length === 0) && (!viaGroups || viaGroups?.length === 0)) {
+      device.credentials = [];
+    } else {
+      if (via) {
+        deviceRegistration.via = via;
+      }
+      if (viaGroups) {
+        deviceRegistration.viaGroups = viaGroups;
+      }
+    }
+    if (memberOf && memberOf.length > 0) {
+      deviceRegistration.memberOf = memberOf;
+    }
+    if ((!via || via.length === 0) && (!viaGroups || viaGroups?.length === 0)) {
+      device.credentials = [];
+    }
+    device.registration = deviceRegistration;
+  }
+  return JSON.stringify(device, undefined, 2);
+};
 
 const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
   deviceDetail,
-  setDeviceDetail,
   onLeave,
   onSave,
   allowTemplate = true
 }) => {
   const { dispatch } = useStoreContext();
+  const [deviceJsonString, setDeviceJsonString] = useState<string>();
   const [selectedTemplate, setSelectedTemplate] = useState<string>(
     TemplateType.DIRECTLY_CONNECTED
   );
   const [isPreviewEnabled, setIsPreviewEnabled] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
+  useEffect(() => {
+    if (deviceDetail) {
+      setDeviceJsonString(getDeviceRegistrationString(deviceDetail));
+    }
+  }, []);
+
   const setDeviceInfoInDetail = (value?: string) => {
     if (errorMessage !== "") {
       setErrorMessage("");
     }
-    setDeviceDetail(value);
+    setDeviceJsonString(value);
   };
 
   const onCancel = () => {
     let isJsonPresent: boolean = false;
-    try {
-      const detail = deviceDetail && JSON.parse(deviceDetail);
-      if (detail && selectedTemplate === TemplateType.DIRECTLY_CONNECTED) {
-        if (!compareObject(detail, directlyConnectedDeviceTemplate)) {
+    if (deviceJsonString) {
+      const { hasError, value } = convertStringToJsonAndValidate(
+        deviceJsonString
+      );
+      if (value && selectedTemplate === TemplateType.DIRECTLY_CONNECTED) {
+        if (!compareObject(value, directlyConnectedDeviceTemplate)) {
           isJsonPresent = true;
         }
       } else if (selectedTemplate === TemplateType.VIA_GATEWAY) {
-        if (!compareObject(detail, connectedViaGatewayDeviceTemplate)) {
+        if (!compareObject(value, connectedViaGatewayDeviceTemplate)) {
           isJsonPresent = true;
         }
       }
-    } catch {
-      if (deviceDetail) isJsonPresent = true;
+      if (hasError && deviceJsonString) {
+        isJsonPresent = true;
+      }
     }
+
     if (isJsonPresent) {
       dispatch({
         type: types.SHOW_MODAL,
@@ -107,34 +171,35 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
   };
 
   const isJsonValid = () => {
-    try {
-      if (!deviceDetail || deviceDetail.trim() === "") {
-        if (deviceDetail !== "") {
-          setDeviceInfoInDetail(undefined);
-        }
-        return true;
+    if (!deviceJsonString || deviceJsonString.trim() === "") {
+      if (deviceJsonString !== "") {
+        setDeviceInfoInDetail(undefined);
       }
-      const detail = JSON.parse(deviceDetail.trim());
-      if (detail) {
-        setDeviceInfoInDetail(getFormattedJsonString(detail));
-        return true;
-      }
-    } catch {
+      return true;
+    }
+    const { hasError, value } = convertStringToJsonAndValidate(
+      deviceJsonString
+    );
+    if (value) {
+      setDeviceInfoInDetail(getFormattedJsonString(value));
+      return true;
+    }
+    if (hasError) {
       return false;
     }
   };
 
   const onFinish = () => {
-    if (deviceDetail)
+    if (deviceJsonString)
       if (!isJsonValid()) {
         setErrorMessage(INVALID_JSON_ERROR);
       } else {
-        onSave(deviceDetail);
+        onSave(deviceJsonString);
       }
   };
 
   const onPreview = () => {
-    if (deviceDetail) {
+    if (deviceJsonString) {
       if (!isJsonValid()) {
         setErrorMessage(INVALID_JSON_ERROR);
       } else {
@@ -156,8 +221,8 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
       credentials: [],
       gateways: { gateways: [], gatewayGroups: [] }
     };
-    if (deviceDetail) {
-      const parseDeviceDetail = JSON.parse(deviceDetail);
+    if (deviceJsonString) {
+      const parseDeviceDetail = JSON.parse(deviceJsonString);
 
       //add deviceId to device object from the parseDeviceDetail
       device.deviceInformation.deviceId = parseDeviceDetail.id;
@@ -181,9 +246,10 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
   const getEditor = () => {
     return (
       <JsonEditor
-        value={deviceDetail}
+        value={deviceJsonString}
         readOnly={false}
         name={"editor-add-device"}
+        manageState={false}
         setDetail={setDeviceInfoInDetail}
         style={{
           minHeight: "39em"
@@ -263,7 +329,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
               aria-label="Preview button"
               variant="secondary"
               onClick={onPreview}
-              disabled={!deviceDetail || deviceDetail?.trim() === ""}
+              disabled={!deviceJsonString || deviceJsonString?.trim() === ""}
             >
               Preview
             </Button>

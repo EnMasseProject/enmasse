@@ -15,15 +15,33 @@ import {
   Breadcrumb,
   BreadcrumbItem
 } from "@patternfly/react-core";
-import { useBreadcrumb } from "use-patternfly";
+import { useBreadcrumb, Loading } from "use-patternfly";
 import { Link } from "react-router-dom";
+import { useQuery } from "@apollo/react-hooks";
+import { IDeviceDetailResponse, ICreateDeviceResponse } from "schema";
+import { RETURN_IOT_DEVICE_DETAIL, CREATE_IOT_DEVICE } from "graphql-module";
+import { FetchPolicy } from "constant";
+import { useMutationQuery } from "hooks";
+import { getDeviceFromDeviceString } from "modules/iot-device/utils";
 
 export default function CreateDeviceUsingJsonPage() {
   const history = useHistory();
   const { projectname, namespace, deviceid } = useParams();
-  const [deviceDetail, setDeviceDetail] = useState<string>();
+  // const [deviceDetail, setDeviceDetail] = useState<string>();
   const deviceListRouteLink = `/iot-projects/${namespace}/${projectname}/devices`;
   const previousDeviceLink = `/iot-projects/${namespace}/${projectname}/devices/${deviceid}/device-info`;
+
+  const onSuccess = () => {
+    history.push(deviceListRouteLink);
+  };
+
+  const [setCreateDeviceQueryVariables] = useMutationQuery(
+    CREATE_IOT_DEVICE,
+    undefined,
+    undefined,
+    onSuccess
+  );
+
   const breadcrumb = useMemo(
     () => (
       <Breadcrumb>
@@ -40,14 +58,49 @@ export default function CreateDeviceUsingJsonPage() {
 
   useBreadcrumb(breadcrumb);
 
-  const onSave = (detail: string) => {
+  const onSave = async (detail: string) => {
     //TODO: Add query to save iot device
-    history.push(deviceListRouteLink);
+    if (detail) {
+      const device: ICreateDeviceResponse = getDeviceFromDeviceString(detail);
+      const variable = {
+        iotproject: { name: projectname, namespace },
+        device: device
+      };
+      await setCreateDeviceQueryVariables(variable);
+    }
   };
 
   const onLeave = () => {
     history.push(previousDeviceLink);
   };
+
+  const queryResolver = `
+    devices{
+      registration{
+        enabled
+        via
+        memberOf
+        viaGroups
+        ext
+        defaults
+      }
+    }
+  `;
+
+  const { loading, data } = useQuery<IDeviceDetailResponse>(
+    RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid, queryResolver),
+    { fetchPolicy: FetchPolicy.NETWORK_ONLY }
+  );
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  const { devices } = data || {
+    devices: { total: 0, devices: [] }
+  };
+
+  const device = devices.devices[0];
 
   return (
     <Page>
@@ -60,8 +113,7 @@ export default function CreateDeviceUsingJsonPage() {
         <Divider />
       </PageSection>
       <AddDeviceWithJson
-        deviceDetail={deviceDetail}
-        setDeviceDetail={setDeviceDetail}
+        deviceDetail={device}
         onLeave={onLeave}
         onSave={onSave}
         allowTemplate={false}
