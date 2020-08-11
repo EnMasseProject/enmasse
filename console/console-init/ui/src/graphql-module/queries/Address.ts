@@ -489,6 +489,50 @@ const RETURN_ADDRESS_SPACE_PLANS = gql`
   }
 `;
 
+const RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE = (
+  name: string,
+  namespace: string,
+  type: string
+) => {
+  let filter = "";
+  if (name && name.trim() !== "") {
+    filter += "`$.metadata.name` LIKE '" + name + ".%' AND";
+  }
+  if (namespace && namespace.trim() !== "") {
+    filter += "`$.metadata.namespace` = '" + namespace + "'";
+  }
+  if (
+    type.trim().toLowerCase() === "subscription" ||
+    type.trim().toLowerCase() === "queue"
+  ) {
+    filter += " AND `$.spec.type` = 'deadletter'";
+  }
+  const ALL_DLQ_FOR_ADDRESS_SPACE = gql`
+    query all_addresses_for_addressspace_view {
+      addresses(
+        filter:"${filter}"
+      ) {
+        total
+        addresses {
+          metadata {
+            namespace
+            name
+          }
+          spec {
+            address
+            type
+            plan {
+              spec {
+                displayName
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+  return ALL_DLQ_FOR_ADDRESS_SPACE;
+};
 const RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION = (
   name: string,
   namespace: string,
@@ -628,6 +672,7 @@ const RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH = (
 export {
   DELETE_ADDRESS,
   PURGE_ADDRESS,
+  RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE,
   RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE,
   CURRENT_ADDRESS_SPACE_PLAN,
   RETURN_ADDRESS_DETAIL,

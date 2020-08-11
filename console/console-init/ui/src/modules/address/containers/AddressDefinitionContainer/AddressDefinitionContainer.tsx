@@ -10,7 +10,8 @@ import { IDropdownOption } from "components";
 import {
   RETURN_ADDRESS_PLANS,
   RETURN_ADDRESS_TYPES,
-  RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION
+  RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION,
+  RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE
 } from "graphql-module/queries";
 import { IAddressResponse } from "schema/ResponseTypes";
 import {
@@ -153,7 +154,7 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
         type.toLowerCase() === "queue"
       ) {
         const deadletter_addresses = await client.query<IAddressResponse>({
-          query: RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION(
+          query: RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE(
             addressspaceName,
             namespace,
             type
@@ -181,7 +182,7 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
         type.toLowerCase() === "queue"
       ) {
         const expiryqueue_addresses = await client.query<IAddressResponse>({
-          query: RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION(
+          query: RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE(
             addressspaceName,
             namespace,
             type

@@ -99,8 +99,8 @@ export interface IAddressDetailResponse {
         address: string;
         type: string;
         topic: string | null;
-        //deadLetterAddress:string|null;
-        //expiryAddress:string|null
+        deadLetter: string | null;
+        expiryAddress: string | null;
         plan: {
           spec: {
             displayName: string;
