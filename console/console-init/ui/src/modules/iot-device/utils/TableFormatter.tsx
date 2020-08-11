@@ -38,8 +38,11 @@ export const getTableCells = (row: IDevice, selectedColumns: string[]) => {
   } = row;
 
   let deviceType: DeviceConnectionType;
-
-  if (via?.length || viaGroups?.length) {
+  const viaGateway =
+    (via && via.length > 0) || (viaGroups && viaGroups.length > 0);
+  if (!via?.length === !credentials?.length) {
+    deviceType = DeviceConnectionType.NA;
+  } else if (viaGateway) {
     deviceType = DeviceConnectionType.VIA_GATEWAYS;
   } else {
     deviceType = DeviceConnectionType.CONNECTED_DIRECTLY;

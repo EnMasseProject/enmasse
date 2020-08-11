@@ -45,6 +45,7 @@ const deviceRows: IDevice[] = [
     lastSeen: "2020-01-20T11:44:28.607Z",
     updated: "2020-01-20T11:44:28.607Z",
     created: "2020-01-20T11:44:28.607Z",
+    credentials: '[{"auth-id":"10-id","type":"psk"}]',
     viaGroups: ["Group 1", "Group 2"]
   },
   {
@@ -54,6 +55,7 @@ const deviceRows: IDevice[] = [
     selected: false,
     lastSeen: "2020-04-20T11:44:28.607Z",
     updated: "2020-04-29T11:44:28.607Z",
+    credentials: '[{"auth-id":"10-id","type":"psk"}]',
     created: "2020-04-30T11:44:28.607Z",
     viaGroups: []
   },
@@ -78,11 +80,12 @@ const deviceRows: IDevice[] = [
     lastSeen: "2020-04-20T11:44:28.607Z",
     updated: "2020-04-29T11:44:28.607Z",
     created: "2020-04-30T11:44:28.607Z",
+    credentials: '[{"auth-id":"10-id","type":"psk"}]',
     viaGroups: []
   })
 ];
 
-const actionResolver = (rowData: IRowData) => [
+const actionResolver = (_rowData: IRowData) => [
   {
     title: "Delete",
     onClick: () => {}
