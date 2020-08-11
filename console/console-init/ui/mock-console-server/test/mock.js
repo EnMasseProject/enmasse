@@ -71,6 +71,57 @@ describe('mock', function () {
 
             assert.match(a.name, /^jupiter_as1\.foo4\..*$/);
         });
+        it('with_deadletter', function () {
+            var a = mock.createAddress({
+                metadata: {
+                    name: "jupiter_as1.foo4",
+                    namespace: "app1_ns"
+                },
+                spec: {
+                    type: "queue",
+                    plan: "standard-small-queue",
+                    address: "fooaddr",
+                    deadLetterAddress: "kale"
+                }
+
+            });
+            assert.strictEqual(a.name, "jupiter_as1.foo4");
+        });
+        it('with_invalid_deadletter', function () {
+            assert.throws(() => {
+                mock.createAddress({
+                    metadata: {
+                        name: "jupiter_as1.foo4",
+                        namespace: "app1_ns"
+                    },
+                    spec: {
+                        type: "queue",
+                        plan: "standard-small-queue",
+                        address: "fooaddr",
+                        deadLetterAddress: "unknown"
+                    }
+                });
+
+            }, /Unrecognised deadletter address 'unknown', known ones are : 'kale'/);
+        });
+        it('with_invalid_expiry', function () {
+            assert.throws(() => {
+                mock.createAddress({
+                    metadata: {
+                        name: "jupiter_as1.foo4",
+                        namespace: "app1_ns"
+                    },
+                    spec: {
+                        type: "queue",
+                        plan: "standard-small-queue",
+                        address: "fooaddr",
+                        expiryAddress: "unknown"
+                    }
+                });
+
+            }, /Unrecognised expiry address 'unknown', known ones are : 'kale'/);
+        });
+
     });
     describe('patchAddress', function () {
         it('known_plan', function () {
