@@ -235,7 +235,9 @@ const RETURN_ADDRESS_DETAIL = (
             address
             type
             topic
-            plan {
+            deadLetterAddress
+            expiryAddress
+              plan {
               spec {
                 displayName
                 addressType

@@ -53,4 +53,3 @@ export const DeadLetter: React.FunctionComponent<IExpiryQueueProps> = ({
     </FormGroup>
   );
 };
-//export default {DeadLetter}
