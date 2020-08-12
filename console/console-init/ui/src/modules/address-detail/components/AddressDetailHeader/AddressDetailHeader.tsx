@@ -25,7 +25,7 @@ export interface IAddressDetailHeaderProps {
   topic?: string | null;
   name: string;
   plan: string;
-  deadLetter?: string | null;
+  deadletter?: string | null;
   expiryQueue?: string | null;
   storedMessages: number | string;
   onEdit: (name: string) => void;
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
 export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderProps> = ({
   type,
   topic,
-  deadLetter,
+  deadletter,
   expiryQueue,
   name,
   plan,
@@ -81,9 +81,6 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
       </SplitItem>
     </Split>
   );
-  console.log(deadLetter);
-  console.log(expiryQueue);
-
   const AddressDetailInFlex = () => (
     <Flex className={css(styles.namespace_info_margin)}>
       <FlexItem id="adheader-plans">
@@ -97,12 +94,12 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
           Topic : <b>{topic}</b>
         </FlexItem>
       )}
-      {deadLetter && deadLetter !== null && (
+      {deadletter && deadletter !== null && (
         <FlexItem
           id="addr-detail-header-deadletter-flexitem"
           className={css(styles.flex_left_border)}
         >
-          DeadLetter : <b>{deadLetter}</b>
+          Deadletter Queue : <b>{deadletter}</b>
         </FlexItem>
       )}
       {expiryQueue && expiryQueue !== null && (
@@ -110,7 +107,7 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
           id="addr-detail-header-deadletter-flexitem"
           className={css(styles.flex_left_border)}
         >
-          Expiry queue : <b>{expiryQueue}</b>
+          Expiry Queue : <b>{expiryQueue}</b>
         </FlexItem>
       )}
       {type && (type === "anycast" || type === "multicast") ? (

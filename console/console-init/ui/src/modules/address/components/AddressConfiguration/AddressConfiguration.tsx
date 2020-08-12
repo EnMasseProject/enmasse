@@ -14,7 +14,7 @@ import {
 } from "@patternfly/react-core";
 import { StyleSheet } from "@patternfly/react-styles";
 import { IDropdownOption, DropdownWithToggle } from "components";
-import { DeadLetter } from "modules/address/components/DeadLetter/DeadLetter";
+import { Deadletter } from "modules/address/components/DeadLetter/DeadLetter";
 import { ExpiryQueue } from "modules/address/components/ExpiryQueue/ExpiryQueue";
 
 const styles = StyleSheet.create({
@@ -37,17 +37,17 @@ export interface IAddressConfigurationProps {
   type: string;
   plan: string;
   topic: string;
-  deadLetter: string;
+  deadletter: string;
   expiryQueue: string;
   onTypeSelect?: (value: string) => void;
   onPlanSelect?: (value: string) => void;
   onTopicSelect?: (value: string) => void;
-  onDeadLetterSelect?: (value: string) => void;
+  onDeadletterSelect?: (value: string) => void;
   onExpiryQueueSelect?: (value: string) => void;
   typeOptions: IDropdownOption[];
   planOptions: IDropdownOption[];
   topicsForSubscription?: IDropdownOption[];
-  deadLetterOptions?: IDropdownOption[];
+  deadletterOptions?: IDropdownOption[];
 }
 
 const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> = ({
@@ -57,16 +57,16 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
   type,
   plan,
   topic,
-  deadLetter,
+  deadletter,
   expiryQueue,
   onTypeSelect,
   onPlanSelect,
   onTopicSelect,
-  onDeadLetterSelect,
+  onDeadletterSelect,
   onExpiryQueueSelect,
   typeOptions,
   planOptions,
-  deadLetterOptions,
+  deadletterOptions,
   topicsForSubscription
 }) => {
   const getHelperText = () => {
@@ -162,13 +162,13 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                 <ExpiryQueue
                   expiryQueue={expiryQueue}
                   onExpiryQueueSelect={onExpiryQueueSelect}
-                  deadLetterOptions={deadLetterOptions}
+                  deadletterOptions={deadletterOptions}
                 />
 
-                <DeadLetter
-                  deadLetter={deadLetter}
-                  onDeadLetterSelect={onDeadLetterSelect}
-                  deadLetterOptions={deadLetterOptions}
+                <Deadletter
+                  deadletter={deadletter}
+                  onDeadletterSelect={onDeadletterSelect}
+                  deadletterOptions={deadletterOptions}
                 />
               </>
             )}

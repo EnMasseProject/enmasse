@@ -21,31 +21,31 @@ const styles = StyleSheet.create({
   }
 });
 export interface IExpiryQueueProps {
-  onDeadLetterSelect?: (value: string) => void;
-  deadLetter: string;
-  deadLetterOptions?: IDropdownOption[];
+  onDeadletterSelect?: (value: string) => void;
+  deadletter: string;
+  deadletterOptions?: IDropdownOption[];
 }
-export const DeadLetter: React.FunctionComponent<IExpiryQueueProps> = ({
-  deadLetter,
-  onDeadLetterSelect,
-  deadLetterOptions
+export const Deadletter: React.FunctionComponent<IExpiryQueueProps> = ({
+  deadletter,
+  onDeadletterSelect,
+  deadletterOptions
 }) => {
   return (
     <FormGroup
       label="Deadletter Queue"
       isRequired={false}
-      fieldId="addr-configuration-deadLetter-dropdown"
+      fieldId="addr-configuration-deadletter-dropdown"
     >
       <br />
       <DropdownWithToggle
-        id="addr-configuration-deadLetter-dropdown"
+        id="addr-configuration-deadletter-dropdown"
         className={styles.dropdown_align}
         toggleClass={styles.dropdown_toggle}
         dropdownItemClass={styles.dropdownItem}
         position={DropdownPosition.left}
-        onSelectItem={onDeadLetterSelect}
-        value={deadLetter}
-        dropdownItems={deadLetterOptions}
+        onSelectItem={onDeadletterSelect}
+        value={deadletter}
+        dropdownItems={deadletterOptions}
         dropdownItemId="address-definition-topic-dropdown-item"
         isDisplayLabelAndValue={true}
         isRequiredField={false}
