@@ -198,12 +198,15 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   };
 
   const deviceRows: IDevice[] =
-    devices?.map(({ deviceId, registration, status }) => {
+    devices?.map(({ deviceId, registration, status, credentials }) => {
       const { enabled, via, viaGroups } = registration || {};
       return {
         deviceId,
         enabled,
         via,
+        ...(credentials?.trim() !== "" && {
+          credentials: JSON.parse(credentials)
+        }),
         viaGroups,
         ...status,
         selected:
