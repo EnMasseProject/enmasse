@@ -117,7 +117,7 @@ export default function AddressDetailPage() {
         addressDetail.spec.plan.metadata.name,
       planValue: addressDetail.spec.plan.metadata.name,
       topic: addressDetail.spec.topic,
-      deadLetter: addressDetail.spec.deadLetterAddress,
+      deadletter: addressDetail.spec.deadLetterAddress,
       expiryQueue: addressDetail.spec.expiryAddress,
       messageIn: getFilteredValue(addressDetail.metrics, "enmasse_messages_in"),
       messageOut: getFilteredValue(
@@ -221,8 +221,6 @@ export default function AddressDetailPage() {
       }
     });
   };
-  console.log(address.expiryQueue);
-  console.log(address.deadLetter);
 
   return (
     <>
@@ -232,7 +230,7 @@ export default function AddressDetailPage() {
           name={address.name}
           plan={address.planLabel}
           topic={address.topic}
-          deadLetter={address.deadLetter}
+          deadletter={address.deadletter}
           expiryQueue={address.expiryQueue}
           storedMessages={address.storedMessages}
           onEdit={onChangeEdit}

@@ -29,7 +29,7 @@ export const CreateAddress: React.FunctionComponent = () => {
   const [addressType, setAddressType] = useState(" ");
   const [plan, setPlan] = useState(" ");
   const [topic, setTopic] = useState(" ");
-  const [deadLetter, setDeadLetter] = useState(" ");
+  const [deadletter, setDeadletter] = useState(" ");
   const [expiryQueue, setExpiryQueue] = useState(" ");
   const [addressTypes, setAddressTypes] = useState<IDropdownOption[]>([]);
   const [addressPlans, setAddressPlans] = useState<IDropdownOption[]>([]);
@@ -119,8 +119,6 @@ export const CreateAddress: React.FunctionComponent = () => {
             type: addressType.toLowerCase(),
             plan: plan,
             address: addressName
-            //deadLetterAddress: deadLetter,
-            //expiryAddress: expiryQueue
           }
         };
         if (
@@ -128,11 +126,11 @@ export const CreateAddress: React.FunctionComponent = () => {
           addressType.trim().toLowerCase() === "subscription"
         ) {
           variable.spec.topic = topic;
-          variable.spec.deadLetterAddress = deadLetter;
+          variable.spec.deadLetterAddress = deadletter;
           variable.spec.expiryAddress = expiryQueue;
         }
         if (addressType && addressType.trim().toLowerCase() === "queue") {
-          variable.spec.deadLetterAddress = deadLetter;
+          variable.spec.deadLetterAddress = deadletter;
           variable.spec.expiryAddress = expiryQueue;
         }
 
@@ -170,8 +168,8 @@ export const CreateAddress: React.FunctionComponent = () => {
           setTypeOptions={setAddressTypes}
           planOptions={addressPlans}
           setPlanOptions={setAddressPlans}
-          setDeadLetter={setDeadLetter}
-          deadLetter={deadLetter}
+          setDeadletter={setDeadletter}
+          deadletter={deadletter}
           setExpiryQueue={setExpiryQueue}
           expiryQueue={expiryQueue}
         />
@@ -187,7 +185,7 @@ export const CreateAddress: React.FunctionComponent = () => {
           plan={plan}
           type={addressType}
           topic={topic}
-          deadLetter={deadLetter}
+          deadletter={deadletter}
           expiryQueue={expiryQueue}
           namespace={namespace || ""}
           addressspace={name}

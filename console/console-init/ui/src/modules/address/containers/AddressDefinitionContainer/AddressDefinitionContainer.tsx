@@ -28,7 +28,7 @@ export interface IAddressDefinition extends IAddressConfigurationProps {
   setPlan: (value: any) => void;
   addressSpaceType?: string;
   setTopic: (value: string) => void;
-  setDeadLetter: (value: string) => void;
+  setDeadletter: (value: string) => void;
   setExpiryQueue: (value: string) => void;
   setTypeOptions: (values: IDropdownOption[]) => void;
   setPlanOptions: (values: IDropdownOption[]) => void;
@@ -74,10 +74,10 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
   setTopic,
   typeOptions,
   setTypeOptions,
-  deadLetter,
+  deadletter,
   expiryQueue,
   setExpiryQueue,
-  setDeadLetter,
+  setDeadletter,
   planOptions,
   setPlanOptions
 }) => {
@@ -85,7 +85,7 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
   const [topicsForSubscription, setTopicForSubscription] = useState<
     IDropdownOption[]
   >([]);
-  const [deadLetterOptions, setDeadLetterOptions] = useState<IDropdownOption[]>(
+  const [deadletterOptions, setDeadletterOptions] = useState<IDropdownOption[]>(
     []
   );
   const { loading, data } = useQuery<IAddressTypes>(RETURN_ADDRESS_TYPES, {
@@ -166,7 +166,7 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
           deadletter_addresses.data.addresses &&
           deadletter_addresses.data.addresses.addresses.length > 0
         ) {
-          const deadLetters = deadletter_addresses.data.addresses.addresses.map(
+          const deadletters = deadletter_addresses.data.addresses.addresses.map(
             address => {
               return {
                 key: address.spec.address,
@@ -175,8 +175,7 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
               };
             }
           );
-          setDeadLetterOptions(deadLetters);
-          // setExpiryQueueOptions(deadLetters);
+          setDeadletterOptions(deadletters);
         }
       }
     }
@@ -189,8 +188,8 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
   const onTopicSelect = (value: string) => {
     setTopic(value);
   };
-  const onDeadLetterSelect = (value: string) => {
-    setDeadLetter(value);
+  const onDeadletterSelect = (value: string) => {
+    setDeadletter(value);
   };
   const onExpiryQueueSelect = (value: string) => {
     setExpiryQueue(value);
@@ -220,13 +219,13 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
       onTypeSelect={onTypeSelect}
       onPlanSelect={onPlanSelect}
       onTopicSelect={onTopicSelect}
-      onDeadLetterSelect={onDeadLetterSelect}
+      onDeadletterSelect={onDeadletterSelect}
       onExpiryQueueSelect={onExpiryQueueSelect}
       typeOptions={typeOptions}
       planOptions={planOptions}
-      deadLetter={deadLetter}
+      deadletter={deadletter}
       expiryQueue={expiryQueue}
-      deadLetterOptions={deadLetterOptions}
+      deadletterOptions={deadletterOptions}
       topicsForSubscription={topicsForSubscription}
     />
   );

@@ -46,7 +46,7 @@ export interface IAddress {
   errorMessages?: string[];
   status?: string;
   selected?: boolean;
-  deadLetter?: string | null;
+  deadletter?: string | null;
   topic?: string | null;
 }
 

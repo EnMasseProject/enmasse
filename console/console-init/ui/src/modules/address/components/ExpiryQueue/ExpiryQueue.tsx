@@ -23,12 +23,12 @@ const styles = StyleSheet.create({
 export interface IExpiryQueueProps {
   onExpiryQueueSelect?: (value: string) => void;
   expiryQueue: string;
-  deadLetterOptions?: IDropdownOption[];
+  deadletterOptions?: IDropdownOption[];
 }
 export const ExpiryQueue: React.FunctionComponent<IExpiryQueueProps> = ({
   expiryQueue,
   onExpiryQueueSelect,
-  deadLetterOptions
+  deadletterOptions
 }) => {
   return (
     <FormGroup
@@ -45,7 +45,7 @@ export const ExpiryQueue: React.FunctionComponent<IExpiryQueueProps> = ({
         position={DropdownPosition.left}
         onSelectItem={onExpiryQueueSelect}
         value={expiryQueue}
-        dropdownItems={deadLetterOptions}
+        dropdownItems={deadletterOptions}
         dropdownItemId="address-definition-topic-dropdown-item"
         isDisplayLabelAndValue={true}
         isRequiredField={false}
