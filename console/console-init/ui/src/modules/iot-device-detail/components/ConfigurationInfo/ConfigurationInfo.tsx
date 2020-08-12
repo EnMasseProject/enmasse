@@ -13,8 +13,8 @@ import {
   CardBody,
   Title,
   DropdownPosition,
-  Tooltip,
-  TooltipPosition,
+  Popover,
+  PopoverPosition,
   Button,
   ButtonVariant
 } from "@patternfly/react-core";
@@ -114,26 +114,25 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
 
   return (
     <>
-      <Tooltip
-        id="device-detail-config-info-help-tooltip"
-        aria-label="Information needed to configure device"
-        position={TooltipPosition.bottom}
-        enableFlip={false}
-        content={
-          <>
-            This info section provides a quick view of the information needed to
-            configure a device connection on the device side.
-          </>
+      <Popover
+        position={PopoverPosition.bottom}
+        bodyContent={
+          <div>
+            Use this information to set up a device for connection with an IoT
+            service.
+          </div>
         }
+        aria-label="configuration info popover"
+        closeBtnAriaLabel="close configuration info popover"
       >
         <Button
-          id="device-detail-config-info-help-icon-button"
-          icon={<ExclamationCircleIcon />}
           variant={ButtonVariant.link}
+          id="configuration-info-popover-button"
+          icon={<ExclamationCircleIcon />}
         >
           What is the device configuration info for?
         </Button>
-      </Tooltip>
+      </Popover>
       <Page id={id}>
         <PageSection>
           <Grid hasGutter>

@@ -8,7 +8,6 @@ import {
   Grid,
   GridItem,
   Title,
-  Text,
   Button,
   ButtonVariant,
   Popover,
@@ -17,9 +16,8 @@ import {
   Chip
 } from "@patternfly/react-core";
 import { ExclamationCircleIcon } from "@patternfly/react-icons";
-import { TypeAheadSelect } from "components";
+import { GatewayGroupTypeAheadSelect } from "containers";
 import { StyleSheet, css } from "aphrodite";
-import { mockGatewayGroups } from "mock-data";
 
 const styles = StyleSheet.create({
   popover_alignment: {
@@ -27,9 +25,6 @@ const styles = StyleSheet.create({
   },
   groups_min_height: {
     "min-height": "25rem"
-  },
-  fontWeight: {
-    "font-weight": "var(--pf-global--FontWeight--light)"
   }
 });
 
@@ -74,14 +69,6 @@ export const AddGatewayGroupMembership: React.FC<IAddGatewayGroupMembershipProps
     onClear();
   };
 
-  const onChangeGroupInput = async (value: string) => {
-    // TODO: integrate backend query and remove mock data
-    const filtererGroups = mockGatewayGroups?.filter(
-      item => item?.value.toLowerCase().indexOf(value.toLowerCase()) > -1
-    );
-    return filtererGroups;
-  };
-
   const removeGatewayGroup = (group: string) => {
     const idIndex = gatewayGroups.indexOf(group);
     if (idIndex >= 0) {
@@ -121,21 +108,6 @@ export const AddGatewayGroupMembership: React.FC<IAddGatewayGroupMembershipProps
   return (
     <Grid id={id} hasGutter>
       <GridItem>
-        <Title
-          id="add-gateway-group-membership-title"
-          headingLevel="h1"
-          size="xl"
-          aria-label="add gatewy group membership title"
-        >
-          Edit gateway groups membership
-          <small className={css(styles.fontWeight)}> (optional)</small>
-        </Title>
-        <Text>
-          If you are adding a gateway device, you can assign it to gateway
-          groups
-        </Text>
-      </GridItem>
-      <GridItem>
         <Popover
           position={PopoverPosition.bottom}
           bodyContent={
@@ -159,16 +131,15 @@ export const AddGatewayGroupMembership: React.FC<IAddGatewayGroupMembershipProps
         </Popover>
       </GridItem>
       <GridItem span={4}>
-        <TypeAheadSelect
-          id="add-gateway-group-typeahead"
-          aria-label="gateway group dropdown"
-          aria-describedby="multi typeahead for gateway groups"
+        <GatewayGroupTypeAheadSelect
+          id="add-gateway-group-membership-typeahead-select"
+          aria-label="gateway group membership dropdown"
+          aria-describedby="multi typeahead for gateway groups membership"
           onSelect={onSelectGatewayGroup}
           onClear={onClear}
           selected={selectedGroups}
-          typeAheadAriaLabel={"typeahead to select gateway groupps"}
+          typeAheadAriaLabel={"typeahead to select gateway group membership"}
           isMultiple={true}
-          onChangeInput={onChangeGroupInput}
           isCreatable={true}
           placeholderText={"Input gateway group name"}
         />

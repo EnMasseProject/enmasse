@@ -16,7 +16,6 @@ import {
 import { useParams } from "react-router";
 import { useQuery } from "@apollo/react-hooks";
 import { AddCredential, ICredential } from "modules/iot-device/components";
-import { useStoreContext, types } from "context-state-reducer";
 import { RETURN_IOT_CREDENTIALS } from "graphql-module/queries";
 import { ICredentialsReponse } from "schema";
 import { Loading } from "use-patternfly";
@@ -35,8 +34,9 @@ const styles = StyleSheet.create({
   }
 });
 
-export const EditCredentialsContainer = () => {
-  const { dispatch } = useStoreContext();
+export const EditCredentialsContainer: React.FC<{
+  onCancel: () => void;
+}> = ({ onCancel }) => {
   const { projectname, deviceid, namespace } = useParams();
   const [credentialList, setCredentialList] = useState<ICredential[]>();
 
@@ -52,15 +52,11 @@ export const EditCredentialsContainer = () => {
     SET_IOT_CREDENTIAL_FOR_DEVICE,
     ["iot_device_detail"],
     undefined,
-    resetActionType
+    onCancel
   );
 
   if (loading) {
     return <Loading />;
-  }
-
-  function resetActionType() {
-    dispatch({ type: types.RESET_DEVICE_ACTION_TYPE });
   }
 
   const onSave = async () => {
@@ -70,10 +66,6 @@ export const EditCredentialsContainer = () => {
       jsonData: serializeCredentials(credentialList)
     };
     await setCredentialQueryVariable(variable);
-  };
-
-  const onCancel = () => {
-    resetActionType();
   };
 
   const deserializeCredentialList = deserializeCredentials(parsecredentials);

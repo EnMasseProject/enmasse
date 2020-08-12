@@ -17,7 +17,6 @@ import { Loading } from "use-patternfly";
 import { StyleSheet, css } from "aphrodite";
 import { useQuery } from "@apollo/react-hooks";
 import { JsonEditor } from "components";
-import { useStoreContext, types } from "context-state-reducer";
 import {
   RETURN_IOT_DEVICE_DETAIL,
   UPDATE_IOT_DEVICE
@@ -34,8 +33,9 @@ const styles = StyleSheet.create({
   }
 });
 
-export const EditDeviceInJsonContainer = () => {
-  const { dispatch } = useStoreContext();
+export const EditDeviceInJsonContainer: React.FC<{
+  onCancel: () => void;
+}> = ({ onCancel }) => {
   const { projectname, deviceid, namespace } = useParams();
   const [deviceJson, setDeviceJson] = useState<any>();
   const [hasError, setHasError] = useState<boolean>(false);
@@ -69,7 +69,7 @@ export const EditDeviceInJsonContainer = () => {
     UPDATE_IOT_DEVICE,
     ["iot_device_detail"],
     undefined,
-    resetActionType
+    onCancel
   );
   const { devices } = data || {
     devices: { total: 0, devices: [] }
@@ -108,10 +108,6 @@ export const EditDeviceInJsonContainer = () => {
     return deviceinfo;
   };
 
-  function resetActionType() {
-    dispatch({ type: types.RESET_DEVICE_ACTION_TYPE });
-  }
-
   const onSave = async () => {
     const { hasError, device } = serialize_IoT_Device(deviceJson, deviceid);
     if (hasError) {
@@ -124,10 +120,6 @@ export const EditDeviceInJsonContainer = () => {
       };
       await setCreateIoTDeviceQueryVariable(variable);
     }
-  };
-
-  const onCancel = () => {
-    resetActionType();
   };
 
   const setDeviceDetail = (value: string | undefined) => {
