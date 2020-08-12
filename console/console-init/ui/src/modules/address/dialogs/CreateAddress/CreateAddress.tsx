@@ -29,17 +29,17 @@ export const CreateAddress: React.FunctionComponent = () => {
   const [addressType, setAddressType] = useState(" ");
   const [plan, setPlan] = useState(" ");
   const [topic, setTopic] = useState(" ");
-  const [Deadletters, setDeadletters] = useState(" ");
-  const [Expiryqueue, setExpiryqueue] = useState(" ");
+  const [deadLetter, setDeadLetter] = useState(" ");
+  const [expiryQueue, setExpiryQueue] = useState(" ");
   const [addressTypes, setAddressTypes] = useState<IDropdownOption[]>([]);
   const [addressPlans, setAddressPlans] = useState<IDropdownOption[]>([]);
   const [topicsForSubscription, setTopicForSubscription] = useState<
     IDropdownOption[]
   >([]);
-  const [DeadlettersOptions, setDeadlettersOptions] = useState<
-    IDropdownOption[]
-  >([]);
-  const [ExpiryqueueOptions, setExpiryqueueOptions] = useState<
+  const [deadLetterOptions, setDeadLetterOptions] = useState<IDropdownOption[]>(
+    []
+  );
+  const [expiryQueueOptions, setExpiryQueueOptions] = useState<
     IDropdownOption[]
   >([]);
 
@@ -167,14 +167,14 @@ export const CreateAddress: React.FunctionComponent = () => {
           planOptions={addressPlans}
           setPlanOptions={setAddressPlans}
           topicsForSubscription={topicsForSubscription}
-          setDeadletters={setDeadletters}
-          Deadletters={Deadletters}
-          DeadlettersOptions={DeadlettersOptions}
-          setDeadlettersOptions={setDeadlettersOptions}
-          setExpiryqueue={setExpiryqueue}
-          Expiryqueue={Expiryqueue}
-          ExpiryqueueOptions={ExpiryqueueOptions}
-          setExpiryqueueOptions={setExpiryqueueOptions}
+          setDeadLetter={setDeadLetter}
+          deadLetter={deadLetter}
+          deadLetterOptions={deadLetterOptions}
+          setDeadLetterOptions={setDeadLetterOptions}
+          setExpiryQueue={setExpiryQueue}
+          expiryQueue={expiryQueue}
+          expiryQueueOptions={expiryQueueOptions}
+          setExpiryQueueOptions={setExpiryQueueOptions}
           setTopicForSubscripitons={setTopicForSubscription}
         />
       ),
@@ -189,8 +189,8 @@ export const CreateAddress: React.FunctionComponent = () => {
           plan={plan}
           type={addressType}
           topic={topic}
-          Deadletters={Deadletters}
-          Expiryqueue={Expiryqueue}
+          deadLetter={deadLetter}
+          expiryQueue={expiryQueue}
           namespace={namespace || ""}
           addressspace={name}
         />

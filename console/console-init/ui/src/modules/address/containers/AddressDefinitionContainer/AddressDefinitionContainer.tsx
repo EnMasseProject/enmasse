@@ -27,13 +27,13 @@ export interface IAddressDefinition extends IAddressConfigurationProps {
   setPlan: (value: any) => void;
   addressSpaceType?: string;
   setTopic: (value: string) => void;
-  setDeadletters: (value: string) => void;
-  setExpiryqueue: (value: string) => void;
+  setDeadLetter: (value: string) => void;
+  setExpiryQueue: (value: string) => void;
   setTypeOptions: (values: IDropdownOption[]) => void;
   setPlanOptions: (values: IDropdownOption[]) => void;
   setTopicForSubscripitons: (values: IDropdownOption[]) => void;
-  setDeadlettersOptions: (values: IDropdownOption[]) => void;
-  setExpiryqueueOptions: (values: IDropdownOption[]) => void;
+  setDeadLetterOptions: (values: IDropdownOption[]) => void;
+  setExpiryQueueOptions: (values: IDropdownOption[]) => void;
 }
 
 interface IAddressPlans {
@@ -77,14 +77,14 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
   typeOptions,
   setTypeOptions,
   topicsForSubscription,
-  Deadletters,
-  Expiryqueue,
-  setExpiryqueue,
-  setDeadletters,
-  DeadlettersOptions,
-  ExpiryqueueOptions,
-  setExpiryqueueOptions,
-  setDeadlettersOptions,
+  deadLetter,
+  expiryQueue,
+  setExpiryQueue,
+  setDeadLetter,
+  deadLetterOptions,
+  expiryQueueOptions,
+  setExpiryQueueOptions,
+  setDeadLetterOptions,
   setTopicForSubscripitons,
   planOptions,
   setPlanOptions
@@ -150,8 +150,8 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
         }
       }
       if (
-        type.toLowerCase() === "subscription" ||
-        type.toLowerCase() === "queue"
+        type?.toLowerCase() === "subscription" ||
+        type?.toLowerCase() === "queue"
       ) {
         const deadletter_addresses = await client.query<IAddressResponse>({
           query: RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE(
@@ -165,7 +165,7 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
           deadletter_addresses.data.addresses &&
           deadletter_addresses.data.addresses.addresses.length > 0
         ) {
-          const deadletters = deadletter_addresses.data.addresses.addresses.map(
+          const deadLetters = deadletter_addresses.data.addresses.addresses.map(
             address => {
               return {
                 key: address.spec.address,
@@ -174,35 +174,8 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
               };
             }
           );
-          setDeadlettersOptions(deadletters);
-        }
-      }
-      if (
-        type.toLowerCase() === "subscription" ||
-        type.toLowerCase() === "queue"
-      ) {
-        const expiryqueue_addresses = await client.query<IAddressResponse>({
-          query: RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE(
-            addressspaceName,
-            namespace,
-            type
-          )
-        });
-        if (
-          expiryqueue_addresses.data &&
-          expiryqueue_addresses.data.addresses &&
-          expiryqueue_addresses.data.addresses.addresses.length > 0
-        ) {
-          const expiryqueues = expiryqueue_addresses.data.addresses.addresses.map(
-            address => {
-              return {
-                key: address.spec.address,
-                value: address.spec.address,
-                label: address.metadata.name
-              };
-            }
-          );
-          setExpiryqueueOptions(expiryqueues);
+          setDeadLetterOptions(deadLetters);
+          setExpiryQueueOptions(deadLetters);
         }
       }
     }
@@ -215,11 +188,11 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
   const onTopicSelect = (value: string) => {
     setTopic(value);
   };
-  const onDeadlettersSelect = (value: string) => {
-    setDeadletters(value);
+  const onDeadLetterSelect = (value: string) => {
+    setDeadLetter(value);
   };
-  const onExpiryqueueSelect = (value: string) => {
-    setExpiryqueue(value);
+  const onExpiryQueueSelect = (value: string) => {
+    setExpiryQueue(value);
   };
 
   const types: IDropdownOption[] = addressTypes_v2.map(type => {
@@ -246,14 +219,14 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
       onTypeSelect={onTypeSelect}
       onPlanSelect={onPlanSelect}
       onTopicSelect={onTopicSelect}
-      onDeadlettersSelect={onDeadlettersSelect}
-      onExpiryqueueSelect={onExpiryqueueSelect}
+      onDeadLetterSelect={onDeadLetterSelect}
+      onExpiryQueueSelect={onExpiryQueueSelect}
       typeOptions={typeOptions}
       planOptions={planOptions}
-      Deadletters={Deadletters}
-      Expiryqueue={Expiryqueue}
-      DeadlettersOptions={DeadlettersOptions}
-      ExpiryqueueOptions={ExpiryqueueOptions}
+      deadLetter={deadLetter}
+      expiryQueue={expiryQueue}
+      deadLetterOptions={deadLetterOptions}
+      expiryQueueOptions={expiryQueueOptions}
       topicsForSubscription={topicsForSubscription}
     />
   );

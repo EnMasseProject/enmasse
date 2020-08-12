@@ -25,8 +25,8 @@ export interface IAddressDetailHeaderProps {
   topic?: string | null;
   name: string;
   plan: string;
-  Deadletters?: string | null;
-  Expiryqueue?: string | null;
+  deadLetter?: string | null;
+  expiryQueue?: string | null;
   storedMessages: number | string;
   onEdit: (name: string) => void;
   onDelete: (name: string) => void;
@@ -63,8 +63,8 @@ const styles = StyleSheet.create({
 export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderProps> = ({
   type,
   topic,
-  Deadletters,
-  Expiryqueue,
+  deadLetter,
+  expiryQueue,
   name,
   plan,
   storedMessages,
@@ -95,20 +95,20 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
           Topic : <b>{topic}</b>
         </FlexItem>
       )}
-      {Deadletters && Deadletters !== null && (
+      {deadLetter && deadLetter !== null && (
         <FlexItem
-          id="adheader-subscription-deadletter"
+          id="addr-detail-header-deadletter-flexitem"
           className={css(styles.flex_left_border)}
         >
-          DeadLetter : <b>{Deadletters}</b>
+          DeadLetter : <b>{deadLetter}</b>
         </FlexItem>
       )}
-      {Expiryqueue && Expiryqueue !== null && (
+      {expiryQueue && expiryQueue !== null && (
         <FlexItem
-          id="adheader-subscription-expiryqueue"
+          id="addr-detail-header-deadletter-flexitem"
           className={css(styles.flex_left_border)}
         >
-          Expiry queue : <b>{Expiryqueue}</b>
+          Expiry queue : <b>{expiryQueue}</b>
         </FlexItem>
       )}
       {type && (type === "anycast" || type === "multicast") ? (

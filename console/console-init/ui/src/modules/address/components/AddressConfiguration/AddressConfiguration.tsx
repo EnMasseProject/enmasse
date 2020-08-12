@@ -35,18 +35,18 @@ export interface IAddressConfigurationProps {
   type: string;
   plan: string;
   topic: string;
-  Deadletters: string;
-  Expiryqueue: string;
+  deadLetter: string;
+  expiryQueue: string;
   onTypeSelect?: (value: string) => void;
   onPlanSelect?: (value: string) => void;
   onTopicSelect?: (value: string) => void;
-  onDeadlettersSelect?: (value: string) => void;
-  onExpiryqueueSelect?: (value: string) => void;
+  onDeadLetterSelect?: (value: string) => void;
+  onExpiryQueueSelect?: (value: string) => void;
   typeOptions: IDropdownOption[];
   planOptions: IDropdownOption[];
   topicsForSubscription: IDropdownOption[];
-  DeadlettersOptions: IDropdownOption[];
-  ExpiryqueueOptions: IDropdownOption[];
+  deadLetterOptions: IDropdownOption[];
+  expiryQueueOptions: IDropdownOption[];
 }
 
 const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> = ({
@@ -56,17 +56,17 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
   type,
   plan,
   topic,
-  Deadletters,
-  Expiryqueue,
+  deadLetter,
+  expiryQueue,
   onTypeSelect,
   onPlanSelect,
   onTopicSelect,
-  onDeadlettersSelect,
-  onExpiryqueueSelect,
+  onDeadLetterSelect,
+  onExpiryQueueSelect,
   typeOptions,
   planOptions,
-  DeadlettersOptions,
-  ExpiryqueueOptions,
+  deadLetterOptions,
+  expiryQueueOptions,
   topicsForSubscription
 }) => {
   const getHelperText = () => {
@@ -156,25 +156,24 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                 />
               </FormGroup>
             )}
-            {((type && type.toLowerCase() === "subscription") ||
-              (type && type.toLowerCase() === "queue")) && (
+            {(type?.toLowerCase() === "subscription" ||
+              type?.toLowerCase() === "queue") && (
               <FormGroup
                 label="Deadletter Queue"
                 isRequired={false}
-                fieldId="address-topic"
+                fieldId="addr-configuration-deadLetter-dropdown"
               >
                 <br />
                 <DropdownWithToggle
-                  id="address-definition-topic-dropdown"
+                  id="addr-configuration-deadLetter-dropdown"
                   className={styles.dropdown_align}
                   toggleClass={styles.dropdown_toggle}
                   dropdownItemClass={styles.dropdownItem}
                   position={DropdownPosition.left}
-                  onSelectItem={onDeadlettersSelect}
-                  value={Deadletters}
-                  dropdownItems={DeadlettersOptions}
+                  onSelectItem={onDeadLetterSelect}
+                  value={deadLetter}
+                  dropdownItems={deadLetterOptions}
                   dropdownItemId="address-definition-topic-dropdown-item"
-                  //isDisabled={type.trim() !== "subscription"}
                   isDisplayLabelAndValue={true}
                 />
                 <br />
@@ -182,20 +181,19 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                 <FormGroup
                   label="Expiry Queue"
                   isRequired={false}
-                  fieldId="address-topic"
+                  fieldId="addr-configuration-expiryQueue-dropdown"
                 >
                   <br />
                   <DropdownWithToggle
-                    id="address-definition-topic-dropdown"
+                    id="addr-configuration-expiryQueue-dropdown"
                     className={styles.dropdown_align}
                     toggleClass={styles.dropdown_toggle}
                     dropdownItemClass={styles.dropdownItem}
                     position={DropdownPosition.left}
-                    onSelectItem={onExpiryqueueSelect}
-                    value={Expiryqueue}
-                    dropdownItems={ExpiryqueueOptions}
+                    onSelectItem={onExpiryQueueSelect}
+                    value={expiryQueue}
+                    dropdownItems={expiryQueueOptions}
                     dropdownItemId="address-definition-topic-dropdown-item"
-                    //isDisabled={type.trim() !== "subscription"}
                     isDisplayLabelAndValue={true}
                   />
                 </FormGroup>
