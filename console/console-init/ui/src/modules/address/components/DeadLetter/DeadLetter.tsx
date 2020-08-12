@@ -48,6 +48,7 @@ export const DeadLetter: React.FunctionComponent<IExpiryQueueProps> = ({
         dropdownItems={deadLetterOptions}
         dropdownItemId="address-definition-topic-dropdown-item"
         isDisplayLabelAndValue={true}
+        isRequiredField={false}
       />
       <br />
     </FormGroup>

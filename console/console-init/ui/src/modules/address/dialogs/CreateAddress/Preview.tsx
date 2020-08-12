@@ -64,6 +64,10 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
           plan: plan ? plan.toLowerCase() : "",
           type: type ? type.toLowerCase() : "",
           ...(topic && topic.trim() !== "" && { topic: topic }),
+          ...(deadLetter &&
+            deadLetter.trim() !== "" && { deadLetterAddress: deadLetter }),
+          ...(expiryQueue &&
+            expiryQueue.trim() !== "" && { expiryAddress: expiryQueue }),
           address: name
         }
       },
