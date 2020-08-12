@@ -201,7 +201,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
     if (memberOf?.length > 0) {
       additionalKebabOptions.push(
         <DropdownItem
-          id="device-detail-edit-credentials-dropdownitem"
+          id="device-detail-edit-gateway-group-membership-dropdownitem"
           key="edit-gateway-group-membership"
           aria-label="edit gateway group membership"
           onClick={onSelectGatewayGroupMembership}

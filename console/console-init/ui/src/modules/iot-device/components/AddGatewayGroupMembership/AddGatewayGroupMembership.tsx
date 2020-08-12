@@ -44,6 +44,10 @@ export const AddGatewayGroupMembership: React.FC<IAddGatewayGroupMembershipProps
   const [gatewayGroups, setGatewayGroups] = useState<string[]>(groups);
 
   useEffect(() => {
+    setGatewayGroups(groups);
+  }, [groups]);
+
+  useEffect(() => {
     returnGatewayGroups && returnGatewayGroups(gatewayGroups);
   }, [gatewayGroups]);
 

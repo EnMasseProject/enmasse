@@ -115,6 +115,7 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
   return (
     <>
       <Popover
+        id="configuration-info-popover"
         position={PopoverPosition.bottom}
         bodyContent={
           <div>

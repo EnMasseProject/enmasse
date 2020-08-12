@@ -15,7 +15,7 @@ export const GatewayGroupTypeAheadSelect: React.FC<ITypeAheadSelectProps> = ({
   placeholderText = "Input gateway group name",
   isCreatable,
   isMultiple,
-  "aria-label": ariaLebel = "gateway group dropdown",
+  "aria-label": ariaLabel = "gateway group dropdown",
   typeAheadAriaLabel = "typeahead to select gateway group"
 }) => {
   const onChangeInput = async (value: string) => {
@@ -29,7 +29,7 @@ export const GatewayGroupTypeAheadSelect: React.FC<ITypeAheadSelectProps> = ({
   return (
     <TypeAheadSelect
       id={id}
-      aria-label={ariaLebel}
+      aria-label={ariaLabel}
       aria-describedby="typeahead for gateway groups"
       onSelect={onSelect}
       onClear={onClear}
