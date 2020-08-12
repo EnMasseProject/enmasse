@@ -139,7 +139,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
         getDeviceRegistrationString(deviceDetail, setErrorMessage)
       );
     }
-  }, []);
+  }, [deviceDetail]);
 
   const isJsonModified = (onCancel: boolean) => {
     let isModified: boolean = false;
