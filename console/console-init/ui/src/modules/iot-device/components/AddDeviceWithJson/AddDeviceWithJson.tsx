@@ -63,7 +63,10 @@ interface IAddDeviceWithJsonProps {
   onSave: (detail: string) => void;
   allowTemplate?: boolean;
 }
-const getDeviceRegistrationString = (deviceDetail: IDeviceResponse) => {
+const getDeviceRegistrationString = (
+  deviceDetail: IDeviceResponse,
+  setErrorMessage: (error: string) => void
+) => {
   let device: any = { registration: {} };
   if (deviceDetail.registration) {
     const {
@@ -79,10 +82,20 @@ const getDeviceRegistrationString = (deviceDetail: IDeviceResponse) => {
       deviceRegistration.enabled = enabled;
     }
     if (defaults) {
-      deviceRegistration.defaults = JSON.parse(defaults);
+      const { hasError, value } = convertStringToJsonAndValidate(defaults);
+      if (hasError) {
+        setErrorMessage(INVALID_JSON_ERROR);
+      } else {
+        deviceRegistration.defaults = value;
+      }
     }
     if (ext) {
-      deviceRegistration.ext = JSON.parse(ext);
+      const { hasError, value } = convertStringToJsonAndValidate(ext);
+      if (hasError) {
+        setErrorMessage(INVALID_JSON_ERROR);
+      } else {
+        deviceRegistration.defaults = value;
+      }
     }
     if ((!via || via.length === 0) && (!viaGroups || viaGroups?.length === 0)) {
       device.credentials = [];
@@ -113,6 +126,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
 }) => {
   const { dispatch } = useStoreContext();
   const [deviceJsonString, setDeviceJsonString] = useState<string>();
+  const [device, setDevice] = useState<string>();
   const [selectedTemplate, setSelectedTemplate] = useState<string>(
     TemplateType.DIRECTLY_CONNECTED
   );
@@ -121,38 +135,80 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
 
   useEffect(() => {
     if (deviceDetail) {
-      setDeviceJsonString(getDeviceRegistrationString(deviceDetail));
+      setDeviceJsonString(
+        getDeviceRegistrationString(deviceDetail, setErrorMessage)
+      );
     }
   }, []);
 
+  const isJsonModified = (onCancel: boolean) => {
+    let isModified: boolean = false;
+    if (deviceJsonString) {
+      const { hasError, value } = convertStringToJsonAndValidate(
+        deviceJsonString
+      );
+      if (hasError && deviceJsonString) {
+        isModified = true;
+      }
+      if (onCancel) {
+        if (value && selectedTemplate === TemplateType.DIRECTLY_CONNECTED) {
+          if (!compareObject(value, directlyConnectedDeviceTemplate)) {
+            isModified = true;
+          }
+        } else if (selectedTemplate === TemplateType.VIA_GATEWAY) {
+          if (!compareObject(value, connectedViaGatewayDeviceTemplate)) {
+            isModified = true;
+          }
+        }
+      } else {
+        if (value && selectedTemplate === TemplateType.DIRECTLY_CONNECTED) {
+          if (!compareObject(value, connectedViaGatewayDeviceTemplate)) {
+            isModified = true;
+          }
+        } else if (selectedTemplate === TemplateType.VIA_GATEWAY) {
+          if (!compareObject(value, directlyConnectedDeviceTemplate)) {
+            isModified = true;
+          }
+        }
+      }
+    }
+    return isModified;
+  };
+
   const setDeviceInfoInDetail = (value?: string) => {
+    if (errorMessage !== "") {
+      setErrorMessage("");
+    }
+    setDevice(value);
+  };
+
+  const setDeviceUsingEditor = (value?: string) => {
     if (errorMessage !== "") {
       setErrorMessage("");
     }
     setDeviceJsonString(value);
   };
 
-  const onCancel = () => {
-    let isJsonPresent: boolean = false;
-    if (deviceJsonString) {
-      const { hasError, value } = convertStringToJsonAndValidate(
-        deviceJsonString
-      );
-      if (value && selectedTemplate === TemplateType.DIRECTLY_CONNECTED) {
-        if (!compareObject(value, directlyConnectedDeviceTemplate)) {
-          isJsonPresent = true;
+  const setDeviceUsingTemplate = (value?: string) => {
+    if (isJsonModified(false)) {
+      dispatch({
+        type: types.SHOW_MODAL,
+        modalType: MODAL_TYPES.LEAVE_CREATE_DEVICE,
+        modalProps: {
+          onConfirm: () => setDeviceInfoInDetail(value),
+          option: "Modify",
+          detail: `Do you want to modify this json without saving? All information will be lost.`,
+          header: "Modify without saving ?",
+          confirmButtonLabel: "Modify",
+          iconType: "danger"
         }
-      } else if (selectedTemplate === TemplateType.VIA_GATEWAY) {
-        if (!compareObject(value, connectedViaGatewayDeviceTemplate)) {
-          isJsonPresent = true;
-        }
-      }
-      if (hasError && deviceJsonString) {
-        isJsonPresent = true;
-      }
+      });
+    } else {
+      setDeviceInfoInDetail(value);
     }
-
-    if (isJsonPresent) {
+  };
+  const onCancel = () => {
+    if (isJsonModified(true)) {
       dispatch({
         type: types.SHOW_MODAL,
         modalType: MODAL_TYPES.LEAVE_CREATE_DEVICE,
@@ -172,20 +228,17 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
 
   const isJsonValid = () => {
     if (!deviceJsonString || deviceJsonString.trim() === "") {
-      if (deviceJsonString !== "") {
-        setDeviceInfoInDetail(undefined);
-      }
       return true;
     }
     const { hasError, value } = convertStringToJsonAndValidate(
       deviceJsonString
     );
+    if (hasError) {
+      return false;
+    }
     if (value) {
       setDeviceInfoInDetail(getFormattedJsonString(value));
       return true;
-    }
-    if (hasError) {
-      return false;
     }
   };
 
@@ -246,11 +299,10 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
   const getEditor = () => {
     return (
       <JsonEditor
-        value={deviceJsonString}
+        value={device}
         readOnly={false}
         name={"editor-add-device"}
-        manageState={false}
-        setDetail={setDeviceInfoInDetail}
+        setDetail={setDeviceUsingEditor}
         style={{
           minHeight: "39em"
         }}
@@ -286,7 +338,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
                 <GridItem span={3} className={css(styles.box_align_style)}>
                   <PageSection variant={PageSectionVariants.light}>
                     <AddJsonUsingTemplate
-                      setDetail={setDeviceInfoInDetail}
+                      setDetail={setDeviceUsingTemplate}
                       selectedTemplate={selectedTemplate}
                       setSelectedTemplate={setSelectedTemplate}
                       setErrorMessage={setErrorMessage}

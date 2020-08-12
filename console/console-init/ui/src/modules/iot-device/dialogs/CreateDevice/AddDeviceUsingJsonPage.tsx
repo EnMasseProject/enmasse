@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import { AddDeviceWithJson } from "modules/iot-device/components";
 import { useParams, useHistory } from "react-router";
 import {

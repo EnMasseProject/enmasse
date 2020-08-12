@@ -16,14 +16,12 @@ import { IAceEditorProps } from "react-ace";
 
 interface IJsonEditorProps extends IAceEditorProps {
   setDetail?: (detail: string | undefined) => void;
-  manageState?: boolean;
   tooltipKey?: string;
 }
 
 const JsonEditor: React.FunctionComponent<IJsonEditorProps> = ({
   value: jsonValue,
   readOnly,
-  manageState = true,
   style,
   name,
   height,
@@ -33,15 +31,15 @@ const JsonEditor: React.FunctionComponent<IJsonEditorProps> = ({
   className
 }) => {
   const [isCopied, setIsCopied] = useState<boolean>(false);
-  const [value, setValue] = useState<string | undefined>(jsonValue);
+  const [value, setValue] = useState<string | undefined>();
 
   const onChange = (value: string) => {
-    if (manageState) {
-      setValue(value);
-    } else {
-      setDetail && setDetail(value);
-    }
+    setValue(value);
   };
+
+  useEffect(() => {
+    setValue(jsonValue);
+  }, [jsonValue]);
 
   useEffect(() => {
     setDetail && setDetail(value);
@@ -84,7 +82,7 @@ const JsonEditor: React.FunctionComponent<IJsonEditorProps> = ({
         mode="json"
         readOnly={readOnly}
         onChange={onChange}
-        value={manageState ? value : jsonValue}
+        value={value}
         style={style}
         name={name}
         height={height}
