@@ -14,6 +14,8 @@ import {
 } from "@patternfly/react-core";
 import { StyleSheet } from "@patternfly/react-styles";
 import { IDropdownOption, DropdownWithToggle } from "components";
+import { DeadLetter } from "modules/address/components/DeadLetter/DeadLetter";
+import { ExpiryQueue } from "modules/address/components/ExpiryQueue/ExpiryQueue";
 
 const styles = StyleSheet.create({
   dropdownItem: {
@@ -156,46 +158,19 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
             )}
             {(type?.toLowerCase() === "subscription" ||
               type?.toLowerCase() === "queue") && (
-              <FormGroup
-                label="Deadletter Queue"
-                isRequired={false}
-                fieldId="addr-configuration-deadLetter-dropdown"
-              >
-                <br />
-                <DropdownWithToggle
-                  id="addr-configuration-deadLetter-dropdown"
-                  className={styles.dropdown_align}
-                  toggleClass={styles.dropdown_toggle}
-                  dropdownItemClass={styles.dropdownItem}
-                  position={DropdownPosition.left}
-                  onSelectItem={onDeadLetterSelect}
-                  value={deadLetter}
-                  dropdownItems={deadLetterOptions}
-                  dropdownItemId="address-definition-topic-dropdown-item"
-                  isDisplayLabelAndValue={true}
+              <>
+                <ExpiryQueue
+                  expiryQueue={expiryQueue}
+                  onExpiryQueueSelect={onExpiryQueueSelect}
+                  deadLetterOptions={deadLetterOptions}
                 />
-                <br />
 
-                <FormGroup
-                  label="Expiry Queue"
-                  isRequired={false}
-                  fieldId="addr-configuration-expiryQueue-dropdown"
-                >
-                  <br />
-                  <DropdownWithToggle
-                    id="addr-configuration-expiryQueue-dropdown"
-                    className={styles.dropdown_align}
-                    toggleClass={styles.dropdown_toggle}
-                    dropdownItemClass={styles.dropdownItem}
-                    position={DropdownPosition.left}
-                    onSelectItem={onExpiryQueueSelect}
-                    value={expiryQueue}
-                    dropdownItems={deadLetterOptions}
-                    dropdownItemId="address-definition-topic-dropdown-item"
-                    isDisplayLabelAndValue={true}
-                  />
-                </FormGroup>
-              </FormGroup>
+                <DeadLetter
+                  deadLetter={deadLetter}
+                  onDeadLetterSelect={onDeadLetterSelect}
+                  deadLetterOptions={deadLetterOptions}
+                />
+              </>
             )}
           </Form>
         </GridItem>
