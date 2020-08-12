@@ -32,7 +32,8 @@ enum AddressTypes {
   ANYCAST = "anycast",
   MULTICAST = "multicast",
   TOPIC = "topic",
-  SUBSCRIPTION = "subscription"
+  SUBSCRIPTION = "subscription",
+  DEADLETTER = "deadletter"
 }
 
 export {
