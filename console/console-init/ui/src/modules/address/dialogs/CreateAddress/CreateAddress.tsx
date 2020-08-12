@@ -118,7 +118,9 @@ export const CreateAddress: React.FunctionComponent = () => {
           spec: {
             type: addressType.toLowerCase(),
             plan: plan,
-            address: addressName
+            address: addressName,
+            deadLetterAddress: deadLetter,
+            expiryAddress: expiryQueue
           }
         };
         if (addressType && addressType.trim().toLowerCase() === "subscription")

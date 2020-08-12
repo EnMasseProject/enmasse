@@ -81,6 +81,8 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
       </SplitItem>
     </Split>
   );
+  console.log(deadLetter);
+  console.log(expiryQueue);
 
   const AddressDetailInFlex = () => (
     <Flex className={css(styles.namespace_info_margin)}>
@@ -159,7 +161,8 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
     if (
       type &&
       (type.toLowerCase() === AddressTypes.QUEUE ||
-        type.toLowerCase() === AddressTypes.SUBSCRIPTION)
+        type.toLowerCase() === AddressTypes.SUBSCRIPTION ||
+        type.toLowerCase() === AddressTypes.DEADLETTER)
     ) {
       dropdownItems.push(
         <DropdownItem

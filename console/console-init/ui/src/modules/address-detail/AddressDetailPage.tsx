@@ -105,7 +105,7 @@ export default function AddressDetailPage() {
   }
 
   const addressDetail = addresses && addresses.addresses[0];
-
+  console.log(addressDetail);
   const getAddress = () => {
     const address: IAddress = {
       name: addressDetail.metadata.name,
@@ -117,7 +117,7 @@ export default function AddressDetailPage() {
         addressDetail.spec.plan.metadata.name,
       planValue: addressDetail.spec.plan.metadata.name,
       topic: addressDetail.spec.topic,
-      deadLetter: addressDetail.spec.deadLetter,
+      deadLetter: addressDetail.spec.deadLetterAddress,
       expiryQueue: addressDetail.spec.expiryAddress,
       messageIn: getFilteredValue(addressDetail.metrics, "enmasse_messages_in"),
       messageOut: getFilteredValue(
@@ -221,6 +221,8 @@ export default function AddressDetailPage() {
       }
     });
   };
+  console.log(address.expiryQueue);
+  console.log(address.deadLetter);
 
   return (
     <>
