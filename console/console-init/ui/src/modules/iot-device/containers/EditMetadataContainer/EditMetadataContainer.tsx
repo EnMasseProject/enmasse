@@ -15,7 +15,6 @@ import {
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
 import { CreateMetadata } from "modules/iot-device/components";
-import { useStoreContext, types } from "context-state-reducer";
 
 const styles = StyleSheet.create({
   title: {
@@ -28,26 +27,17 @@ const styles = StyleSheet.create({
 
 export interface IEditMetadataContainerProps {
   title?: string;
+  onCancel: () => void;
 }
 
 export const EditMetadataContainer: React.FC<IEditMetadataContainerProps> = ({
-  title
+  onCancel
 }) => {
-  const { dispatch } = useStoreContext();
-
-  const resetActionType = () => {
-    dispatch({ type: types.RESET_DEVICE_ACTION_TYPE });
-  };
-
-  const onCancel = () => {
-    resetActionType();
-  };
-
   const onSave = () => {
     /**
      * TODO: implement save metadata query
      */
-    resetActionType();
+    onCancel();
   };
 
   return (

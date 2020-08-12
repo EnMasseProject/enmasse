@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Flex,
   FlexItem,
@@ -17,13 +17,10 @@ import {
   IAddGatewayGroupMembershipProps
 } from "modules/iot-device/components";
 import { AddCredential } from "modules/iot-device/components";
-import { useStoreContext, types } from "context-state-reducer";
 import { StyleSheet, css } from "aphrodite";
+import { PageJourney } from "constant";
 
 const styles = StyleSheet.create({
-  grid_alignment: {
-    "padding-left": "3rem"
-  },
   popover_alignment: {
     "padding-left": "0px"
   },
@@ -38,17 +35,14 @@ interface IAddGatewayGroupWrapperProps
     "returnGatewayGroups" | "gatewayGroups"
   > {
   onCancel: () => void;
-  onNext: () => void;
-}
-
-enum Steps {
-  AddGroup,
-  AddCredential
+  onBack: () => void;
+  onSave: () => void;
 }
 
 const AddGatewayGroupWrapper: React.FC<IAddGatewayGroupWrapperProps> = ({
   onCancel,
-  onNext,
+  onBack,
+  onSave,
   returnGatewayGroups,
   gatewayGroups
 }) => {
@@ -60,6 +54,57 @@ const AddGatewayGroupWrapper: React.FC<IAddGatewayGroupWrapperProps> = ({
         gatewayGroups={gatewayGroups}
       />
       <Flex>
+        <FlexItem>
+          <Button
+            id="connected-directly-save-button"
+            variant={ButtonVariant.primary}
+            onClick={onSave}
+          >
+            Save
+          </Button>
+        </FlexItem>
+        <FlexItem>
+          <Button
+            id="connected-directly-back-button"
+            variant={ButtonVariant.secondary}
+            onClick={onBack}
+          >
+            Back
+          </Button>
+        </FlexItem>
+        <FlexItem>
+          <Button
+            id="connected-directly-cancel-button"
+            variant={ButtonVariant.link}
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+        </FlexItem>
+      </Flex>
+    </>
+  );
+};
+
+interface IAddCredentialWrapperProps
+  extends Pick<IAddGatewayGroupWrapperProps, "onCancel"> {
+  onNext: () => void;
+}
+
+const AddCredentialWrapper: React.FC<IAddCredentialWrapperProps> = ({
+  onCancel,
+  onNext
+}) => {
+  return (
+    <>
+      <Grid>
+        <GridItem span={6}>
+          <AddCredential id="connected-directly-add-credentials" />
+        </GridItem>
+      </Grid>
+      <br />
+      <br />
+      <Flex className={css(styles.button_alignment)}>
         <FlexItem>
           <Button
             id="connected-directly-next-button"
@@ -83,76 +128,30 @@ const AddGatewayGroupWrapper: React.FC<IAddGatewayGroupWrapperProps> = ({
   );
 };
 
-interface IAddCredentialWrapperProps
-  extends Pick<IAddGatewayGroupWrapperProps, "onCancel"> {
-  onSave: () => void;
-  onBack: () => void;
+interface IConnectedDirectlyContainerProps {
+  setPageJourney: (
+    journey: PageJourney.AddCredential | PageJourney.AddGatewayGroupMembership
+  ) => void;
+  onCancel: () => void;
 }
 
-const AddCredentialWrapper: React.FC<IAddCredentialWrapperProps> = ({
-  onSave,
-  onCancel,
-  onBack
+export const ConnectedDirectlyContainer: React.FC<IConnectedDirectlyContainerProps> = ({
+  setPageJourney,
+  onCancel
 }) => {
-  return (
-    <>
-      <Grid>
-        <GridItem span={6}>
-          <AddCredential id="connected-directly-add-credentials" />
-        </GridItem>
-      </Grid>
-      <br />
-      <br />
-      <Flex className={css(styles.button_alignment)}>
-        <FlexItem>
-          <Button
-            id="connected-directly-back-button"
-            variant={ButtonVariant.secondary}
-            onClick={onBack}
-          >
-            Back
-          </Button>
-        </FlexItem>
-        <FlexItem>
-          <Button
-            id="connected-directly-save-button"
-            variant={ButtonVariant.primary}
-            onClick={onSave}
-          >
-            Save
-          </Button>
-        </FlexItem>
-        <FlexItem>
-          <Button
-            id="connected-directly-cancel-button"
-            variant={ButtonVariant.link}
-            onClick={onCancel}
-          >
-            Cancel
-          </Button>
-        </FlexItem>
-      </Flex>
-    </>
-  );
-};
-
-export const ConnectedDirectlyContainer = () => {
-  const { dispatch } = useStoreContext();
-  const [step, setStep] = useState(Steps.AddGroup);
+  const [step, setStep] = useState(PageJourney.AddCredential);
   const [gatewayGroups, setGatewayGroups] = useState<string[]>([]);
 
-  const onCancel = () => {
-    dispatch({
-      type: types.RESET_DEVICE_ACTION_TYPE
-    });
-  };
+  useEffect(() => {
+    setPageJourney(step);
+  }, [step]);
 
   const onNext = () => {
-    setStep(Steps.AddCredential);
+    setStep(PageJourney.AddGatewayGroupMembership);
   };
 
   const onBack = () => {
-    setStep(Steps.AddGroup);
+    setStep(PageJourney.AddCredential);
   };
 
   const onSave = () => {
@@ -162,22 +161,19 @@ export const ConnectedDirectlyContainer = () => {
   };
 
   return (
-    <div className={css(styles.grid_alignment)}>
-      {step === Steps.AddGroup && (
+    <>
+      {step === PageJourney.AddGatewayGroupMembership && (
         <AddGatewayGroupWrapper
           onCancel={onCancel}
-          onNext={onNext}
+          onBack={onBack}
+          onSave={onSave}
           returnGatewayGroups={setGatewayGroups}
           gatewayGroups={gatewayGroups}
         />
       )}
-      {step === Steps.AddCredential && (
-        <AddCredentialWrapper
-          onBack={onBack}
-          onSave={onSave}
-          onCancel={onCancel}
-        />
+      {step === PageJourney.AddCredential && (
+        <AddCredentialWrapper onNext={onNext} onCancel={onCancel} />
       )}
-    </div>
+    </>
   );
 };

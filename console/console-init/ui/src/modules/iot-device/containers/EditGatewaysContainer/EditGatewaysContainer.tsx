@@ -11,7 +11,6 @@ import { StyleSheet, css } from "aphrodite";
 import { AddGateways } from "modules/iot-device/components";
 import { RETURN_IOT_DEVICE_DETAIL } from "graphql-module";
 import { IDeviceDetailResponse } from "schema";
-import { useStoreContext, types } from "context-state-reducer";
 
 const styles = StyleSheet.create({
   button_padding: {
@@ -19,9 +18,10 @@ const styles = StyleSheet.create({
   }
 });
 
-export const EditGatewaysContainer = () => {
+export const EditGatewaysContainer: React.FC<{
+  onCancel: () => void;
+}> = ({ onCancel }) => {
   const { deviceid, projectname, namespace } = useParams();
-  const { dispatch } = useStoreContext();
   const [gatewayDevices, addGatewayDevices] = useState<string[]>([]);
   const [gatewayGroups, setGatewayGroups] = useState<string[]>([]);
 
@@ -44,16 +44,8 @@ export const EditGatewaysContainer = () => {
     setGatewayGroups(groups);
   };
 
-  const resetActionType = () => {
-    dispatch({ type: types.RESET_DEVICE_ACTION_TYPE });
-  };
-
   const onGatewaysSave = () => {
     // TODO: Call the `update iot project` mutation
-  };
-
-  const onCancel = () => {
-    resetActionType();
   };
 
   return (

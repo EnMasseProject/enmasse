@@ -32,7 +32,9 @@ const MODAL_COMPONENTS: any = {
   [MODAL_TYPES.EDIT_PROJECT]: EditMsgProjectContainer,
   [MODAL_TYPES.UPDATE_DEVICE_CREDENTIAL_STATUS]: DialogPrompt,
   [MODAL_TYPES.CHANGE_CONNECTION_TYPE]: DialogPrompt,
-  [MODAL_TYPES.CLONE_DEVICE]: CloneDeviceDialog
+  [MODAL_TYPES.CLONE_DEVICE]: CloneDeviceDialog,
+  [MODAL_TYPES.REMOVE_CREDENTIALS]: DialogPrompt,
+  [MODAL_TYPES.REMOVE_GATEWAY]: DialogPrompt
 };
 
 export const RootModal: React.FC<{}> = () => {

@@ -89,9 +89,13 @@ export default function DeviceDetailPage() {
   };
   const { registration, deviceId, credentials, status } =
     devices?.devices[0] || {};
-  const { enabled, via = [] } = registration || {};
+  const { enabled, via = [], viaGroups = [], memberOf = [] } = registration || {
+    memberOf: [],
+    viaGroups: [],
+    via: []
+  };
   const parseCredentials = credentials && JSON.parse(credentials);
-  const viaGateway = via?.length > 0;
+  const viaGateway = via?.length > 0 || viaGroups?.length > 0;
 
   const breadcrumb = useMemo(
     () => (
@@ -228,6 +232,7 @@ export default function DeviceDetailPage() {
                 viaGateway,
                 parseCredentials
               )}
+              memberOf={memberOf}
             />
             <DeviceDetailNavigation activeItem={subList || "device-info"} />
           </PageSection>

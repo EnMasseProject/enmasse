@@ -16,7 +16,6 @@ import {
   GridItem
 } from "@patternfly/react-core";
 import { AddCredential, ICredential } from "modules/iot-device/components";
-import { useStoreContext, types } from "context-state-reducer";
 import { SET_IOT_CREDENTIAL_FOR_DEVICE } from "graphql-module/queries";
 import { useMutationQuery } from "hooks";
 import { serializeCredentials } from "modules/iot-device/utils";
@@ -30,20 +29,17 @@ const styles = StyleSheet.create({
   }
 });
 
-export const AddCredentialsContainer = () => {
+export const AddCredentialsContainer: React.FC<{
+  onCancel: () => void;
+}> = ({ onCancel }) => {
   const { projectname, deviceid, namespace } = useParams();
-  const { dispatch } = useStoreContext();
   const [credentials, setCredentials] = useState<ICredential[]>();
   const [setCredentialQueryVariable] = useMutationQuery(
     SET_IOT_CREDENTIAL_FOR_DEVICE,
     ["iot_device_detail"],
     undefined,
-    resetActionType
+    onCancel
   );
-
-  function resetActionType() {
-    dispatch({ type: types.RESET_DEVICE_ACTION_TYPE });
-  }
 
   const onSave = async () => {
     const variable = {
@@ -52,10 +48,6 @@ export const AddCredentialsContainer = () => {
       jsonData: serializeCredentials(credentials)
     };
     await setCredentialQueryVariable(variable);
-  };
-
-  const onCancel = () => {
-    resetActionType();
   };
 
   return (

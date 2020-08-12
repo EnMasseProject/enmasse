@@ -39,6 +39,7 @@ interface IDeviceDetailHeaderProps {
     | DeviceConnectionType.CONNECTED_DIRECTLY
     | DeviceConnectionType.VIA_GATEWAYS
     | DeviceConnectionType.NA;
+  memberOf?: string[];
 }
 
 const styles = StyleSheet.create({
@@ -66,7 +67,8 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
   deviceStatus,
   credentials = [],
   viaGateway = false,
-  connectiontype
+  connectiontype,
+  memberOf = []
 }) => {
   const { dispatch } = useStoreContext();
 
@@ -130,6 +132,13 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
     });
   };
 
+  const onSelectGatewayGroupMembership = () => {
+    dispatch({
+      type: types.SET_DEVICE_ACTION_TYPE,
+      payload: { actionType: DeviceActionType.EDIT_GATEWAY_GROUP_MEMBERSHIP }
+    });
+  };
+
   const DeviceDetailLayout = () => (
     <>
       <SplitItem>
@@ -165,7 +174,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
 
   const additionalKebebOptions = () => {
     const additionalKebabOptions: React.ReactNode[] = [];
-    if (!(credentials.length > 0) && viaGateway) {
+    if (viaGateway) {
       additionalKebabOptions.push(
         <DropdownItem
           id="device-detail-edit-gateways-dropdownitem"
@@ -173,10 +182,11 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
           aria-label="edit gateways"
           onClick={onSelctEditGateways}
         >
-          Edit gateways
+          Edit connection gateways
         </DropdownItem>
       );
-    } else if (!viaGateway && credentials?.length > 0) {
+    }
+    if (credentials?.length > 0) {
       additionalKebabOptions.push(
         <DropdownItem
           id="device-detail-edit-credentials-dropdownitem"
@@ -185,6 +195,18 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
           onClick={onSelectEditCredentials}
         >
           Edit credentials
+        </DropdownItem>
+      );
+    }
+    if (memberOf?.length > 0) {
+      additionalKebabOptions.push(
+        <DropdownItem
+          id="device-detail-edit-gateway-group-membership-dropdownitem"
+          key="edit-gateway-group-membership"
+          aria-label="edit gateway group membership"
+          onClick={onSelectGatewayGroupMembership}
+        >
+          Edit gateway group membership
         </DropdownItem>
       );
     }

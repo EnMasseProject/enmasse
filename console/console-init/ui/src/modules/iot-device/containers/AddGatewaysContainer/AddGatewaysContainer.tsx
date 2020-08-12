@@ -9,7 +9,6 @@ import { useParams } from "react-router";
 import { Flex, FlexItem, Button, ButtonVariant } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
 import { AddGateways } from "modules/iot-device/components";
-import { useStoreContext, types } from "context-state-reducer";
 
 const styles = StyleSheet.create({
   button_padding: {
@@ -17,9 +16,10 @@ const styles = StyleSheet.create({
   }
 });
 
-export const AddGatewaysContainer = () => {
+export const AddGatewaysContainer: React.FC<{
+  onCancel: () => void;
+}> = ({ onCancel }) => {
   const { deviceid } = useParams();
-  const { dispatch } = useStoreContext();
   const [gatewayDevices, addGatewayDevices] = useState<string[]>([]);
   const [gatewayGroups, addGatewayGroups] = useState<string[]>([]);
 
@@ -31,19 +31,11 @@ export const AddGatewaysContainer = () => {
     addGatewayGroups(gateway);
   };
 
-  const resetActionType = () => {
-    dispatch({ type: types.RESET_DEVICE_ACTION_TYPE });
-  };
-
   const onSave = () => {
     /**
      * TODO: implement save query
      */
-    resetActionType();
-  };
-
-  const onCancel = () => {
-    resetActionType();
+    onCancel();
   };
 
   return (

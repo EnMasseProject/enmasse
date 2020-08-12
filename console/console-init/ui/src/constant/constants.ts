@@ -82,6 +82,11 @@ enum Messages {
   InvalidJson = "Invalid json, please try again with valid json"
 }
 
+enum PageJourney {
+  AddGatewayGroupMembership = "AddGatewayGroupMembership",
+  AddCredential = "AddCredential"
+}
+
 export {
   UNKNOWN,
   POLL_INTERVAL,
@@ -102,5 +107,6 @@ export {
   WIZARD_HEIGHT,
   DeviceConnectionType,
   OperationType,
-  Messages
+  Messages,
+  PageJourney
 };

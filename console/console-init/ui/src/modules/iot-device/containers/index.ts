@@ -12,3 +12,4 @@ export * from "./AddCredentialsContainer";
 export * from "./AddGatewaysContainer";
 export * from "./EmptyDeviceContainer";
 export * from "./ReviewDeviceContainer";
+export * from "./EditGatewayGroupMembershipContainer";

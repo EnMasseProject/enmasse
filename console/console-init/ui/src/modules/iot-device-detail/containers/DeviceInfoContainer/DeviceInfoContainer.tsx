@@ -17,6 +17,7 @@ import { useMutationQuery } from "hooks";
 import { DELETE_CREDENTIALS_FOR_IOT_DEVICE } from "graphql-module/queries";
 import { ICredential } from "modules/iot-device/components";
 import { FetchPolicy } from "constant";
+import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 
 export interface IDeviceInfoContainerProps {
   id: string;
@@ -26,6 +27,7 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
   id
 }) => {
   const { projectname, deviceid, namespace } = useParams();
+  const { dispatch } = useStoreContext();
   const queryResolver = `
     devices{
       registration{
@@ -57,7 +59,7 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
   ] = useMutationQuery(SET_IOT_CREDENTIAL_FOR_DEVICE, ["iot_device_detail"]);
 
   const { credentials, registration } = data?.devices?.devices[0] || {
-    credentials: "[]",
+    credentials: "",
     registration: {
       ext: "",
       via: [],
@@ -103,13 +105,26 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
     }
   };
 
-  const deleteGateways = () => {
+  const onConfirmDeleteGateways = () => {
     /**
      * TODO: add delete gataways query
      */
   };
 
-  const deleteCredentials = async () => {
+  const openPreConfirmRemoveGatewayDialog = () => {
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.REMOVE_CREDENTIALS,
+      modalProps: {
+        onConfirm: onConfirmDeleteGateways,
+        confirmButtonLabel: "Remove",
+        detail: "Connection gateway will be removed and is unrecoverable",
+        header: "Remove gateway assignment?"
+      }
+    });
+  };
+
+  const onConfirmDeleteCredentials = async () => {
     const variable = {
       iotproject: {
         name: projectname,
@@ -120,6 +135,19 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
     await setDeleteCredentialsQueryVariables(variable);
   };
 
+  const openPreConfirmDeleteCredetialsDialog = () => {
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.REMOVE_CREDENTIALS,
+      modalProps: {
+        onConfirm: onConfirmDeleteCredentials,
+        confirmButtonLabel: "Remove",
+        detail: "Credentials will be removed and is unreciverable.",
+        header: "Remove credentials ?"
+      }
+    });
+  };
+
   const getErrorState = () => {
     let errorState = "";
     if (
@@ -128,7 +156,11 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
       viaGateway
     ) {
       errorState = ErrorState.CONFLICTING;
-    } else if (!(parsecredentials?.length > 0) && viaGateway === false) {
+    } else if (
+      Array.isArray(parsecredentials) &&
+      !(parsecredentials?.length > 0) &&
+      viaGateway === false
+    ) {
       errorState = ErrorState.MISSING;
     }
     return errorState;
@@ -143,8 +175,8 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
       memberOf={memberOf}
       viaGroups={viaGroups}
       errorState={getErrorState()}
-      deleteGateways={deleteGateways}
-      deleteCredentials={deleteCredentials}
+      deleteGateways={openPreConfirmRemoveGatewayDialog}
+      deleteCredentials={openPreConfirmDeleteCredetialsDialog}
       onConfirmCredentialsStatus={onConfirmCredentialsStatus}
     />
   );
