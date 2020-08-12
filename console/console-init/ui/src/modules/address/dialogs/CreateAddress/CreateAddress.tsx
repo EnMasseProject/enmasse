@@ -33,15 +33,6 @@ export const CreateAddress: React.FunctionComponent = () => {
   const [expiryQueue, setExpiryQueue] = useState(" ");
   const [addressTypes, setAddressTypes] = useState<IDropdownOption[]>([]);
   const [addressPlans, setAddressPlans] = useState<IDropdownOption[]>([]);
-  const [topicsForSubscription, setTopicForSubscription] = useState<
-    IDropdownOption[]
-  >([]);
-  const [deadLetterOptions, setDeadLetterOptions] = useState<IDropdownOption[]>(
-    []
-  );
-  const [expiryQueueOptions, setExpiryQueueOptions] = useState<
-    IDropdownOption[]
-  >([]);
 
   const [isNameValid, setIsNameValid] = useState<boolean>(true);
 
@@ -166,16 +157,10 @@ export const CreateAddress: React.FunctionComponent = () => {
           setTypeOptions={setAddressTypes}
           planOptions={addressPlans}
           setPlanOptions={setAddressPlans}
-          topicsForSubscription={topicsForSubscription}
           setDeadLetter={setDeadLetter}
           deadLetter={deadLetter}
-          deadLetterOptions={deadLetterOptions}
-          setDeadLetterOptions={setDeadLetterOptions}
           setExpiryQueue={setExpiryQueue}
           expiryQueue={expiryQueue}
-          expiryQueueOptions={expiryQueueOptions}
-          setExpiryQueueOptions={setExpiryQueueOptions}
-          setTopicForSubscripitons={setTopicForSubscription}
         />
       ),
       enableNext: isReviewButtonEnabled(),

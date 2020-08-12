@@ -44,9 +44,8 @@ export interface IAddressConfigurationProps {
   onExpiryQueueSelect?: (value: string) => void;
   typeOptions: IDropdownOption[];
   planOptions: IDropdownOption[];
-  topicsForSubscription: IDropdownOption[];
-  deadLetterOptions: IDropdownOption[];
-  expiryQueueOptions: IDropdownOption[];
+  topicsForSubscription?: IDropdownOption[];
+  deadLetterOptions?: IDropdownOption[];
 }
 
 const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> = ({
@@ -66,7 +65,6 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
   typeOptions,
   planOptions,
   deadLetterOptions,
-  expiryQueueOptions,
   topicsForSubscription
 }) => {
   const getHelperText = () => {
@@ -192,7 +190,7 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                     position={DropdownPosition.left}
                     onSelectItem={onExpiryQueueSelect}
                     value={expiryQueue}
-                    dropdownItems={expiryQueueOptions}
+                    dropdownItems={deadLetterOptions}
                     dropdownItemId="address-definition-topic-dropdown-item"
                     isDisplayLabelAndValue={true}
                   />
