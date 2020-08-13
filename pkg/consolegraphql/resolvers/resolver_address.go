@@ -248,6 +248,7 @@ func (r *mutationResolver) PurgeAddresses(ctx context.Context, inputs []*metav1.
 		switch address.Spec.Type {
 		case "subscription":
 		case "queue":
+		case "deadletter":
 		default:
 			graphql.AddErrorf(ctx, "failed to purge address: '%s' in namespace: '%s' - address type '%s' is not supported for this operation", input.Name, input.Namespace, address.Spec.Type)
 			continue
