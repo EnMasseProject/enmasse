@@ -212,7 +212,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
     }
 
     if (
-      (!(credentials.length > 0) && viaGateway) ||
+      (!(credentials?.length > 0) && viaGateway) ||
       (!viaGateway && credentials?.length > 0)
     ) {
       additionalKebabOptions.push(

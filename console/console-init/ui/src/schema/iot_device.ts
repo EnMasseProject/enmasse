@@ -3,27 +3,29 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
+interface IRegistrationResponse {
+  enabled?: boolean;
+  via?: string[];
+  ext?: string;
+  viaGroups?: string[];
+  memberOf?: string[];
+  defaults?: string;
+}
+export interface IDeviceResponse {
+  deviceId?: string;
+  registration: IRegistrationResponse;
+  jsonData?: string;
+  credentials?: string;
+  status?: {
+    created?: string;
+    updated?: string;
+    lastSeen?: string;
+  };
+}
 export interface IDeviceDetailResponse {
   devices: {
     total: number;
-    devices: Array<{
-      deviceId?: string;
-      registration: {
-        enabled?: boolean;
-        via?: string[];
-        ext?: string;
-        viaGroups?: string[];
-        memberOf?: string[];
-        defaults?: string;
-      };
-      jsonData?: string;
-      credentials?: string;
-      status?: {
-        created?: string;
-        updated?: string;
-        lastSeen?: string;
-      };
-    }>;
+    devices: Array<IDeviceResponse>;
   };
 }
 

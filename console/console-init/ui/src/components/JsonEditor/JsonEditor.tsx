@@ -31,11 +31,15 @@ const JsonEditor: React.FunctionComponent<IJsonEditorProps> = ({
   className
 }) => {
   const [isCopied, setIsCopied] = useState<boolean>(false);
-  const [value, setValue] = useState<string | undefined>(jsonValue);
+  const [value, setValue] = useState<string | undefined>();
 
   const onChange = (value: string) => {
     setValue(value);
   };
+
+  useEffect(() => {
+    setValue(jsonValue);
+  }, [jsonValue]);
 
   useEffect(() => {
     setDetail && setDetail(value);
