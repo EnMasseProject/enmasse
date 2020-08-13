@@ -114,7 +114,11 @@ type AgentAddressLink struct {
 }
 
 func FromAgentConnectionBody(agentConnectionMap map[string]interface{}) (*AgentConnection, error) {
-	cleanMap(agentConnectionMap)
+	for k, v := range agentConnectionMap {
+		if vv, ok := v.(map[interface{}]interface{}); ok && len(vv) == 0 {
+			delete(agentConnectionMap, k)
+		}
+	}
 
 	bytes, e := json.Marshal(agentConnectionMap)
 	if e != nil {
