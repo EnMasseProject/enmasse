@@ -27,6 +27,19 @@
   },
   {
     "metadata": {
+      "Name": "brokered.deadletter"
+    },
+    "spec": {
+      "addressType": "deadletter",
+      "addressSpaceType": "brokered",
+      "displayName": "deadletter",
+      "shortDescription": "A deadletter queue",
+      "longDescription": "Instances of the deadletter address type may be assigned as deadletter or expiry targets to queues.",
+      "displayOrder": 2
+    }
+  },
+  {
+    "metadata": {
       "name": "standard.anycast"
     },
     "spec": {
@@ -88,6 +101,19 @@
       "shortDescription": "A publish-subscribe topic",
       "longDescription": "The topic address type supports the publish-subscribe messaging pattern where there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.",
       "displayOrder": 4
+    }
+  },
+  {
+    "metadata": {
+      "Name": "standard.deadletter"
+    },
+    "spec": {
+      "addressType": "deadletter",
+      "addressSpaceType": "standard",
+      "displayName": "deadletter",
+      "shortDescription": "A deadletter queue",
+      "longDescription": "Instances of the deadletter address type may be assigned as deadletter or expiry targets to queues and subscriptions.",
+      "displayOrder": 5
     }
   }
 ]
