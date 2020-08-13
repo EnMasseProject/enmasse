@@ -87,7 +87,7 @@ function same_address_definition(a, b) {
         && a.type === b.type
         && a.plan === b.plan
         && a.deadLetterAddress === b.deadLetterAddress
-        && a.expiryAdreess === b.expiryAdreess
+        && a.expiryAddress === b.expiryAddress
         && myutils.same_ttl(a.messageTtl, b.messageTtl)
         && myutils.same_ttl(a.messageRedelivery, b.messageRedelivery);
 }
