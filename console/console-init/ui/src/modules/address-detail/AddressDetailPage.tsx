@@ -105,7 +105,6 @@ export default function AddressDetailPage() {
   }
 
   const addressDetail = addresses && addresses.addresses[0];
-  console.log(addressDetail);
   const getAddress = () => {
     const address: IAddress = {
       name: addressDetail.metadata.name,
