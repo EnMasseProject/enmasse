@@ -157,13 +157,13 @@ type ComplexityRoot struct {
 	}
 
 	AddressSpecEnmasseIoV1beta1 struct {
-		Address           func(childComplexity int) int
-		AddressSpace      func(childComplexity int) int
-		DeadLetterAddress func(childComplexity int) int
-		ExpiryAddress     func(childComplexity int) int
-		Plan              func(childComplexity int) int
-		Topic             func(childComplexity int) int
-		Type              func(childComplexity int) int
+		Address      func(childComplexity int) int
+		AddressSpace func(childComplexity int) int
+		Deadletter   func(childComplexity int) int
+		Expiry       func(childComplexity int) int
+		Plan         func(childComplexity int) int
+		Topic        func(childComplexity int) int
+		Type         func(childComplexity int) int
 	}
 
 	AddressStatusEnmasseIoV1beta1 struct {
@@ -900,19 +900,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AddressSpecEnmasseIoV1beta1.AddressSpace(childComplexity), true
 
-	case "AddressSpec_enmasse_io_v1beta1.deadLetterAddress":
-		if e.complexity.AddressSpecEnmasseIoV1beta1.DeadLetterAddress == nil {
+	case "AddressSpec_enmasse_io_v1beta1.deadletter":
+		if e.complexity.AddressSpecEnmasseIoV1beta1.Deadletter == nil {
 			break
 		}
 
-		return e.complexity.AddressSpecEnmasseIoV1beta1.DeadLetterAddress(childComplexity), true
+		return e.complexity.AddressSpecEnmasseIoV1beta1.Deadletter(childComplexity), true
 
-	case "AddressSpec_enmasse_io_v1beta1.expiryAddress":
-		if e.complexity.AddressSpecEnmasseIoV1beta1.ExpiryAddress == nil {
+	case "AddressSpec_enmasse_io_v1beta1.expiry":
+		if e.complexity.AddressSpecEnmasseIoV1beta1.Expiry == nil {
 			break
 		}
 
-		return e.complexity.AddressSpecEnmasseIoV1beta1.ExpiryAddress(childComplexity), true
+		return e.complexity.AddressSpecEnmasseIoV1beta1.Expiry(childComplexity), true
 
 	case "AddressSpec_enmasse_io_v1beta1.plan":
 		if e.complexity.AddressSpecEnmasseIoV1beta1.Plan == nil {
@@ -2409,8 +2409,8 @@ type AddressSpec_enmasse_io_v1beta1 {
   type:              AddressType!
   plan:              AddressPlan_admin_enmasse_io_v1beta2!
   topic:             String
-  deadLetterAddress: String
-  expiryAddress:     String
+  deadletter: String
+  expiry:     String
 }
 
 type AddressStatus_enmasse_io_v1beta1 {
@@ -2679,8 +2679,8 @@ input AddressSpec_enmasse_io_v1beta1_Input {
   type:              String!
   plan:              String!
   topic:             String
-  deadLetterAddress: String
-  expiryAddress:     String
+  deadletter: String
+  expiry:     String
 }
 
 input Address_enmasse_io_v1beta1_Input {
@@ -5231,7 +5231,7 @@ func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_topic(ctx context.Co
 	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_deadLetterAddress(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_deadletter(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpec) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5248,7 +5248,7 @@ func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_deadLetterAddress(ct
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DeadLetterAddress, nil
+		return obj.Deadletter, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5262,7 +5262,7 @@ func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_deadLetterAddress(ct
 	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_expiryAddress(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_expiry(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpec) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5279,7 +5279,7 @@ func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_expiryAddress(ctx co
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ExpiryAddress, nil
+		return obj.Expiry, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11512,15 +11512,15 @@ func (ec *executionContext) unmarshalInputAddressSpec_enmasse_io_v1beta1_Input(c
 			if err != nil {
 				return it, err
 			}
-		case "deadLetterAddress":
+		case "deadletter":
 			var err error
-			it.DeadLetterAddress, err = ec.unmarshalOString2string(ctx, v)
+			it.Deadletter, err = ec.unmarshalOString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "expiryAddress":
+		case "expiry":
 			var err error
-			it.ExpiryAddress, err = ec.unmarshalOString2string(ctx, v)
+			it.Expiry, err = ec.unmarshalOString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -12375,10 +12375,10 @@ func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1(ctx context.Context,
 			})
 		case "topic":
 			out.Values[i] = ec._AddressSpec_enmasse_io_v1beta1_topic(ctx, field, obj)
-		case "deadLetterAddress":
-			out.Values[i] = ec._AddressSpec_enmasse_io_v1beta1_deadLetterAddress(ctx, field, obj)
-		case "expiryAddress":
-			out.Values[i] = ec._AddressSpec_enmasse_io_v1beta1_expiryAddress(ctx, field, obj)
+		case "deadletter":
+			out.Values[i] = ec._AddressSpec_enmasse_io_v1beta1_deadletter(ctx, field, obj)
+		case "expiry":
+			out.Values[i] = ec._AddressSpec_enmasse_io_v1beta1_expiry(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

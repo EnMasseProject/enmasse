@@ -1212,20 +1212,20 @@ function createAddress(addr, addressSpaceName) {
 
   if (addr.spec.type === 'queue' || addr.spec.type === 'subscription') {
       var deadletters  = addresses.filter(a => a.metadata.name.startsWith(addressSpaceName) && a.spec.type === "deadletter");
-      if (addr.spec.deadLetterAddress && deadletters.find(t => t.spec.address === addr.spec.deadLetterAddress) === undefined) {
+      if (addr.spec.deadletter && deadletters.find(t => t.spec.address === addr.spec.deadletter) === undefined) {
         var deadletterNames  = deadletters.map(t => t.spec.address);
-        throw `Unrecognised deadletter address '${addr.spec.deadLetterAddress}', known ones are : '${deadletterNames}'`;
+        throw `Unrecognised deadletter address '${addr.spec.deadletter}', known ones are : '${deadletterNames}'`;
       }
-      if (addr.spec.expiryAddress && deadletters.find(t => t.spec.address === addr.spec.expiryAddress) === undefined) {
+      if (addr.spec.expiry && deadletters.find(t => t.spec.address === addr.spec.expiry) === undefined) {
         var deadletterNames  = deadletters.map(t => t.spec.address);
-        throw `Unrecognised expiry address '${addr.spec.expiryAddress}', known ones are : '${deadletterNames}'`;
+        throw `Unrecognised expiry address '${addr.spec.expiry}', known ones are : '${deadletterNames}'`;
       }
   } else {
-      if (addr.spec.deadLetterAddress) {
-        throw `spec.deadLetterAddress is not allowed for the address type '${addr.spec.type}'.`;
+      if (addr.spec.deadletter) {
+        throw `spec.deadletter is not allowed for the address type '${addr.spec.type}'.`;
       }
-      if (addr.spec.expiryAddress) {
-        throw `spec.expiryAddress is not allowed for the address type '${addr.spec.type}'.`;
+      if (addr.spec.expiry) {
+        throw `spec.expiry is not allowed for the address type '${addr.spec.type}'.`;
       }
   }
 
@@ -1263,8 +1263,8 @@ function createAddress(addr, addressSpaceName) {
       plan: plan,
       type: addr.spec.type,
       topic: addr.spec.topic,
-      deadLetterAddress: addr.spec.deadLetterAddress,
-      expiryAddress: addr.spec.expiryAddress,
+      deadletter: addr.spec.deadletter,
+      expiry: addr.spec.expiry,
     },
     status: {
       phase:"",

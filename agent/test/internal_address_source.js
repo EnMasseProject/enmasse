@@ -242,7 +242,7 @@ describe('address source', function() {
     });
     it('updates status - deadletter address not found', function(done) {
         address_server.add_address_definition({address:'mydla', type:'queue', plan: 'myplan'});
-        address_server.add_address_definition({address:'foo', type:'queue', plan: 'myplan', deadLetterAddress: 'mydla'});
+        address_server.add_address_definition({address:'foo', type:'queue', plan: 'myplan', deadletter: 'mydla'});
         var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default'});
         source.start(address_plans_source);
         address_plans_source.emit("addressplans_defined", [{
@@ -261,7 +261,7 @@ describe('address source', function() {
         });
     });
     it('updates status - expiry address not found', function(done) {
-        address_server.add_address_definition({address:'foo', type:'queue', plan: 'myplan', expiryAddress: 'notfound'});
+        address_server.add_address_definition({address:'foo', type:'queue', plan: 'myplan', expiry: 'notfound'});
         var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default'});
         source.start(address_plans_source);
         address_plans_source.emit("addressplans_defined", [{

@@ -98,7 +98,7 @@ describe('mock', function () {
                         type: "queue",
                         plan: "standard-small-queue",
                         address: "fooaddr",
-                        deadLetterAddress: "unknown"
+                        deadletter: "unknown"
                     }
                 });
 
@@ -115,7 +115,7 @@ describe('mock', function () {
                         type: "queue",
                         plan: "standard-small-queue",
                         address: "fooaddr",
-                        expiryAddress: "unknown"
+                        expiry: "unknown"
                     }
                 });
 

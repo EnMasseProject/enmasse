@@ -86,8 +86,8 @@ function same_address_definition(a, b) {
         && a.address === b.address
         && a.type === b.type
         && a.plan === b.plan
-        && a.deadLetterAddress === b.deadLetterAddress
-        && a.expiryAddress === b.expiryAddress
+        && a.deadletter === b.deadletter
+        && a.expiry === b.expiry
         && myutils.same_ttl(a.messageTtl, b.messageTtl)
         && myutils.same_ttl(a.messageRedelivery, b.messageRedelivery);
 }
@@ -360,28 +360,28 @@ AddressSource.prototype.update_status = function (record, ready) {
                 updated++;
             }
 
-            if (address.spec.expiryAddress) {
-                var targetRecord = myutils.values(self.readiness).find(record => record.address === address.spec.expiryAddress);
+            if (address.spec.expiry) {
+                var targetRecord = myutils.values(self.readiness).find(record => record.address === address.spec.expiry);
                 if (targetRecord) {
                     if (targetRecord.type !== "deadletter") {
                         ready = false;
-                        messages.push(`Address '${address.spec.address}' (resource name '${address.metadata.name}') references an expiry address '${address.spec.expiryAddress}' (resource name '${targetRecord.name}') that is not of expected type 'deadletter' (found type '${targetRecord.type}' instead).`);
+                        messages.push(`Address '${address.spec.address}' (resource name '${address.metadata.name}') references an expiry address '${address.spec.expiry}' (resource name '${targetRecord.name}') that is not of expected type 'deadletter' (found type '${targetRecord.type}' instead).`);
                     }
                 } else {
                     ready = false;
-                    messages.push(`Address '${address.spec.address}' (resource name '${address.metadata.name}') references an expiry address '${address.spec.expiryAddress}' that does not exist.`);
+                    messages.push(`Address '${address.spec.address}' (resource name '${address.metadata.name}') references an expiry address '${address.spec.expiry}' that does not exist.`);
                 }
             }
-            if (address.spec.deadLetterAddress) {
-                var targetRecord = myutils.values(self.readiness).find(record => record.address === address.spec.deadLetterAddress);
+            if (address.spec.deadletter) {
+                var targetRecord = myutils.values(self.readiness).find(record => record.address === address.spec.deadletter);
                 if (targetRecord) {
                     if (targetRecord.type !== "deadletter") {
                         ready = false;
-                        messages.push(`Address '${address.spec.address}' (resource name '${address.metadata.name}') references a deadletter address '${address.spec.deadLetterAddress}' (resource name '${targetRecord.name}') that is not of expected type 'deadletter' (found type '${targetRecord.type}' instead).`);
+                        messages.push(`Address '${address.spec.address}' (resource name '${address.metadata.name}') references a deadletter address '${address.spec.deadletter}' (resource name '${targetRecord.name}') that is not of expected type 'deadletter' (found type '${targetRecord.type}' instead).`);
                     }
                 } else {
                     ready = false;
-                    messages.push(`Address '${address.spec.address}' (resource name '${address.metadata.name}') references a deadletter address '${address.spec.deadLetterAddress}' that does not exist.`);
+                    messages.push(`Address '${address.spec.address}' (resource name '${address.metadata.name}') references a deadletter address '${address.spec.deadletter}' that does not exist.`);
                 }
             }
 

@@ -335,8 +335,8 @@ public class AddressController implements Watcher<Address> {
                 }
             }
 
-            String deadLetterAddress = address.getSpec().getDeadLetterAddress();
-            if (deadLetterAddress != null) {
+            String deadletter = address.getSpec().getDeadletter();
+            if (deadletter != null) {
                 if (!Set.of("queue", "subscription").contains(address.getSpec().getType())) {
                     String errorMessage = String.format(
                             "Address '%s' (resource name '%s') of type '%s' cannot reference a dead letter address.",
@@ -348,13 +348,13 @@ public class AddressController implements Watcher<Address> {
                     continue;
                 }
 
-                Optional<Address> refDlq = addressList.stream().filter(a -> deadLetterAddress.equals(a.getSpec().getAddress())).findFirst();
+                Optional<Address> refDlq = addressList.stream().filter(a -> deadletter.equals(a.getSpec().getAddress())).findFirst();
                 if (refDlq.isEmpty()) {
                     String errorMessage = String.format(
                             "Address '%s' (resource name '%s') references a dead letter address '%s' that does not exist.",
                             address.getSpec().getAddress(),
                             address.getMetadata().getName(),
-                            deadLetterAddress);
+                            deadletter);
                     address.getStatus().setPhase(Pending);
                     address.getStatus().appendMessage(errorMessage);
                     continue;
@@ -366,7 +366,7 @@ public class AddressController implements Watcher<Address> {
                                         " (resource name '%s') that is not of expected type 'deadletter' (found type '%s' instead).",
                                 address.getSpec().getAddress(),
                                 address.getMetadata().getName(),
-                                deadLetterAddress,
+                                deadletter,
                                 target.getMetadata().getName(),
                                 target.getSpec().getType());
                         address.getStatus().setPhase(Pending);
@@ -376,8 +376,8 @@ public class AddressController implements Watcher<Address> {
                 }
             }
 
-            String expiryAddress = address.getSpec().getExpiryAddress();
-            if (expiryAddress != null) {
+            String expiry = address.getSpec().getExpiry();
+            if (expiry != null) {
                 if (!Set.of("queue", "subscription").contains(address.getSpec().getType())) {
                     String errorMessage = String.format(
                             "Address '%s' (resource name '%s') of type '%s' cannot reference an expiry address.",
@@ -389,13 +389,13 @@ public class AddressController implements Watcher<Address> {
                     continue;
                 }
 
-                Optional<Address> refDlq = addressList.stream().filter(a -> expiryAddress.equals(a.getSpec().getAddress())).findFirst();
+                Optional<Address> refDlq = addressList.stream().filter(a -> expiry.equals(a.getSpec().getAddress())).findFirst();
                 if (refDlq.isEmpty()) {
                     String errorMessage = String.format(
                             "Address '%s' (resource name '%s') references an expiry address '%s' that does not exist.",
                             address.getSpec().getAddress(),
                             address.getMetadata().getName(),
-                            expiryAddress);
+                            expiry);
                     address.getStatus().setPhase(Pending);
                     address.getStatus().appendMessage(errorMessage);
                     continue;
@@ -407,7 +407,7 @@ public class AddressController implements Watcher<Address> {
                                         " (resource name '%s') that is not of expected type 'deadletter' (found type '%s' instead).",
                                 address.getSpec().getAddress(),
                                 address.getMetadata().getName(),
-                                expiryAddress,
+                                expiry,
                                 target.getMetadata().getName(),
                                 target.getSpec().getType());
                         address.getStatus().setPhase(Pending);
@@ -450,7 +450,7 @@ public class AddressController implements Watcher<Address> {
         StandardInfraConfig desiredConfig = (StandardInfraConfig) addressSpaceResolver.getInfraConfig("standard", addressSpacePlan.getMetadata().getName());
         provisioner.provisionResources(routerCluster, clusterList, neededMap, pendingAddresses, desiredConfig);
 
-        processDeadLetterAddresses(addressSet);
+        processDeadletteres(addressSet);
 
         long provisionResources = System.nanoTime();
 
@@ -838,11 +838,11 @@ public class AddressController implements Watcher<Address> {
                         Set<String> addressNames = clusterAddresses.get(brokerStatus.getClusterId());
                         Set<String> queueNames = clusterQueues.get(brokerStatus.getClusterId());
                         ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getAddress(), queueNames, address.getSpec().getAddress());
-                        if (address.getSpec().getDeadLetterAddress() != null) {
-                            ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getDeadLetterAddress(), queueNames, address.getSpec().getDeadLetterAddress());
+                        if (address.getSpec().getDeadletter() != null) {
+                            ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getDeadletter(), queueNames, address.getSpec().getDeadletter());
                         }
-                        if (address.getSpec().getExpiryAddress() != null) {
-                            ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getExpiryAddress(), queueNames, address.getSpec().getExpiryAddress());
+                        if (address.getSpec().getExpiry() != null) {
+                            ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getExpiry(), queueNames, address.getSpec().getExpiry());
                         }
                     }
                     ok += RouterStatus.checkActiveAutoLink(address, routerStatusList, 2);
@@ -856,11 +856,11 @@ public class AddressController implements Watcher<Address> {
                         Set<String> addressNames = clusterAddresses.get(brokerStatus.getClusterId());
                         Set<String> queueNames = clusterQueues.get(brokerStatus.getClusterId());
                         ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getTopic(), queueNames, address.getSpec().getAddress());
-                        if (address.getSpec().getDeadLetterAddress() != null) {
-                            ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getDeadLetterAddress(), queueNames, address.getSpec().getDeadLetterAddress());
+                        if (address.getSpec().getDeadletter() != null) {
+                            ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getDeadletter(), queueNames, address.getSpec().getDeadletter());
                         }
-                        if (address.getSpec().getExpiryAddress() != null) {
-                            ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getExpiryAddress(), queueNames, address.getSpec().getExpiryAddress());
+                        if (address.getSpec().getExpiry() != null) {
+                            ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getExpiry(), queueNames, address.getSpec().getExpiry());
                         }
                     }
                     ok += RouterStatus.checkForwarderLinks(address, routerStatusList);
@@ -1081,7 +1081,7 @@ public class AddressController implements Watcher<Address> {
         return valid;
     }
 
-    private void processDeadLetterAddresses(Set<Address> addressSet) {
+    private void processDeadletteres(Set<Address> addressSet) {
         Set<Address> deadLetters = addressSet.stream().filter(a -> "deadletter".equals(a.getSpec().getType())).collect(Collectors.toSet());
         Set<BrokerStatus> inUse = addressSet.stream().filter(a -> !"deadletter".equals(a.getSpec().getType())).flatMap(a -> a.getStatus().getBrokerStatuses().stream()).collect(Collectors.toSet());
 

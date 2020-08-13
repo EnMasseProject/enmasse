@@ -339,13 +339,13 @@ const typeDefs = gql`
     }
 
     type AddressSpec_enmasse_io_v1beta1 {
-        address:           String!
-        addressSpace:      String!
-        type:              AddressType!
-        plan:              AddressPlan_admin_enmasse_io_v1beta2!
-        topic:             String
-        deadLetterAddress: String
-        expiryAddress:     String
+        address:      String!
+        addressSpace: String!
+        type:         AddressType!
+        plan:         AddressPlan_admin_enmasse_io_v1beta2!
+        topic:        String
+        deadletter:   String
+        expiry:       String
     }
 
     type AddressStatus_enmasse_io_v1beta1 {
@@ -506,13 +506,13 @@ const typeDefs = gql`
     }
 
     input AddressSpec_enmasse_io_v1beta1_Input {
-        address:           String!
-        addressSpace:      String
-        type:              String!
-        plan:              String!
-        topic:             String
-        deadLetterAddress: String
-        expiryAddress:     String
+        address:      String!
+        addressSpace: String
+        type:         String!
+        plan:         String!
+        topic:        String
+        deadletter:   String
+        expiry:       String
     }
 
     input EndpointSpec_enmasse_io_v1beta1_Input {

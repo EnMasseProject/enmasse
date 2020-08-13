@@ -205,7 +205,7 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
                 .withType(addressType.toString())
                 .withMessageRedelivery(addressType == AddressType.TOPIC ? null : addrRedelivery)
                 .withAddress("message-redelivery")
-                .withDeadLetterAddress(addressType == AddressType.TOPIC ? null : deadletter.getSpec().getAddress())
+                .withDeadletter(addressType == AddressType.TOPIC ? null : deadletter.getSpec().getAddress())
                 .withPlan(addrPlan.getMetadata().getName())
                 .endSpec()
                 .build();
@@ -223,7 +223,7 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
                         .withType(AddressType.SUBSCRIPTION.toString())
                         .withMessageRedelivery(addrRedelivery)
                         .withAddress("message-redelivery-sub")
-                        .withDeadLetterAddress(deadletter.getSpec().getAddress())
+                        .withDeadletter(deadletter.getSpec().getAddress())
                         .withTopic(addr.getSpec().getAddress())
                         .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
                         .endSpec()
@@ -250,12 +250,12 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
                     .build());
         }
 
-        if (recvAddr.getSpec().getMessageRedelivery() != null || recvAddr.getSpec().getDeadLetterAddress() != null) {
+        if (recvAddr.getSpec().getMessageRedelivery() != null || recvAddr.getSpec().getDeadletter() != null) {
             isolatedResourcesManager.replaceAddress(new AddressBuilder()
                     .withMetadata(recvAddr.getMetadata())
                     .withNewSpecLike(recvAddr.getSpec())
                     .withMessageRedelivery(new MessageRedelivery())
-                    .withDeadLetterAddress(null)
+                    .withDeadletter(null)
                     .endSpec()
                     .build());
         }
@@ -297,9 +297,9 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
                     delivery -> delivery.disposition(DELIVERY_FAILED, true)).getResult().get(1, TimeUnit.MINUTES).size(), is(expected));
 
             if (redelivery.getMaximumDeliveryAttempts() != null && redelivery.getMaximumDeliveryAttempts() >= 0) {
-                if (sendAddr.getSpec().getDeadLetterAddress() != null) {
+                if (sendAddr.getSpec().getDeadletter() != null) {
                     // Messages should have been routed to the dead letter address
-                    assertThat("all messages should have been routed to the dead letter address", client.recvMessages(sendAddr.getSpec().getDeadLetterAddress(), 1).get(1, TimeUnit.MINUTES).size(), is(messages.size()));
+                    assertThat("all messages should have been routed to the dead letter address", client.recvMessages(sendAddr.getSpec().getDeadletter(), 1).get(1, TimeUnit.MINUTES).size(), is(messages.size()));
                 }
             } else {
                 // Infinite delivery attempts configured - consume normally
@@ -366,15 +366,15 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
         brokers.forEach(name -> TestUtils.waitUntilCondition(() -> {
             Map<String, Object> actualSettings = ArtemisUtils.getAddressSettings(kubernetes, name, supportCredentials, reread.getSpec().getAddress());
             int maxDeliveryAttempts = ((Number) actualSettings.get("maxDeliveryAttempts")).intValue();
-            String deadLetterAddress = String.valueOf(actualSettings.get("DLA"));
-            String expiryAddress = String.valueOf(actualSettings.get("expiryAddress"));
+            String deadletter = String.valueOf(actualSettings.get("DLA"));
+            String expiry = String.valueOf(actualSettings.get("expiryAddress"));
             boolean b = maxDeliveryAttemptsEquals(maxDeliveryAttempts, expectedRedelivery.getMaximumDeliveryAttempts());
             if (!b) {
                 log.info("Address {} on broker {} does not have expected redelivery values: {}, dead letter: {}, expiry: {}." +
                                 " Actual maxDeliveryAttempts: {}, dead letter: {} expiry: {}",
                         reread.getMetadata().getName(), name,
-                        expectedRedelivery, reread.getSpec().getDeadLetterAddress(), reread.getSpec().getExpiryAddress(),
-                        maxDeliveryAttempts, deadLetterAddress, expiryAddress);
+                        expectedRedelivery, reread.getSpec().getDeadletter(), reread.getSpec().getExpiry(),
+                        maxDeliveryAttempts, deadletter, expiry);
             }
             return b;
                 }, Duration.ofMinutes(2), Duration.ofSeconds(5),
