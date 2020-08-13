@@ -6,7 +6,6 @@ spec:
     address: myqueue
     type: queue
     plan: standard-small-queue
-    expiry: myexpiry <1>
-    messageTtl: <2>
+    messageTtl: <1>
         minimim: 30000
         maximum: 300000
