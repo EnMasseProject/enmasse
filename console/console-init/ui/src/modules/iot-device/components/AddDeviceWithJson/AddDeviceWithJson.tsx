@@ -39,8 +39,7 @@ const styles = StyleSheet.create({
   box_align_style: {
     minHeight: "40em",
     maxHeight: "40em",
-    border: "1px solid",
-    borderColor: "grey",
+    border: "1px solid var(--pf-global--BorderColor--100)",
     padding: 20,
     marginRight: 20
   },
@@ -135,9 +134,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
 
   useEffect(() => {
     if (deviceDetail) {
-      setDeviceJsonString(
-        getDeviceRegistrationString(deviceDetail, setErrorMessage)
-      );
+      setDevice(getDeviceRegistrationString(deviceDetail, setErrorMessage));
     }
   }, [deviceDetail]);
 
