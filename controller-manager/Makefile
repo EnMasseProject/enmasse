@@ -38,7 +38,5 @@ build/operatorImageMap.yaml:
 	echo "broker: $(BROKER_IMAGE)" >> "$@"
 	echo "broker-plugin: $(BROKER_PLUGIN_IMAGE)" >> "$@"
 	echo "topic-forwarder: $(TOPIC_FORWARDER_IMAGE)" >> "$@"
-	echo "mqtt-gateway: $(MQTT_GATEWAY_IMAGE)" >> "$@"
-	echo "mqtt-lwt: $(MQTT_LWT_IMAGE)" >> "$@"
 
 .PHONY: build/operatorImageMap.yaml run

@@ -1038,7 +1038,7 @@ describe('changing router configuration', function() {
 });
 
 describe('broker configuration', function() {
-    this.timeout(6000);
+    this.timeout(15000);
     var ragent;
     var address_source;
     var routers;

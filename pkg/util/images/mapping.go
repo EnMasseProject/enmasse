@@ -80,8 +80,6 @@ func overrideImageMapFromEnv(data map[string]string) {
 	setIfEnvPresent(data, "broker", "RELATED_IMAGE_BROKER")
 	setIfEnvPresent(data, "broker-plugin", "RELATED_IMAGE_BROKER_PLUGIN")
 	setIfEnvPresent(data, "topic-forwarder", "RELATED_IMAGE_TOPIC_FORWARDER")
-	setIfEnvPresent(data, "mqtt-gateway", "RELATED_IMAGE_MQTT_GATEWAY")
-	setIfEnvPresent(data, "mqtt-lwt", "RELATED_IMAGE_MQTT_LWT")
 }
 
 const defaultImageMapFileName = "operatorImageMap.yaml"

@@ -191,8 +191,7 @@ public class KubeSchemaApi implements SchemaApi {
 
         builder.withAvailableEndpoints(Arrays.asList(
                 createEndpointSpec("messaging", "messaging", "amqps", TlsTermination.passthrough),
-                createEndpointSpec("messaging-wss", "messaging", "https", TlsTermination.reencrypt),
-                createEndpointSpec("mqtt", "mqtt", "secure-mqtt", TlsTermination.passthrough)));
+                createEndpointSpec("messaging-wss", "messaging", "https", TlsTermination.reencrypt)));
 
         builder.withCertificateProviderTypes(createCertificateProviderTypeDescriptions());
         builder.withRouteServicePorts(createRouteServicePortDescriptions("standard"));

@@ -244,8 +244,6 @@ public class AddressController implements Watcher<Address> {
                         a -> new ProvisionState(a.getStatus(), a.getAnnotation(AnnotationKeys.APPLIED_PLAN))));
 
         AddressSpacePlan addressSpacePlan = addressSpaceType.findAddressSpacePlan(options.getAddressSpacePlanName()).orElseThrow(() -> new RuntimeException("Unable to handle updates: address space plan " + options.getAddressSpacePlanName() + " not found!"));
-        InfraConfig infraConfig = addressSpaceResolver.getInfraConfig("standard", addressSpacePlan.getMetadata().getName());
-        boolean withMqtt = isWithMqtt(infraConfig);
 
         long resolvedPlan = System.nanoTime();
 
@@ -377,11 +375,7 @@ public class AddressController implements Watcher<Address> {
 
         List<RouterStatus> routerStatusList = checkRouterStatuses(checkRouterLinks);
 
-        Set<String> subserveTopics = Collections.emptySet();
-        if (withMqtt) {
-            subserveTopics = checkRegisteredSubserveTopics();
-        }
-        checkAddressStatuses(liveAddresses, addressResolver, routerStatusList, subserveTopics, withMqtt);
+        checkAddressStatuses(liveAddresses, addressResolver, routerStatusList);
 
         long checkStatuses = System.nanoTime();
         for (Address address : liveAddresses) {
@@ -437,7 +431,7 @@ public class AddressController implements Watcher<Address> {
         }
 
         long replaceAddresses = System.nanoTime();
-        garbageCollectTerminating(filterByPhases(addressSet, EnumSet.of(Terminating)), addressResolver, routerStatusList, subserveTopics, withMqtt);
+        garbageCollectTerminating(filterByPhases(addressSet, EnumSet.of(Terminating)), addressResolver, routerStatusList);
         long gcTerminating = System.nanoTime();
 
         log.info("Time spent: Total: {} ns, resolvedPlan: {} ns, calculatedUsage: {} ns, checkedQuota: {} ns, listClusters: {} ns, provisionResources: {} ns, checkStatuses: {} ns, deprovisionUnused: {} ns, upgradeClusters: {} ns, replaceAddresses: {} ns, gcTerminating: {} ns", gcTerminating - start, resolvedPlan - start, calculatedUsage - resolvedPlan, checkedQuota - calculatedUsage, listClusters - checkedQuota, provisionResources - listClusters, checkStatuses - provisionResources, deprovisionUnused - checkStatuses, upgradeClusters - deprovisionUnused, replaceAddresses - upgradeClusters, gcTerminating - replaceAddresses);
@@ -489,10 +483,6 @@ public class AddressController implements Watcher<Address> {
             }
         }
         return Collections.emptySet();
-    }
-
-    private boolean isWithMqtt(InfraConfig infraConfig) {
-        return infraConfig.getMetadata().getAnnotations() != null && Boolean.parseBoolean(infraConfig.getMetadata().getAnnotations().getOrDefault(AnnotationKeys.WITH_MQTT, "false"));
     }
 
     private void upgradeClusters(StandardInfraConfig desiredConfig, AddressResolver addressResolver, List<BrokerCluster> clusterList, Set<Address> addresses) throws Exception {
@@ -654,8 +644,8 @@ public class AddressController implements Watcher<Address> {
                 .collect(Collectors.toSet());
     }
 
-    private void garbageCollectTerminating(Set<Address> addresses, AddressResolver addressResolver, List<RouterStatus> routerStatusList, Set<String> subserveTopics, boolean withMqtt) throws Exception {
-        Map<Address, Integer> okMap = checkAddressStatuses(addresses, addressResolver, routerStatusList, subserveTopics, withMqtt);
+    private void garbageCollectTerminating(Set<Address> addresses, AddressResolver addressResolver, List<RouterStatus> routerStatusList) throws Exception {
+        Map<Address, Integer> okMap = checkAddressStatuses(addresses, addressResolver, routerStatusList);
         for (Map.Entry<Address, Integer> entry : okMap.entrySet()) {
             if (entry.getValue() == 0) {
                 log.info("Garbage collecting {}", entry.getKey());
@@ -720,7 +710,7 @@ public class AddressController implements Watcher<Address> {
         return statusCollector.getLatestResults();
     }
 
-    private Map<Address, Integer> checkAddressStatuses(Set<Address> addresses, AddressResolver addressResolver, List<RouterStatus> routerStatusList, Set<String> subserveTopics, boolean withMqtt) throws Exception {
+    private Map<Address, Integer> checkAddressStatuses(Set<Address> addresses, AddressResolver addressResolver, List<RouterStatus> routerStatusList) throws Exception {
 
         Map<Address, Integer> numOk = new HashMap<>();
         if (addresses.isEmpty()) {
@@ -801,9 +791,6 @@ public class AddressController implements Watcher<Address> {
                         ok += RouterStatus.checkActiveLinkRoute(address, routerStatusList);
                     } else {
                         ok += RouterStatus.checkConnection(address, routerStatusList);
-                        if (withMqtt) {
-                            SubserveStatusCollector.checkTopicRegistration(subserveTopics, address, addressPlan);
-                        }
                     }
                     updateMessageTtlStatus(addressPlan, address);
                     break;

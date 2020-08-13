@@ -79,7 +79,7 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
                         client,
                         new File("src/test/resources/templates"),
                         true),
-                Collections.emptyMap(), schemaProvider);
+                Collections.emptyMap());
     }
 
     @Test
