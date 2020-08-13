@@ -1,0 +1,6 @@
+
+The `messageRedelivery` field is used to control the behavior of a queue or subscription when a receiver is unsuccessful in its processing
+of a message and the mesage is returned to the queue for redelivery.   By default, messages will be redelivered indefinitely.
+However the `messageRedelivery` field allows the behavior to be modified either by delaying redelivery or redirecting the message to a
+deadletter address. 
+

@@ -1,0 +1,27 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-addresses.adoc
+
+[id='ref-address-example-ttl{context}']
+= Address Message Redelivery/Dead Letter example
+
+[source,yaml,options="nowrap"]
+----
+include::../common/address-example-message-redelivery.yaml[]
+----
+<1> (Optional) Destination for messages that have exceeded the maximum number of delivery attempts.  This address must be of type `deadletter`.
+<2> (Optional) Provides message redelivery settings. Applies to address types `queue` and `subscription` only.
+<3> (Optional) Maximum number of delivery attempts that will be made for a message before message is directed to a deadletter address (or dropped). Set to -1 for infinite re-deliveries.
+<4> (Optional) The number of milliseconds to wait before redelivery. Set to 0 for no redelivery delay.
+<5> (Optional) The redelivery multiplier. This factor is applied to last redelivery delay.
+<6> (Optional) The maximum delivery delay in milliseconds. Imposes an upper limit on the delivery delay.
+
+include::ref-message-redelivery.adoc[]
+
+Message redelivery settings may also be defined by the address plan.  If a message redelivery setting are provided by both
+the address and address plan, the value provided by the address takes priority. The address `status` section shows the
+message redelivery settings that are in force.
+
+If the address has an `deadletter` address assigned, messages that have exceeded the maximum number of delivery attempts are automatically moved to it.
+
+If the address has no `deadletter` address assigned, the system drops the messages. These messages are lost permanently.

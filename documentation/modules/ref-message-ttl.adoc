@@ -7,4 +7,3 @@ any message put to a queue or topic. The `maximum` and `minimum` values are defi
 
 Messages that arrive without a TTL defined are considered to have a TTL value of infinity.
 
-Expired messages will be automatically removed from the `queue`, `subscription` or temporary topic subscription periodically. These messages are lost. This occurs every 30 seconds.
