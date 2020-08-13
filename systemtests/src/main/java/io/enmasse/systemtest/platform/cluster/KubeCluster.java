@@ -5,8 +5,8 @@
 package io.enmasse.systemtest.platform.cluster;
 
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.Strings;
 import io.enmasse.systemtest.logs.CustomLogger;
-import org.eclipse.hono.util.Strings;
 import org.slf4j.Logger;
 
 import java.util.Arrays;

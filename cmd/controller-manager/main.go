@@ -9,7 +9,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/monitoring"
@@ -162,76 +161,6 @@ func main() {
 			Version: "v1beta1",
 			Kind:    "AddressList",
 		},
-		schema.GroupVersionKind{
-			Group:   "iot.enmasse.io",
-			Version: "v1alpha1",
-			Kind:    "IoTProject",
-		},
-		schema.GroupVersionKind{
-			Group:   "iot.enmasse.io",
-			Version: "v1alpha1",
-			Kind:    "IoTProjectList",
-		},
-	}
-
-	if util.IsModuleEnabled("MESSAGING_INFRASTRUCTURE") {
-		globalGvks = append(globalGvks,
-			schema.GroupVersionKind{
-				Group:   "enmasse.io",
-				Version: "v1beta2",
-				Kind:    "MessagingInfrastructure",
-			},
-			schema.GroupVersionKind{
-				Group:   "enmasse.io",
-				Version: "v1beta2",
-				Kind:    "MessagingInfrastructureList",
-			},
-		)
-	}
-
-	if util.IsModuleEnabled("MESSAGING_TENANT") {
-		globalGvks = append(globalGvks,
-			schema.GroupVersionKind{
-				Group:   "enmasse.io",
-				Version: "v1beta2",
-				Kind:    "MessagingTenant",
-			},
-			schema.GroupVersionKind{
-				Group:   "enmasse.io",
-				Version: "v1beta2",
-				Kind:    "MessagingTenantList",
-			},
-		)
-	}
-
-	if util.IsModuleEnabled("MESSAGING_ADDRESS") {
-		globalGvks = append(globalGvks,
-			schema.GroupVersionKind{
-				Group:   "enmasse.io",
-				Version: "v1beta2",
-				Kind:    "MessagingAddress",
-			},
-			schema.GroupVersionKind{
-				Group:   "enmasse.io",
-				Version: "v1beta2",
-				Kind:    "MessagingAddressList",
-			},
-		)
-	}
-
-	if util.IsModuleEnabled("MESSAGING_ENDPOINT") {
-		globalGvks = append(globalGvks,
-			schema.GroupVersionKind{
-				Group:   "enmasse.io",
-				Version: "v1beta2",
-				Kind:    "MessagingEndpoint",
-			},
-			schema.GroupVersionKind{
-				Group:   "enmasse.io",
-				Version: "v1beta2",
-				Kind:    "MessagingEndpointList",
-			},
-		)
 	}
 
 	// Create a new Cmd to provide shared dependencies and start components
@@ -276,7 +205,6 @@ func main() {
 
 	// Add the Metrics Service
 	if monitoringEnabled {
-		monitoring.StartIoTMetrics(mgr)
 		addMetrics(ctx, cfg, namespace)
 	}
 
@@ -342,21 +270,9 @@ func addMetrics(ctx context.Context, cfg *rest.Config, namespace string) {
 // It serves those metrics on "http://metricsHost:operatorMetricsPort".
 func serveCRMetrics(cfg *rest.Config) error {
 	// Below function returns all GVKs for EnMasse.
-	allGVK, err := k8sutil.GetGVKsFromAddToScheme(enmassescheme.AddToScheme)
+	filteredGVK, err := k8sutil.GetGVKsFromAddToScheme(enmassescheme.AddToScheme)
 	if err != nil {
 		return err
-	}
-
-	filteredGVK := make([]schema.GroupVersionKind, 0)
-	for _, gvk := range allGVK {
-		if (!util.IsModuleEnabled("MESSAGING_INFRASTRUCTURE") && strings.HasPrefix(gvk.Kind, "MessagingInfrastructure")) ||
-			(!util.IsModuleEnabled("MESSAGING_TENANT") && strings.HasPrefix(gvk.Kind, "MessagingTenant")) ||
-			(!util.IsModuleEnabled("MESSAGING_ENDPOINT") && strings.HasPrefix(gvk.Kind, "MessagingEndpoint")) ||
-			(!util.IsModuleEnabled("MESSAGING_ADDRESS") && strings.HasPrefix(gvk.Kind, "MessagingAddress")) {
-			log.Info("Skipping adding metric because module is not enabled", "gkv", gvk)
-		} else {
-			filteredGVK = append(filteredGVK, gvk)
-		}
 	}
 
 	// Get the namespace the operator is currently deployed in.

@@ -77,7 +77,6 @@ public class OLMLinksTest extends TestBase implements ITestBaseIsolated {
         }
 
         testUrl(environment.enmasseOlmDocConfigUrl(), privateRepo);
-        testUrl(environment.enmasseOlmDocIotUrl(), privateRepo);
 
     }
 

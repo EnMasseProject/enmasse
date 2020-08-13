@@ -16,10 +16,8 @@ import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.operator.EnmasseOperatorManager;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
-import io.enmasse.systemtest.utils.IoTUtils;
 
 /**
  * Execution listener useful for safety cleanups of the test environment after test suite execution
@@ -67,51 +65,8 @@ public class JunitExecutionListener implements TestExecutionListener {
         final Kubernetes kube = Kubernetes.getInstance();
         final GlobalLogCollector logCollector = new GlobalLogCollector(kube, env.testLogDir());
 
-        if (IoTUtils.isIoTInstalled(kube)) {
-            try {
-                kube.getNonNamespacedIoTProjectClient().list().getItems().forEach(project -> {
-                    LOGGER.info("iot project '{}' will be removed", project.getMetadata().getName());
-                    try {
-                        IoTUtils.deleteIoTProjectAndWait(kube, project);
-                    } catch (Exception e) {
-                        LOGGER.warn("Failed to delete IoT projects: {}", project, e);
-                    }
-                });
-                kube.getIoTConfigClient().list().getItems().forEach(config -> {
-                    LOGGER.info("iot config '{}' will be removed", config.getMetadata().getName());
-                    try {
-                        IoTUtils.deleteIoTConfigAndWait(kube, config);
-                    } catch (Exception e) {
-                        LOGGER.warn("Failed to delete IoT config: {}", config, e);
-                    }
-                });
-
-                LOGGER.info("Infinispan server will be removed");
-                SystemtestsKubernetesApps.deleteInfinispanServer();
-                if (!SystemtestsKubernetesApps.INFINISPAN_PROJECT.equals(kube.getInfraNamespace())) {
-                    kube.deleteNamespace(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
-                }
-
-                LOGGER.info("PostgreSQL server will be removed");
-                SystemtestsKubernetesApps.deletePostgresqlServer();
-                if (!SystemtestsKubernetesApps.POSTGRESQL_PROJECT.equals(kube.getInfraNamespace())) {
-                    kube.deleteNamespace(SystemtestsKubernetesApps.POSTGRESQL_PROJECT);
-                }
-
-                LOGGER.info("H2 server will be removed");
-                SystemtestsKubernetesApps.deleteH2Server();
-                if (!SystemtestsKubernetesApps.H2_PROJECT.equals(kube.getInfraNamespace())) {
-                    kube.deleteNamespace(SystemtestsKubernetesApps.H2_PROJECT);
-                }
-
-            } catch (Exception e) {
-                LOGGER.warn("Cleanup failed or no clean is needed");
-            }
-        }
-
         /*
-         * Clean up address spaces after IoT projects, as the iot operator immediately re-created missing
-         * address spaces.
+         * Clean up address spaces
          */
         try {
             kube.getAddressSpaceClient().inAnyNamespace().list().getItems().forEach((addrSpace) -> {
@@ -131,7 +86,6 @@ public class JunitExecutionListener implements TestExecutionListener {
 
     private void performInfraCleanup() {
         try {
-            EnmasseOperatorManager.getInstance().removeIoT();
             EnmasseOperatorManager.getInstance().deleteEnmasseOlm();
             EnmasseOperatorManager.getInstance().deleteEnmasseBundle();
         } catch (Exception e) {

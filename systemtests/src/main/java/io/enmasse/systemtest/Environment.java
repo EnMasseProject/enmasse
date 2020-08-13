@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.fabric8.kubernetes.client.Config;
-import org.eclipse.hono.util.Strings;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -114,7 +113,6 @@ public class Environment {
     private final String enmasseOlmAboutName = System.getProperty("enmasse.olm.about.name");
     private final String enmasseOlmAboutUrl = System.getProperty("enmasse.olm.about.url");
     private final String enmasseOlmDocConfigUrl = System.getProperty("enmasse.olm.doc.configure.url");
-    private final String enmasseOlmDocIotUrl = System.getProperty("enmasse.olm.doc.iot.url");
     private final String enmasseOlmReplaces = System.getProperty(ENMASSE_OLM_REPLACES_SYSTEM_PROPERTY);
 
     /**
@@ -225,10 +223,6 @@ public class Environment {
 
     public String enmasseOlmDocConfigUrl() {
         return enmasseOlmDocConfigUrl;
-    }
-
-    public String enmasseOlmDocIotUrl() {
-        return enmasseOlmDocIotUrl;
     }
 
     public String enmasseOlmReplaces() {

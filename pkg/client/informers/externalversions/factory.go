@@ -16,7 +16,6 @@ import (
 	admin "github.com/enmasseproject/enmasse/pkg/client/informers/externalversions/admin"
 	enmasse "github.com/enmasseproject/enmasse/pkg/client/informers/externalversions/enmasse"
 	internalinterfaces "github.com/enmasseproject/enmasse/pkg/client/informers/externalversions/internalinterfaces"
-	iot "github.com/enmasseproject/enmasse/pkg/client/informers/externalversions/iot"
 	user "github.com/enmasseproject/enmasse/pkg/client/informers/externalversions/user"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -166,7 +165,6 @@ type SharedInformerFactory interface {
 
 	Admin() admin.Interface
 	Enmasse() enmasse.Interface
-	Iot() iot.Interface
 	User() user.Interface
 }
 
@@ -176,10 +174,6 @@ func (f *sharedInformerFactory) Admin() admin.Interface {
 
 func (f *sharedInformerFactory) Enmasse() enmasse.Interface {
 	return enmasse.New(f, f.namespace, f.tweakListOptions)
-}
-
-func (f *sharedInformerFactory) Iot() iot.Interface {
-	return iot.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) User() user.Interface {

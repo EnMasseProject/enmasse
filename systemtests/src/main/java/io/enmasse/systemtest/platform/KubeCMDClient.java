@@ -333,11 +333,6 @@ public class KubeCMDClient {
         return data;
     }
 
-    public static ExecutionResultData deleteIoTConfig(String namespace, String name) {
-        List<String> ressourcesCmd = getRessourcesCmd("delete", "iotconfig", namespace, name, Optional.empty());
-        return Exec.execute(ressourcesCmd, DEFAULT_SYNC_TIMEOUT, true);
-    }
-
     public static ExecutionResultData describePods(String namespace) {
         return Exec.execute(DEFAULT_SYNC_TIMEOUT, false, CMD, "-n", namespace, "describe", "pods");
     }
@@ -394,11 +389,6 @@ public class KubeCMDClient {
         List<String> command = Arrays.asList(CMD, "get", "secrets",
                 "--namespace", namespace,
                 "--output", "yaml");
-        return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
-    }
-
-    public static ExecutionResultData getIoTConfig(String namespace) {
-        List<String> command = Arrays.asList(CMD, "get", "iotconfig", "--namespace", namespace, "--output", "yaml");
         return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
     }
 

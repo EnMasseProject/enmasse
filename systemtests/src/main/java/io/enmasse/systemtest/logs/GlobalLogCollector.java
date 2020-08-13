@@ -258,14 +258,6 @@ public class GlobalLogCollector {
         Kubernetes kube = Kubernetes.getInstance();
         saveInfraState(path, kube.getInfraNamespace(),
                 () -> {
-                    if (TestInfo.getInstance().isClassIoT()) {
-                        Files.writeString(path.resolve("iotconfig.yaml"), KubeCMDClient.getIoTConfig(kube.getInfraNamespace()).getStdOut());
-                        Files.writeString(path.resolve("iotprojects.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "-A", "iotproject", "-o", "yaml").getStdOut());
-                        GlobalLogCollector collectors = new GlobalLogCollector(kube, path, kube.getInfraNamespace());
-                        collectors.collectAllAdapterQdrProxyState();
-                    }
-                },
-                () -> {
                     if (TestInfo.getInstance().isOLMTest()) {
                         Files.writeString(path.resolve("describe_pods_olm.txt"), KubeCMDClient.describePods(kube.getOlmNamespace()).getStdOut());
                     }

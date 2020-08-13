@@ -19,11 +19,8 @@ import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.manager.IsolatedIoTManager;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
-import io.enmasse.systemtest.manager.SharedIoTManager;
 import io.enmasse.systemtest.manager.SharedResourceManager;
-import io.enmasse.systemtest.messaginginfra.ResourceManager;
 import io.enmasse.systemtest.operator.EnmasseOperatorManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -42,8 +39,6 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     private final TestInfo testInfo = TestInfo.getInstance();
     private final IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
     private final SharedResourceManager sharedResourcesManager = SharedResourceManager.getInstance();
-    private final SharedIoTManager sharedIoTManager = SharedIoTManager.getInstance();
-    private final IsolatedIoTManager isolatedIoTManager = IsolatedIoTManager.getInstance();
     private final EnmasseOperatorManager operatorManager = EnmasseOperatorManager.getInstance();
     private static Exception beforeAllException; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
 
@@ -52,7 +47,6 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         LOGGER.info("running - beforeAll");
 
         testInfo.setCurrentTestClass(context);
-        ResourceManager.getInstance().setClassResources();
         KubeClusterManager.getInstance().setClassConfigurations();
         try { //TODO remove it after upgrade to surefire plugin 3.0.0-M5
             handleCallBackError("Callback before all", context, () -> {
@@ -78,19 +72,9 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                         operatorManager.installExamplesBundleOlm();
                         operatorManager.waitUntilOperatorReadyOlm();
                     }
-                } else if (testInfo.isTestSharedInfra()) {
-                    if (operatorManager.isEnmasseBundleDeployed()) {
-                        operatorManager.deleteEnmasseBundle();
-                    } else if (operatorManager.isEnmasseOlmDeployed()) {
-                        operatorManager.deleteEnmasseOlm();
-                    }
-                    operatorManager.installEnmasseSharedInfraBundle();
                 } else {
                     if (!operatorManager.isEnmasseBundleDeployed()) {
                         operatorManager.installEnmasseBundle();
-                    }
-                    if (testInfo.isClassIoT()) {
-                        operatorManager.installIoTOperator();
                     }
                 }
             });
@@ -107,20 +91,16 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         beforeAllException = null; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
         handleCallBackError("Callback after all", extensionContext, () -> {
             if (!env.skipCleanup()) {
-                ResourceManager.getInstance().deleteClassResources();
                 KubeClusterManager.getInstance().restoreClassConfigurations();
             }
             if (env.skipCleanup() || env.skipUninstall()) {
-                LOGGER.info("Skip cleanup/uninstall is set, enmasse and iot operators won't be deleted");
+                LOGGER.info("Skip cleanup/uninstall is set, enmasse operator won't be deleted");
             } else if (testInfo.isOLMTest()) {
                 LOGGER.info("Test is OLM");
                 if (operatorManager.isEnmasseOlmDeployed()) {
                     operatorManager.deleteEnmasseOlm();
                 }
             } else if (env.installType() == EnmasseInstallType.BUNDLE) {
-                if (testInfo.isEndOfIotTests()) {
-                    operatorManager.removeIoT();
-                }
                 if (operatorManager.isEnmasseOlmDeployed()) {
                     operatorManager.deleteEnmasseOlm();
                 }
@@ -131,7 +111,6 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         testInfo.setCurrentTest(context);
-        ResourceManager.getInstance().setMethodResources();
         KubeClusterManager.getInstance().setMethodConfigurations();
         logPodsInInfraNamespace();
         if (beforeAllException != null) {
@@ -143,14 +122,9 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     public void afterEach(ExtensionContext extensionContext) throws Exception {
         handleCallBackError("Callback after each", extensionContext, () -> {
             LOGGER.info("Teardown section: ");
-            ResourceManager.getInstance().deleteMethodResources();
             KubeClusterManager.getInstance().restoreMethodConfigurations();
             if (testInfo.isTestShared()) {
                 tearDownSharedResources();
-            } else if (testInfo.isTestIoT()) {
-                if (testInfo.needsIoTCleanup()) {
-                    isolatedIoTManager.tearDown(testInfo.getActualTest());
-                }
             } else {
                 tearDownCommonResources();
             }
@@ -166,18 +140,8 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
 
     private void tearDownSharedResources() throws Exception {
         if (testInfo.isAddressSpaceDeleteable() || testInfo.getActualTest().getExecutionException().isPresent()) {
-            if (testInfo.isTestIoT()) {
-                if (testInfo.needsIoTCleanup()) {
-                    LOGGER.info("Teardown shared IoT!");
-                    sharedIoTManager.tearDown(testInfo.getActualTest());
-                } else {
-                    LOGGER.info("Self-cleaning IoT test");
-                    sharedIoTManager.closeAmqpFactory();
-                }
-            } else {
-                LOGGER.info("Teardown shared!");
-                sharedResourcesManager.tearDown(testInfo.getActualTest());
-            }
+            LOGGER.info("Teardown shared!");
+            sharedResourcesManager.tearDown(testInfo.getActualTest());
         } else if (sharedResourcesManager.getSharedAddressSpace() != null) {
             sharedResourcesManager.tearDownShared();
         }

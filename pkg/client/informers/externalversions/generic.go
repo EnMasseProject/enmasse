@@ -13,8 +13,6 @@ import (
 	v1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
-	enmassev1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
-	v1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	userv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/user/v1beta1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
@@ -67,22 +65,6 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta1().AddressSpaceSchemas().Informer()}, nil
 	case enmassev1beta1.SchemeGroupVersion.WithResource("authenticationservices"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta1().AuthenticationServices().Informer()}, nil
-
-		// Group=enmasse.io, Version=v1beta2
-	case enmassev1beta2.SchemeGroupVersion.WithResource("messagingaddresses"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta2().MessagingAddresses().Informer()}, nil
-	case enmassev1beta2.SchemeGroupVersion.WithResource("messagingendpoints"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta2().MessagingEndpoints().Informer()}, nil
-	case enmassev1beta2.SchemeGroupVersion.WithResource("messaginginfrastructures"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta2().MessagingInfrastructures().Informer()}, nil
-	case enmassev1beta2.SchemeGroupVersion.WithResource("messagingtenants"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta2().MessagingTenants().Informer()}, nil
-
-		// Group=iot.enmasse.io, Version=v1alpha1
-	case v1alpha1.SchemeGroupVersion.WithResource("iotconfigs"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Iot().V1alpha1().IoTConfigs().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("iotprojects"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Iot().V1alpha1().IoTProjects().Informer()}, nil
 
 		// Group=user.enmasse.io, Version=v1beta1
 	case userv1beta1.SchemeGroupVersion.WithResource("messagingusers"):

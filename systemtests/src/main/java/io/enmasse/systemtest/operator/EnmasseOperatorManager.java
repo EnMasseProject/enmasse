@@ -71,32 +71,12 @@ public class EnmasseOperatorManager {
         LOGGER.info("***********************************************************");
     }
 
-    public void installEnmasseSharedInfraBundle() throws Exception {
-        LOGGER.info("***********************************************************");
-        LOGGER.info("         Enmasse operator shared infra install");
-        LOGGER.info("***********************************************************");
-        generateTemplates();
-        kube.createNamespace(kube.getInfraNamespace(), Collections.singletonMap("allowed", "true"));
-        KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "enmasse"));
-        TestUtils.waitUntilDeployed(kube.getInfraNamespace());
-        LOGGER.info("***********************************************************");
-    }
-
     public void installEnmasseOlm(OLMInstallationType installation) throws Exception {
         LOGGER.info("***********************************************************");
         LOGGER.info("                  Enmasse OLM install");
         LOGGER.info("***********************************************************");
         olm.install(installation);
         waitUntilOperatorReadyOlm(installation);
-        LOGGER.info("***********************************************************");
-    }
-
-    public void installIoTOperator() {
-        LOGGER.info("***********************************************************");
-        LOGGER.info("                Enmasse IoT operator install");
-        LOGGER.info("***********************************************************");
-        LOGGER.info("Installing enmasse IoT operator from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
         LOGGER.info("***********************************************************");
     }
 
@@ -350,12 +330,6 @@ public class EnmasseOperatorManager {
         KubeCMDClient.deleteFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "cluster-service-broker"));
     }
 
-    public void removeIoT() {
-        LOGGER.info("Delete enmasse IoT from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.deleteFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
-        KubeCMDClient.runOnCluster("delete", "iotconfigs", "--all", "-n", kube.getInfraNamespace());
-    }
-
     public boolean clean() throws Exception {
         cleanCRDs();
         KubeCMDClient.runOnCluster("delete", "clusterrolebindings", "-l", "app=enmasse");
@@ -373,7 +347,6 @@ public class EnmasseOperatorManager {
     }
 
     private void cleanCRDs() {
-        KubeCMDClient.runOnCluster("delete", "crd", "-l", "app=enmasse,enmasse-component=iot");
         KubeCMDClient.runOnClusterWithTimeout(600_000, "delete", "crd", "-l", "app=enmasse", "--timeout=600s");
     }
 

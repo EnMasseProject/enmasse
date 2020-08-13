@@ -60,8 +60,5 @@
     name: cluster_service_broker
   when: service_catalog
 - import_role:
-    name: iot
-  when: enable_iot
-- import_role:
     name: monitoring-operator
   when: monitoring_operator

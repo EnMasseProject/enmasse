@@ -86,6 +86,7 @@
         <jakarta.xml.bind-api.version>2.3.2</jakarta.xml.bind-api.version>
         <jsonschema2pojo.version>1.0.2</jsonschema2pojo.version>
         <lombok.version>1.18.10</lombok.version>
+        <hdrhistogram.version>2.1.4</hdrhistogram.version>
 
         <!-- NOTE: jaeger-client must be aligned with Hono -->
         <jaeger-client.version>1.1.0</jaeger-client.version>
@@ -136,7 +137,6 @@
         <module>broker-plugin</module>
         <module>service-broker</module>
         <module>bundle</module>
-        <module>iot</module>
         <module>controller-manager</module>
         <module>console</module>
         <module>olm-manifest</module>
@@ -408,6 +408,12 @@
               <groupId>ch.qos.logback</groupId>
               <artifactId>logback-classic</artifactId>
               <version>${logback.version}</version>
+            </dependency>
+
+            <dependency>
+              <groupId>org.hdrhistogram</groupId>
+              <artifactId>HdrHistogram</artifactId>
+              <version>${hdrhistogram.version}</version>
             </dependency>
 
             <!-- Overridden to avoid CVE-2018-10237 -->

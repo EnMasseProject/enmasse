@@ -26,11 +26,10 @@ ifeval::["{cmdcli}" == "oc"]
 ----
 endif::[]
 
-. Remove all `IoTProject` and `AddressSpace` instances:
+. Remove all `AddressSpace` instances:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} delete iotprojects -A --all
 {cmdcli} delete addressspaces -A --all --timeout=600s
 ----
 

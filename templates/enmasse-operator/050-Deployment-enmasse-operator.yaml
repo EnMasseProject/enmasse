@@ -50,8 +50,6 @@ spec:
           value: "${VERSION}"
         - name: CONTROLLER_ENABLE_MESSAGING_INFRASTRUCTURE
           value: "false"
-        - name: IOT_CONFIG_NAME
-          value: "default"
         - name: OPERATOR_NAME
           value: "enmasse-operator"
         - name: IMAGE_PULL_POLICY
@@ -59,10 +57,6 @@ spec:
         - name: CONTROLLER_DISABLE_ALL
           value: "true"
         - name: CONTROLLER_ENABLE_UPGRADER
-          value: "true"
-        - name: CONTROLLER_ENABLE_IOT_PROJECT
-          value: "true"
-        - name: CONTROLLER_ENABLE_IOT_CONFIG
           value: "true"
         - name: CONTROLLER_ENABLE_AUTHENTICATION_SERVICE
           value: "true"
@@ -74,30 +68,6 @@ spec:
           value: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
         - name: RELATED_IMAGE_CONTROLLER_MANAGER
           value: ${CONTROLLER_MANAGER_IMAGE}
-        - name: RELATED_IMAGE_IOT_AUTH_SERVICE
-          value: ${IOT_AUTH_SERVICE_IMAGE}
-        - name: RELATED_IMAGE_IOT_DEVICE_CONNECTION_INFINISPAN
-          value: ${IOT_DEVICE_CONNECTION_INFINISPAN_IMAGE}
-        - name: RELATED_IMAGE_IOT_DEVICE_CONNECTION_JDBC
-          value: ${IOT_DEVICE_CONNECTION_JDBC_IMAGE}
-        - name: RELATED_IMAGE_IOT_DEVICE_REGISTRY_INFINISPAN
-          value: ${IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
-        - name: RELATED_IMAGE_IOT_DEVICE_REGISTRY_JDBC
-          value: ${IOT_DEVICE_REGISTRY_JDBC_IMAGE}
-        - name: RELATED_IMAGE_IOT_HTTP_ADAPTER
-          value: ${IOT_HTTP_ADAPTER_IMAGE}
-        - name: RELATED_IMAGE_IOT_MQTT_ADAPTER
-          value: ${IOT_MQTT_ADAPTER_IMAGE}
-        - name: RELATED_IMAGE_IOT_LORAWAN_ADAPTER
-          value: ${IOT_LORAWAN_ADAPTER_IMAGE}
-        - name: RELATED_IMAGE_IOT_SIGFOX_ADAPTER
-          value: ${IOT_SIGFOX_ADAPTER_IMAGE}
-        - name: RELATED_IMAGE_IOT_TENANT_CLEANER
-          value: ${IOT_TENANT_CLEANER_IMAGE}
-        - name: RELATED_IMAGE_IOT_TENANT_SERVICE
-          value: ${IOT_TENANT_SERVICE_IMAGE}
-        - name: RELATED_IMAGE_IOT_PROXY_CONFIGURATOR
-          value: ${IOT_PROXY_CONFIGURATOR_IMAGE}
         - name: RELATED_IMAGE_ROUTER
           value: ${ROUTER_IMAGE}
         - name: RELATED_IMAGE_STANDARD_CONTROLLER

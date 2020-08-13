@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.selenium.resources;
 
-import org.eclipse.hono.util.Strings;
+import io.enmasse.systemtest.Strings;
 import org.openqa.selenium.WebElement;
 
 public class WebItem {
