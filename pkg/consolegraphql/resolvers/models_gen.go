@@ -127,6 +127,7 @@ const (
 	AddressTypeSubscription AddressType = "subscription"
 	AddressTypeMulticast    AddressType = "multicast"
 	AddressTypeAnycast      AddressType = "anycast"
+	AddressTypeDeadletter   AddressType = "deadletter"
 )
 
 var AllAddressType = []AddressType{
@@ -135,11 +136,12 @@ var AllAddressType = []AddressType{
 	AddressTypeSubscription,
 	AddressTypeMulticast,
 	AddressTypeAnycast,
+	AddressTypeDeadletter,
 }
 
 func (e AddressType) IsValid() bool {
 	switch e {
-	case AddressTypeQueue, AddressTypeTopic, AddressTypeSubscription, AddressTypeMulticast, AddressTypeAnycast:
+	case AddressTypeQueue, AddressTypeTopic, AddressTypeSubscription, AddressTypeMulticast, AddressTypeAnycast, AddressTypeDeadletter:
 		return true
 	}
 	return false
