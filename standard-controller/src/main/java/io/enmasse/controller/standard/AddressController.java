@@ -430,7 +430,8 @@ public class AddressController implements Watcher<Address> {
 
         long calculatedUsage = System.nanoTime();
         Set<Address> pendingAddresses = filterBy(addressSet, address -> address.getStatus().getPhase().equals(Pending) ||
-                !Objects.equals(AppliedConfig.create(address.getSpec()).getAddressSpec(), AppliedConfig.getCurrentAppliedAddressSpec(address).orElse(null)));
+                !Objects.equals(AppliedConfig.create(address.getSpec()).getAddressSpec(), AppliedConfig.getCurrentAppliedAddressSpec(address).orElse(null)) ||
+                hasPlansChanged(addressResolver, address));
 
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, pendingAddresses, addressSet);
 
@@ -1114,6 +1115,11 @@ public class AddressController implements Watcher<Address> {
             }
         }
         return false;
+    }
+
+    private boolean hasPlansChanged(AddressResolver addressResolver, Address address) {
+        AddressPlan addressPlan = addressResolver.getDesiredPlan(address);
+        return !AddressPlanStatus.fromAddressPlan(addressPlan).equals(address.getStatus().getPlanStatus());
     }
 
     private class ProvisionState {
