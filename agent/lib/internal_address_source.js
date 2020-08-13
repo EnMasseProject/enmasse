@@ -173,7 +173,7 @@ AddressSource.prototype.dispatch_if_changed = function (name, addresses, unchang
 AddressSource.prototype.add_readiness_record = function (definition) {
     var record = this.readiness[definition.address];
     if (record === undefined) {
-        record = {ready: false, address: definition.address, name: definition.name};
+        record = {ready: false, address: definition.address, name: definition.name, type: definition.type};
         this.readiness[definition.address] = record;
     }
 };
@@ -359,6 +359,32 @@ AddressSource.prototype.update_status = function (record, ready) {
                 delete address.status.messageRedelivery;
                 updated++;
             }
+
+            if (address.spec.expiryAddress) {
+                var targetRecord = myutils.values(self.readiness).find(record => record.address === address.spec.expiryAddress);
+                if (targetRecord) {
+                    if (targetRecord.type !== "deadletter") {
+                        ready = false;
+                        messages.push(`Address '${address.spec.address}' (resource name '${address.metadata.name}') references an expiry address '${address.spec.expiryAddress}' (resource name '${targetRecord.name}') that is not of expected type 'deadletter' (found type '${targetRecord.type}' instead).`);
+                    }
+                } else {
+                    ready = false;
+                    messages.push(`Address '${address.spec.address}' (resource name '${address.metadata.name}') references an expiry address '${address.spec.expiryAddress}' that does not exist.`);
+                }
+            }
+            if (address.spec.deadLetterAddress) {
+                var targetRecord = myutils.values(self.readiness).find(record => record.address === address.spec.deadLetterAddress);
+                if (targetRecord) {
+                    if (targetRecord.type !== "deadletter") {
+                        ready = false;
+                        messages.push(`Address '${address.spec.address}' (resource name '${address.metadata.name}') references a deadletter address '${address.spec.deadLetterAddress}' (resource name '${targetRecord.name}') that is not of expected type 'deadletter' (found type '${targetRecord.type}' instead).`);
+                    }
+                } else {
+                    ready = false;
+                    messages.push(`Address '${address.spec.address}' (resource name '${address.metadata.name}') references a deadletter address '${address.spec.deadLetterAddress}' that does not exist.`);
+                }
+            }
+
         } else {
             ready = false;
             messages.push("Unknown address plan '" + address.spec.plan + "'");

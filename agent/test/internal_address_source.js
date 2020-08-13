@@ -227,6 +227,7 @@ describe('address source', function() {
         address_plans_source.emit("addressplans_defined", [{
             kind: 'AddressPlan',
             metadata: {name: 'myplan'},
+            spec: {addressType: 'queue'}
         }]);
 
         source.once('addresses_defined', function (addresses) {
@@ -235,6 +236,46 @@ describe('address source', function() {
                 assert.equal(address.status.isReady, false);
                 assert.equal(address.status.messages.length, 1);
                 assert.equal(address.status.messages[0], "Unknown address plan 'not found'");
+                done();
+            });
+        });
+    });
+    it('updates status - deadletter address not found', function(done) {
+        address_server.add_address_definition({address:'mydla', type:'queue', plan: 'myplan'});
+        address_server.add_address_definition({address:'foo', type:'queue', plan: 'myplan', deadLetterAddress: 'mydla'});
+        var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default'});
+        source.start(address_plans_source);
+        address_plans_source.emit("addressplans_defined", [{
+            kind: 'AddressPlan',
+            metadata: {name: 'myplan'},
+            spec: {addressType: 'queue'}
+        }]);
+        source.once('addresses_defined', function (addresses) {
+            source.check_status({foo:{propagated:100}}).then(function (add) {
+                var address = address_server.find_resource('addresses', 'foo');
+                assert.equal(address.status.isReady, false);
+                assert.equal(address.status.messages.length, 1);
+                assert.equal(address.status.messages[0], "Address 'foo' (resource name 'foo') references a deadletter address 'mydla' (resource name 'mydla') that is not of expected type 'deadletter' (found type 'queue' instead).");
+                done();
+            });
+        });
+    });
+    it('updates status - expiry address not found', function(done) {
+        address_server.add_address_definition({address:'foo', type:'queue', plan: 'myplan', expiryAddress: 'notfound'});
+        var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default'});
+        source.start(address_plans_source);
+        address_plans_source.emit("addressplans_defined", [{
+            kind: 'AddressPlan',
+            metadata: {name: 'myplan'},
+            spec: {addressType: 'queue'}
+        }]);
+
+        source.once('addresses_defined', function (addresses) {
+            source.check_status({foo:{propagated:100}}).then(function (add) {
+                var address = address_server.find_resource('addresses', 'foo');
+                assert.equal(address.status.isReady, false);
+                assert.equal(address.status.messages.length, 1);
+                assert.equal(address.status.messages[0], "Address 'foo' (resource name 'foo') references an expiry address 'notfound' that does not exist.");
                 done();
             });
         });
