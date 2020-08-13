@@ -41,7 +41,7 @@ describe('broker controller', function() {
 
     afterEach(function(done) {
         Promise.all([controller.close, new Promise(function (resolve) {
-            setTimeout(resolve, 500);
+            setTimeout(resolve, 1000);
         }), broker.close]).then(() => done());
     });
 
