@@ -13,4 +13,4 @@ ENV VERSION=${version} MAVEN_VERSION=${maven_version} REVISION=${revision}
 ADD target/lib/manifests manifests/${OLM_VERSION}/manifests
 ADD target/lib/metadata/annotations.yaml manifests/${OLM_VERSION}/metadata/annotations.yaml
 
-RUN initializer -m manifests -o /database/index.sb
+RUN initializer -m manifests -o /database/index.db
