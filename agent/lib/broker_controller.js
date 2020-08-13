@@ -774,12 +774,12 @@ BrokerController.prototype.generate_address_settings = function (address, global
         var notTopic = address.type === 'subscription' || address.type === 'queue' || address.type === 'deadletter';
 
         if (notTopic) {
-            if (address.deadLetterAddress) {
-                addressSettings.DLA = address.deadLetterAddress;
+            if (address.deadletter) {
+                addressSettings.DLA = address.deadletter;
                 upd++;
             }
-            if (address.expiryAddress) {
-                addressSettings.expiryAddress = address.expiryAddress;
+            if (address.expiry) {
+                addressSettings.expiryAddress = address.expiry;
                 upd++;
             }
             if (address.status.messageRedelivery) {

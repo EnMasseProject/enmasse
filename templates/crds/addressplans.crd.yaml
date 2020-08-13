@@ -98,7 +98,7 @@ spec:
               description: "Configures message redelivery options.  Applies to address types queue, subscription and deadletter only."
               properties:
                 maximumDeliveryAttempts:
-                  description: "Maximum number of delivery attempts that will be made for a message before message is directed to a deadLetterAddress (or dropped). Set to -1 for infinite re-deliveries."
+                  description: "Maximum number of delivery attempts that will be made for a message before message is directed to a deadletter address (or dropped). Set to -1 for infinite re-deliveries."
                   type: integer
                 redeliveryDelay:
                   description: "The number of milliseconds to wait before redelivery. Set to 0 for no redelivery delay."

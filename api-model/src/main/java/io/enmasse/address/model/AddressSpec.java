@@ -42,8 +42,8 @@ public class AddressSpec extends AbstractWithAdditionalProperties {
     @NotNull
     private String plan;
     private String topic;
-    private String deadLetterAddress;
-    private String expiryAddress;
+    private String deadletter;
+    private String expiry;
     private MessageTtl messageTtl;
     private MessageRedelivery messageRedelivery;
 
@@ -128,20 +128,20 @@ public class AddressSpec extends AbstractWithAdditionalProperties {
         this.messageRedelivery = messageRedelivery;
     }
 
-    public String getDeadLetterAddress() {
-        return deadLetterAddress;
+    public String getDeadletter() {
+        return deadletter;
     }
 
-    public void setDeadLetterAddress(String deadLetterAddress) {
-        this.deadLetterAddress = deadLetterAddress;
+    public void setDeadletter(String deadletter) {
+        this.deadletter = deadletter;
     }
 
-    public String getExpiryAddress() {
-        return expiryAddress;
+    public String getExpiry() {
+        return expiry;
     }
 
-    public void setExpiryAddress(String expiryAddress) {
-        this.expiryAddress = expiryAddress;
+    public void setExpiry(String expiry) {
+        this.expiry = expiry;
     }
 
     @Override
@@ -159,8 +159,8 @@ public class AddressSpec extends AbstractWithAdditionalProperties {
              sb.append(",forwarders=").append(forwarders);
          }
          sb.append(",subscription=").append(subscription);
-         sb.append(",deadLetterAddress=").append(deadLetterAddress);
-         sb.append(",expiryAddress=").append(expiryAddress);
+         sb.append(",deadletter=").append(deadletter);
+         sb.append(",expiry=").append(expiry);
          sb.append(",messageTtl=").append(messageTtl);
          sb.append(",messageRedelivery=").append(messageRedelivery);
          sb.append("}");

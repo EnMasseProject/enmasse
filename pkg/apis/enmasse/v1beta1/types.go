@@ -289,15 +289,15 @@ type Address struct {
 }
 
 type AddressSpec struct {
-	Address           string            `json:"address"`
-	AddressSpace      string            `json:"addressSpace,omitempty"`
-	Type              string            `json:"type"`
-	Plan              string            `json:"plan"`
-	Topic             string            `json:"topic,omitempty"`
-	DeadLetterAddress string            `json:"deadLetterAddress,omitempty"`
-	ExpiryAddress     string            `json:"expiryAddress,omitempty"`
-	Subscription      *SubscriptionSpec `json:"subscription,omitempty"`
-	Forwarders        []ForwarderSpec   `json:"forwarders,omitempty"`
+	Address      string            `json:"address"`
+	AddressSpace string            `json:"addressSpace,omitempty"`
+	Type         string            `json:"type"`
+	Plan         string            `json:"plan"`
+	Topic        string            `json:"topic,omitempty"`
+	Deadletter   string            `json:"deadletter,omitempty"`
+	Expiry       string            `json:"expiry,omitempty"`
+	Subscription *SubscriptionSpec `json:"subscription,omitempty"`
+	Forwarders   []ForwarderSpec   `json:"forwarders,omitempty"`
 }
 
 type SubscriptionSpec struct {

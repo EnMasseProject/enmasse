@@ -640,14 +640,14 @@ public class AddressControllerTest {
     }
 
     @Test
-    public void testQueueRefersToUnknownDeadLetterAddress() throws Exception {
+    public void testQueueRefersToUnknownDeadletter() throws Exception {
         Address sub = new AddressBuilder()
                 .withNewMetadata()
                 .withName("myspace.a1")
                 .endMetadata()
                 .withNewSpec()
                 .withAddress("a1")
-                .withDeadLetterAddress("unknown")
+                .withDeadletter("unknown")
                 .withType("queue")
                 .withPlan("small-queue")
                 .endSpec()
@@ -663,7 +663,7 @@ public class AddressControllerTest {
     }
 
     @Test
-    public void testQueueRefersToDeadLetterAddressWithWrongType() throws Exception {
+    public void testQueueRefersToDeadletterWithWrongType() throws Exception {
         Address nonDeadLetter = new AddressBuilder()
                 .withNewMetadata()
                 .withName("myspace.myanycast")
@@ -684,7 +684,7 @@ public class AddressControllerTest {
                 .endMetadata()
                 .withNewSpec()
                 .withAddress("a1")
-                .withDeadLetterAddress(nonDeadLetter.getSpec().getAddress())
+                .withDeadletter(nonDeadLetter.getSpec().getAddress())
                 .withType("queue")
                 .withPlan("small-queue")
                 .endSpec()
@@ -700,14 +700,14 @@ public class AddressControllerTest {
     }
 
     @Test
-    public void testInvalidAddressTypeRefersToDeadLetterAddress() throws Exception {
+    public void testInvalidAddressTypeRefersToDeadletter() throws Exception {
         Address sub = new AddressBuilder()
                 .withNewMetadata()
                 .withName("myspace.a1")
                 .endMetadata()
                 .withNewSpec()
                 .withAddress("a1")
-                .withDeadLetterAddress("illegal")
+                .withDeadletter("illegal")
                 .withType("anycast")
                 .withPlan("small-anycast")
                 .endSpec()
@@ -723,14 +723,14 @@ public class AddressControllerTest {
     }
 
     @Test
-    public void testQueueRefersToUnknownExpiryAddress() throws Exception {
+    public void testQueueRefersToUnknownExpiry() throws Exception {
         Address sub = new AddressBuilder()
                 .withNewMetadata()
                 .withName("myspace.a1")
                 .endMetadata()
                 .withNewSpec()
                 .withAddress("a1")
-                .withExpiryAddress("unknown")
+                .withExpiry("unknown")
                 .withType("queue")
                 .withPlan("small-queue")
                 .endSpec()
@@ -746,7 +746,7 @@ public class AddressControllerTest {
     }
 
     @Test
-    public void testQueueRefersToExpiryAddressWithWrongType() throws Exception {
+    public void testQueueRefersToExpiryWithWrongType() throws Exception {
         Address nonDeadLetter = new AddressBuilder()
                 .withNewMetadata()
                 .withName("myspace.myanycast")
@@ -767,7 +767,7 @@ public class AddressControllerTest {
                 .endMetadata()
                 .withNewSpec()
                 .withAddress("a1")
-                .withExpiryAddress(nonDeadLetter.getSpec().getAddress())
+                .withExpiry(nonDeadLetter.getSpec().getAddress())
                 .withType("queue")
                 .withPlan("small-queue")
                 .endSpec()
@@ -783,14 +783,14 @@ public class AddressControllerTest {
     }
 
     @Test
-    public void testTopicRefersToExpiryAddress() throws Exception {
+    public void testTopicRefersToExpiry() throws Exception {
         Address sub = new AddressBuilder()
                 .withNewMetadata()
                 .withName("myspace.a1")
                 .endMetadata()
                 .withNewSpec()
                 .withAddress("a1")
-                .withExpiryAddress("illegal")
+                .withExpiry("illegal")
                 .withType("topic")
                 .withPlan("small-topic")
                 .endSpec()
@@ -1095,7 +1095,7 @@ public class AddressControllerTest {
                 .withAddressSpace("myspace")
                 .withType("queue")
                 .withPlan("small-queue")
-                .withDeadLetterAddress(deadLetter.getSpec().getAddress())
+                .withDeadletter(deadLetter.getSpec().getAddress())
                 .endSpec()
 
                 .withNewStatus()
