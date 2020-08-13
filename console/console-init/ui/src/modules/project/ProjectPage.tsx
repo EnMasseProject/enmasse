@@ -17,7 +17,8 @@ import {
 import { ISortBy } from "@patternfly/react-table";
 import {
   DELETE_MESSAGING_PROJECT,
-  DELETE_IOT_PROJECT
+  DELETE_IOT_PROJECT,
+  TOGGLE_IOT_PROJECTS_STATUS
 } from "graphql-module/queries";
 import { compareObject, ISelectOption } from "utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
@@ -30,7 +31,9 @@ import {
   ProjectType,
   getDetailForDeleteDialog,
   getHeaderForDeleteDialog,
-  ProjectTypes
+  ProjectTypes,
+  getDetailForToggleDialog,
+  getHeaderForToggleDialog
 } from "./utils";
 import { ProjectToolbarContainer, ProjectListContainer } from "./containers";
 
@@ -100,6 +103,12 @@ export default function ProjectPage() {
     undefined,
     resetFormState
   );
+  const [setToggleIoTProjectQueryVariables] = useMutationQuery(
+    TOGGLE_IOT_PROJECTS_STATUS,
+    ["allProjects"],
+    undefined,
+    resetFormState
+  );
 
   const onDeleteAll = () => {
     dispatch({
@@ -148,6 +157,49 @@ export default function ProjectPage() {
         await setDeleteProjectQueryVariables(queryVariable);
       }
     }
+  };
+  const handleOnChangeEnable = (projects: IProject[], toEnable: boolean) => {
+    let iotQueryVariables: Array<{ name: string; namespace: string }> = [];
+    selectedProjects.forEach(
+      (project: IProject) =>
+        project.name &&
+        project.namespace &&
+        project.projectType === ProjectTypes.IOT &&
+        iotQueryVariables.push({
+          name: project.name,
+          namespace: project.namespace
+        })
+    );
+    if (iotQueryVariables.length > 0) {
+      const queryVariable = {
+        a: iotQueryVariables,
+        status: toEnable
+      };
+      setToggleIoTProjectQueryVariables(queryVariable);
+    }
+  };
+
+  const onToggleAll = (action: string) => {
+    const toEnable = action === "enable" ? true : false;
+    const filteredProjects = selectedProjects.filter(
+      project =>
+        project.projectType === ProjectTypes.IOT &&
+        project.isEnabled === !toEnable
+    );
+    let projectActionValue = toEnable ? "Enable" : "Disable";
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.DELETE_PROJECT,
+      modalProps: {
+        selectedItems: filteredProjects.map(as => as.name),
+        data: filteredProjects,
+        onConfirm: () => handleOnChangeEnable(filteredProjects, toEnable),
+        option: projectActionValue,
+        detail: getDetailForToggleDialog(filteredProjects, toEnable),
+        header: getHeaderForToggleDialog(filteredProjects, projectActionValue),
+        confirmButtonLabel: projectActionValue
+      }
+    });
   };
 
   const onSelectProject = (
@@ -202,6 +254,27 @@ export default function ProjectPage() {
     return true;
   };
 
+  const isEnableAllOptionDisabled = () => {
+    if (selectedProjects && selectedProjects.length > 0) {
+      const disabledProjects = selectedProjects.filter(
+        project =>
+          project.projectType === ProjectTypes.IOT && !project.isEnabled
+      );
+      if (disabledProjects.length === selectedProjects.length) return false;
+    }
+    return true;
+  };
+
+  const isDisableAllOptionDisabled = () => {
+    if (selectedProjects && selectedProjects.length > 0) {
+      const enabledProjects = selectedProjects.filter(
+        project => project.projectType === ProjectTypes.IOT && project.isEnabled
+      );
+      if (enabledProjects.length === selectedProjects.length) return false;
+    }
+    return true;
+  };
+
   const renderPagination = () => {
     return (
       <TablePagination
@@ -247,6 +320,9 @@ export default function ProjectPage() {
                 isDeleteAllDisabled={isDeleteAllOptionDisabled()}
                 onSelectAllProjects={onSelectAllProject}
                 isAllProjectSelected={isAllSelected}
+                isEnableAllOptionDisabled={isEnableAllOptionDisabled()}
+                isDisableAllOptionDisabled={isDisableAllOptionDisabled()}
+                onToggleAll={onToggleAll}
               />
             </GridItem>
             <GridItem span={5}>{renderPagination()}</GridItem>

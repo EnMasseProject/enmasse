@@ -17,12 +17,16 @@ import { CreateProject } from "modules/project/dailogs";
 
 export interface IProjectListKebabProps {
   isDeleteAllDisabled: boolean;
-  onSelectDeleteAll: (event: any) => void;
+  onSelectKebabOption: (event: any) => void;
+  isEnableAllOptionDisabled: boolean;
+  isDisableAllOptionDisabled: boolean;
 }
 
 export const ProjectListKebab: React.FC<IProjectListKebabProps> = ({
   isDeleteAllDisabled,
-  onSelectDeleteAll
+  onSelectKebabOption,
+  isEnableAllOptionDisabled,
+  isDisableAllOptionDisabled
 }) => {
   const dropdownItems = [
     <DropdownItem
@@ -33,6 +37,24 @@ export const ProjectListKebab: React.FC<IProjectListKebabProps> = ({
       isDisabled={isDeleteAllDisabled}
     >
       Delete Selected
+    </DropdownItem>,
+    <DropdownItem
+      id="project-list-kebab-enable-selected-dropdownitem"
+      key="enable-all"
+      component="button"
+      value="enableAll"
+      isDisabled={isEnableAllOptionDisabled}
+    >
+      Enable Selected
+    </DropdownItem>,
+    <DropdownItem
+      id="project-list-kebab-disable-selected-dropdownitem"
+      key="disable-all"
+      component="button"
+      value="disableAll"
+      isDisabled={isDisableAllOptionDisabled}
+    >
+      Disable Selected
     </DropdownItem>
   ];
 
@@ -51,7 +73,7 @@ export const ProjectListKebab: React.FC<IProjectListKebabProps> = ({
           <DropdownWithKebabToggle
             id="project-list-kebab-dropdown"
             toggleId="project-list-kebab-dropdowntoggle"
-            onSelect={onSelectDeleteAll}
+            onSelect={onSelectKebabOption}
             dropdownItems={dropdownItems}
             isPlain
           />

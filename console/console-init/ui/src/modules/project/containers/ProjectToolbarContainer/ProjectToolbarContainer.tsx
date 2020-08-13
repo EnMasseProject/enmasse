@@ -29,6 +29,9 @@ export interface IProjectToolbarContainerProps {
   isDeleteAllDisabled: boolean;
   onSelectAllProjects: (val: boolean) => void;
   isAllProjectSelected: boolean;
+  isEnableAllOptionDisabled: boolean;
+  isDisableAllOptionDisabled: boolean;
+  onToggleAll: (action: string) => void;
 }
 
 export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarContainerProps> = ({
@@ -40,7 +43,10 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
   onDeleteAll,
   isDeleteAllDisabled,
   onSelectAllProjects,
-  isAllProjectSelected
+  isAllProjectSelected,
+  isEnableAllOptionDisabled,
+  isDisableAllOptionDisabled,
+  onToggleAll
 }) => {
   const client = useApolloClient();
   // const { dispatch } = useStoreContext();
@@ -53,9 +59,25 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
     setFilter(initialiseFilterForProject());
   };
 
-  const onSelectDeleteAll = async (event: any) => {
-    if (event.target.value === "deleteAll") {
-      await onDeleteAll();
+  const onSelectKebabOption = async (event: any) => {
+    const option = event.target.value;
+    if (option) {
+      switch (option) {
+        case "deleteAll":
+          await onDeleteAll();
+          break;
+        case "enableAll":
+          await onToggleAll("enable");
+          break;
+        case "disableAll":
+          await onToggleAll("disable");
+          break;
+        default:
+          break;
+      }
+      if (option === "deleteAll") {
+        await onDeleteAll();
+      }
     }
   };
 
@@ -255,7 +277,7 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
       onSearch={onSearch}
       onDelete={onDelete}
       isDeleteAllDisabled={isDeleteAllDisabled}
-      onSelectDeleteAll={onSelectDeleteAll}
+      onSelectKebabOption={onSelectKebabOption}
       sortValue={sortValue}
       setSortValue={setSortValue}
       onClearAllFilters={onClearAllFilters}
@@ -265,6 +287,8 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
       setNameSpaceInput={setNamespaceInput}
       onSelectAllProjects={onSelectAllProjects}
       isAllProjectSelected={isAllProjectSelected}
+      isEnableAllOptionDisabled={isEnableAllOptionDisabled}
+      isDisableAllOptionDisabled={isDisableAllOptionDisabled}
     />
   );
 };
