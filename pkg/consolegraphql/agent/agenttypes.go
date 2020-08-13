@@ -114,11 +114,7 @@ type AgentAddressLink struct {
 }
 
 func FromAgentConnectionBody(agentConnectionMap map[string]interface{}) (*AgentConnection, error) {
-	for k, v := range agentConnectionMap {
-		if vv, ok := v.(map[interface{}]interface{}); ok && len(vv) == 0 {
-			delete(agentConnectionMap, k)
-		}
-	}
+	cleanMap(agentConnectionMap)
 
 	bytes, e := json.Marshal(agentConnectionMap)
 	if e != nil {
@@ -134,9 +130,12 @@ func FromAgentConnectionBody(agentConnectionMap map[string]interface{}) (*AgentC
 	}
 }
 
-func FromAgentAddressBody(agentConnectionMap map[string]interface{}) (*AgentAddress, error) {
-	bytes, e := json.Marshal(agentConnectionMap)
+func FromAgentAddressBody(agentAddressMap map[string]interface{}) (*AgentAddress, error) {
+	cleanMap(agentAddressMap)
+
+	bytes, e := json.Marshal(agentAddressMap)
 	if e != nil {
+		cleanMap(agentAddressMap)
 		return nil, e
 	}
 
@@ -148,4 +147,18 @@ func FromAgentAddressBody(agentConnectionMap map[string]interface{}) (*AgentAddr
 		return nil, err
 	}
 
+}
+
+func cleanMap(m map[string]interface{}) {
+	for k, v := range m {
+		if vv, ok := v.(map[interface{}]interface{}); ok && len(vv) == 0 {
+			delete(m, k)
+		} else if vv, ok := v.(map[string]interface{}); ok {
+			if len(vv) == 0 {
+				delete(m, k)
+			} else {
+				cleanMap(vv)
+			}
+		}
+	}
 }
