@@ -158,7 +158,8 @@ export default function ProjectPage() {
       }
     }
   };
-  const handleOnChangeEnable = (projects: IProject[], toEnable: boolean) => {
+
+  const handleStatus = (_projects: IProject[], toEnable: boolean) => {
     let iotQueryVariables: Array<{ name: string; namespace: string }> = [];
     selectedProjects.forEach(
       (project: IProject) =>
@@ -193,7 +194,7 @@ export default function ProjectPage() {
       modalProps: {
         selectedItems: filteredProjects.map(as => as.name),
         data: filteredProjects,
-        onConfirm: () => handleOnChangeEnable(filteredProjects, toEnable),
+        onConfirm: () => handleStatus(filteredProjects, toEnable),
         option: projectActionValue,
         detail: getDetailForToggleDialog(filteredProjects, toEnable),
         header: getHeaderForToggleDialog(filteredProjects, projectActionValue),
@@ -253,24 +254,14 @@ export default function ProjectPage() {
     }
     return true;
   };
-
-  const isEnableAllOptionDisabled = () => {
+  const getOptionStatus = (isEnabled: boolean) => {
     if (selectedProjects && selectedProjects.length > 0) {
-      const disabledProjects = selectedProjects.filter(
+      const filteredProjects = selectedProjects.filter(
         project =>
-          project.projectType === ProjectTypes.IOT && !project.isEnabled
+          project.projectType === ProjectTypes.IOT &&
+          (isEnabled ? !project.isEnabled : project.isEnabled)
       );
-      if (disabledProjects.length === selectedProjects.length) return false;
-    }
-    return true;
-  };
-
-  const isDisableAllOptionDisabled = () => {
-    if (selectedProjects && selectedProjects.length > 0) {
-      const enabledProjects = selectedProjects.filter(
-        project => project.projectType === ProjectTypes.IOT && project.isEnabled
-      );
-      if (enabledProjects.length === selectedProjects.length) return false;
+      if (filteredProjects.length === selectedProjects.length) return false;
     }
     return true;
   };
@@ -320,8 +311,8 @@ export default function ProjectPage() {
                 isDeleteAllDisabled={isDeleteAllOptionDisabled()}
                 onSelectAllProjects={onSelectAllProject}
                 isAllProjectSelected={isAllSelected}
-                isEnableAllOptionDisabled={isEnableAllOptionDisabled()}
-                isDisableAllOptionDisabled={isDisableAllOptionDisabled()}
+                isEnableAllOptionDisabled={getOptionStatus(true)}
+                isDisableAllOptionDisabled={getOptionStatus(false)}
                 onToggleAll={onToggleAll}
               />
             </GridItem>

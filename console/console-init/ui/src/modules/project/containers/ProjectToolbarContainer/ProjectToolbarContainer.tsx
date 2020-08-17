@@ -49,7 +49,6 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
   onToggleAll
 }) => {
   const client = useApolloClient();
-  // const { dispatch } = useStoreContext();
   const [nameSelected, setNameSelected] = useState<string>();
   const [nameInput, setNameInput] = useState<string>();
   const [namespaceSelected, setNamespaceSelected] = useState<string>();
@@ -61,7 +60,7 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
 
   const onSelectKebabOption = async (event: any) => {
     const option = event.target.value;
-    if (option) {
+    if (option && option.trim() !== "") {
       switch (option) {
         case "deleteAll":
           await onDeleteAll();
@@ -74,9 +73,6 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
           break;
         default:
           break;
-      }
-      if (option === "deleteAll") {
-        await onDeleteAll();
       }
     }
   };
