@@ -16,6 +16,7 @@ import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { useHistory, useParams } from "react-router";
 import { IIotProjectType } from "schema";
+import { FetchPolicy, POLL_INTERVAL } from "constant";
 
 export const IoTProjectDetailHeaderContainer: React.FC = () => {
   const { dispatch } = useStoreContext();
@@ -83,7 +84,8 @@ export const IoTProjectDetailHeaderContainer: React.FC = () => {
       }
     }`;
   const { data } = useQuery<IIoTProjectsResponse>(
-    RETURN_IOT_PROJECTS({ projectname }, queryResolver)
+    RETURN_IOT_PROJECTS({ projectname }, queryResolver),
+    { fetchPolicy: FetchPolicy.NETWORK_ONLY, pollInterval: POLL_INTERVAL }
   );
 
   const objects: IIotProjectType[] = [];
