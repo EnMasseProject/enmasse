@@ -124,11 +124,37 @@ const getDetailForDeleteDialog = (selectedItems: IProject[]) => {
   return detail;
 };
 
+const getDetailForToggleDialog = (
+  selectedItems: IProject[],
+  toEnable: boolean
+) => {
+  let projectTypeValue = "IoT";
+  let projectActionValue = toEnable ? "Enable" : "Disable";
+  const detail =
+    selectedItems.length > 1
+      ? `Are you sure you want to ${projectActionValue} all of these ${projectTypeValue} projects: ${selectedItems.map(
+          as => "  " + as.name
+        )} ?`
+      : `Are you sure you want to ${projectActionValue} this ${projectTypeValue} project: ${selectedItems[0].name} ?`;
+  return detail;
+};
+
 const getHeaderForDeleteDialog = (selectedItems: any[]) => {
   const header =
     selectedItems.length > 1
       ? "Delete these Projects ?"
       : "Delete this Project ?";
+  return header;
+};
+
+const getHeaderForToggleDialog = (
+  selectedItems: IProject[],
+  action: string
+) => {
+  const header =
+    selectedItems.length > 1
+      ? `${action} these Projects ?`
+      : `${action} this Project ?`;
   return header;
 };
 
@@ -299,5 +325,7 @@ export {
   isEnabledCertificateStep,
   isRouteStepValid,
   isMessagingProjectConfigurationValid,
-  getQueryVariableForCreateMessagingProject
+  getQueryVariableForCreateMessagingProject,
+  getDetailForToggleDialog,
+  getHeaderForToggleDialog
 };

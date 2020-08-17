@@ -21,11 +21,13 @@ import { sortMenuItems } from "modules/project/utils";
 export interface IProjectToolbarProps extends IProjectToolbarToggleGroupProps {
   onClearNamespace: () => void;
   isDeleteAllDisabled: boolean;
-  onSelectDeleteAll: (event: any) => void;
+  onSelectKebabOption: (event: any) => void;
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
   onClearAllFilters: () => void;
   isAllProjectSelected: boolean;
+  isEnableAllOptionDisabled: boolean;
+  isDisableAllOptionDisabled: boolean;
 }
 const ProjectToolbar: React.FunctionComponent<IProjectToolbarProps &
   ToolbarContentProps> = ({
@@ -50,7 +52,7 @@ const ProjectToolbar: React.FunctionComponent<IProjectToolbarProps &
   onSearch,
   onDelete,
   isDeleteAllDisabled,
-  onSelectDeleteAll,
+  onSelectKebabOption,
   sortValue,
   setSortValue,
   onClearAllFilters,
@@ -59,7 +61,9 @@ const ProjectToolbar: React.FunctionComponent<IProjectToolbarProps &
   setNameInput,
   setNameSpaceInput,
   onSelectAllProjects,
-  isAllProjectSelected
+  isAllProjectSelected,
+  isEnableAllOptionDisabled,
+  isDisableAllOptionDisabled
 }) => {
   const { width } = useWindowDimensions();
   const toolbarItems = (
@@ -103,8 +107,10 @@ const ProjectToolbar: React.FunctionComponent<IProjectToolbarProps &
       </ToolbarItem>
       <ToolbarItem data-codemods="true">
         <ProjectListKebab
-          onSelectDeleteAll={onSelectDeleteAll}
+          onSelectKebabOption={onSelectKebabOption}
           isDeleteAllDisabled={isDeleteAllDisabled}
+          isEnableAllOptionDisabled={isEnableAllOptionDisabled}
+          isDisableAllOptionDisabled={isDisableAllOptionDisabled}
         />
       </ToolbarItem>
     </>
