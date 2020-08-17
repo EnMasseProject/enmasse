@@ -32,7 +32,7 @@ export const Deadletter: React.FunctionComponent<IExpiryQueueProps> = ({
 }) => {
   return (
     <FormGroup
-      label="Deadletter Queue"
+      label="Deadletter Address"
       isRequired={false}
       fieldId="addr-configuration-deadletter-dropdown"
     >

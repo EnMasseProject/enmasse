@@ -139,7 +139,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
             {deadletter && deadletter.trim() !== "" && (
               <>
                 <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
-                  Deadletter Queue
+                  Deadletter Address
                 </GridItem>
                 <GridItem span={8}>{deadletter}</GridItem>
               </>
@@ -147,7 +147,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
             {expiryQueue && expiryQueue.trim() !== "" && (
               <>
                 <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
-                  Expiry Queue
+                  Expiry Address
                 </GridItem>
                 <GridItem span={8}>{expiryQueue}</GridItem>
               </>
