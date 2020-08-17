@@ -67,7 +67,7 @@ public class OLMOperatorManager {
 
         if (installation == OLMInstallationType.SPECIFIC) {
             Path operatorGroupFile = Files.createTempFile("operatorgroup", ".yaml");
-            String operatorGroup = Files.readString(Paths.get("custom-operator-registry", "operator-group.yaml"));
+            String operatorGroup = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "operator-group.yaml"));
             Files.writeString(operatorGroupFile, operatorGroup.replaceAll("\\$\\{OPERATOR_NAMESPACE}", namespace));
             KubeCMDClient.applyFromFile(namespace, operatorGroupFile);
         }
@@ -95,7 +95,7 @@ public class OLMOperatorManager {
 
     public void deployCatalogSource(String catalogNamespace) throws IOException {
         Path catalogSourceFile = Files.createTempFile("catalogsource", ".yaml");
-        String catalogSource = Files.readString(Paths.get("custom-operator-registry", "catalog-source.yaml"));
+        String catalogSource = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "catalog-source.yaml"));
         Files.writeString(catalogSourceFile,
                 catalogSource
                     .replaceAll("\\$\\{OPERATOR_NAMESPACE}", catalogNamespace));
