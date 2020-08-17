@@ -56,7 +56,6 @@ export default function DeviceListPage() {
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const [selectedDevices, setSelectedDevices] = useState<IDevice[]>([]);
-  const [filter, setFilter] = useState<IDeviceFilter>(getInitialFilter());
   const [appliedFilter, setAppliedFilter] = useState<IDeviceFilter>(
     getInitialFilter()
   );
@@ -302,7 +301,6 @@ export default function DeviceListPage() {
   ];
 
   const resetFilter = () => {
-    setFilter(getInitialFilter());
     setAppliedFilter(getInitialFilter());
   };
 
@@ -342,12 +340,7 @@ export default function DeviceListPage() {
           <GridItem span={3}>
             <Card>
               <CardBody>
-                <DeviceFilter
-                  filter={filter}
-                  setFilter={setFilter}
-                  runFilter={runFilter}
-                  resetFilter={resetFilter}
-                />
+                <DeviceFilter runFilter={runFilter} resetFilter={resetFilter} />
               </CardBody>
             </Card>
           </GridItem>

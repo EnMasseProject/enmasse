@@ -35,7 +35,7 @@ import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
 import { useMutationQuery } from "hooks";
 import { NoDataFound } from "components";
 import { ActionManager } from "modules/iot-device-detail/components";
-import { DialogTypes, FetchPolicy } from "constant";
+import { DialogTypes, FetchPolicy, POLL_INTERVAL } from "constant";
 import {
   getDetailForDialog,
   getHeaderForDialog

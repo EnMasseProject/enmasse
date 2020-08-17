@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Form,
   FormGroup,
@@ -14,7 +14,11 @@ import {
   ButtonVariant,
   Split,
   SplitItem,
-  DropdownItem
+  DropdownItem,
+  Grid,
+  GridItem,
+  ChipGroup,
+  Chip
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
 import { DropdownWithToggle, DropdownWithKebabToggle } from "components";
@@ -23,10 +27,12 @@ import { IDeviceFilterCriteria } from "modules/iot-device";
 import { AddCriteria } from "./AddCriteria";
 import { LastSeenFilterSection } from "./LastSeenFilterSection";
 import { DateFilterSection } from "./DateFilterSection";
+import { GatewayGroupTypeAheadSelect } from "containers";
 import {
   deviceTypeOptions,
   deviceStatusOptions,
-  getInitialFilter
+  getInitialFilter,
+  deviceGatewayConnectionOptions
 } from "modules/iot-device/utils";
 
 const styles = StyleSheet.create({
@@ -34,7 +40,8 @@ const styles = StyleSheet.create({
     padding: 20
   },
   dropdown_align: { display: "flex" },
-  dropdown_toggle_align: { flex: "1" }
+  dropdown_toggle_align: { flex: "1" },
+  grid_margin: { marginLeft: 10 }
 });
 
 export interface ITimeOption {
@@ -54,31 +61,36 @@ export interface IDeviceFilter {
     startDate: string;
     endDate: string;
   };
+  gatewayGroups: string[];
+  gatewayConnections: string[];
   filterCriteria: IDeviceFilterCriteria[];
 }
 
 export interface IDeviceFilterProps {
-  filter: IDeviceFilter;
-  setFilter: (filter: IDeviceFilter) => void;
   runFilter?: (filter: IDeviceFilter) => void;
   resetFilter?: () => void;
 }
 
 const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
-  filter,
-  setFilter,
   runFilter,
   resetFilter
 }) => {
+  const [filter, setFilter] = useState<IDeviceFilter>(getInitialFilter());
   const [lastAppliedFilter, setLastAppliedFilter] = useState<IDeviceFilter[]>([
     getInitialFilter()
   ]);
   const [isKebabOpen, setIsKebabOpen] = useState<boolean>(false);
   const [isRedoEnabled, setIsRedoEnabled] = useState<boolean>(false);
+  const [gatewayGroupConnection, setGatewayGroupConnection] = useState<string>(
+    deviceGatewayConnectionOptions[0].value
+  );
+  const [gatewayInput, setGatewayInput] = useState<string>("");
+
   const onClearFilter = () => {
     resetFilter && resetFilter();
     setIsKebabOpen(false);
   };
+
   const onRedoFilter = () => {
     const lastFilterLength = lastAppliedFilter.length;
     const lastFilter = createDeepCopy({
@@ -97,6 +109,22 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
     setFilter(filterObj);
   };
 
+  const setSelectedGatewayGroups = (connections: string[]) => {
+    const filterObj = { ...filter };
+    filterObj.gatewayGroups = connections;
+    setFilter(filterObj);
+  };
+
+  const onSelectGatewayGroup = (_: any, selection: any) => {
+    const { gatewayGroups } = filter;
+    if (gatewayGroups?.includes(selection)) {
+      setSelectedGatewayGroups(
+        gatewayGroups.filter((item: string) => item !== selection)
+      );
+    } else {
+      setSelectedGatewayGroups([...gatewayGroups, selection]);
+    }
+  };
   const onTypeSelect = (value: string) => {
     const filterObj = { ...filter };
     filterObj.deviceType = value;
@@ -121,6 +149,40 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
   const isEnabledRunFilter = () => {
     return compareObject(Object.assign({}, filter), getInitialFilter());
   };
+  const onClear = () => {
+    setSelectedGatewayGroups([]);
+  };
+
+  const onChangeGatewayConnection = (value: string) => {
+    setGatewayInput(value);
+  };
+
+  const onGatewayConnectionSelect = (value: string) => {
+    setGatewayGroupConnection(value);
+  };
+
+  const setSelectedGroupConnections = (connections: string[]) => {
+    const filterObj = { ...filter };
+    filterObj.gatewayConnections = connections;
+    setFilter(filterObj);
+  };
+
+  const deleteGatewayConnection = (chip?: string) => {
+    const { gatewayConnections } = filter;
+    if (gatewayConnections?.length > 0 && chip && chip.trim() !== "") {
+      let index = gatewayConnections.indexOf(chip.toString());
+      if (index >= 0) gatewayConnections.splice(index, 1);
+      setSelectedGroupConnections([...gatewayConnections]);
+    }
+  };
+
+  const addGatewayConnection = () => {
+    const { gatewayConnections } = filter;
+    if (gatewayInput && gatewayInput.trim() !== "") {
+      setSelectedGroupConnections([...gatewayConnections, gatewayInput]);
+      setGatewayInput("");
+    }
+  };
 
   const kebabDropdownItems = [
     <DropdownItem
@@ -141,7 +203,13 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
       Clear all
     </DropdownItem>
   ];
-  const { deviceId, deviceType, status } = filter;
+  const {
+    deviceId,
+    deviceType,
+    status,
+    gatewayGroups,
+    gatewayConnections
+  } = filter;
 
   const FilterActions = () => (
     <Split>
@@ -219,6 +287,80 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
         </FormGroup>
         <FormGroup label="Added date" fieldId="filter-device-added-date">
           <DateFilterSection filter={filter} setFilter={setFilter} />
+        </FormGroup>
+        <FormGroup
+          label="Gateway group membership"
+          fieldId="device-filter-gateway-membership-group-input"
+        >
+          <GatewayGroupTypeAheadSelect
+            id="add-gateway-group-membership-typeahead-select"
+            aria-label="gateway group membership dropdown"
+            aria-describedby="multi typeahead for gateway groups membership"
+            onSelect={onSelectGatewayGroup}
+            onClear={onClear}
+            selected={gatewayGroups}
+            typeAheadAriaLabel={"typeahead to select gateway group membership"}
+            isMultiple={true}
+            placeholderText={"Input gateway group name"}
+          />
+        </FormGroup>
+
+        <FormGroup
+          label="Gateway connections"
+          fieldId="device-gateway-connection-dropdowntoggle"
+        >
+          <Grid>
+            <GridItem span={4}>
+              <DropdownWithToggle
+                id={"device-filter-gateway-conn-dropdown"}
+                toggleId="device-filter-gateway-conn-dropdowntoggle"
+                name="Device Connections"
+                className={css(styles.dropdown_align)}
+                toggleClass={css(styles.dropdown_toggle_align)}
+                position={DropdownPosition.left}
+                onSelectItem={onGatewayConnectionSelect}
+                dropdownItems={deviceGatewayConnectionOptions}
+                value={gatewayGroupConnection}
+                isLabelAndValueNotSame={true}
+              />
+            </GridItem>
+            <GridItem span={5} className={css(styles.grid_margin)}>
+              <TextInput
+                isRequired
+                type="text"
+                id="device-filter-gateway-connection-input"
+                placeholder="Input gateway"
+                name="gateway-connection"
+                aria-describedby="gateway connection for filter"
+                value={gatewayInput}
+                onChange={onChangeGatewayConnection}
+              />
+            </GridItem>
+            <GridItem span={3} className={css(styles.grid_margin)}>
+              <Button
+                variant={ButtonVariant.primary}
+                id="device-filter-add-gateway-conn-btn"
+                isDisabled={
+                  gatewayGroupConnection.trim() === "" ||
+                  gatewayInput.trim() === ""
+                }
+                onClick={addGatewayConnection}
+              >
+                Add
+              </Button>
+            </GridItem>
+          </Grid>
+          <br />
+          <ChipGroup>
+            {gatewayConnections.map(currentChip => (
+              <Chip
+                key={currentChip}
+                onClick={() => deleteGatewayConnection(currentChip)}
+              >
+                {currentChip}
+              </Chip>
+            ))}
+          </ChipGroup>
         </FormGroup>
         <Divider />
         <FormGroup label="" fieldId="filter-criteria-paramter">

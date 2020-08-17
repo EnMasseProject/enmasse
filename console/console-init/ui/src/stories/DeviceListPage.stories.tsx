@@ -121,7 +121,10 @@ const Data = (
     <GridItem span={3}>
       <Card>
         <CardBody>
-          <DeviceFilter filter={getInitialFilter()} setFilter={() => {}} />
+          <DeviceFilter
+            runFilter={action("Run filter")}
+            resetFilter={action("Reset fitler")}
+          />
         </CardBody>
       </Card>
     </GridItem>
