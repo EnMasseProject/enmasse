@@ -74,6 +74,7 @@ replace_images: prepare
 					  -e 's,\$${HONO_IMAGE},$(HONO_IMAGE),g' \
 					  -e 's,\$${CONTROLLER_MANAGER_IMAGE},$(CONTROLLER_MANAGER_IMAGE),g' \
 					  -e 's,\$${OLM_MANIFEST_IMAGE},$(OLM_MANIFEST_IMAGE),g' \
+					  -e 's,\$${OLM_INDEX_IMAGE},$(OLM_INDEX_IMAGE),g' \
 					  -e 's,\$${CONSOLE_SERVER_IMAGE},$(CONSOLE_SERVER_IMAGE),g' \
 					  -e 's,\$${CONSOLE_INIT_IMAGE},$(CONSOLE_INIT_IMAGE),g' \
 					  -e 's,\$${CONSOLE_PROXY_OPENSHIFT_IMAGE},$(CONSOLE_PROXY_OPENSHIFT_IMAGE),g' \

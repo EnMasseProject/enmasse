@@ -140,7 +140,6 @@
         <module>controller-manager</module>
         <module>console</module>
         <module>olm-manifest</module>
-        <module>olm-index</module>
         <module>templates</module>
     </modules>
 

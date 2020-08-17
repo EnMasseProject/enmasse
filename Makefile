@@ -15,8 +15,7 @@ DOCKER_DIRS = \
 	keycloak-plugin \
 	service-broker \
 	console/console-init \
-	olm-manifest \
-	olm-index
+	olm-manifest
 
 FULL_BUILD       = true
 GOOPTS          ?= -mod=vendor
@@ -50,6 +49,12 @@ build_java: build_go templates
 	$(IMAGE_ENV) IMAGE_ENV="$(IMAGE_ENV)" mvn package $(MAVEN_ARGS)
 
 build_go: $(GO_DIRS) test_go
+
+olmindex:
+	$(MAKE) -C olm-index docker_build docker_tag
+
+olmindex_push:
+	$(MAKE) -C olm-index docker_push
 
 imageenv:
 	@echo $(IMAGE_ENV) > imageenv.txt

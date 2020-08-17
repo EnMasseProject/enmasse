@@ -7,6 +7,6 @@ metadata:
     app: enmasse
 spec:
   displayName: EnMasse Operator Source
-  image: ${OLM_MANIFEST_IMAGE}
+  image: ${OLM_INDEX_IMAGE}
   publisher: enmasse
   sourceType: grpc
