@@ -99,15 +99,15 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
           id="addr-detail-header-deadletter-flexitem"
           className={css(styles.flex_left_border)}
         >
-          Deadletter Queue : <b>{deadletter}</b>
+          Deadletter Address : <b>{deadletter}</b>
         </FlexItem>
       )}
       {expiryQueue && expiryQueue !== null && (
         <FlexItem
-          id="addr-detail-header-deadletter-flexitem"
+          id="addr-detail-header-expiry-address-flexitem"
           className={css(styles.flex_left_border)}
         >
-          Expiry Queue : <b>{expiryQueue}</b>
+          Expiry Address : <b>{expiryQueue}</b>
         </FlexItem>
       )}
       {type && (type === "anycast" || type === "multicast") ? (
