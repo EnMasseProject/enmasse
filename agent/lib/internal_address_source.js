@@ -260,8 +260,6 @@ AddressSource.prototype.update_status = function (record, ready) {
             } else if (address.status.planStatus.resources) {
                 delete address.status.planStatus.resources;
                 updated++;
-            } else {
-                address.status.planStatus.resources = {};
             }
 
             var minimumTtl;
