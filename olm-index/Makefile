@@ -1,6 +1,6 @@
 include ../Makefile.common
 
-OPM_ARGS ?= --skip-tls
+OPM_ARGS ?= --skip-tls -u docker -p docker
 
 image_deps:: Dockerfile
 
