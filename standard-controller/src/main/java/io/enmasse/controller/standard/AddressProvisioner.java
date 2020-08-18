@@ -88,43 +88,46 @@ public class AddressProvisioner {
         AddressPlanStatus appliedPlan = addressResolver.getAppliedPlan(address)
                 .orElseGet(() -> AddressPlanStatus.fromAddressPlan(addressResolver.getDesiredPlan(address)));
 
-        for (Map.Entry<String, Double> resourceRequest : appliedPlan.getResources().entrySet()) {
-            if ("subscription".equals(address.getSpec().getType())) {
-                if (address.getStatus().getBrokerStatuses().isEmpty()) {
-                    log.warn("Unexpected pooled address without cluster id: " + address.getSpec().getAddress());
-                    return;
-                }
-                for (BrokerStatus status : address.getStatus().getBrokerStatuses()) {
-                    if (BrokerState.Active.equals(status.getState())) {
-                        addToUsage(usageMap, status.getContainerId(), "subscription", resourceRequest.getValue());
+        if (appliedPlan.getResources() != null) {
+            for (Map.Entry<String, Double> resourceRequest : appliedPlan.getResources().entrySet()) {
+                if ("subscription".equals(address.getSpec().getType())) {
+                    if (address.getStatus().getBrokerStatuses().isEmpty()) {
+                        log.warn("Unexpected pooled address without cluster id: " + address.getSpec().getAddress());
+                        return;
                     }
-                }
-            } else if (resourceRequest.getKey().equals("router")) {
-                addToUsage(usageMap, "all", "router", resourceRequest.getValue());
-
-            } else if (resourceRequest.getKey().equals("broker") && ("queue".equals(addressType.getName()) || resourceRequest.getValue() < 1)) {
-                if (address.getStatus().getBrokerStatuses().isEmpty()) {
-                    log.warn("Unexpected pooled address without assigned cluster: " + address.getSpec().getAddress());
-                    return;
-                }
-                for (BrokerStatus status : address.getStatus().getBrokerStatuses()) {
-                    if (BrokerState.Active.equals(status.getState())) {
-                        addToUsage(usageMap, status.getClusterId(), "broker", getPartitionedCredits(resourceRequest.getValue(), appliedPlan.getPartitions()));
+                    for (BrokerStatus status : address.getStatus().getBrokerStatuses()) {
+                        if (BrokerState.Active.equals(status.getState())) {
+                            addToUsage(usageMap, status.getContainerId(), "subscription", resourceRequest.getValue());
+                        }
                     }
-                }
+                } else if (resourceRequest.getKey().equals("router")) {
+                    addToUsage(usageMap, "all", "router", resourceRequest.getValue());
 
-            } else if (resourceRequest.getKey().equals("broker")) {
-                if (address.getStatus().getBrokerStatuses().isEmpty()) {
-                    log.warn("Unexpected sharded address without assigned cluster: " + address.getSpec().getAddress());
-                    return;
-                }
-                for (BrokerStatus status : address.getStatus().getBrokerStatuses()) {
-                    if (BrokerState.Active.equals(status.getState())) {
-                        addToUsage(usageMap, status.getClusterId(), "broker", resourceRequest.getValue());
+                } else if (resourceRequest.getKey().equals("broker") && ("queue".equals(addressType.getName()) || resourceRequest.getValue() < 1)) {
+                    if (address.getStatus().getBrokerStatuses().isEmpty()) {
+                        log.warn("Unexpected pooled address without assigned cluster: " + address.getSpec().getAddress());
+                        return;
+                    }
+                    for (BrokerStatus status : address.getStatus().getBrokerStatuses()) {
+                        if (BrokerState.Active.equals(status.getState())) {
+                            addToUsage(usageMap, status.getClusterId(), "broker", getPartitionedCredits(resourceRequest.getValue(), appliedPlan.getPartitions()));
+                        }
+                    }
+
+                } else if (resourceRequest.getKey().equals("broker")) {
+                    if (address.getStatus().getBrokerStatuses().isEmpty()) {
+                        log.warn("Unexpected sharded address without assigned cluster: " + address.getSpec().getAddress());
+                        return;
+                    }
+                    for (BrokerStatus status : address.getStatus().getBrokerStatuses()) {
+                        if (BrokerState.Active.equals(status.getState())) {
+                            addToUsage(usageMap, status.getClusterId(), "broker", resourceRequest.getValue());
+                        }
                     }
                 }
             }
-
+        } else {
+            log.info("Not adding usage for address {}. Plan has no resources defined", address);
         }
     }
 

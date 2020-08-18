@@ -34,7 +34,7 @@ public class AddressPlanStatus extends AbstractWithAdditionalProperties {
     private String name;
     @NotNull
     private Integer partitions;
-    @NotNull
+
     private Map<String, Double> resources;
 
     public String getName() {
