@@ -157,7 +157,7 @@ pipeline {
                 dir('enmasse') {
                     script {
                         enmasse.addSystemPullerRights(env.KUBERNETES_NAMESPACE, env.DOCKER_ORG)
-                        enmasse.addExternalRegistry(env.DOCKER_REGISTRY)
+                        enmasse.addExternalRegistry(env.DOCKER_REGISTRY, true)
                         enmasse.buildEnmasse()
                         enmasse.pushImages()
                     }
