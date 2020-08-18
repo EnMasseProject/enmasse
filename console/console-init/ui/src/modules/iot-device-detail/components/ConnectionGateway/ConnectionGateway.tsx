@@ -4,21 +4,18 @@
  */
 
 import React from "react";
-import { Link } from "react-router-dom";
 import { useParams } from "react-router";
 import {
   Card,
-  Flex,
-  FlexItem,
   CardBody,
   Title,
-  Text,
   Popover,
   Button,
   CardTitle
 } from "@patternfly/react-core";
 import { OutlinedQuestionCircleIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "aphrodite";
+import { GatewayItems } from "modules/iot-device-detail/components/ConnectionGateway";
 
 export interface IConnectionGatewayProps {
   deviceList?: string[];
@@ -67,43 +64,21 @@ export const ConnectionGateway: React.FC<IConnectionGatewayProps> = ({
       </CardTitle>
       <CardBody>
         {deviceList && deviceList.length > 0 && (
-          <>
-            <Text>Gateway Devices</Text>
-            <Flex>
-              {deviceList.map((deviceId: string) => {
-                return (
-                  <FlexItem span={2} key={deviceId}>
-                    <Link
-                      id="device-info-id-link"
-                      to={`/iot-projects/${namespace}/${projectname}/devices/${deviceId}/device-info`}
-                    >
-                      {deviceId}
-                    </Link>
-                  </FlexItem>
-                );
-              })}
-            </Flex>
-          </>
+          <GatewayItems
+            title="Gateway Devices"
+            gateways={deviceList}
+            projectname={projectname}
+            namespace={namespace}
+          />
         )}
         <br />
         {gatewayGroups && gatewayGroups.length > 0 && (
-          <>
-            <Text>Gateway Groups</Text>
-            <Flex>
-              {gatewayGroups.map((group: string) => {
-                return (
-                  <FlexItem span={2} key={group}>
-                    <Link
-                      id="device-info-id-link"
-                      to={`/iot-projects/${namespace}/${projectname}/devices/${group}/device-info`}
-                    >
-                      {group}
-                    </Link>
-                  </FlexItem>
-                );
-              })}
-            </Flex>
-          </>
+          <GatewayItems
+            title="Gateway Groups"
+            gateways={gatewayGroups}
+            projectname={projectname}
+            namespace={namespace}
+          />
         )}
       </CardBody>
     </Card>

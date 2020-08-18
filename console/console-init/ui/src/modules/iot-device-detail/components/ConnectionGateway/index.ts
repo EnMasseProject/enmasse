@@ -4,3 +4,4 @@
  */
 
 export * from "./ConnectionGateway";
+export * from "./GatewayItems";
