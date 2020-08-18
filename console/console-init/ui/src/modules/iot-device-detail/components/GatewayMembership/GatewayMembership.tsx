@@ -70,14 +70,14 @@ export const GatewayMembership: React.FC<IGatewayMembershipProps> = ({
         <Flex>
           <br />
           {memberOf &&
-            memberOf.map((deviceId: string) => {
+            memberOf.map((group: string) => {
               return (
-                <FlexItem span={2} key={deviceId}>
+                <FlexItem span={2} key={group}>
                   <Link
                     id="device-info-id-link"
-                    to={`/iot-projects/${namespace}/${projectname}/devices/${deviceId}/device-info`}
+                    to={`/iot-projects/${namespace}/${projectname}/devices/${group}/device-info`}
                   >
-                    {deviceId}
+                    {group}
                   </Link>
                 </FlexItem>
               );
