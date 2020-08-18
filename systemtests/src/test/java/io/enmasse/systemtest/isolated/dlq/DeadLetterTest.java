@@ -71,7 +71,7 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
     }
 
     @ParameterizedTest(name = "testAddressSpecified-{0}-space")
-    @ValueSource(strings = {"brokered"})
+    @ValueSource(strings = {"standard", "brokered"})
     void testAddressSpecified(String type) throws Exception {
         doTestMessageRedelivery(AddressSpaceType.getEnum(type), AddressType.QUEUE, null, new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(2).build(),
                 new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(2).build());
