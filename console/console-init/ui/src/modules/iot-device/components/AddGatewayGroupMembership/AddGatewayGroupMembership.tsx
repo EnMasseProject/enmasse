@@ -7,16 +7,14 @@ import React, { useState, useEffect } from "react";
 import {
   Grid,
   GridItem,
-  Title,
   Button,
   ButtonVariant,
   Popover,
-  PopoverPosition,
-  ChipGroup,
-  Chip
+  PopoverPosition
 } from "@patternfly/react-core";
 import { ExclamationCircleIcon } from "@patternfly/react-icons";
 import { GatewayGroupTypeAheadSelect } from "containers";
+import { ChipGroupsWithTitle } from "components";
 import { StyleSheet, css } from "aphrodite";
 
 const styles = StyleSheet.create({
@@ -81,34 +79,6 @@ export const AddGatewayGroupMembership: React.FC<IAddGatewayGroupMembershipProps
     }
   };
 
-  const renderGatewayGroups = () => {
-    return (
-      <div className={css(styles.groups_min_height)}>
-        {gatewayGroups?.length > 0 && (
-          <>
-            <br />
-            <Title size="md" headingLevel="h4">
-              Selected gateway groups:
-            </Title>
-            <br />
-            <ChipGroup>
-              {gatewayGroups?.map((group: string) => (
-                <Chip
-                  key={group}
-                  id={`add-gateway-group-remove-chip-${group}`}
-                  value={group}
-                  onClick={() => removeGatewayGroup(group)}
-                >
-                  {group}
-                </Chip>
-              ))}
-            </ChipGroup>
-          </>
-        )}
-      </div>
-    );
-  };
-
   return (
     <Grid id={id} hasGutter>
       <GridItem>
@@ -159,7 +129,15 @@ export const AddGatewayGroupMembership: React.FC<IAddGatewayGroupMembershipProps
           Add
         </Button>
       </GridItem>
-      <GridItem>{renderGatewayGroups()}</GridItem>
+      <GridItem className={css(styles.groups_min_height)}>
+        <ChipGroupsWithTitle
+          id="gateway-group-membership-chipgroups"
+          titleId="gateway-group-membership-title"
+          title={"Selected gateway groups"}
+          items={gatewayGroups}
+          removeItem={removeGatewayGroup}
+        />
+      </GridItem>
     </Grid>
   );
 };

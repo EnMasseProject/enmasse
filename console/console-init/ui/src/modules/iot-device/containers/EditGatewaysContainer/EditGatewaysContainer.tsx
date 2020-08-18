@@ -2,7 +2,6 @@
  * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-
 import React, { useState } from "react";
 import { useParams } from "react-router";
 import { useQuery } from "@apollo/react-hooks";
@@ -13,8 +12,8 @@ import { RETURN_IOT_DEVICE_DETAIL } from "graphql-module";
 import { IDeviceDetailResponse } from "schema";
 
 const styles = StyleSheet.create({
-  button_padding: {
-    paddingTop: 100
+  min_height: {
+    "min-height": "35rem"
   }
 });
 
@@ -50,14 +49,15 @@ export const EditGatewaysContainer: React.FC<{
 
   return (
     <>
-      <AddGateways
-        gatewayDevices={gatewayList}
-        gatewayGroups={gatewayGroupList}
-        header={`Edit gateways of device ${deviceid}`}
-        returnGatewayDevices={getGatewayDevices}
-        returnGatewayGroups={getGatewayGroups}
-      />
-      <Flex className={css(styles.button_padding)}>
+      <div className={css(styles.min_height)}>
+        <AddGateways
+          gatewayDevices={gatewayList}
+          gatewayGroups={gatewayGroupList}
+          returnGatewayDevices={getGatewayDevices}
+          returnGatewayGroups={getGatewayGroups}
+        />
+      </div>
+      <Flex>
         <FlexItem>
           <Button
             id="edit-gateways-container-save-button"
