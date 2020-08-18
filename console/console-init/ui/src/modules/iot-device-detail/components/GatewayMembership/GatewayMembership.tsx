@@ -33,6 +33,10 @@ const styles = StyleSheet.create({
   },
   tooltip_margin: {
     paddingRight: "3.125rem"
+  },
+  popover_btn: {
+    color: "var(--pf-global--palette--black-1000)",
+    paddingLeft: "0"
   }
 });
 
@@ -60,6 +64,7 @@ export const GatewayMembership: React.FC<IGatewayMembershipProps> = ({
             <Button
               variant="link"
               id="gateway-membership-help-button"
+              className={css(styles.popover_btn)}
               icon={<OutlinedQuestionCircleIcon />}
             ></Button>
           </Popover>

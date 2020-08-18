@@ -28,6 +28,10 @@ export interface IConnectionGatewayProps {
 const styles = StyleSheet.create({
   card_body: {
     marginBottom: "1.25rem"
+  },
+  popover_btn: {
+    color: "var(--pf-global--palette--black-1000)",
+    paddingLeft: "0"
   }
 });
 
@@ -55,6 +59,7 @@ export const ConnectionGateway: React.FC<IConnectionGatewayProps> = ({
             <Button
               variant="link"
               id="connection-gateway-help-button"
+              className={css(styles.popover_btn)}
               icon={<OutlinedQuestionCircleIcon />}
             ></Button>
           </Popover>
