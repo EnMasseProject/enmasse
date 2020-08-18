@@ -31,9 +31,9 @@ import { GatewayGroupTypeAheadSelect } from "containers";
 import {
   deviceTypeOptions,
   deviceStatusOptions,
-  getInitialFilter,
-  deviceGatewayConnectionOptions
+  getInitialFilter
 } from "modules/iot-device/utils";
+import { GatewayFilter } from "./GatewayFilter";
 
 const styles = StyleSheet.create({
   time_input_box: {
@@ -81,10 +81,6 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
   ]);
   const [isKebabOpen, setIsKebabOpen] = useState<boolean>(false);
   const [isRedoEnabled, setIsRedoEnabled] = useState<boolean>(false);
-  const [gatewayGroupConnection, setGatewayGroupConnection] = useState<string>(
-    deviceGatewayConnectionOptions[0].value
-  );
-  const [gatewayInput, setGatewayInput] = useState<string>("");
 
   const onClearFilter = () => {
     resetFilter && resetFilter();
@@ -115,7 +111,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
     setFilter(filterObj);
   };
 
-  const onSelectGatewayGroup = (_: any, selection: any) => {
+  const onSelectGatewayGroup = (_event: any, selection: any) => {
     const { gatewayGroups } = filter;
     if (gatewayGroups?.includes(selection)) {
       setSelectedGatewayGroups(
@@ -153,37 +149,6 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
     setSelectedGatewayGroups([]);
   };
 
-  const onChangeGatewayConnection = (value: string) => {
-    setGatewayInput(value);
-  };
-
-  const onGatewayConnectionSelect = (value: string) => {
-    setGatewayGroupConnection(value);
-  };
-
-  const setSelectedGroupConnections = (connections: string[]) => {
-    const filterObj = { ...filter };
-    filterObj.gatewayConnections = connections;
-    setFilter(filterObj);
-  };
-
-  const deleteGatewayConnection = (chip?: string) => {
-    const { gatewayConnections } = filter;
-    if (gatewayConnections?.length > 0 && chip && chip.trim() !== "") {
-      let index = gatewayConnections.indexOf(chip.toString());
-      if (index >= 0) gatewayConnections.splice(index, 1);
-      setSelectedGroupConnections([...gatewayConnections]);
-    }
-  };
-
-  const addGatewayConnection = () => {
-    const { gatewayConnections } = filter;
-    if (gatewayInput && gatewayInput.trim() !== "") {
-      setSelectedGroupConnections([...gatewayConnections, gatewayInput]);
-      setGatewayInput("");
-    }
-  };
-
   const kebabDropdownItems = [
     <DropdownItem
       key="redo-last-filter"
@@ -203,13 +168,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
       Clear all
     </DropdownItem>
   ];
-  const {
-    deviceId,
-    deviceType,
-    status,
-    gatewayGroups,
-    gatewayConnections
-  } = filter;
+  const { deviceId, deviceType, status, gatewayGroups } = filter;
 
   const FilterActions = () => (
     <Split>
@@ -293,7 +252,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
           fieldId="device-filter-gateway-membership-group-input"
         >
           <GatewayGroupTypeAheadSelect
-            id="add-gateway-group-membership-typeahead-select"
+            id="device-filter-gateway-membership-group-input"
             aria-label="gateway group membership dropdown"
             aria-describedby="multi typeahead for gateway groups membership"
             onSelect={onSelectGatewayGroup}
@@ -304,64 +263,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
             placeholderText={"Input gateway group name"}
           />
         </FormGroup>
-
-        <FormGroup
-          label="Gateway connections"
-          fieldId="device-gateway-connection-dropdowntoggle"
-        >
-          <Grid>
-            <GridItem span={4}>
-              <DropdownWithToggle
-                id={"device-filter-gateway-conn-dropdown"}
-                toggleId="device-filter-gateway-conn-dropdowntoggle"
-                name="Device Connections"
-                className={css(styles.dropdown_align)}
-                toggleClass={css(styles.dropdown_toggle_align)}
-                position={DropdownPosition.left}
-                onSelectItem={onGatewayConnectionSelect}
-                dropdownItems={deviceGatewayConnectionOptions}
-                value={gatewayGroupConnection}
-                isLabelAndValueNotSame={true}
-              />
-            </GridItem>
-            <GridItem span={5} className={css(styles.grid_margin)}>
-              <TextInput
-                isRequired
-                type="text"
-                id="device-filter-gateway-connection-input"
-                placeholder="Input gateway"
-                name="gateway-connection"
-                aria-describedby="gateway connection for filter"
-                value={gatewayInput}
-                onChange={onChangeGatewayConnection}
-              />
-            </GridItem>
-            <GridItem span={3} className={css(styles.grid_margin)}>
-              <Button
-                variant={ButtonVariant.primary}
-                id="device-filter-add-gateway-conn-btn"
-                isDisabled={
-                  gatewayGroupConnection.trim() === "" ||
-                  gatewayInput.trim() === ""
-                }
-                onClick={addGatewayConnection}
-              >
-                Add
-              </Button>
-            </GridItem>
-          </Grid>
-          <br />
-          <ChipGroup>
-            {gatewayConnections.map(currentChip => (
-              <Chip
-                key={currentChip}
-                onClick={() => deleteGatewayConnection(currentChip)}
-              >
-                {currentChip}
-              </Chip>
-            ))}
-          </ChipGroup>
-        </FormGroup>
+        <GatewayFilter filter={filter} setFilter={setFilter} />
         <Divider />
         <FormGroup label="" fieldId="filter-criteria-paramter">
           <AddCriteria filter={filter} setFilter={setFilter} />
