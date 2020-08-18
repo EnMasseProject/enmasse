@@ -6,7 +6,6 @@
 import React from "react";
 import { SwitchWith404, LazyRoute } from "use-patternfly";
 
-const getDevicesPage = () => import("modules/iot-device/DeviceListPage");
 const IoTProjectDetailInfoPage = () =>
   import("modules/iot-project-detail/IoTProjectDetailInfoPage");
 const getDeviceListPage = () => import("modules/iot-device/DeviceListPage");
@@ -28,11 +27,6 @@ export const Routes = () => (
     <LazyRoute
       path="/iot-projects/:namespace/:projectname/certificates"
       getComponent={getCertificatesPage}
-      exact={true}
-    />
-    <LazyRoute
-      path="/iot-projects/:namespace/:projectname/devices"
-      getComponent={getDevicesPage}
       exact={true}
     />
   </SwitchWith404>

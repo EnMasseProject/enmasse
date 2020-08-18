@@ -37,3 +37,4 @@ export * from "./PasswordLabel";
 export * from "./UpdatePassword";
 export * from "./PasswordInputFieldWithToggle";
 export * from "./AdapterList";
+export * from "./ChipGroupsWithTitle";

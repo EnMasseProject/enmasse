@@ -5,22 +5,25 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  Title,
   FormGroup,
   Form,
   Button,
-  Chip,
-  ChipGroup,
   GridItem,
   Grid,
-  Popover,
   DropdownPosition
 } from "@patternfly/react-core";
-import { InfoCircleIcon } from "@patternfly/react-icons";
 import { DropdownWithToggle, TypeAheadSelect } from "components";
 import "./pf-overrides.css";
 import { gatewayTypeOptions } from "modules/iot-device/utils";
 import { mockGatewayDevices, mockGatewayGroups } from "mock-data/iot_device";
+import { StyleSheet, css } from "aphrodite";
+import { ChipGroupsWithTitle } from "components";
+
+const styles = StyleSheet.create({
+  dropdown_min_width: {
+    "min-width": "12rem"
+  }
+});
 
 export interface IGatewaysProps {
   header?: string;
@@ -31,7 +34,6 @@ export interface IGatewaysProps {
 }
 
 export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
-  header = "Add permitted devices as gateways to this new device",
   gatewayDevices: deviceList = [],
   gatewayGroups: groupList = [],
   returnGatewayDevices,
@@ -114,43 +116,27 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
     setGatewaySelections([]);
   };
 
+  const getPlaceholderText = () => {
+    let placeholder =
+      inputType === "device_id"
+        ? "Input gateway device ID"
+        : "Input gateway group name";
+    return placeholder;
+  };
+
   return (
-    <Grid hasGutter>
+    <Grid>
       <GridItem span={8}>
-        <Title id="add-gateway-device-info-title" headingLevel="h3" size="2xl">
-          {header}
-        </Title>
-        <br />
-        <Popover
-          bodyContent={
-            <div>
-              In AMQ IoT, gateway devices are represented in Hono in the same
-              way as any other devices.
-            </div>
-          }
-          aria-label="Add gateway devices info popover"
-          closeBtnAriaLabel="Close Gateway Devices info popover"
-        >
-          <Button
-            variant="link"
-            id="add-gateway-info-popover-button"
-            icon={<InfoCircleIcon />}
-          >
-            How AMQ IoT handles gateways?
-          </Button>
-        </Popover>
-        <br />
-        <br />
         <Form>
           <FormGroup
-            label="Device ID of gateway"
+            label="gateway device id or gateway group name"
             id="add-gateway-form-group"
             isRequired
             helperTextInvalid="Invalid device ID"
             fieldId="add-gateway-device-id-input"
             validated="default"
           >
-            <Grid>
+            <Grid hasGutter>
               <GridItem span={2}>
                 <DropdownWithToggle
                   id="add-gateway-type-dropdown"
@@ -160,9 +146,10 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
                   onSelectItem={onTypeSelect}
                   value={inputType}
                   isLabelAndValueNotSame={true}
+                  toggleClass={css(styles.dropdown_min_width)}
                 />
               </GridItem>
-              <GridItem span={9}>
+              <GridItem span={5}>
                 <TypeAheadSelect
                   id="add-gateway-typeahead"
                   aria-label="Input gateway"
@@ -173,9 +160,10 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
                   typeAheadAriaLabel={"Typeahead to select gateway devices"}
                   isMultiple={true}
                   onChangeInput={onChangeDeviceIdInput}
+                  placeholderText={getPlaceholderText()}
                 />
               </GridItem>
-              <GridItem span={1}>
+              <GridItem span={2}>
                 <Button
                   id="add-gateway-button"
                   isDisabled={isDisableAddGatewayButton()}
@@ -189,52 +177,23 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
           </FormGroup>
         </Form>
         <br />
-        {gatewayDevices.length > 0 && (
-          <>
-            <Title id="add-gateway-id-list-title" headingLevel="h6" size="md">
-              Selected gateway devices
-            </Title>
-            <br />
-            <ChipGroup id="add-gateway-remove-chipgroup">
-              {gatewayDevices.map((deviceId: string) => (
-                <Chip
-                  key={deviceId}
-                  id={`add-gateway-remove-chip-${deviceId}`}
-                  value={deviceId}
-                  onClick={() => removeDevice(deviceId)}
-                >
-                  {deviceId}
-                </Chip>
-              ))}
-            </ChipGroup>
-          </>
-        )}
+        <br />
+        <ChipGroupsWithTitle
+          id="gateway-device-chipgroups"
+          titleId="gateway-device-title"
+          title={"Selected gateway devices"}
+          items={gatewayDevices}
+          removeItem={removeDevice}
+        />
         <br />
         <br />
-        {gatewayGroups.length > 0 && (
-          <>
-            <Title
-              id="add-gateway-group-list-title"
-              headingLevel="h6"
-              size="md"
-            >
-              Selected gateway groups
-            </Title>
-            <br />
-            <ChipGroup id="add-gateway-group-chip-group">
-              {gatewayGroups.map((group: string) => (
-                <Chip
-                  key={group}
-                  id={`add-gateway-group-remove-chip-${group}`}
-                  value={group}
-                  onClick={() => removeGatewayGroup(group)}
-                >
-                  {group}
-                </Chip>
-              ))}
-            </ChipGroup>
-          </>
-        )}
+        <ChipGroupsWithTitle
+          id="gateway-groups-chipgroups"
+          titleId="gateway-groups-title"
+          title={"Selected gateway groups"}
+          items={gatewayGroups}
+          removeItem={removeGatewayGroup}
+        />
       </GridItem>
     </Grid>
   );

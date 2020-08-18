@@ -49,8 +49,8 @@ export const ActionManager: React.FC<IActionManagerProps> = ({
           <Title
             headingLevel="h2"
             size="xl"
-            id="edit-device-title"
-            aria-label="edit device title"
+            id="edit-credentials-title"
+            aria-label="edit credentials title"
           >
             Edit credentials
           </Title>
@@ -73,6 +73,17 @@ export const ActionManager: React.FC<IActionManagerProps> = ({
               groups
             </Text>
           </>
+        );
+      case DeviceActionType.EDIT_GATEWAYS:
+        return (
+          <Title
+            headingLevel="h2"
+            size="xl"
+            id="edit-gateway-connections-title"
+            aria-label="edit gateway connections"
+          >
+            Edit gateway connections
+          </Title>
         );
       default:
         return (

@@ -80,6 +80,12 @@ export default function DeviceListPage() {
   };
   const { dispatch } = useStoreContext();
 
+  useEffect(() => {
+    dispatch({
+      type: types.RESET_DEVICE_ACTION_TYPE
+    });
+  }, []);
+
   const [setDeleteDeviceQueryVariables] = useMutationQuery(DELETE_IOT_DEVICE, [
     "devices_for_iot_project"
   ]);
