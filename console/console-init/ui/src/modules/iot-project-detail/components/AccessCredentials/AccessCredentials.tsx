@@ -219,7 +219,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
           <br />
           <Grid>
             <GridItem span={4}>
-              <b>Certificate</b>
+              <b>Tenant certificate</b>
             </GridItem>
             <GridItem span={8}>
               <Button
