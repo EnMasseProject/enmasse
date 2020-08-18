@@ -155,10 +155,12 @@ pipeline {
             }
             steps {
                 dir('enmasse') {
-                    enmasse.addSystemPullerRights(env.KUBERNETES_NAMESPACE, env.DOCKER_ORG)
-                    enmasse.addExternalRegistry(env.DOCKER_REGISTRY)
-                    enmasse.buildEnmasse()
-                    enmasse.pushImages()
+                    script {
+                        enmasse.addSystemPullerRights(env.KUBERNETES_NAMESPACE, env.DOCKER_ORG)
+                        enmasse.addExternalRegistry(env.DOCKER_REGISTRY)
+                        enmasse.buildEnmasse()
+                        enmasse.pushImages()
+                    }
                 }
             }
         }
