@@ -4,7 +4,6 @@
  */
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import { useParams } from "react-router";
 import {
   Page,
@@ -16,11 +15,11 @@ import {
   Card,
   CardBody,
   Title,
-  Text,
-  TextVariants,
   CardTitle
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
+import { ConnectionGateway } from "modules/iot-device-detail/components/ConnectionGateway";
+import { GatewayMembership } from "modules/iot-device-detail/components/GatewayMembership";
 import {
   CredentialsView,
   ICredentialsViewProps
@@ -30,10 +29,10 @@ import { ErrorStateAlert, IErrorStateAlertProps } from "./ErrorStateAlert";
 
 const styles = StyleSheet.create({
   card_body: {
-    paddingLeft: 0,
-    paddingRight: 0,
-    paddingBottom: 0,
-    minHeight: 336
+    paddingLeft: "0",
+    paddingRight: "0",
+    paddingBottom: "0",
+    minHeight: "21rem"
   }
 });
 
@@ -44,23 +43,23 @@ export interface IDeviceInfoProps
     >,
     IErrorStateAlertProps {
   id: string;
-  deviceList?: any;
+  deviceList?: string[];
+  gatewayGroups?: string[];
   metadataList?: any;
   memberOf?: string[];
-  viaGroups?: string[];
 }
 
 export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
   id,
   deviceList,
+  gatewayGroups,
   metadataList: metadetaJson,
   credentials,
   errorState,
   deleteGateways,
   deleteCredentials,
   onConfirmCredentialsStatus,
-  memberOf = [],
-  viaGroups = []
+  memberOf = []
 }) => {
   const [isHidden, setIsHidden] = useState<boolean>(false);
   const { projectname, namespace } = useParams();
@@ -69,7 +68,7 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
     registration: {
       via: deviceList,
       memberOf,
-      viaGroups,
+      viaGroups: gatewayGroups,
       ...metadetaJson
     },
     credentials
@@ -129,44 +128,14 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
         ) : (
           <Grid hasGutter>
             <GridItem span={5}>
-              <Card>
-                <CardTitle>
-                  <Title
-                    id="device-info-gateways-title"
-                    headingLevel="h1"
-                    size="2xl"
-                  >
-                    Via gateways
-                  </Title>
-                </CardTitle>
-                <CardBody>
-                  <Grid>
-                    {deviceList &&
-                      deviceList.map((deviceId: string) => {
-                        return (
-                          <GridItem span={2} key={deviceId}>
-                            <Link
-                              id="device-info-id-link"
-                              to={`/iot-projects/${namespace}/${projectname}/devices/${deviceId}/device-info`}
-                            >
-                              {deviceId}
-                            </Link>
-                          </GridItem>
-                        );
-                      })}
-                    {!(deviceList?.length > 0) && (
-                      <Text
-                        component={TextVariants.p}
-                        id="device-info-no-gateways-text"
-                      >
-                        There are no gateways for this device. This device is
-                        connected to the cloud directly.
-                      </Text>
-                    )}
-                  </Grid>
-                </CardBody>
-              </Card>
-              <br />
+              {((deviceList && deviceList?.length > 0) ||
+                (gatewayGroups && gatewayGroups?.length > 0)) && (
+                <ConnectionGateway
+                  deviceList={deviceList}
+                  gatewayGroups={gatewayGroups}
+                />
+              )}
+
               <CredentialsView
                 id={"deice-info-credentials-view"}
                 credentials={credentials}
@@ -174,6 +143,9 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
               />
             </GridItem>
             <GridItem span={7}>
+              {memberOf && memberOf?.length > 0 && (
+                <GatewayMembership memberOf={memberOf} />
+              )}
               <Card id={id}>
                 <CardTitle>
                   <Title

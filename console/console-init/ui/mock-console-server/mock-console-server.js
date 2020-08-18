@@ -2199,8 +2199,8 @@ createIotDevice("iotProjectFrance", {
   enabled: true,
   registration: {
     via: ["device-1", "device-2"],
-    viaGroups: [],
-    memberOf: [],
+    viaGroups: ["Group 1", "Group 2", "Group 3", "Group 4", "Group 5"],
+    memberOf: ["Group XI", "Group XII"],
     ext: JSON.stringify({ summit: "Mt Blanc" })
   },
   status: getIotDeviceStatusSection(),
