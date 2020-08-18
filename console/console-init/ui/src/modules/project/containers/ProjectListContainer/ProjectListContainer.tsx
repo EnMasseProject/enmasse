@@ -172,7 +172,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
           data: project,
           onConfirm: onDeleteProject,
           option: "Delete",
-          detail: `All data will be deleted and recoverable`,
+          detail: `All data will be deleted and unrecoverable`,
           header: "Delete this IoT Project ?",
           confirmButtonLabel: "Delete",
           iconType: "danger"
@@ -245,7 +245,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
         data: project,
         onConfirm: () => handleOnChangeEnable(project),
         option: "Disable",
-        detail: `Devices under this project will stop sending and receving messages and commands with the system`,
+        detail: `Devices under this project will stop sending and receiving messages and commands with the system`,
         header: "Disable this IoT Project ?",
         confirmButtonLabel: "Disable"
       }
