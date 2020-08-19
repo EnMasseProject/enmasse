@@ -4,8 +4,8 @@
  */
 
 const UNKNOWN: string = "unknown";
-const POLL_INTERVAL: number = 5000;
-const POLL_INTERVAL_USER: number = 20000;
+const POLL_INTERVAL: number = 5000000;
+const POLL_INTERVAL_USER: number = 200000;
 const QUERY: string = "query";
 const MAX_ITEM_TO_FETCH_IN_TYPEAHEAD_DROPDOWN = 10;
 const NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA = 10;

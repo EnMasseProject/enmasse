@@ -37,6 +37,12 @@ interface IAddressPlans {
   }>;
 }
 
+interface IPatchObject {
+  op: string;
+  path: string;
+  value: string | null;
+}
+
 export const EditAddress: React.FunctionComponent = () => {
   const { state, dispatch } = useStoreContext();
   const { modalProps } = (state && state.modal) || {};
@@ -154,6 +160,28 @@ export const EditAddress: React.FunctionComponent = () => {
     }
   };
 
+  const getJsonPatchObject = (
+    op: string,
+    path: string,
+    value: string | null
+  ) => {
+    let patchObject: IPatchObject;
+    if (!value || value.trim() === "" || value.trim() === "null") {
+      patchObject = {
+        op: op,
+        path: path,
+        value: null
+      };
+    } else {
+      patchObject = {
+        op: op,
+        path: path,
+        value: value.trim()
+      };
+    }
+    return JSON.stringify(patchObject);
+  };
+
   const onConfirmDialog = async () => {
     if (address && plan && deadletterAddress && expiryAddress) {
       const variables = {
@@ -162,15 +190,24 @@ export const EditAddress: React.FunctionComponent = () => {
           namespace: address.namespace
         },
         jsonPatch:
-          '[{"op":"replace","path":"/spec/plan","value":"' +
-          plan.value +
-          '"},{"op":"replace","path":"/spec/deadLetterAddress","value":"' +
-          deadletterAddress.value +
-          '"},{"op":"replace","path":"/spec/expiryAddress","value":"' +
-          expiryAddress.value +
-          '"}]',
+          "[" +
+          getJsonPatchObject("replace", "/spec/plan", plan.value) +
+          "," +
+          getJsonPatchObject(
+            "replace",
+            "/spec/deadLetterAddress",
+            deadletterAddress.value
+          ) +
+          "," +
+          getJsonPatchObject(
+            "replace",
+            "/spec/expiryAddress",
+            expiryAddress.value
+          ) +
+          "]",
         patchType: "application/json-patch+json"
       };
+      console.log("varaible", variables);
       await setEditAddressQueryVariables(variables);
       onCloseDialog();
       if (onConfirm) {
