@@ -29,7 +29,7 @@ export interface IAddressDefinition extends IAddressConfigurationProps {
   addressSpaceType?: string;
   setTopic: (value: string) => void;
   setDeadletter: (value: string) => void;
-  setExpiryQueue: (value: string) => void;
+  setExpiryAddress: (value: string) => void;
   setTypeOptions: (values: IDropdownOption[]) => void;
   setPlanOptions: (values: IDropdownOption[]) => void;
 }
@@ -75,8 +75,8 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
   typeOptions,
   setTypeOptions,
   deadletter,
-  expiryQueue,
-  setExpiryQueue,
+  expiryAddress,
+  setExpiryAddress,
   setDeadletter,
   planOptions,
   setPlanOptions
@@ -191,8 +191,8 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
   const onDeadletterSelect = (value: string) => {
     setDeadletter(value);
   };
-  const onExpiryQueueSelect = (value: string) => {
-    setExpiryQueue(value);
+  const onExpiryAddressSelect = (value: string) => {
+    setExpiryAddress(value);
   };
 
   const types: IDropdownOption[] = addressTypes_v2.map(type => {
@@ -220,11 +220,11 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
       onPlanSelect={onPlanSelect}
       onTopicSelect={onTopicSelect}
       onDeadletterSelect={onDeadletterSelect}
-      onExpiryQueueSelect={onExpiryQueueSelect}
+      onExpiryAddressSelect={onExpiryAddressSelect}
       typeOptions={typeOptions}
       planOptions={planOptions}
       deadletter={deadletter}
-      expiryQueue={expiryQueue}
+      expiryAddress={expiryAddress}
       deadletterOptions={deadletterOptions}
       topicsForSubscription={topicsForSubscription}
     />

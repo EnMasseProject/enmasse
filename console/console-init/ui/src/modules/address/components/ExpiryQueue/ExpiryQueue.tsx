@@ -20,31 +20,31 @@ const styles = StyleSheet.create({
     flex: "1"
   }
 });
-export interface IExpiryQueueProps {
-  onExpiryQueueSelect?: (value: string) => void;
-  expiryQueue: string;
+export interface IExpiryAddressProps {
+  onExpiryAddressSelect?: (value: string) => void;
+  expiryAddress: string;
   deadletterOptions?: IDropdownOption[];
 }
-export const ExpiryQueue: React.FunctionComponent<IExpiryQueueProps> = ({
-  expiryQueue,
-  onExpiryQueueSelect,
+export const ExpiryAddress: React.FunctionComponent<IExpiryAddressProps> = ({
+  expiryAddress,
+  onExpiryAddressSelect,
   deadletterOptions
 }) => {
   return (
     <FormGroup
-      label="Expiry Queue"
+      label="Expiry Address"
       isRequired={false}
-      fieldId="addr-configuration-expiryQueue-dropdown"
+      fieldId="addr-configuration-expiryAddress-dropdown"
     >
       <br />
       <DropdownWithToggle
-        id="addr-configuration-expiryQueue-dropdown"
+        id="addr-configuration-expiryAddress-dropdown"
         className={styles.dropdown_align}
         toggleClass={styles.dropdown_toggle}
         dropdownItemClass={styles.dropdownItem}
         position={DropdownPosition.left}
-        onSelectItem={onExpiryQueueSelect}
-        value={expiryQueue}
+        onSelectItem={onExpiryAddressSelect}
+        value={expiryAddress}
         dropdownItems={deadletterOptions}
         dropdownItemId="address-definition-topic-dropdown-item"
         isDisplayLabelAndValue={true}

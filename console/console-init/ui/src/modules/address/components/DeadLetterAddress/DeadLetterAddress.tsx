@@ -20,13 +20,13 @@ const styles = StyleSheet.create({
     flex: "1"
   }
 });
-export interface IExpiryQueueProps {
+interface IDeadLetterAddressProps {
   onDeadletterSelect?: (value: string) => void;
-  deadletter: string;
+  deadletterAddress: string;
   deadletterOptions?: IDropdownOption[];
 }
-export const Deadletter: React.FunctionComponent<IExpiryQueueProps> = ({
-  deadletter,
+export const DeadLetterAddress: React.FunctionComponent<IDeadLetterAddressProps> = ({
+  deadletterAddress,
   onDeadletterSelect,
   deadletterOptions
 }) => {
@@ -44,7 +44,7 @@ export const Deadletter: React.FunctionComponent<IExpiryQueueProps> = ({
         dropdownItemClass={styles.dropdownItem}
         position={DropdownPosition.left}
         onSelectItem={onDeadletterSelect}
-        value={deadletter}
+        value={deadletterAddress}
         dropdownItems={deadletterOptions}
         dropdownItemId="address-definition-topic-dropdown-item"
         isDisplayLabelAndValue={true}

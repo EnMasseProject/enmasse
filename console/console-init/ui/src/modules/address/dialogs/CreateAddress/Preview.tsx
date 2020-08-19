@@ -32,7 +32,7 @@ export interface IAddressPreview {
   namespace: string;
   addressspace: string;
   deadletter: string;
-  expiryQueue: string;
+  expiryAddress: string;
 }
 const Style = StyleSheet.create({
   left_padding: {
@@ -51,7 +51,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
   namespace,
   addressspace,
   deadletter,
-  expiryQueue
+  expiryAddress
 }) => {
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const { data, loading } = useQuery(ADDRESS_COMMAND_PREVIEW_DETAIL, {
@@ -66,8 +66,8 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
           ...(topic && topic.trim() !== "" && { topic: topic }),
           ...(deadletter &&
             deadletter.trim() !== "" && { deadLetterAddress: deadletter }),
-          ...(expiryQueue &&
-            expiryQueue.trim() !== "" && { expiryAddress: expiryQueue }),
+          ...(expiryAddress &&
+            expiryAddress.trim() !== "" && { expiryAddress: expiryAddress }),
           address: name
         }
       },
@@ -144,12 +144,12 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                 <GridItem span={8}>{deadletter}</GridItem>
               </>
             )}
-            {expiryQueue && expiryQueue.trim() !== "" && (
+            {expiryAddress && expiryAddress.trim() !== "" && (
               <>
                 <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
                   Expiry Address
                 </GridItem>
-                <GridItem span={8}>{expiryQueue}</GridItem>
+                <GridItem span={8}>{expiryAddress}</GridItem>
               </>
             )}
           </Grid>

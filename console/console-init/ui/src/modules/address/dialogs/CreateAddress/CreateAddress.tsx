@@ -30,7 +30,7 @@ export const CreateAddress: React.FunctionComponent = () => {
   const [plan, setPlan] = useState(" ");
   const [topic, setTopic] = useState(" ");
   const [deadletter, setDeadletter] = useState(" ");
-  const [expiryQueue, setExpiryQueue] = useState(" ");
+  const [expiryAddress, setExpiryAddress] = useState(" ");
   const [addressTypes, setAddressTypes] = useState<IDropdownOption[]>([]);
   const [addressPlans, setAddressPlans] = useState<IDropdownOption[]>([]);
 
@@ -134,8 +134,8 @@ export const CreateAddress: React.FunctionComponent = () => {
           if (deadletter && deadletter.trim() !== "") {
             variable.spec.deadLetterAddress = deadletter.trim();
           }
-          if (expiryQueue && expiryQueue.trim() !== "") {
-            variable.spec.expiryAddress = expiryQueue.trim();
+          if (expiryAddress && expiryAddress.trim() !== "") {
+            variable.spec.expiryAddress = expiryAddress.trim();
           }
         }
         return variable;
@@ -174,8 +174,8 @@ export const CreateAddress: React.FunctionComponent = () => {
           setPlanOptions={setAddressPlans}
           setDeadletter={setDeadletter}
           deadletter={deadletter}
-          setExpiryQueue={setExpiryQueue}
-          expiryQueue={expiryQueue}
+          setExpiryAddress={setExpiryAddress}
+          expiryAddress={expiryAddress}
         />
       ),
       enableNext: isReviewButtonEnabled(),
@@ -190,7 +190,7 @@ export const CreateAddress: React.FunctionComponent = () => {
           type={addressType}
           topic={topic}
           deadletter={deadletter}
-          expiryQueue={expiryQueue}
+          expiryAddress={expiryAddress}
           namespace={namespace || ""}
           addressspace={name}
         />
