@@ -19,7 +19,7 @@ import { StyleSheet, css } from "aphrodite";
 
 const styles = StyleSheet.create({
   popover_alignment: {
-    "padding-left": "0px"
+    "padding-left": "0"
   },
   groups_min_height: {
     "min-height": "25rem"

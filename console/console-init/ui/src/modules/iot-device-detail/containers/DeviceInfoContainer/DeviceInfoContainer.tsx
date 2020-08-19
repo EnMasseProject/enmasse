@@ -75,6 +75,7 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
     memberOf = [],
     viaGroups = []
   } = registration;
+
   const parsecredentials = credentials && JSON.parse(credentials);
 
   const ext = extString && JSON.parse(extString);
@@ -142,7 +143,7 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
       modalProps: {
         onConfirm: onConfirmDeleteCredentials,
         confirmButtonLabel: "Remove",
-        detail: "Credentials will be removed and is unreciverable.",
+        detail: "Credentials will be removed and is unrecoverable.",
         header: "Remove credentials ?"
       }
     });
@@ -170,10 +171,10 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
     <DeviceInfo
       id={id}
       deviceList={via}
+      gatewayGroups={viaGroups}
+      memberOf={memberOf}
       metadataList={metadetaJson}
       credentials={parsecredentials}
-      memberOf={memberOf}
-      viaGroups={viaGroups}
       errorState={getErrorState()}
       deleteGateways={openPreConfirmRemoveGatewayDialog}
       deleteCredentials={openPreConfirmDeleteCredetialsDialog}
