@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Form,
   FormGroup,
@@ -14,11 +14,7 @@ import {
   ButtonVariant,
   Split,
   SplitItem,
-  DropdownItem,
-  Grid,
-  GridItem,
-  ChipGroup,
-  Chip
+  DropdownItem
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
 import { DropdownWithToggle, DropdownWithKebabToggle } from "components";
