@@ -45,9 +45,17 @@ export const EditAddress: React.FunctionComponent = () => {
     { planLabel: address.planLabel, value: address.planValue } || {}
   );
 
-  const [deadletterAddress, setDeadletterAddress] = useState<any>();
+  const [deadletterAddress, setDeadletterAddress] = useState<any>({
+    key: " ",
+    value: " ",
+    label: " "
+  });
 
-  const [expiryAddress, setExpiryAddress] = useState<any>();
+  const [expiryAddress, setExpiryAddress] = useState<any>({
+    key: " ",
+    value: " ",
+    label: " "
+  });
 
   useEffect(() => {
     if (address.deadLetterAddress && address.deadLetterAddress !== null) {
@@ -147,7 +155,7 @@ export const EditAddress: React.FunctionComponent = () => {
   };
 
   const onConfirmDialog = async () => {
-    if (address) {
+    if (address && plan && deadletterAddress && expiryAddress) {
       const variables = {
         a: {
           name: address.name,
