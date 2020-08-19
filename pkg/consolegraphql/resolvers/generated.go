@@ -159,6 +159,8 @@ type ComplexityRoot struct {
 	AddressSpecEnmasseIoV1beta1 struct {
 		Address      func(childComplexity int) int
 		AddressSpace func(childComplexity int) int
+		Deadletter   func(childComplexity int) int
+		Expiry       func(childComplexity int) int
 		Plan         func(childComplexity int) int
 		Topic        func(childComplexity int) int
 		Type         func(childComplexity int) int
@@ -897,6 +899,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AddressSpecEnmasseIoV1beta1.AddressSpace(childComplexity), true
+
+	case "AddressSpec_enmasse_io_v1beta1.deadletter":
+		if e.complexity.AddressSpecEnmasseIoV1beta1.Deadletter == nil {
+			break
+		}
+
+		return e.complexity.AddressSpecEnmasseIoV1beta1.Deadletter(childComplexity), true
+
+	case "AddressSpec_enmasse_io_v1beta1.expiry":
+		if e.complexity.AddressSpecEnmasseIoV1beta1.Expiry == nil {
+			break
+		}
+
+		return e.complexity.AddressSpecEnmasseIoV1beta1.Expiry(childComplexity), true
 
 	case "AddressSpec_enmasse_io_v1beta1.plan":
 		if e.complexity.AddressSpecEnmasseIoV1beta1.Plan == nil {
@@ -2144,6 +2160,7 @@ enum AddressType {
   subscription
   multicast
   anycast
+  deadletter
 }
 
 enum AuthenticationServiceType {
@@ -2194,7 +2211,6 @@ enum RouteTlsTermination_enmasse_io_v1beta1 {
   passthrough
   reencrypt
 }
-
 
 enum MessagingEndpointType_enmasse_io_v1beta2  {
   Cluster,
@@ -2388,11 +2404,13 @@ type Port_enmasse_io_v1beta1 {
 }
 
 type AddressSpec_enmasse_io_v1beta1 {
-  address:      String!
-  addressSpace: String!
-  type:         AddressType!
-  plan:         AddressPlan_admin_enmasse_io_v1beta2!
-  topic:        String
+  address:           String!
+  addressSpace:      String!
+  type:              AddressType!
+  plan:              AddressPlan_admin_enmasse_io_v1beta2!
+  topic:             String
+  deadletter: String
+  expiry:     String
 }
 
 type AddressStatus_enmasse_io_v1beta1 {
@@ -2656,11 +2674,13 @@ input AddressSpace_enmasse_io_v1beta1_Input {
 }
 
 input AddressSpec_enmasse_io_v1beta1_Input {
-  address:      String!
-  addressSpace: String
-  type:         String!
-  plan:         String!
-  topic:        String
+  address:           String!
+  addressSpace:      String
+  type:              String!
+  plan:              String!
+  topic:             String
+  deadletter: String
+  expiry:     String
 }
 
 input Address_enmasse_io_v1beta1_Input {
@@ -5198,6 +5218,68 @@ func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_topic(ctx context.Co
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Topic, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_deadletter(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpec) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "AddressSpec_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Deadletter, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_expiry(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpec) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "AddressSpec_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Expiry, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11430,6 +11512,18 @@ func (ec *executionContext) unmarshalInputAddressSpec_enmasse_io_v1beta1_Input(c
 			if err != nil {
 				return it, err
 			}
+		case "deadletter":
+			var err error
+			it.Deadletter, err = ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "expiry":
+			var err error
+			it.Expiry, err = ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -12281,6 +12375,10 @@ func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1(ctx context.Context,
 			})
 		case "topic":
 			out.Values[i] = ec._AddressSpec_enmasse_io_v1beta1_topic(ctx, field, obj)
+		case "deadletter":
+			out.Values[i] = ec._AddressSpec_enmasse_io_v1beta1_deadletter(ctx, field, obj)
+		case "expiry":
+			out.Values[i] = ec._AddressSpec_enmasse_io_v1beta1_expiry(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

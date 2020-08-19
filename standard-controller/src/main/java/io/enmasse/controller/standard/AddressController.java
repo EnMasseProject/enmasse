@@ -16,6 +16,7 @@ import static io.enmasse.k8s.api.EventLogger.Type.Normal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -78,7 +80,7 @@ public class AddressController implements Watcher<Address> {
     private final SchemaProvider schemaProvider;
     private final Vertx vertx;
     private final BrokerIdGenerator brokerIdGenerator;
-    private final BrokerClientFactory brokerClientFactory;
+    private final BrokerStatusCollectorFactory brokerStatusCollectorFactory;
     private final RouterStatusCache statusCollector;
     private final ResourceChecker<Address> reconciler;
 
@@ -92,7 +94,7 @@ public class AddressController implements Watcher<Address> {
     private volatile Long totalTime;
     private volatile Map<Phase, Long> countByPhase = new HashMap<>();
 
-    public AddressController(StandardControllerOptions options, AddressSpaceApi addressSpaceApi, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, EventLogger eventLogger, SchemaProvider schemaProvider, Vertx vertx, Metrics metrics, BrokerIdGenerator brokerIdGenerator, BrokerClientFactory brokerClientFactory) {
+    public AddressController(StandardControllerOptions options, AddressSpaceApi addressSpaceApi, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, EventLogger eventLogger, SchemaProvider schemaProvider, Vertx vertx, Metrics metrics, BrokerIdGenerator brokerIdGenerator, BrokerStatusCollectorFactory brokerStatusCollectorFactory) {
         this.options = options;
         this.addressSpaceApi = addressSpaceApi;
         this.addressApi = addressApi;
@@ -102,7 +104,7 @@ public class AddressController implements Watcher<Address> {
         this.schemaProvider = schemaProvider;
         this.vertx = vertx;
         this.brokerIdGenerator = brokerIdGenerator;
-        this.brokerClientFactory = brokerClientFactory;
+        this.brokerStatusCollectorFactory = brokerStatusCollectorFactory;
         RouterManagement routerManagement = RouterManagement.withCertsInDir(vertx, "standard-controller", options.getManagementConnectTimeout(), options.getManagementQueryTimeout(), options.getCertDir());
         this.statusCollector = new RouterStatusCache(routerManagement, kubernetes, eventLogger, options.getAddressSpace(), options.getStatusCheckInterval());
         reconciler = new ResourceChecker<>(this, options.getRecheckInterval());
@@ -241,7 +243,7 @@ public class AddressController implements Watcher<Address> {
 
         final Map<String, ProvisionState> previousStatus = addressList.stream()
                 .collect(Collectors.toMap(a -> a.getMetadata().getName(),
-                        a -> new ProvisionState(a.getStatus(), a.getAnnotation(AnnotationKeys.APPLIED_PLAN))));
+                        a -> new ProvisionState(a.getStatus(), AppliedConfig.getCurrentAppliedAddressSpec(a).orElse(null))));
 
         AddressSpacePlan addressSpacePlan = addressSpaceType.findAddressSpacePlan(options.getAddressSpacePlanName()).orElseThrow(() -> new RuntimeException("Unable to handle updates: address space plan " + options.getAddressSpacePlanName() + " not found!"));
 
@@ -332,6 +334,88 @@ public class AddressController implements Watcher<Address> {
                     }
                 }
             }
+
+            String deadletter = address.getSpec().getDeadletter();
+            if (deadletter != null) {
+                if (!Set.of("queue", "subscription").contains(address.getSpec().getType())) {
+                    String errorMessage = String.format(
+                            "Address '%s' (resource name '%s') of type '%s' cannot reference a dead letter address.",
+                            address.getSpec().getAddress(),
+                            address.getMetadata().getName(),
+                            address.getSpec().getType());
+                    address.getStatus().setPhase(Pending);
+                    address.getStatus().appendMessage(errorMessage);
+                    continue;
+                }
+
+                Optional<Address> refDlq = addressList.stream().filter(a -> deadletter.equals(a.getSpec().getAddress())).findFirst();
+                if (refDlq.isEmpty()) {
+                    String errorMessage = String.format(
+                            "Address '%s' (resource name '%s') references a dead letter address '%s' that does not exist.",
+                            address.getSpec().getAddress(),
+                            address.getMetadata().getName(),
+                            deadletter);
+                    address.getStatus().setPhase(Pending);
+                    address.getStatus().appendMessage(errorMessage);
+                    continue;
+                } else {
+                    Address target = refDlq.get();
+                    if (!"deadletter".equals(target.getSpec().getType())) {
+                        String errorMessage = String.format(
+                                "Address '%s' (resource name '%s') references a dead letter address '%s'" +
+                                        " (resource name '%s') that is not of expected type 'deadletter' (found type '%s' instead).",
+                                address.getSpec().getAddress(),
+                                address.getMetadata().getName(),
+                                deadletter,
+                                target.getMetadata().getName(),
+                                target.getSpec().getType());
+                        address.getStatus().setPhase(Pending);
+                        address.getStatus().appendMessage(errorMessage);
+                        continue;
+                    }
+                }
+            }
+
+            String expiry = address.getSpec().getExpiry();
+            if (expiry != null) {
+                if (!Set.of("queue", "subscription").contains(address.getSpec().getType())) {
+                    String errorMessage = String.format(
+                            "Address '%s' (resource name '%s') of type '%s' cannot reference an expiry address.",
+                            address.getSpec().getAddress(),
+                            address.getMetadata().getName(),
+                            address.getSpec().getType());
+                    address.getStatus().setPhase(Pending);
+                    address.getStatus().appendMessage(errorMessage);
+                    continue;
+                }
+
+                Optional<Address> refDlq = addressList.stream().filter(a -> expiry.equals(a.getSpec().getAddress())).findFirst();
+                if (refDlq.isEmpty()) {
+                    String errorMessage = String.format(
+                            "Address '%s' (resource name '%s') references an expiry address '%s' that does not exist.",
+                            address.getSpec().getAddress(),
+                            address.getMetadata().getName(),
+                            expiry);
+                    address.getStatus().setPhase(Pending);
+                    address.getStatus().appendMessage(errorMessage);
+                    continue;
+                } else {
+                    Address target = refDlq.get();
+                    if (!"deadletter".equals(target.getSpec().getType())) {
+                        String errorMessage = String.format(
+                                "Address '%s' (resource name '%s') references an expiry address '%s'" +
+                                        " (resource name '%s') that is not of expected type 'deadletter' (found type '%s' instead).",
+                                address.getSpec().getAddress(),
+                                address.getMetadata().getName(),
+                                expiry,
+                                target.getMetadata().getName(),
+                                target.getSpec().getType());
+                        address.getStatus().setPhase(Pending);
+                        address.getStatus().appendMessage(errorMessage);
+                        continue;
+                    }
+                }
+            }
             validAddresses.put(address.getSpec().getAddress(), address);
         }
 
@@ -346,7 +430,8 @@ public class AddressController implements Watcher<Address> {
 
         long calculatedUsage = System.nanoTime();
         Set<Address> pendingAddresses = filterBy(addressSet, address -> address.getStatus().getPhase().equals(Pending) ||
-                AddressProvisioner.hasPlansChanged(addressResolver, address));
+                !Objects.equals(AppliedConfig.create(address.getSpec()).getAddressSpec(), AppliedConfig.getCurrentAppliedAddressSpec(address).orElse(null)) ||
+                hasPlansChanged(addressResolver, address));
 
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, pendingAddresses, addressSet);
 
@@ -365,6 +450,8 @@ public class AddressController implements Watcher<Address> {
 
         StandardInfraConfig desiredConfig = (StandardInfraConfig) addressSpaceResolver.getInfraConfig("standard", addressSpacePlan.getMetadata().getName());
         provisioner.provisionResources(routerCluster, clusterList, neededMap, pendingAddresses, desiredConfig);
+
+        processDeadletteres(addressSet);
 
         long provisionResources = System.nanoTime();
 
@@ -403,7 +490,7 @@ public class AddressController implements Watcher<Address> {
         for (Address address : addressList) {
             var addressName = address.getMetadata().getNamespace() + ":" + address.getMetadata().getName();
             ProvisionState previous = previousStatus.get(address.getMetadata().getName());
-            ProvisionState current = new ProvisionState(address.getStatus(), address.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+            ProvisionState current = new ProvisionState(address.getStatus(), AppliedConfig.getCurrentAppliedAddressSpec(address).orElse(null));
             log.debug("Compare current state\nPrevious: {}\nCurrent : {}", previous, current);
             if (!current.equals(previous)) {
                 log.debug("Address did change: {}", addressName);
@@ -681,7 +768,7 @@ public class AddressController implements Watcher<Address> {
     }
 
     private void checkAndRemoveDrainingBrokers(Set<Address> addresses) throws Exception {
-        BrokerStatusCollector brokerStatusCollector = new BrokerStatusCollector(kubernetes, brokerClientFactory, options);
+        BrokerStatusCollector brokerStatusCollector = brokerStatusCollectorFactory.createBrokerStatusCollector();
         for (Address address : addresses) {
             List<BrokerStatus> brokerStatuses = new ArrayList<>();
             for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
@@ -720,58 +807,65 @@ public class AddressController implements Watcher<Address> {
         Map<String, Set<String>> clusterAddresses = new HashMap<>();
         Map<String, Set<String>> clusterQueues = new HashMap<>();
 
-        BrokerStatusCollector brokerStatusCollector = new BrokerStatusCollector(kubernetes, brokerClientFactory, options);
+        BrokerStatusCollector brokerStatusCollector = brokerStatusCollectorFactory.createBrokerStatusCollector();
         for (Address address : addresses) {
             AddressType addressType = addressResolver.getType(address);
             AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
 
             int ok = 0;
             switch (addressType.getName()) {
-                case "queue":
+                case "deadletter":
                     ok += checkBrokerStatus(brokerStatusCollector, address, clusterOk, clusterAddresses, clusterQueues);
                     for (RouterStatus routerStatus : routerStatusList) {
                         ok += routerStatus.checkAddress(address);
-                        ok += routerStatus.checkAutoLinks(address);
+                        ok += routerStatus.checkAutoLinks(address, 1);
                     }
                     for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
                         Set<String> addressNames = clusterAddresses.get(brokerStatus.getClusterId());
                         Set<String> queueNames = clusterQueues.get(brokerStatus.getClusterId());
-                        if (!addressNames.contains(address.getSpec().getAddress())) {
-                            address.getStatus().setReady(false);
-                            address.getStatus().appendMessage("Address " + address.getSpec().getAddress() + " is not configured on broker " + brokerStatus.getContainerId());
-                        } else {
-                            ok++;
+                        ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getAddress(), queueNames, address.getSpec().getAddress());
+                    }
+                    ok += RouterStatus.checkActiveAutoLink(address, routerStatusList, 1);
+                    updateMessageTtlStatus(addressPlan, address);
+                    updateMessageRedeliveryStatus(addressPlan, address);
+                    break;
+                case "queue":
+                    ok += checkBrokerStatus(brokerStatusCollector, address, clusterOk, clusterAddresses, clusterQueues);
+                    for (RouterStatus routerStatus : routerStatusList) {
+                        ok += routerStatus.checkAddress(address);
+                        ok += routerStatus.checkAutoLinks(address, 2);
+                    }
+                    for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
+                        Set<String> addressNames = clusterAddresses.get(brokerStatus.getClusterId());
+                        Set<String> queueNames = clusterQueues.get(brokerStatus.getClusterId());
+                        ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getAddress(), queueNames, address.getSpec().getAddress());
+                        if (address.getSpec().getDeadletter() != null) {
+                            ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getDeadletter(), queueNames, address.getSpec().getDeadletter());
                         }
-                        if (!queueNames.contains(address.getSpec().getAddress())) {
-                            address.getStatus().setReady(false);
-                            address.getStatus().appendMessage("Queue " + address.getSpec().getAddress() + " is not configured on broker " + brokerStatus.getContainerId());
-                        } else {
-                            ok++;
+                        if (address.getSpec().getExpiry() != null) {
+                            ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getExpiry(), queueNames, address.getSpec().getExpiry());
                         }
                     }
-                    ok += RouterStatus.checkActiveAutoLink(address, routerStatusList);
+                    ok += RouterStatus.checkActiveAutoLink(address, routerStatusList, 2);
                     ok += RouterStatus.checkForwarderLinks(address, routerStatusList);
                     updateMessageTtlStatus(addressPlan, address);
+                    updateMessageRedeliveryStatus(addressPlan, address);
                     break;
                 case "subscription":
                     ok += checkBrokerStatus(brokerStatusCollector, address, clusterOk, clusterAddresses, clusterQueues);
                     for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
                         Set<String> addressNames = clusterAddresses.get(brokerStatus.getClusterId());
                         Set<String> queueNames = clusterQueues.get(brokerStatus.getClusterId());
-                        if (!addressNames.contains(address.getSpec().getTopic())) {
-                            address.getStatus().setReady(false);
-                            address.getStatus().appendMessage("Address " + address.getSpec().getTopic() + " is not configured on broker " + brokerStatus.getContainerId());
-                        } else {
-                            ok++;
+                        ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getTopic(), queueNames, address.getSpec().getAddress());
+                        if (address.getSpec().getDeadletter() != null) {
+                            ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getDeadletter(), queueNames, address.getSpec().getDeadletter());
                         }
-                        if (!queueNames.contains(address.getSpec().getAddress())) {
-                            address.getStatus().setReady(false);
-                            address.getStatus().appendMessage("Queue " + address.getSpec().getAddress() + " is not configured on broker " + brokerStatus.getContainerId());
-                        } else {
-                            ok++;
+                        if (address.getSpec().getExpiry() != null) {
+                            ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getExpiry(), queueNames, address.getSpec().getExpiry());
                         }
                     }
                     ok += RouterStatus.checkForwarderLinks(address, routerStatusList);
+                    updateMessageRedeliveryStatus(addressPlan, address);
                     break;
                 case "topic":
                     ok += checkBrokerStatus(brokerStatusCollector, address, clusterOk, clusterAddresses, clusterQueues);
@@ -781,12 +875,7 @@ public class AddressController implements Watcher<Address> {
                     if (isPooled(addressPlan)) {
                         for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
                             Set<String> addressNames = clusterAddresses.get(brokerStatus.getClusterId());
-                            if (!addressNames.contains(address.getSpec().getAddress())) {
-                                address.getStatus().setReady(false);
-                                address.getStatus().appendMessage("Address " + address.getSpec().getAddress() + " is not configured on broker " + brokerStatus.getContainerId());
-                            } else {
-                                ok++;
-                            }
+                            ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getAddress(), null, null);
                         }
                         ok += RouterStatus.checkActiveLinkRoute(address, routerStatusList);
                     } else {
@@ -805,6 +894,65 @@ public class AddressController implements Watcher<Address> {
         }
 
         return numOk;
+    }
+
+    private int checkAddressAndQueue(Address address, BrokerStatus brokerStatus, Set<String> addressNames, String expectedAddressName, Set<String> queueNames, String expectedQueueName) {
+        int i = 0;
+        if (!addressNames.contains(expectedAddressName)) {
+            address.getStatus().setReady(false);
+            address.getStatus().appendMessage(String.format("Address %s is not configured on broker %s", expectedAddressName, brokerStatus.getContainerId()));
+        } else {
+            i++;
+        }
+        if (queueNames != null) {
+            if (!queueNames.contains(expectedQueueName)) {
+                address.getStatus().setReady(false);
+                address.getStatus().appendMessage(String.format("Queue %s is not configured on broker %s", expectedQueueName, brokerStatus.getContainerId()));
+            } else {
+                i++;
+            }
+        }
+        return i;
+    }
+
+    private void updateMessageRedeliveryStatus(AddressPlan addressPlan, Address address) {
+        MessageRedeliveryBuilder status = null;
+
+        MessageRedelivery planRedelivery = addressPlan.getMessageRedelivery();
+        if (planRedelivery != null) {
+            status = new MessageRedeliveryBuilder(planRedelivery);
+        }
+
+        MessageRedelivery addrRedelivery = address.getSpec().getMessageRedelivery();
+        if (addrRedelivery != null) {
+            if (addrRedelivery.getMaximumDeliveryAttempts() != null) {
+                if (status == null) {
+                    status = new MessageRedeliveryBuilder();
+                }
+                status.withMaximumDeliveryAttempts(addrRedelivery.getMaximumDeliveryAttempts());
+            }
+            if (addrRedelivery.getMaximumDeliveryDelay() != null) {
+                if (status == null) {
+                    status = new MessageRedeliveryBuilder();
+                }
+                status.withMaximumDeliveryDelay(addrRedelivery.getMaximumDeliveryDelay());
+            }
+            if (addrRedelivery.getRedeliveryDelay() != null) {
+                if (status == null) {
+                    status = new MessageRedeliveryBuilder();
+                }
+                status.withRedeliveryDelay(addrRedelivery.getRedeliveryDelay());
+            }
+            if (addrRedelivery.getRedeliveryDelayMultiplier() != null) {
+                if (status == null) {
+                    status = new MessageRedeliveryBuilder();
+                }
+                status.withRedeliveryDelayMultiplier(addrRedelivery.getRedeliveryDelayMultiplier());
+            }
+        }
+
+        address.getStatus().setMessageRedelivery(status == null ? null : status.build());
+
     }
 
     private void updateMessageTtlStatus(AddressPlan addressPlan, Address address) {
@@ -934,6 +1082,32 @@ public class AddressController implements Watcher<Address> {
         return valid;
     }
 
+    private void processDeadletteres(Set<Address> addressSet) {
+        Set<Address> deadLetters = addressSet.stream().filter(a -> "deadletter".equals(a.getSpec().getType())).collect(Collectors.toSet());
+        Set<BrokerStatus> inUse = addressSet.stream().filter(a -> !"deadletter".equals(a.getSpec().getType())).flatMap(a -> a.getStatus().getBrokerStatuses().stream()).collect(Collectors.toSet());
+
+        deadLetters.forEach(dla -> {
+            List<BrokerStatus> copy = new ArrayList<>(dla.getStatus().getBrokerStatuses());
+            Set<BrokerStatus> brokerStatuses = new TreeSet<>(Comparator.comparing(BrokerStatus::getContainerId));
+
+            inUse.forEach(rs -> {
+                copy.remove(rs);
+                brokerStatuses.add(new BrokerStatus(rs.getClusterId(), rs.getContainerId(), BrokerState.Active));
+            });
+
+            // Any remaining brokerstatuses from the original set may have dead lettered messages remaining, so mark
+            // them as Draining so the garbage collector can review and remove once empty.
+            if (!copy.isEmpty()) {
+                copy.forEach(s -> {
+                    brokerStatuses.add(new BrokerStatus(s.getClusterId(), s.getContainerId(), BrokerState.Draining));
+                });
+            }
+            dla.setStatus(new AddressStatusBuilder(dla.getStatus())
+                    .withBrokerStatuses(new ArrayList<>(brokerStatuses))
+                    .build());
+        });
+    }
+
     private boolean isPooled(AddressPlan plan) {
         for (Map.Entry<String, Double> request : plan.getResources().entrySet()) {
             if ("broker".equals(request.getKey()) && request.getValue() < 1.0) {
@@ -943,13 +1117,18 @@ public class AddressController implements Watcher<Address> {
         return false;
     }
 
+    private boolean hasPlansChanged(AddressResolver addressResolver, Address address) {
+        AddressPlan addressPlan = addressResolver.getDesiredPlan(address);
+        return !AddressPlanStatus.fromAddressPlan(addressPlan).equals(address.getStatus().getPlanStatus());
+    }
+
     private class ProvisionState {
         private final AddressStatus status;
-        private final String plan;
+        private final AddressSpec addressSpec;
 
-        public ProvisionState(AddressStatus status, String plan) {
+        public ProvisionState(AddressStatus status, AddressSpec addressSpec) {
             this.status = new AddressStatusBuilder(status).build();
-            this.plan = plan;
+            this.addressSpec = addressSpec == null ? null : new AddressSpecBuilder(addressSpec).build();
         }
 
         @Override
@@ -958,19 +1137,19 @@ public class AddressController implements Watcher<Address> {
             if (o == null || getClass() != o.getClass()) return false;
             ProvisionState that = (ProvisionState) o;
             return Objects.equals(status, that.status) &&
-                    Objects.equals(plan, that.plan);
+                    Objects.equals(addressSpec, that.addressSpec);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(status, plan);
+            return Objects.hash(status, addressSpec);
         }
 
         @Override
         public String toString() {
             return "ProvisionState{" +
                     "status=" + status +
-                    ", plan='" + plan + '\'' +
+                    ", addressSpec='" + addressSpec + '\'' +
                     '}';
         }
     }

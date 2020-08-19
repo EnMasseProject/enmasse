@@ -7,6 +7,7 @@ package io.enmasse.systemtest.model.addressplan;
 public interface DestinationPlan {
     String BROKERED_QUEUE = "brokered-queue";
     String BROKERED_TOPIC = "brokered-topic";
+    String BROKERED_DEADLETTER = "brokered-deadletter";
     String STANDARD_SMALL_QUEUE = "standard-small-queue";
     String STANDARD_SMALL_TOPIC = "standard-small-topic";
     String STANDARD_MEDIUM_QUEUE = "standard-medium-queue";
@@ -20,4 +21,5 @@ public interface DestinationPlan {
     String STANDARD_MEDIUM_MULTICAST = "standard-medium-multicast";
     String STANDARD_SMALL_SUBSCRIPTION = "standard-small-subscription";
     String STANDARD_LARGE_SUBSCRIPTION = "standard-large-subscription";
+    String STANDARD_DEADLETTER = "standard-deadletter";
 }

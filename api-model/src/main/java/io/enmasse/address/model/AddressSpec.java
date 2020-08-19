@@ -42,7 +42,10 @@ public class AddressSpec extends AbstractWithAdditionalProperties {
     @NotNull
     private String plan;
     private String topic;
+    private String deadletter;
+    private String expiry;
     private MessageTtl messageTtl;
+    private MessageRedelivery messageRedelivery;
 
     private SubscriptionSpec subscription;
 
@@ -117,6 +120,30 @@ public class AddressSpec extends AbstractWithAdditionalProperties {
         this.messageTtl = messageTtl;
     }
 
+    public MessageRedelivery getMessageRedelivery() {
+        return messageRedelivery;
+    }
+
+    public void setMessageRedelivery(MessageRedelivery messageRedelivery) {
+        this.messageRedelivery = messageRedelivery;
+    }
+
+    public String getDeadletter() {
+        return deadletter;
+    }
+
+    public void setDeadletter(String deadletter) {
+        this.deadletter = deadletter;
+    }
+
+    public String getExpiry() {
+        return expiry;
+    }
+
+    public void setExpiry(String expiry) {
+        this.expiry = expiry;
+    }
+
     @Override
     public String toString() {
 
@@ -132,7 +159,10 @@ public class AddressSpec extends AbstractWithAdditionalProperties {
              sb.append(",forwarders=").append(forwarders);
          }
          sb.append(",subscription=").append(subscription);
+         sb.append(",deadletter=").append(deadletter);
+         sb.append(",expiry=").append(expiry);
          sb.append(",messageTtl=").append(messageTtl);
+         sb.append(",messageRedelivery=").append(messageRedelivery);
          sb.append("}");
 
          return sb.toString();
@@ -155,4 +185,5 @@ public class AddressSpec extends AbstractWithAdditionalProperties {
     public int hashCode() {
         return Objects.hash(address, addressSpace);
     }
+
 }

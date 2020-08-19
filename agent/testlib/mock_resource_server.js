@@ -394,6 +394,7 @@ AddressServer.prototype.add_address_plan = function (params) {
             displayOrder: params.displayOrder,
             addressType: params.address_type,
             messageTtl: params.messageTtl,
+            messageRedelivery: params.messageRedelivery,
         }
     };
     if (params.resources) {
@@ -413,6 +414,7 @@ AddressServer.prototype.update_address_plan = function (params) {
             displayOrder: params.displayOrder,
             addressType: params.address_type,
             messageTtl: params.messageTtl,
+            messageRedelivery: params.messageRedelivery,
         }
     };
     if (params.required_resources) {

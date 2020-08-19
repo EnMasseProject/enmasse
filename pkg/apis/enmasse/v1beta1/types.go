@@ -294,6 +294,8 @@ type AddressSpec struct {
 	Type         string            `json:"type"`
 	Plan         string            `json:"plan"`
 	Topic        string            `json:"topic,omitempty"`
+	Deadletter   string            `json:"deadletter,omitempty"`
+	Expiry       string            `json:"expiry,omitempty"`
 	Subscription *SubscriptionSpec `json:"subscription,omitempty"`
 	Forwarders   []ForwarderSpec   `json:"forwarders,omitempty"`
 }

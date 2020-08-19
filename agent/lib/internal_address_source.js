@@ -75,7 +75,8 @@ function same_address_definition_and_allocation(a, b) {
     return same_address_definition(a, b)
         && same_allocation(a.allocated_to, b.allocated_to)
         && same_plan_status(a.status ? a.status.planStatus : undefined, b.status ? b.status.planStatus : undefined)
-        && myutils.same_ttl(a.status ? a.status.messageTtl : undefined, b.status ? b.status.messageTtl : undefined);
+        && myutils.same_ttl(a.status ? a.status.messageTtl : undefined, b.status ? b.status.messageTtl : undefined)
+        && myutils.same_message_redelivery(a.status ? a.status.messageRedelivery : undefined, b.status ? b.status.messageRedelivery : undefined);
 }
 
 function same_address_definition(a, b) {
@@ -85,7 +86,10 @@ function same_address_definition(a, b) {
         && a.address === b.address
         && a.type === b.type
         && a.plan === b.plan
-        && myutils.same_ttl(a.messageTtl, b.messageTtl);
+        && a.deadletter === b.deadletter
+        && a.expiry === b.expiry
+        && myutils.same_ttl(a.messageTtl, b.messageTtl)
+        && myutils.same_ttl(a.messageRedelivery, b.messageRedelivery);
 }
 
 function same_address_status(a, b) {
@@ -96,7 +100,9 @@ function same_address_status(a, b) {
         && a.phase === b.phase
         && myutils.same_status_messages(a.messages, b.messages)
         && same_plan_status(a.planStatus, b.planStatus)
-        && myutils.same_ttl(a.messageTtl, b.messageTtl);
+        && myutils.same_ttl(a.messageTtl, b.messageTtl)
+        && myutils.same_message_redelivery(a.messageRedelivery, b.messageRedelivery);
+
 }
 
 function same_address_definition_and_status(a, b) {
@@ -167,7 +173,7 @@ AddressSource.prototype.dispatch_if_changed = function (name, addresses, unchang
 AddressSource.prototype.add_readiness_record = function (definition) {
     var record = this.readiness[definition.address];
     if (record === undefined) {
-        record = {ready: false, address: definition.address, name: definition.name};
+        record = {ready: false, address: definition.address, name: definition.name, type: definition.type};
         this.readiness[definition.address] = record;
     }
 };
@@ -269,6 +275,26 @@ AddressSource.prototype.update_status = function (record, ready) {
                 minimumTtl = undefined;
             }
 
+            var maximumDeliveryAttempts;
+            var redeliveryDelay;
+            var redeliveryDelayMultiplier;
+            var maximumDeliveryDelay;
+            if (planDef.spec && planDef.spec.messageRedelivery) {
+                var messageRedelivery = planDef.spec.messageRedelivery;
+                if (messageRedelivery.maximumDeliveryAttempts) {
+                    maximumDeliveryAttempts = messageRedelivery.maximumDeliveryAttempts;
+                }
+                if (messageRedelivery.redeliveryDelay) {
+                    redeliveryDelay = messageRedelivery.redeliveryDelay;
+                }
+                if (messageRedelivery.redeliveryDelayMultiplier) {
+                    redeliveryDelayMultiplier = messageRedelivery.redeliveryDelayMultiplier;
+                }
+                if (messageRedelivery.maximumDeliveryDelay) {
+                    maximumDeliveryDelay = messageRedelivery.maximumDeliveryDelay;
+                }
+            }
+
             if (address.spec.messageTtl && address.spec.messageTtl.minimum && (minimumTtl === undefined || address.spec.messageTtl.minimum > minimumTtl)) {
                 minimumTtl = address.spec.messageTtl.minimum;
             }
@@ -278,6 +304,22 @@ AddressSource.prototype.update_status = function (record, ready) {
             if (maximumTtl && minimumTtl && minimumTtl > maximumTtl) {
                 maximumTtl = undefined;
                 minimumTtl = undefined;
+            }
+
+            if (address.spec.messageRedelivery) {
+                var messageRedelivery = address.spec.messageRedelivery;
+                if (messageRedelivery.maximumDeliveryAttempts) {
+                    maximumDeliveryAttempts = messageRedelivery.maximumDeliveryAttempts;
+                }
+                if (messageRedelivery.redeliveryDelay) {
+                    redeliveryDelay = messageRedelivery.redeliveryDelay;
+                }
+                if (messageRedelivery.redeliveryDelayMultiplier) {
+                    redeliveryDelayMultiplier = messageRedelivery.redeliveryDelayMultiplier;
+                }
+                if (messageRedelivery.maximumDeliveryDelay) {
+                    maximumDeliveryDelay = messageRedelivery.maximumDeliveryDelay;
+                }
             }
 
             if (minimumTtl || maximumTtl) {
@@ -294,6 +336,55 @@ AddressSource.prototype.update_status = function (record, ready) {
                 delete address.status.messageTtl;
                 updated++;
             }
+
+            if (maximumDeliveryAttempts || redeliveryDelay || redeliveryDelayMultiplier || maximumDeliveryDelay) {
+                address.status.messageRedelivery = {};
+                if (maximumDeliveryAttempts) {
+                    address.status.messageRedelivery.maximumDeliveryAttempts = maximumDeliveryAttempts;
+                    updated++;
+                }
+                if (redeliveryDelay) {
+                    address.status.messageRedelivery.redeliveryDelay = redeliveryDelay;
+                    updated++;
+                }
+                if (redeliveryDelayMultiplier) {
+                    address.status.messageRedelivery.redeliveryDelayMultiplier = redeliveryDelayMultiplier;
+                    updated++;
+                }
+                if (maximumDeliveryDelay) {
+                    address.status.messageRedelivery.maximumDeliveryDelay = maximumDeliveryDelay;
+                    updated++;
+                }
+            } else {
+                delete address.status.messageRedelivery;
+                updated++;
+            }
+
+            if (address.spec.expiry) {
+                var targetRecord = myutils.values(self.readiness).find(record => record.address === address.spec.expiry);
+                if (targetRecord) {
+                    if (targetRecord.type !== "deadletter") {
+                        ready = false;
+                        messages.push(`Address '${address.spec.address}' (resource name '${address.metadata.name}') references an expiry address '${address.spec.expiry}' (resource name '${targetRecord.name}') that is not of expected type 'deadletter' (found type '${targetRecord.type}' instead).`);
+                    }
+                } else {
+                    ready = false;
+                    messages.push(`Address '${address.spec.address}' (resource name '${address.metadata.name}') references an expiry address '${address.spec.expiry}' that does not exist.`);
+                }
+            }
+            if (address.spec.deadletter) {
+                var targetRecord = myutils.values(self.readiness).find(record => record.address === address.spec.deadletter);
+                if (targetRecord) {
+                    if (targetRecord.type !== "deadletter") {
+                        ready = false;
+                        messages.push(`Address '${address.spec.address}' (resource name '${address.metadata.name}') references a deadletter address '${address.spec.deadletter}' (resource name '${targetRecord.name}') that is not of expected type 'deadletter' (found type '${targetRecord.type}' instead).`);
+                    }
+                } else {
+                    ready = false;
+                    messages.push(`Address '${address.spec.address}' (resource name '${address.metadata.name}') references a deadletter address '${address.spec.deadletter}' that does not exist.`);
+                }
+            }
+
         } else {
             ready = false;
             messages.push("Unknown address plan '" + address.spec.plan + "'");

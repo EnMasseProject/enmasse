@@ -24,6 +24,7 @@ enum AddressType {
   subscription
   multicast
   anycast
+  deadletter
 }
 
 enum AuthenticationServiceType {
@@ -272,6 +273,8 @@ type AddressSpec_enmasse_io_v1beta1 {
   type:         AddressType!
   plan:         AddressPlan_admin_enmasse_io_v1beta2!
   topic:        String
+  deadletter:   String
+  expiry:       String
 }
 
 type AddressStatus_enmasse_io_v1beta1 {
@@ -540,6 +543,8 @@ input AddressSpec_enmasse_io_v1beta1_Input {
   type:         String!
   plan:         String!
   topic:        String
+  deadletter:   String
+  expiry:       String
 }
 
 input Address_enmasse_io_v1beta1_Input {

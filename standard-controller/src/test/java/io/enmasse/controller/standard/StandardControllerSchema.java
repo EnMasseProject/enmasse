@@ -8,6 +8,7 @@ import io.enmasse.address.model.AddressSpaceType;
 import io.enmasse.address.model.AddressSpaceTypeBuilder;
 import io.enmasse.address.model.AddressTypeBuilder;
 import io.enmasse.address.model.EndpointSpecBuilder;
+import io.enmasse.address.model.MessageRedeliveryBuilder;
 import io.enmasse.address.model.MessageTtlBuilder;
 import io.enmasse.address.model.Schema;
 import io.enmasse.address.model.SchemaBuilder;
@@ -64,7 +65,8 @@ public class StandardControllerSchema implements SchemaProvider {
                         "pooled-queue-small",
                         "pooled-queue-tiny",
                         "small-topic",
-                        "small-subscription"
+                        "small-subscription",
+                        "deadletter"
                 ))
                 .endSpec()
                 .build();
@@ -121,6 +123,13 @@ public class StandardControllerSchema implements SchemaProvider {
                                                 .withAddressType("queue")
                                                 .withResources(Map.of("router", 0.2, "broker", 0.4))
                                                 .endSpec()
+                                                .build(),
+                                        new AddressPlanBuilder()
+                                                .withMetadata(new ObjectMetaBuilder().withName("small-queue-with-redelivery").build())
+                                                .withSpec(new AddressPlanSpecBuilder()
+                                                        .withAddressType("queue")
+                                                        .withResources(Map.of("router", 0.2, "broker", 0.4))
+                                                        .withMessageRedelivery(new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(10).withRedeliveryDelay(1000L).build()).build())
                                                 .build(),
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("small-queue-with-maxttl").build())
@@ -219,6 +228,17 @@ public class StandardControllerSchema implements SchemaProvider {
                                                 .endSpec()
                                                 .build()))
 
+                                .build(),
+                        new AddressTypeBuilder()
+                                .withName("deadletter")
+                                .withDescription("deadletter")
+                                .withPlans(List.of(
+                                        new AddressPlanBuilder()
+                                                .withMetadata(new ObjectMetaBuilder().withName("deadletter").build())
+                                                .editOrNewSpec()
+                                                .withAddressType("deadletter")
+                                                .endSpec()
+                                                .build()))
                                 .build()))
                 .withInfraConfigs(Arrays.asList(
                         new StandardInfraConfigBuilder()
