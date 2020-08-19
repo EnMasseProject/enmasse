@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Form,
   FormGroup,
@@ -17,7 +17,14 @@ import { useQuery } from "@apollo/react-hooks";
 import { Loading } from "use-patternfly";
 import { useStoreContext, types } from "context-state-reducer";
 import { useMutationQuery } from "hooks";
-import { RETURN_ADDRESS_PLANS, EDIT_ADDRESS } from "graphql-module/queries";
+import {
+  RETURN_ADDRESS_PLANS,
+  EDIT_ADDRESS,
+  RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE
+} from "graphql-module/queries";
+import { IAddressResponse } from "schema/ResponseTypes";
+import { FetchPolicy } from "constant";
+import { IDropdownOption } from "components";
 interface IAddressPlans {
   addressPlans: Array<{
     metadata: {
@@ -34,14 +41,28 @@ export const EditAddress: React.FunctionComponent = () => {
   const { state, dispatch } = useStoreContext();
   const { modalProps } = (state && state.modal) || {};
   const { onConfirm, onClose, address } = modalProps || {};
-  console.log(address);
   const [plan, setPlan] = useState(
     { planLabel: address.planLabel, value: address.planValue } || {}
   );
+
+  const [deadletterAddress, setDeadletterAddress] = useState<any>();
+
+  const [expiryAddress, setExpiryAddress] = useState<any>();
+
+  useEffect(() => {
+    if (address.deadLetterAddress && address.deadLetterAddress !== null) {
+      setDeadletterAddress({ value: address.deadLetterAddress });
+    }
+    if (address.expiryAddress && address.expiryAddress !== null) {
+      setExpiryAddress({ value: address.expiryAddress });
+    }
+  }, [address]);
+
   const refetchQueries: string[] = [
     "all_addresses_for_addressspace_view",
     "single_addresses"
   ];
+
   const [setEditAddressQueryVariables] = useMutationQuery(
     EDIT_ADDRESS,
     refetchQueries
@@ -51,10 +72,23 @@ export const EditAddress: React.FunctionComponent = () => {
     RETURN_ADDRESS_PLANS(modalProps.addressSpacePlan, address.type || "")
   );
 
-  if (loading) return <Loading />;
+  const dlq_addresses = useQuery<IAddressResponse>(
+    RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE(
+      address.addressSpaceName,
+      address.namespace,
+      address.type
+    ),
+    { fetchPolicy: FetchPolicy.NETWORK_ONLY }
+  );
+
+  if (loading || dlq_addresses.loading) return <Loading />;
 
   const { addressPlans } = data || {
     addressPlans: []
+  };
+
+  const { addresses } = dlq_addresses.data || {
+    addresses: { total: 0, addresses: [] }
   };
 
   let optionsPlan: any[] = addressPlans
@@ -66,6 +100,15 @@ export const EditAddress: React.FunctionComponent = () => {
       };
     })
     .filter(plan => plan !== undefined);
+
+  let deadLetters: IDropdownOption[] = [{ key: " ", value: " ", label: " " }];
+  addresses.addresses.forEach(address => {
+    deadLetters.push({
+      key: address.spec.address,
+      value: address.spec.address,
+      label: address.metadata.name
+    });
+  });
 
   const onCloseDialog = () => {
     dispatch({ type: types.HIDE_MODAL });
@@ -85,6 +128,24 @@ export const EditAddress: React.FunctionComponent = () => {
     }
   };
 
+  const onChangeDeadletter = (value: string) => {
+    if (value) {
+      const newDlq = deadLetters.filter(address => address.value === value);
+      if (newDlq && newDlq[0]) {
+        setDeadletterAddress(newDlq[0]);
+      }
+    }
+  };
+
+  const onChangeExpiryAddress = (value: string) => {
+    if (value) {
+      const newDlq = deadLetters.filter(address => address.value === value);
+      if (newDlq && newDlq[0]) {
+        setExpiryAddress(newDlq[0]);
+      }
+    }
+  };
+
   const onConfirmDialog = async () => {
     if (address) {
       const variables = {
@@ -93,7 +154,13 @@ export const EditAddress: React.FunctionComponent = () => {
           namespace: address.namespace
         },
         jsonPatch:
-          '[{"op":"replace","path":"/spec/plan","value":"' + plan.value + '"}]',
+          '[{"op":"replace","path":"/spec/plan","value":"' +
+          plan.value +
+          '"},{"op":"replace","path":"/spec/deadLetterAddress","value":"' +
+          deadletterAddress.value +
+          '"},{"op":"replace","path":"/spec/expiryAddress","value":"' +
+          expiryAddress.value +
+          '"}]',
         patchType: "application/json-patch+json"
       };
       await setEditAddressQueryVariables(variables);
@@ -151,6 +218,17 @@ export const EditAddress: React.FunctionComponent = () => {
             <FormSelectOption value={address.type} label={address.type} />
           </FormSelect>
         </FormGroup>
+        {address.type?.trim() === "subscription" && (
+          <FormGroup label="Topic" fieldId="edit-address-topic-form-select">
+            <FormSelect
+              isDisabled
+              aria-label="form select topic"
+              id="edit-addr-topic"
+            >
+              <FormSelectOption value={address.topic} label={address.topic} />
+            </FormSelect>
+          </FormGroup>
+        )}
         <FormGroup label="Plan" fieldId="simple-form-name">
           <FormSelect
             id="edit-addr-plan"
@@ -168,6 +246,57 @@ export const EditAddress: React.FunctionComponent = () => {
             ))}
           </FormSelect>
         </FormGroup>
+        {(address.type?.trim() === "subscription" ||
+          address.type?.trim() === "queue") && (
+          <>
+            <FormGroup
+              label="Deadletter Address"
+              fieldId="edit-address-dead-letter-form-select"
+            >
+              <FormSelect
+                id="edit-address-dead-letter-form-select"
+                value={
+                  deadletterAddress && deadletterAddress.value !== null
+                    ? deadletterAddress.value
+                    : ""
+                }
+                onChange={value => onChangeDeadletter(value)}
+                aria-label="dead letter address"
+              >
+                {deadLetters.map((option, index) => (
+                  <FormSelectOption
+                    key={index}
+                    value={option.value}
+                    label={option.label}
+                  />
+                ))}
+              </FormSelect>
+            </FormGroup>
+            <FormGroup
+              label="Expiry Address"
+              fieldId="edit-address-expiry-addr-form-select"
+            >
+              <FormSelect
+                id="edit-address-expiry-addr-form-select"
+                value={
+                  expiryAddress && expiryAddress.value !== null
+                    ? expiryAddress.value
+                    : ""
+                }
+                onChange={value => onChangeExpiryAddress(value)}
+                aria-label="expiry address"
+              >
+                {deadLetters.map((option, index) => (
+                  <FormSelectOption
+                    key={index}
+                    value={option.value}
+                    label={option.label}
+                  />
+                ))}
+              </FormSelect>
+            </FormGroup>
+          </>
+        )}
       </Form>
     </Modal>
   );

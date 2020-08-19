@@ -39,7 +39,7 @@ export interface IDropdownWithToggleProps
   dropdownItemId?: string;
   dropdownItemClass?: string;
   isDisplayLabelAndValue?: boolean;
-  isRequiredField?: boolean;
+  isRequired?: boolean;
 }
 
 export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
@@ -58,7 +58,7 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
   dropdownItemId,
   dropdownItemClass,
   isDisplayLabelAndValue,
-  isRequiredField = true
+  isRequired = true
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>();
   const dropdowItemCss = classNames(dropdownItemClass);
@@ -76,7 +76,7 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
    *  If there is only one option use it as default
    */
   useEffect(() => {
-    if (isRequiredField) {
+    if (isRequired) {
       if (!value || value.trim() === "") {
         if (dropdownItems && dropdownItems.length === 1) {
           const item = dropdownItems[0];

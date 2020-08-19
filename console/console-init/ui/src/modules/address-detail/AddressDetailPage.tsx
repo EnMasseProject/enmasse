@@ -116,8 +116,8 @@ export default function AddressDetailPage() {
         addressDetail.spec.plan.metadata.name,
       planValue: addressDetail.spec.plan.metadata.name,
       topic: addressDetail.spec.topic,
-      deadletter: addressDetail.spec.deadLetterAddress,
-      expiryQueue: addressDetail.spec.expiryAddress,
+      deadLetterAddress: addressDetail.spec.deadLetterAddress,
+      expiryAddress: addressDetail.spec.expiryAddress,
       messageIn: getFilteredValue(addressDetail.metrics, "enmasse_messages_in"),
       messageOut: getFilteredValue(
         addressDetail.metrics,
@@ -229,8 +229,8 @@ export default function AddressDetailPage() {
           name={address.name}
           plan={address.planLabel}
           topic={address.topic}
-          deadletter={address.deadletter}
-          expiryQueue={address.expiryQueue}
+          deadletter={address.deadLetterAddress}
+          expiryQueue={address.expiryAddress}
           storedMessages={address.storedMessages}
           onEdit={onChangeEdit}
           onDelete={onChangeDelete}

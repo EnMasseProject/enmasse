@@ -154,6 +154,9 @@ const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
           spec {
             address
             type
+            topic
+            deadLetterAddress
+            expiryAddress
             plan {
               spec {
                 displayName
@@ -492,13 +495,13 @@ const RETURN_ADDRESS_SPACE_PLANS = gql`
 `;
 
 const RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE = (
-  name: string,
+  addressSpaceName: string,
   namespace: string,
   type: string
 ) => {
   let filter = "";
-  if (name && name.trim() !== "") {
-    filter += "`$.metadata.name` LIKE '" + name + ".%' AND";
+  if (addressSpaceName && addressSpaceName.trim() !== "") {
+    filter += "`$.metadata.name` LIKE '" + addressSpaceName + ".%' AND";
   }
   if (namespace && namespace.trim() !== "") {
     filter += "`$.metadata.namespace` = '" + namespace + "'";

@@ -46,6 +46,9 @@ export interface IAddressResponse {
       spec: {
         address: string;
         type: string;
+        topic?: string | null;
+        deadLetterAddress?: string | null;
+        expiryAddress?: string | null;
         plan: {
           spec: {
             displayName: string;

@@ -48,7 +48,7 @@ export const Deadletter: React.FunctionComponent<IExpiryQueueProps> = ({
         dropdownItems={deadletterOptions}
         dropdownItemId="address-definition-topic-dropdown-item"
         isDisplayLabelAndValue={true}
-        isRequiredField={false}
+        isRequired={false}
       />
       <br />
     </FormGroup>

@@ -31,7 +31,8 @@ export interface IAddress {
   name: string;
   displayName: string;
   namespace: string;
-  expiryQueue?: string | null;
+  deadLetterAddress?: string | null;
+  expiryAddress?: string | null;
   type: string;
   planLabel: string;
   planValue: string;
@@ -46,7 +47,6 @@ export interface IAddress {
   errorMessages?: string[];
   status?: string;
   selected?: boolean;
-  deadletter?: string | null;
   topic?: string | null;
 }
 
