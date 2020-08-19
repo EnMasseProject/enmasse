@@ -78,7 +78,7 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
   };
 
   //this function used to clear value of type ahead select input field on filter change
-  const resettInitialState = () => {
+  const resetInitialState = () => {
     setNameSelected(undefined);
     setNameInput(undefined);
     setNamespaceInput(undefined);
@@ -87,7 +87,7 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
 
   const onSelectFilter = (value: string) => {
     setFilter({ ...filter, filterType: value });
-    resettInitialState();
+    resetInitialState();
   };
 
   const onSelectName = (e: any, selection: SelectOptionObject) => {

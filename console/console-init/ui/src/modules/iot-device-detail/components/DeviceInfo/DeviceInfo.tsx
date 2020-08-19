@@ -4,7 +4,6 @@
  */
 
 import React, { useState } from "react";
-import { useParams } from "react-router";
 import {
   Page,
   PageSection,
@@ -62,7 +61,6 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
   memberOf = []
 }) => {
   const [isHidden, setIsHidden] = useState<boolean>(false);
-  const { projectname, namespace } = useParams();
 
   const jsonViewData = {
     registration: {
