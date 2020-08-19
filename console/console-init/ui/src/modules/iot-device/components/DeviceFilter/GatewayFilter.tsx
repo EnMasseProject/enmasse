@@ -18,6 +18,7 @@ import { DropdownWithToggle } from "components";
 import { css, StyleSheet } from "aphrodite";
 import { deviceGatewayConnectionOptions } from "modules/iot-device/utils";
 import { IDeviceFilter } from "./DeviceFilter";
+import { ChipGroupsWithTitle } from "components/ChipGroupsWithTitle";
 
 const styles = StyleSheet.create({
   dropdown_align: { display: "flex" },
@@ -118,16 +119,11 @@ const GatewayFilter: React.FunctionComponent<IGatewayFilter> = ({
         </GridItem>
       </Grid>
       <br />
-      <ChipGroup>
-        {gatewayConnections.map(gatewayChip => (
-          <Chip
-            key={gatewayChip}
-            onClick={() => deleteGatewayConnection(gatewayChip)}
-          >
-            {gatewayChip}
-          </Chip>
-        ))}
-      </ChipGroup>
+      <ChipGroupsWithTitle
+        id={"gateway-filter-connections-chip-group"}
+        items={gatewayConnections}
+        removeItem={deleteGatewayConnection}
+      />
     </FormGroup>
   );
 };
