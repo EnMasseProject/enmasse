@@ -23,7 +23,11 @@ import {
 } from "@patternfly/react-core";
 import { DeviceInformation } from "./DeviceInformation";
 import { ConnectionType } from "modules/iot-device/components/ConnectionTypeStep";
-import { AddGateways, AddCredential } from "modules/iot-device/components";
+import {
+  AddGateways,
+  AddCredential,
+  AddGatewayGroupMembership
+} from "modules/iot-device/components";
 import { useHistory, useParams } from "react-router";
 import { Link } from "react-router-dom";
 import { useBreadcrumb } from "use-patternfly";
@@ -32,6 +36,7 @@ import {
   ReviewDeviceContainer,
   IDeviceProp
 } from "modules/iot-device/containers";
+import { StyleSheet, css } from "aphrodite";
 
 const getInitialDeviceForm = () => {
   const device: IDeviceProp = {
@@ -47,7 +52,15 @@ export default function CreateDevicePage() {
   // const [connectionType, setConnectionType] = useState<string>("directly");
   const [gatewayDevices, setGatewayDevices] = useState<string[]>([]);
   const [gatewayGroups, setGatewayGroups] = useState<string[]>([]);
+  const [memberOf, setMemberOf] = useState<string[]>([]);
   const { projectname, namespace } = useParams();
+
+  const styles = StyleSheet.create({
+    lighter_text: {
+      fontWeight: "lighter"
+    }
+  });
+
   const deviceListRouteLink = `/iot-projects/${namespace}/${projectname}/devices`;
   const [device, setDevice] = useState<IDeviceProp>(getInitialDeviceForm());
   const breadcrumb = useMemo(
@@ -88,6 +101,26 @@ export default function CreateDevicePage() {
         returnGatewayGroups={getGatewayGroups}
       />
     )
+  };
+
+  const AddGatewayGroupMembershipWrapper = () => (
+    <>
+      <Title size="2xl" headingLevel="h1">
+        Assign to gateway groups{" "}
+        <small className={css(styles.lighter_text)}>(Optional)</small>
+      </Title>
+      <br />
+      <AddGatewayGroupMembership
+        id="some-random-id"
+        gatewayGroups={memberOf}
+        returnGatewayGroups={setMemberOf}
+      />
+    </>
+  );
+
+  const assignGroups = {
+    name: "Gateway groups",
+    component: <AddGatewayGroupMembershipWrapper />
   };
 
   const AddCredentialWrapper = () => (
@@ -153,6 +186,7 @@ export default function CreateDevicePage() {
     } else {
       steps.push(addGateway);
     }
+    steps.push(assignGroups);
     steps.push(reviewForm);
   }
 
