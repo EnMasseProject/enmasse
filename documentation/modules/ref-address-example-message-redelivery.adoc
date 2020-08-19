@@ -18,10 +18,10 @@ include::../common/address-example-message-redelivery.yaml[]
 
 include::ref-message-redelivery.adoc[]
 
-Message redelivery settings may also be defined by the address plan.  If a message redelivery setting are provided by both
-the address and address plan, the value provided by the address takes priority. The address `status` section shows the
+Message redelivery settings may also be defined by the address plan.  If both the address and address plan provide a message redelivery setting,
+the value provided by the address takes priority. The address `status` section shows the
 message redelivery settings that are in force.
 
-If the address has an `deadletter` address assigned, messages that have exceeded the maximum number of delivery attempts are automatically moved to it.
+If the address has a `deadletter` address assigned, messages that have exceeded the maximum number of delivery attempts are automatically moved to it.
 
 If the address has no `deadletter` address assigned, the system drops the messages. These messages are lost permanently.
