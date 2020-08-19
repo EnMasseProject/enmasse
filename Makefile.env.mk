@@ -1,16 +1,17 @@
 # Docker env
-DOCKER_REGISTRY     ?= quay.io
-DOCKER_ORG          ?= enmasse
-DOCKER              ?= docker
-PROJECT_PREFIX      ?= enmasse
-PROJECT_NAME        ?= $(shell basename $(CURDIR))
-REVISION            ?= $(shell git rev-parse HEAD)
-VERSION             ?= $(shell grep "release.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
-OLM_VERSION         ?= $(shell grep "olm.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
-MAVEN_VERSION       ?= $(shell grep "maven.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
-APP_BUNDLE_PREFIX   ?= $(shell grep "application.bundle.prefix" $(TOPDIR)/pom.properties| cut -d'=' -f2)
-OLM_PACKAGE_CHANNEL ?= $(shell grep "olm.package.channel" $(TOPDIR)/pom.properties| cut -d'=' -f2)
-TAG                 ?= latest
+DOCKER_REGISTRY      ?= quay.io
+DOCKER_ORG           ?= enmasse
+DOCKER               ?= docker
+PROJECT_PREFIX       ?= enmasse
+PROJECT_NAME         ?= $(shell basename $(CURDIR))
+REVISION             ?= $(shell git rev-parse HEAD)
+VERSION              ?= $(shell grep "release.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+OLM_VERSION          ?= $(shell grep "olm.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+MAVEN_VERSION        ?= $(shell grep "maven.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+APP_BUNDLE_PREFIX    ?= $(shell grep "application.bundle.prefix" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+OLM_PACKAGE_CHANNEL  ?= $(shell grep "olm.package.channel" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+OLM_REPLACES_VERSION ?= $(shell grep "olm.csv.replaces" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+TAG                  ?= latest
 
 CONSOLE_LINK_NAME         ?= $(shell grep "application.globalconsole.display.name" $(TOPDIR)/pom.properties| cut -d'=' -f2)
 CONSOLE_LINK_SECTION_NAME ?= $(shell grep "application.globalconsole.section.name" $(TOPDIR)/pom.properties| cut -d'=' -f2)
@@ -36,6 +37,8 @@ CONSOLE_PROXY_OPENSHIFT_IMAGE ?= quay.io/openshift/origin-oauth-proxy:latest
 CONSOLE_PROXY_OPENSHIFT3_IMAGE ?= openshift/oauth-proxy:latest
 CONSOLE_PROXY_KUBERNETES_IMAGE ?= quay.io/oauth2-proxy/oauth2-proxy:v5.1.0
 OLM_MANIFEST_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/olm-manifest:$(IMAGE_VERSION)
+OLM_INDEX_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/olm-index:$(IMAGE_VERSION)
+OLM_INDEX_IMAGE_PREVIOUS ?= quay.io/enmasse/olm-index:$(OLM_REPLACES_VERSION)
 PROMETHEUS_IMAGE ?= prom/prometheus:v2.4.3
 ALERTMANAGER_IMAGE ?= prom/alertmanager:v0.15.2
 GRAFANA_IMAGE ?= grafana/grafana:5.3.1
@@ -70,6 +73,8 @@ IMAGE_ENV=ADDRESS_SPACE_CONTROLLER_IMAGE=$(ADDRESS_SPACE_CONTROLLER_IMAGE) \
 			CONSOLE_PROXY_OPENSHIFT3_IMAGE=$(CONSOLE_PROXY_OPENSHIFT3_IMAGE) \
 			CONSOLE_PROXY_KUBERNETES_IMAGE=$(CONSOLE_PROXY_KUBERNETES_IMAGE) \
 			OLM_MANIFEST_IMAGE=$(OLM_MANIFEST_IMAGE) \
+			OLM_INDEX_IMAGE=$(OLM_INDEX_IMAGE) \
+			OLM_INDEX_IMAGE_PREVIOUS=$(OLM_INDEX_IMAGE_PREVIOUS) \
 			PROMETHEUS_IMAGE=$(PROMETHEUS_IMAGE) \
 			ALERTMANAGER_IMAGE=$(ALERTMANAGER_IMAGE) \
 			GRAFANA_IMAGE=$(GRAFANA_IMAGE) \

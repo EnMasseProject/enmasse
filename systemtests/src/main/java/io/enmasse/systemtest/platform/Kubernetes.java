@@ -618,15 +618,23 @@ public abstract class Kubernetes {
     }
 
     public List<StatefulSet> listStatefulSets(Map<String, String> labels) {
-        return client.apps().statefulSets().inNamespace(infraNamespace).withLabels(labels).list().getItems();
+        return listStatefulSets(infraNamespace, labels);
     }
 
     public List<StatefulSet> listStatefulSets(String namespace) {
         return client.apps().statefulSets().inNamespace(namespace).list().getItems();
     }
 
+    public List<StatefulSet> listStatefulSets(String namespace, Map<String, String> labels) {
+        return client.apps().statefulSets().inNamespace(namespace).withLabels(labels).list().getItems();
+    }
+
     public List<ReplicaSet> listReplicaSets(String namespace) {
         return client.apps().replicaSets().inNamespace(namespace).list().getItems();
+    }
+
+    public List<ReplicaSet> listReplicaSets(String namespace, Map<String, String> labels) {
+        return client.apps().replicaSets().inNamespace(namespace).withLabels(labels).list().getItems();
     }
 
     public List<ServiceAccount> listServiceAccounts(Map<String, String> labels) {

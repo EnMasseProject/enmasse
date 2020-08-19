@@ -6,3 +6,9 @@ kubectl apply -f https://github.com/operator-framework/operator-lifecycle-manage
 
 # Delete "operatorhubio-catalog"
 kubectl delete catalogsource operatorhubio-catalog -n olm
+
+
+# Install OPM tool
+curl -o opm -L https://github.com/operator-framework/operator-registry/releases/download/v1.13.7/linux-amd64-opm
+chmod 755 opm
+sudo mv opm /usr/bin

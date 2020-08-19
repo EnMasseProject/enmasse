@@ -21,3 +21,6 @@ make -j 4 docker_tag docker_push
 
 echo "Generate templates"
 make templates
+
+echo "Generate OLM index"
+make olmindex olmindex_push

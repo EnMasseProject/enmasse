@@ -496,18 +496,14 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
 
     private void upgradeEnmasseOLM(Path upgradeTemplates, String previousVersion) throws Exception {
         String newVersion = getVersionFromTemplateDir(upgradeTemplates);
-        String manifestsImage = getManifestsImage(upgradeTemplates, newVersion);
-        //update manifests image
-        operatorManager.olm().buildPushCustomOperatorRegistry(infraNamespace, manifestsImage);
 
         //delete catalog pod to force update
         kubernetes.deletePod(infraNamespace, Map.of("olm.catalogSource", "enmasse-source"));
 
         String csvName = getCsvName(upgradeTemplates, newVersion);
-        String catalogSourceName = "enmasse-source";
         String catalogNamespace = infraNamespace;
         //update subscription to point to new catalog and to use latest csv
-        operatorManager.olm().applySubscription(infraNamespace, catalogSourceName, catalogNamespace, csvName, Environment.getInstance().getOperatorName(), Environment.getInstance().getOperatorChannel());
+        operatorManager.olm().applySubscription(infraNamespace, catalogNamespace, csvName, Environment.getInstance().getOperatorName(), Environment.getInstance().getOperatorChannel());
 
         //should update
         Thread.sleep(300_000);

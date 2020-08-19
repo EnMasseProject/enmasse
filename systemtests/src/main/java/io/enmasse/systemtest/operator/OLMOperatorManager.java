@@ -26,7 +26,6 @@ import io.enmasse.systemtest.utils.TestUtils;
 
 public class OLMOperatorManager {
 
-    private static final String DEFAULT_NAME_ENMASSE_SOURCE = "enmasse-source";
     private static final Logger log = CustomLogger.getLogger();
     private Kubernetes kube = Kubernetes.getInstance();
     private String clusterExternalImageRegistry;
@@ -64,21 +63,16 @@ public class OLMOperatorManager {
             kube.createNamespace(namespace, Collections.singletonMap("allowed", "true"));
         }
 
-        String catalogSourceName = DEFAULT_NAME_ENMASSE_SOURCE;
-        String catalogNamespace = namespace;
-
-        buildPushCustomOperatorRegistry(catalogNamespace, manifestsImage);
-        String customRegistryImageToUse = getCustomOperatorRegistryInternalImage(catalogNamespace);
-        deployCatalogSource(catalogSourceName, catalogNamespace, customRegistryImageToUse);
+        deployCatalogSource(namespace);
 
         if (installation == OLMInstallationType.SPECIFIC) {
             Path operatorGroupFile = Files.createTempFile("operatorgroup", ".yaml");
-            String operatorGroup = Files.readString(Paths.get("custom-operator-registry", "operator-group.yaml"));
+            String operatorGroup = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "operator-group.yaml"));
             Files.writeString(operatorGroupFile, operatorGroup.replaceAll("\\$\\{OPERATOR_NAMESPACE}", namespace));
             KubeCMDClient.applyFromFile(namespace, operatorGroupFile);
         }
 
-        applySubscription(namespace, catalogSourceName, catalogNamespace, csvName, Environment.getInstance().getOperatorName(), Environment.getInstance().getOperatorChannel());
+        applySubscription(namespace, namespace, csvName, Environment.getInstance().getOperatorName(), Environment.getInstance().getOperatorChannel());
 
         TestUtils.waitForPodReady("enmasse-operator", namespace);
 
@@ -89,72 +83,27 @@ public class OLMOperatorManager {
         SystemtestsKubernetesApps.cleanBuiltContainerImages(kube);
     }
 
-    public void applySubscription(String installationNamespace, String catalogSourceName, String catalogNamespace, String csvName, String operatorName, String operatorChannel) throws IOException {
+    public void applySubscription(String installationNamespace, String catalogNamespace, String csvName, String operatorName, String operatorChannel) throws IOException {
         Path subscriptionFile = Files.createTempFile("subscription", ".yaml");
-        String subscription = Files.readString(Paths.get("custom-operator-registry", "subscription.yaml"));
+        String subscription = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "subscription.yaml"));
         Files.writeString(subscriptionFile,
                 subscription
-                    .replaceAll("\\$\\{OPERATOR_NAME}", operatorName)
-                    .replaceAll("\\$\\{OPERATOR_CHANNEL}", operatorChannel)
                     .replaceAll("\\$\\{OPERATOR_NAMESPACE}", installationNamespace)
-                    .replaceAll("\\$\\{CATALOG_SOURCE_NAME}", catalogSourceName)
-                    .replaceAll("\\$\\{CATALOG_NAMESPACE}", catalogNamespace)
                     .replaceAll("\\$\\{CSV}", csvName));
         KubeCMDClient.applyFromFile(installationNamespace, subscriptionFile);
     }
 
-    public void deployCatalogSource(String catalogSourceName, String catalogNamespace, String customRegistryImageToUse) throws IOException {
+    public void deployCatalogSource(String catalogNamespace) throws IOException {
         Path catalogSourceFile = Files.createTempFile("catalogsource", ".yaml");
-        String catalogSource = Files.readString(Paths.get("custom-operator-registry", "catalog-source.yaml"));
+        String catalogSource = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "catalog-source.yaml"));
         Files.writeString(catalogSourceFile,
                 catalogSource
-                    .replaceAll("\\$\\{CATALOG_SOURCE_NAME}", catalogSourceName)
-                    .replaceAll("\\$\\{OPERATOR_NAMESPACE}", catalogNamespace)
-                    .replaceAll("\\$\\{REGISTRY_IMAGE}", customRegistryImageToUse));
+                    .replaceAll("\\$\\{OPERATOR_NAMESPACE}", catalogNamespace));
         KubeCMDClient.applyFromFile(catalogNamespace, catalogSourceFile);
-    }
-
-    public void buildPushCustomOperatorRegistry(String namespace, String manifestsImage) throws Exception {
-        String customRegistryImageToPush = clusterExternalImageRegistry+"/"+namespace+"/systemtests-operator-registry:latest";
-
-        String olmManifestsImage = manifestsImage.replace(clusterInternalImageRegistry, clusterExternalImageRegistry);
-
-        Path dockerfilePath = Paths.get(System.getProperty("user.dir"), "custom-operator-registry", "workspace", "Dockerfile");
-        Path manifestsReplacerScript = Paths.get(System.getProperty("user.dir"), "custom-operator-registry", "workspace", "manifests_replacer.sh");
-
-        log.info("Going to build and push image {}", customRegistryImageToPush);
-
-        TestUtils.runUntilPass(10, () -> {
-            if (Kubernetes.isOpenShiftCompatible()) {
-                SystemtestsKubernetesApps.buildOperatorRegistryImage(kube, olmManifestsImage, customRegistryImageToPush, clusterExternalImageRegistry, dockerfilePath, manifestsReplacerScript);
-            } else {
-                String volume = System.getProperty("user.dir") + "/custom-operator-registry/workspace:/workspace";
-                String kanikoImage = "gcr.io/kaniko-project/executor:v0.23.0";
-                List<String> command = Arrays.asList("docker", "run", "-v", volume, kanikoImage, "--context=dir:///workspace", "--destination=" + customRegistryImageToPush,
-                        "--build-arg=MANIFESTS_IMAGE=" + olmManifestsImage,
-                        "--insecure-registry=true",
-                        "--skip-tls-verify=true",
-                        "--insecure-pull",
-                        "--force");
-                var result = Exec.execute(command);
-                if (!result.getRetCode()) {
-                    if (saysDoingNothing(result.getStdErr()) || saysDoingNothing(result.getStdOut())) {
-                        log.info("Ignoring command error, as image building should have succeeded");
-                        return; //it went ok
-                    }
-                    log.error("Throwing error, image building failed");
-                    throw new IllegalStateException("Image build failed");
-                }
-            }
-        });
     }
 
     private boolean saysDoingNothing(String text) {
         return text != null && text.replace("\n", "").replace("\r", "").strip().equals("Doing nothing");
-    }
-
-    public String getCustomOperatorRegistryInternalImage(String namespace) {
-        return clusterInternalImageRegistry+"/"+namespace+"/systemtests-operator-registry:latest";
     }
 
     public String getLatestStartingCsv() throws Exception {

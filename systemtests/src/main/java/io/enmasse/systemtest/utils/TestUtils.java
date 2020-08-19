@@ -630,7 +630,7 @@ public class TestUtils {
     public static void waitUntilDeployed(String namespace, List<String> expectedPods) {
         log.info("-------------------------------------------------------------");
         TestUtils.waitUntilCondition("All Deployments, StatefulSets, ReplicaSets and Pods are ready", waitPhase -> {
-            List<Deployment> deployments = Kubernetes.getInstance().listDeployments(namespace);
+            List<Deployment> deployments = Kubernetes.getInstance().listDeployments(namespace, Collections.singletonMap("app", "enmasse"));
             for (Deployment deployment : deployments) {
                 if (!Objects.equals(deployment.getStatus().getReplicas(), deployment.getStatus().getReadyReplicas())) {
                     log.info("Deployment {} has not all replicas ready", deployment.getMetadata().getName());
@@ -638,7 +638,7 @@ public class TestUtils {
                 }
             }
             log.info("All current Deployments are ready");
-            List<StatefulSet> statefulSets = Kubernetes.getInstance().listStatefulSets(namespace);
+            List<StatefulSet> statefulSets = Kubernetes.getInstance().listStatefulSets(namespace, Collections.singletonMap("app", "enmasse"));
             for (StatefulSet statefulSet : statefulSets) {
                 if (!Objects.equals(statefulSet.getStatus().getReplicas(), statefulSet.getStatus().getReadyReplicas())) {
                     log.info("StatefulSet {} has not all replicas ready", statefulSet.getMetadata().getName());
@@ -646,7 +646,7 @@ public class TestUtils {
                 }
             }
             log.info("All current StatefulSets are ready");
-            List<ReplicaSet> replicaSets = Kubernetes.getInstance().listReplicaSets(namespace);
+            List<ReplicaSet> replicaSets = Kubernetes.getInstance().listReplicaSets(namespace, Collections.singletonMap("app", "enmasse"));
             for (ReplicaSet replicaSet : replicaSets) {
                 if (replicaSet.getSpec().getReplicas() > 0 && !Objects.equals(replicaSet.getStatus().getReplicas(), replicaSet.getStatus().getReadyReplicas())) {
                     log.info("ReplicaSet {} has not all replicas ready", replicaSet.getMetadata().getName());
@@ -654,7 +654,7 @@ public class TestUtils {
                 }
             }
             log.info("All current ReplicaSets are ready");
-            List<Pod> pods = Kubernetes.getInstance().listPods(namespace);
+            List<Pod> pods = Kubernetes.getInstance().listPods(namespace, Collections.singletonMap("app", "enmasse"));
             for (String expectedPod : expectedPods) {
                 if (pods.stream().noneMatch(pod -> pod.getMetadata().getName().contains(expectedPod))) {
                     log.info("Pod {} is still not deployed", expectedPod);
@@ -760,8 +760,8 @@ public class TestUtils {
     /**
      * Encode an X509 certificate into PEM format.
      *
-     * @param certificate The certificate to encode.
-     * @return the PEM encoded certificate, or {@code null} if the input was {@code null}.
+     * @param certificates The certificates to encode.
+     * @return the PEM encoded certificates, or {@code null} if the input was {@code null}.
      */
     public static String toPem(final X509Certificate... certificates) {
 
