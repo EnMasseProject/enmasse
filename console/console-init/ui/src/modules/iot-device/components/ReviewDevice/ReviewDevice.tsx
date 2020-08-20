@@ -76,26 +76,41 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
   const getConnectionType = () => {
     const { gateways, credentials } = device || {};
 
-    let connType: string = "";
+    let connectionType: string = "";
     const viaGateway = gateways
       ? (gateways.gateways && gateways.gateways.length > 0) ||
         (gateways.gatewayGroups && gateways.gatewayGroups.length > 0)
       : false;
     if (credentials && credentials.length > 0 && !viaGateway) {
-      connType = "Connected directly";
+      connectionType = "Connected directly";
     } else if (viaGateway && !credentials?.length) {
-      connType = "Connected via gateways";
+      connectionType = "Connected via gateways";
     } else {
-      connType = "N/A";
+      connectionType = "N/A";
     }
 
     return (
       <>
         <Text className={css(style.font_size_20)}>Connection Type</Text>
         <br />
-        {connType}
+        {connectionType}
         <br />
         <br />
+      </>
+    );
+  };
+  const renderSplitItems = (items?: string[]) => {
+    return (
+      <>
+        <Split>
+          {items && items?.length > 0
+            ? items.map(item => (
+                <SplitItem key={item} className={css(style.split_right_margin)}>
+                  {item}
+                </SplitItem>
+              ))
+            : "--"}
+        </Split>
       </>
     );
   };
@@ -106,18 +121,7 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
       <>
         <Text className={css(style.font_size_20)}>Gateways</Text>
         <br />
-        <Split>
-          {gateways && gateways?.length > 0
-            ? gateways.map(gateway => (
-                <SplitItem
-                  key={gateway}
-                  className={css(style.split_right_margin)}
-                >
-                  {gateway}
-                </SplitItem>
-              ))
-            : "--"}
-        </Split>
+        <Split>{renderSplitItems(gateways)}</Split>
         <br />
       </>
     );
@@ -129,18 +133,7 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
       <>
         <Text className={css(style.font_size_20)}>Gateway groups</Text>
         <br />
-        <Split>
-          {gatewayGroups && gatewayGroups?.length > 0
-            ? gatewayGroups.map(gatewayGroup => (
-                <SplitItem
-                  key={gatewayGroup}
-                  className={css(style.split_right_margin)}
-                >
-                  {gatewayGroup}
-                </SplitItem>
-              ))
-            : "--"}
-        </Split>
+        {renderSplitItems(gatewayGroups)}
         <br />
       </>
     );
@@ -152,18 +145,7 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
       <>
         <Text className={css(style.font_size_20)}>Gateway Members</Text>
         <br />
-        <Split>
-          {memberOf && memberOf?.length > 0
-            ? memberOf.map(member => (
-                <SplitItem
-                  key={member}
-                  className={css(style.split_right_margin)}
-                >
-                  {member}
-                </SplitItem>
-              ))
-            : "--"}
-        </Split>
+        {renderSplitItems(memberOf)}
         <br />
       </>
     );
