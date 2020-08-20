@@ -81,7 +81,7 @@ const SecretRow: React.FC<ISecretRowProps> = ({
           Change password
         </Button>
       );
-    } else if (key === "key" || !enableActions) {
+    } else if (key === "key" || (key === "pwd-hash" && !enableActions)) {
       return (
         <PasswordLabel id="secrets-view-key-password-label" value={value} />
       );
