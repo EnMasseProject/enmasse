@@ -124,7 +124,7 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
       }
 
       if (type.toLowerCase() === "subscription") {
-        const topics_addresses = await client.query<IAddressResponse>({
+        const topicsAddresses = await client.query<IAddressResponse>({
           query: RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION(
             addressspaceName,
             namespace,
@@ -133,11 +133,11 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
           fetchPolicy: FetchPolicy.NETWORK_ONLY
         });
         if (
-          topics_addresses.data &&
-          topics_addresses.data.addresses &&
-          topics_addresses.data.addresses.addresses.length > 0
+          topicsAddresses.data &&
+          topicsAddresses.data.addresses &&
+          topicsAddresses.data.addresses.addresses.length > 0
         ) {
-          const topics = topics_addresses.data.addresses.addresses.map(
+          const topics = topicsAddresses.data.addresses.addresses.map(
             address => {
               return {
                 key: address.spec.address,
@@ -153,7 +153,7 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
         type?.toLowerCase() === "subscription" ||
         type?.toLowerCase() === "queue"
       ) {
-        const deadletter_addresses = await client.query<IAddressResponse>({
+        const deadletterAddresses = await client.query<IAddressResponse>({
           query: RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE(
             addressspaceName,
             namespace,
@@ -162,11 +162,11 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
           fetchPolicy: FetchPolicy.NETWORK_ONLY
         });
         if (
-          deadletter_addresses.data &&
-          deadletter_addresses.data.addresses &&
-          deadletter_addresses.data.addresses.addresses.length > 0
+          deadletterAddresses.data &&
+          deadletterAddresses.data.addresses &&
+          deadletterAddresses.data.addresses.addresses.length > 0
         ) {
-          const deadletters = deadletter_addresses.data.addresses.addresses.map(
+          const deadletters = deadletterAddresses.data.addresses.addresses.map(
             address => {
               return {
                 key: address.spec.address,
