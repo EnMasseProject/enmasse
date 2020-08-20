@@ -32,9 +32,9 @@ export interface IAddressConfigurationProps {
   addressName: string;
   isNameValid: boolean;
   handleAddressChange: (name: string) => void;
-  type: string;
-  plan: string;
-  topic: string;
+  type?: string;
+  plan?: string;
+  topic?: string;
   onTypeSelect?: (value: string) => void;
   onPlanSelect?: (value: string) => void;
   onTopicSelect?: (value: string) => void;
@@ -134,7 +134,7 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                 value={plan}
                 dropdownItems={planOptions}
                 dropdownItemIdPrefix="address-definition-plan-dropdown-item"
-                isDisabled={type.trim() === ""}
+                isDisabled={type?.trim() === ""}
               />
             </FormGroup>
             {type && type.toLowerCase() === "subscription" && (
