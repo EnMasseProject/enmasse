@@ -166,7 +166,7 @@ export const EditAddress: React.FunctionComponent = () => {
     value: string | null
   ) => {
     let patchObject: IPatchObject;
-    if (!value || value.trim() === "" || value.trim() === "null") {
+    if (!value || value.trim() === "" || value.trim() === null) {
       patchObject = {
         op: op,
         path: path,
@@ -207,7 +207,6 @@ export const EditAddress: React.FunctionComponent = () => {
           "]",
         patchType: "application/json-patch+json"
       };
-      console.log("varaible", variables);
       await setEditAddressQueryVariables(variables);
       onCloseDialog();
       if (onConfirm) {
