@@ -86,7 +86,7 @@ export const EditAddress: React.FunctionComponent = () => {
     RETURN_ADDRESS_PLANS(modalProps.addressSpacePlan, address.type || "")
   );
 
-  const dlq_addresses = useQuery<IAddressResponse>(
+  const dlqAddresses = useQuery<IAddressResponse>(
     RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE(
       address.addressSpaceName,
       address.namespace,
@@ -95,13 +95,13 @@ export const EditAddress: React.FunctionComponent = () => {
     { fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
 
-  if (loading || dlq_addresses.loading) return <Loading />;
+  if (loading || dlqAddresses.loading) return <Loading />;
 
   const { addressPlans } = data || {
     addressPlans: []
   };
 
-  const { addresses } = dlq_addresses.data || {
+  const { addresses } = dlqAddresses.data || {
     addresses: { total: 0, addresses: [] }
   };
 
@@ -115,9 +115,11 @@ export const EditAddress: React.FunctionComponent = () => {
     })
     .filter(plan => plan !== undefined);
 
-  let deadLetters: IDropdownOption[] = [{ key: " ", value: " ", label: " " }];
+  let deadlettersAddress: IDropdownOption[] = [
+    { key: " ", value: " ", label: " " }
+  ];
   addresses.addresses.forEach(address => {
-    deadLetters.push({
+    deadlettersAddress.push({
       key: address.spec.address,
       value: address.spec.address,
       label: address.metadata.name
@@ -144,7 +146,9 @@ export const EditAddress: React.FunctionComponent = () => {
 
   const onChangeDeadletter = (value: string) => {
     if (value) {
-      const newDlq = deadLetters.filter(address => address.value === value);
+      const newDlq = deadlettersAddress.filter(
+        address => address.value === value
+      );
       if (newDlq && newDlq[0]) {
         setDeadletterAddress(newDlq[0]);
       }
@@ -153,7 +157,9 @@ export const EditAddress: React.FunctionComponent = () => {
 
   const onChangeExpiryAddress = (value: string) => {
     if (value) {
-      const newDlq = deadLetters.filter(address => address.value === value);
+      const newDlq = deadlettersAddress.filter(
+        address => address.value === value
+      );
       if (newDlq && newDlq[0]) {
         setExpiryAddress(newDlq[0]);
       }
@@ -307,7 +313,7 @@ export const EditAddress: React.FunctionComponent = () => {
                 onChange={value => onChangeDeadletter(value)}
                 aria-label="dead letter address"
               >
-                {deadLetters.map((option, index) => (
+                {deadlettersAddress.map((option, index) => (
                   <FormSelectOption
                     key={index}
                     value={option.value}
@@ -330,7 +336,7 @@ export const EditAddress: React.FunctionComponent = () => {
                 onChange={value => onChangeExpiryAddress(value)}
                 aria-label="expiry address"
               >
-                {deadLetters.map((option, index) => (
+                {deadlettersAddress.map((option, index) => (
                   <FormSelectOption
                     key={index}
                     value={option.value}
