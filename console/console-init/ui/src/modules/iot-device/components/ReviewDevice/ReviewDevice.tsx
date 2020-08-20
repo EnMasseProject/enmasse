@@ -14,6 +14,7 @@ import {
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
 import { CredentialsView } from "modules/iot-device-detail";
+import { ReviewMetaData } from "./ReviewMetaData";
 interface IReviewDeviceProps {
   device?: IDeviceProp;
   title?: string;
@@ -33,7 +34,8 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
   title
 }) => {
   const getDeviceInformation = () => {
-    const { deviceId, status, metadata } = device?.deviceInformation || {};
+    const { deviceId, status, metadata, defaults, ext } =
+      device?.deviceInformation || {};
     return (
       <>
         <Text className={css(style.font_size_20)}>Device Information</Text>
@@ -63,8 +65,13 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
             <Title size="lg" headingLevel="h5">
               MetaData
             </Title>
-            {/*TODO: {metadata} */}
-            --
+            <br />
+            <ReviewMetaData
+              defaults={defaults}
+              ext={ext}
+              label={"Default properties parameter"}
+            />
+            <br />
             <br />
             <br />
           </>

@@ -208,7 +208,7 @@ const getDeviceFromDeviceString = (device: string) => {
       if (registration.enabled !== undefined) {
         deviceDetail.registration.enabled = registration.enabled;
       }
-      if (registration.defaults && registration.defaults.length > 0) {
+      if (registration.defaults) {
         try {
           deviceDetail.registration.defaults = JSON.stringify(
             registration.defaults
@@ -226,8 +226,7 @@ const getDeviceFromDeviceString = (device: string) => {
       if (registration.memberOf && registration.memberOf.length > 0) {
         deviceDetail.registration.memberOf = registration.memberOf;
       }
-
-      if (registration.ext && registration.ext.length > 0) {
+      if (registration.ext) {
         try {
           deviceDetail.registration.ext = JSON.stringify(registration.ext);
         } catch (_err) {
