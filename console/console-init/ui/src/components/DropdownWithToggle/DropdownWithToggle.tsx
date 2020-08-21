@@ -37,7 +37,7 @@ export interface IDropdownWithToggleProps
   toggleIcon?: React.ReactElement<any>;
   component?: React.ReactNode;
   toggleClass?: string;
-  value: string;
+  value?: string;
   onSelectItem?: (value: string, event?: any) => void;
   dropdownItemIdPrefix?: string;
   dropdownItemClass?: string;

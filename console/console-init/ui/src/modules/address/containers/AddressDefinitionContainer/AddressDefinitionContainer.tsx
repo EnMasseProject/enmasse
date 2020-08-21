@@ -22,10 +22,10 @@ export interface IAddressDefinition extends IAddressConfigurationProps {
   addressspaceName: string;
   namespace: string;
   addressSpacePlan: string | null;
-  setType: (value: any) => void;
-  setPlan: (value: any) => void;
+  setType: (value?: any) => void;
+  setPlan: (value?: any) => void;
   addressSpaceType?: string;
-  setTopic: (value: string) => void;
+  setTopic: (value?: string) => void;
   setTypeOptions: (values: IDropdownOption[]) => void;
   setPlanOptions: (values: IDropdownOption[]) => void;
   setTopicForSubscripitons: (values: IDropdownOption[]) => void;
@@ -106,9 +106,9 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
             description: plan.spec.shortDescription || plan.spec.longDescription
           };
         });
-        setTopic(" ");
+        setTopic(undefined);
         setPlanOptions(planOptions);
-        setPlan(" ");
+        setPlan(undefined);
       }
 
       if (type.toLowerCase() === "subscription") {

@@ -26,9 +26,9 @@ export const CreateAddress: React.FunctionComponent = () => {
     modalProps || {};
 
   const [addressName, setAddressName] = useState("");
-  const [addressType, setAddressType] = useState(" ");
-  const [plan, setPlan] = useState(" ");
-  const [topic, setTopic] = useState(" ");
+  const [addressType, setAddressType] = useState<string>();
+  const [plan, setPlan] = useState<string>();
+  const [topic, setTopic] = useState<string>();
   const [addressTypes, setAddressTypes] = useState<IDropdownOption[]>([]);
   const [addressPlans, setAddressPlans] = useState<IDropdownOption[]>([]);
   const [topicsForSubscription, setTopicForSubscription] = useState<
@@ -85,9 +85,12 @@ export const CreateAddress: React.FunctionComponent = () => {
     if (
       addressName.trim() !== "" &&
       isNameValid &&
+      plan &&
       plan.trim() !== "" &&
+      addressType &&
       addressType.trim() !== "" &&
-      (addressType.toLowerCase() === "subscription") === (topic.trim() !== "")
+      (addressType && addressType.toLowerCase() === "subscription") ===
+        (topic && topic.trim() !== "")
     ) {
       return true;
     }
@@ -97,10 +100,12 @@ export const CreateAddress: React.FunctionComponent = () => {
   const isFinishButtonEnabled = () => {
     if (
       addressName.trim() !== "" &&
+      plan &&
       plan.trim() !== "" &&
+      addressType &&
       addressType.trim() !== "" &&
-      (addressType.toLowerCase() === "subscription") ===
-        (topic.trim() !== "") &&
+      (addressType && addressType.toLowerCase() === "subscription") ===
+        (topic && topic.trim() !== "") &&
       isNameValid
     ) {
       return true;
@@ -116,7 +121,7 @@ export const CreateAddress: React.FunctionComponent = () => {
             namespace: namespace
           },
           spec: {
-            type: addressType.toLowerCase(),
+            type: addressType?.toLowerCase(),
             plan: plan,
             address: addressName
           }
