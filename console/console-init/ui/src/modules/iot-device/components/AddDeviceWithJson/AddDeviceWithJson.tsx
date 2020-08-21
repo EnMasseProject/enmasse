@@ -212,10 +212,9 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
         modalProps: {
           onConfirm: onLeave,
           option: "Leave",
-          detail: `Do you want to leave this creation page without saving? All information will be lost.`,
+          detail: `All unsaved information will be lost.`,
           header: "Leave without saving ?",
-          confirmButtonLabel: "Leave",
-          iconType: "danger"
+          confirmButtonLabel: "Leave"
         }
       });
     } else {

@@ -25,8 +25,8 @@ describe("<CreateDeviceButton />", () => {
 
     fireEvent.click(createBtn);
 
-    const inputDeviceBtn = getByText("Input device info");
-    const inputJSONBtn = getByText("Upload a JSON file");
+    const inputDeviceBtn = getByText("Add with wizard");
+    const inputJSONBtn = getByText("Add in JSON");
 
     expect(inputDeviceBtn).toBeInTheDocument();
     expect(inputJSONBtn).toBeInTheDocument();

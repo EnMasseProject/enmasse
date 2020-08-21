@@ -159,7 +159,8 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
           option: "Delete",
           detail: `Are you sure you want to delete this messaging project: ${project.name} ?`,
           header: "Delete this Messaging Project ?",
-          confirmButtonLabel: "Delete"
+          confirmButtonLabel: "Delete",
+          iconType: "danger"
         }
       });
     } else if (project.projectType === ProjectTypes.IOT) {
@@ -171,9 +172,10 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
           data: project,
           onConfirm: onDeleteProject,
           option: "Delete",
-          detail: `Are you sure you want to delete this iot project: ${project.name} ?`,
+          detail: `All data will be deleted and unrecoverable`,
           header: "Delete this IoT Project ?",
-          confirmButtonLabel: "Delete"
+          confirmButtonLabel: "Delete",
+          iconType: "danger"
         }
       });
     }
@@ -243,7 +245,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
         data: project,
         onConfirm: () => handleOnChangeEnable(project),
         option: "Disable",
-        detail: `Are you sure you want to disable this iot project: ${project.name} ?`,
+        detail: `Devices under this project will stop sending and receiving messages and commands with the system`,
         header: "Disable this IoT Project ?",
         confirmButtonLabel: "Disable"
       }

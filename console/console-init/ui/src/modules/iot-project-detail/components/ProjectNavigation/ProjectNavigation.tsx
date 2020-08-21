@@ -16,7 +16,8 @@ const styles = StyleSheet.create({
   navlink: {
     color: "black",
     paddingLeft: 10,
-    paddingRight: 10
+    paddingRight: 10,
+    marginRight: 20
   }
 });
 
@@ -72,7 +73,7 @@ export const ProjectNavigation: React.FunctionComponent<ProjectNavigationProps> 
             to={`certificates`}
             className={css(styles.navlink)}
           >
-            Certificates
+            Device certificates
           </NavLink>
         </NavItem>
       </NavList>

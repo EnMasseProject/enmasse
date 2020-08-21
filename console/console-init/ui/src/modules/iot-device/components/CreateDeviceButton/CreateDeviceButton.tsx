@@ -24,7 +24,7 @@ export const CreateDeviceButton: React.FunctionComponent<ICreateDeviceButtonProp
       key="device-info"
       component="button"
     >
-      Input device info
+      Add with wizard
     </DropdownItem>,
     <DropdownItem
       onClick={handleJSONUpload}
@@ -32,7 +32,7 @@ export const CreateDeviceButton: React.FunctionComponent<ICreateDeviceButtonProp
       key="json-file"
       component="button"
     >
-      Upload a JSON file
+      Add in JSON
     </DropdownItem>
   ];
 

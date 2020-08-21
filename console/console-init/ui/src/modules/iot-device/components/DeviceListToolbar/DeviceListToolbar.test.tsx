@@ -66,8 +66,8 @@ describe("<DeviceListToolbar />", () => {
 
     fireEvent.click(createDeviceBtn);
 
-    getByText("Input device info");
-    getByText("Upload a JSON file");
+    getByText("Add with wizard");
+    getByText("Add in JSON");
   });
 
   // ToDo: Modify after bulk select is finalized
