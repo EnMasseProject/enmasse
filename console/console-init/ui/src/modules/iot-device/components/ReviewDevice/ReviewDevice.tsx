@@ -66,12 +66,7 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
               MetaData
             </Title>
             <br />
-            <ReviewMetaData
-              defaults={defaults}
-              ext={ext}
-              label={"Default properties parameter"}
-            />
-            <br />
+            <ReviewMetaData defaults={defaults} ext={ext} />
             <br />
             <br />
           </>
