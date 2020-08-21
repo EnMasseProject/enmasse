@@ -27,6 +27,19 @@ const deviceTypeOptions: ISelectOption[] = [
     label: "All types"
   }
 ];
+
+const deviceGatewayConnectionOptions: ISelectOption[] = [
+  {
+    key: "gateway-device-id",
+    value: "gatewayDeviceId",
+    label: "Gateway device ID"
+  },
+  {
+    key: "gateway-group-name",
+    value: "gatewayDeviceName",
+    label: "Gateway group Name"
+  }
+];
 const deviceStatusOptions: ISelectOption[] = [
   {
     key: "enabled",
@@ -87,7 +100,9 @@ const getInitialFilter = () => {
         form: "hr",
         time: ""
       }
-    }
+    },
+    gatewayGroups: [],
+    gatewayConnections: []
   };
   return filter;
 };
@@ -192,5 +207,6 @@ export {
   getInitialSelectedColumns,
   getInitialManageColumnsForDevices,
   MAX_DEVICE_LIST_COUNT,
-  ValidationStatusType
+  ValidationStatusType,
+  deviceGatewayConnectionOptions
 };

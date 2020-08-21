@@ -23,18 +23,21 @@ import { IDeviceFilterCriteria } from "modules/iot-device";
 import { AddCriteria } from "./AddCriteria";
 import { LastSeenFilterSection } from "./LastSeenFilterSection";
 import { DateFilterSection } from "./DateFilterSection";
+import { GatewayGroupTypeAheadSelect } from "containers";
 import {
   deviceTypeOptions,
   deviceStatusOptions,
   getInitialFilter
 } from "modules/iot-device/utils";
+import { GatewayFilter } from "./GatewayFilter";
 
 const styles = StyleSheet.create({
   time_input_box: {
     padding: 20
   },
   dropdown_align: { display: "flex" },
-  dropdown_toggle_align: { flex: "1" }
+  dropdown_toggle_align: { flex: "1" },
+  grid_margin: { marginLeft: 10 }
 });
 
 export interface ITimeOption {
@@ -54,31 +57,32 @@ export interface IDeviceFilter {
     startDate: string;
     endDate: string;
   };
+  gatewayGroups: string[];
+  gatewayConnections: string[];
   filterCriteria: IDeviceFilterCriteria[];
 }
 
 export interface IDeviceFilterProps {
-  filter: IDeviceFilter;
-  setFilter: (filter: IDeviceFilter) => void;
   runFilter?: (filter: IDeviceFilter) => void;
   resetFilter?: () => void;
 }
 
 const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
-  filter,
-  setFilter,
   runFilter,
   resetFilter
 }) => {
+  const [filter, setFilter] = useState<IDeviceFilter>(getInitialFilter());
   const [lastAppliedFilter, setLastAppliedFilter] = useState<IDeviceFilter[]>([
     getInitialFilter()
   ]);
   const [isKebabOpen, setIsKebabOpen] = useState<boolean>(false);
   const [isRedoEnabled, setIsRedoEnabled] = useState<boolean>(false);
+
   const onClearFilter = () => {
     resetFilter && resetFilter();
     setIsKebabOpen(false);
   };
+
   const onRedoFilter = () => {
     const lastFilterLength = lastAppliedFilter.length;
     const lastFilter = createDeepCopy({
@@ -97,6 +101,22 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
     setFilter(filterObj);
   };
 
+  const setSelectedGatewayGroups = (connections: string[]) => {
+    const filterObj = { ...filter };
+    filterObj.gatewayGroups = connections;
+    setFilter(filterObj);
+  };
+
+  const onSelectGatewayGroup = (_event: any, selection: any) => {
+    const { gatewayGroups } = filter;
+    if (gatewayGroups?.includes(selection)) {
+      setSelectedGatewayGroups(
+        gatewayGroups.filter((item: string) => item !== selection)
+      );
+    } else {
+      setSelectedGatewayGroups([...gatewayGroups, selection]);
+    }
+  };
   const onTypeSelect = (value: string) => {
     const filterObj = { ...filter };
     filterObj.deviceType = value;
@@ -121,6 +141,9 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
   const isEnabledRunFilter = () => {
     return compareObject(Object.assign({}, filter), getInitialFilter());
   };
+  const onClear = () => {
+    setSelectedGatewayGroups([]);
+  };
 
   const kebabDropdownItems = [
     <DropdownItem
@@ -141,7 +164,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
       Clear all
     </DropdownItem>
   ];
-  const { deviceId, deviceType, status } = filter;
+  const { deviceId, deviceType, status, gatewayGroups } = filter;
 
   const FilterActions = () => (
     <Split>
@@ -220,6 +243,23 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
         <FormGroup label="Added date" fieldId="filter-device-added-date">
           <DateFilterSection filter={filter} setFilter={setFilter} />
         </FormGroup>
+        <FormGroup
+          label="Gateway group membership"
+          fieldId="device-filter-gateway-membership-group-input"
+        >
+          <GatewayGroupTypeAheadSelect
+            id="device-filter-gateway-membership-group-input"
+            aria-label="gateway group membership dropdown"
+            aria-describedby="multi typeahead for gateway groups membership"
+            onSelect={onSelectGatewayGroup}
+            onClear={onClear}
+            selected={gatewayGroups}
+            typeAheadAriaLabel={"typeahead to select gateway group membership"}
+            isMultiple={true}
+            placeholderText={"Input gateway group name"}
+          />
+        </FormGroup>
+        <GatewayFilter filter={filter} setFilter={setFilter} />
         <Divider />
         <FormGroup label="" fieldId="filter-criteria-paramter">
           <AddCriteria filter={filter} setFilter={setFilter} />

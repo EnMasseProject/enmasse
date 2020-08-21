@@ -13,6 +13,7 @@ import {
   PageSectionVariants,
   PageSection
 } from "@patternfly/react-core";
+import { action } from "@storybook/addon-actions";
 
 export default {
   title: "Device List"
@@ -25,7 +26,10 @@ export const deviceFilter = () => {
         <PageSection variant={PageSectionVariants.light}>
           <Grid>
             <GridItem span={3}>
-              <DeviceFilter filter={getInitialFilter()} setFilter={() => {}} />
+              <DeviceFilter
+                runFilter={action("Run filter")}
+                resetFilter={action("Reset fitler")}
+              />
             </GridItem>
           </Grid>
         </PageSection>
