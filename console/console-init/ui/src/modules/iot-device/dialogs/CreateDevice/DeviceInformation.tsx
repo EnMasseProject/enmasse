@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Form,
   FormGroup,
@@ -14,29 +14,37 @@ import {
   Flex,
   Grid,
   GridItem,
-  SelectOptionObject,
   FlexItem
 } from "@patternfly/react-core";
-import { CreateMetadata } from "modules/iot-device/components";
+import { CreateMetadata, IMetadataProps } from "modules/iot-device/components";
 import { StyleSheet, css } from "aphrodite";
 
 export interface IDeviceInfo {
-  onPropertySelect?: (e: any, selection: SelectOptionObject) => void;
-  onChangePropertyInput?: (value: string) => Promise<any>;
-  onPropertyClear?: () => void;
-  propertySelected?: string;
-  propertyInput?: string;
-  setPropertyInput?: (value: string) => void;
+  deviceId?: string;
+  returnDeviceId?: (value: string) => void;
+  deviceStatus?: boolean;
+  returnDeviceStatus?: (value: boolean) => void;
+  metadataList?: IMetadataProps[];
+  returnMetadataList?: (value: IMetadataProps[]) => void;
 }
 
 export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
-  onChangePropertyInput
+  deviceId,
+  returnDeviceId,
+  deviceStatus,
+  returnDeviceStatus,
+  metadataList,
+  returnMetadataList
 }) => {
-  const [deviceIdInput, setDeviceIdInput] = useState("");
-  const [isChecked, setIsChecked] = useState(true);
-  const handleTextInputChange1 = () => {};
-  const handleChange = () => {
-    setIsChecked(!isChecked);
+  const [deviceIdInput, setDeviceIdInput] = useState<string>(deviceId || "");
+  const [isDeviceEnabled, setIsDeviceEnabled] = useState<boolean>(
+    deviceStatus || false
+  );
+  const handleTextInputChange1 = (val: string) => {
+    setDeviceIdInput(val);
+  };
+  const handleStatusChange = (val: boolean) => {
+    setIsDeviceEnabled(val);
   };
 
   const styles = StyleSheet.create({
@@ -44,6 +52,15 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
       fontWeight: "lighter"
     }
   });
+
+  useEffect(() => {
+    returnDeviceId && returnDeviceId(deviceIdInput);
+  }, [deviceIdInput]);
+
+  useEffect(() => {
+    returnDeviceStatus && returnDeviceStatus(isDeviceEnabled);
+  }, [isDeviceEnabled]);
+
   return (
     <Grid>
       <GridItem span={8}>
@@ -87,8 +104,8 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
                   id="device-info-status-switch"
                   label="Enabled"
                   labelOff="Disabled"
-                  isChecked={isChecked}
-                  onChange={handleChange}
+                  isChecked={isDeviceEnabled}
+                  onChange={handleStatusChange}
                 />
               </FlexItem>
             </Flex>
@@ -96,7 +113,10 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
           <br />
           <Divider />
           Metadata
-          <CreateMetadata />
+          <CreateMetadata
+            metadataList={metadataList}
+            returnMetadataList={returnMetadataList}
+          />
         </Form>
       </GridItem>
     </Grid>

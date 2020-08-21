@@ -26,7 +26,10 @@ import { ConnectionType } from "modules/iot-device/components/ConnectionTypeStep
 import {
   AddGateways,
   AddCredential,
-  AddGatewayGroupMembership
+  AddGatewayGroupMembership,
+  ICredential,
+  IMetadataProps,
+  getInitialMetadataState
 } from "modules/iot-device/components";
 import { useHistory, useParams } from "react-router";
 import { Link } from "react-router-dom";
@@ -37,6 +40,14 @@ import {
   IDeviceProp
 } from "modules/iot-device/containers";
 import { StyleSheet, css } from "aphrodite";
+import { useMutationQuery } from "hooks";
+import { CREATE_IOT_DEVICE } from "graphql-module";
+import { OperationType } from "constant";
+import {
+  getCredentialsFieldsInitialState,
+  serializeCredentials,
+  serializeMetaData
+} from "modules/iot-device/utils";
 
 const getInitialDeviceForm = () => {
   const device: IDeviceProp = {
@@ -50,9 +61,17 @@ const getInitialDeviceForm = () => {
 export default function CreateDevicePage() {
   const history = useHistory();
   // const [connectionType, setConnectionType] = useState<string>("directly");
+  const [deviceIdInput, setDeviceIdInput] = useState<string>("");
+  const [isEnabled, setIsEnabled] = useState<boolean>(false);
+  const [metadataList, setMetadataList] = useState<IMetadataProps[]>(
+    getInitialMetadataState
+  );
   const [gatewayDevices, setGatewayDevices] = useState<string[]>([]);
   const [gatewayGroups, setGatewayGroups] = useState<string[]>([]);
   const [memberOf, setMemberOf] = useState<string[]>([]);
+  const [credentials, setCredentials] = useState<ICredential[]>([
+    getCredentialsFieldsInitialState()
+  ]);
   const { projectname, namespace } = useParams();
 
   const styles = StyleSheet.create({
@@ -62,6 +81,7 @@ export default function CreateDevicePage() {
   });
 
   const deviceListRouteLink = `/iot-projects/${namespace}/${projectname}/devices`;
+  // TODO: Device is subjected to change in accordance with DeviceReview
   const [device, setDevice] = useState<IDeviceProp>(getInitialDeviceForm());
   const breadcrumb = useMemo(
     () => (
@@ -75,6 +95,28 @@ export default function CreateDevicePage() {
       </Breadcrumb>
     ),
     [projectname]
+  );
+
+  const onDeviceSaveSuccess = () => {
+    resetWizardState();
+    history.push(deviceListRouteLink);
+  };
+
+  const resetWizardState = () => {
+    setDeviceIdInput("");
+    setIsEnabled(false);
+    setGatewayDevices([]);
+    setGatewayGroups([]);
+    setMemberOf([]);
+    setCredentials([getCredentialsFieldsInitialState()]);
+    setMetadataList(getInitialMetadataState);
+  };
+
+  const [setCreateDeviceQueryVariables] = useMutationQuery(
+    CREATE_IOT_DEVICE,
+    undefined,
+    undefined,
+    onDeviceSaveSuccess
   );
 
   useBreadcrumb(breadcrumb);
@@ -111,7 +153,7 @@ export default function CreateDevicePage() {
       </Title>
       <br />
       <AddGatewayGroupMembership
-        id="some-random-id"
+        id="create-device-add-gateway-group"
         gatewayGroups={memberOf}
         returnGatewayGroups={setMemberOf}
       />
@@ -123,23 +165,25 @@ export default function CreateDevicePage() {
     component: <AddGatewayGroupMembershipWrapper />
   };
 
-  const AddCredentialWrapper = () => (
-    <Grid hasGutter>
-      <GridItem span={8}>
-        <Title size="2xl" headingLevel="h1">
-          Add credentials to this new device{" "}
-        </Title>
-        <br />
-      </GridItem>
-      <GridItem span={8}>
-        <AddCredential />
-      </GridItem>
-    </Grid>
-  );
-
   const addCredentials = {
     name: "Add credentials",
-    component: <AddCredentialWrapper />
+    component: (
+      <Grid hasGutter>
+        <GridItem span={8}>
+          <Title size="2xl" headingLevel="h1">
+            Add credentials to this new device{" "}
+          </Title>
+          <br />
+        </GridItem>
+        <GridItem span={8}>
+          <AddCredential
+            credentials={credentials}
+            setCredentialList={setCredentials}
+            operation={OperationType.EDIT}
+          />
+        </GridItem>
+      </Grid>
+    )
   };
 
   const reviewForm = {
@@ -155,19 +199,48 @@ export default function CreateDevicePage() {
   const onChangeConnection = (_: boolean, event: any) => {
     const connectionType = event.target.value;
     if (connectionType) {
+      if (connectionType === "via-device")
+        setCredentials([getCredentialsFieldsInitialState()]);
+      else {
+        setGatewayDevices([]);
+        setGatewayGroups([]);
+      }
       setDevice({ ...device, connectionType });
     }
   };
 
   const handleSave = async () => {
     // Add query to add device
-    history.push(deviceListRouteLink);
+    const variable = {
+      iotproject: { name: projectname, namespace },
+      device: {
+        deviceId: deviceIdInput,
+        registration: {
+          enabled: isEnabled,
+          ext: serializeMetaData(metadataList),
+          via: gatewayDevices,
+          viaGroups: gatewayGroups,
+          memberOf
+        },
+        credentials: serializeCredentials(credentials)
+      }
+    };
+    setCreateDeviceQueryVariables(variable);
   };
 
   const steps = [
     {
       name: "Device information",
-      component: <DeviceInformation />
+      component: (
+        <DeviceInformation
+          deviceId={deviceIdInput}
+          returnDeviceId={setDeviceIdInput}
+          deviceStatus={isEnabled}
+          returnDeviceStatus={setIsEnabled}
+          metadataList={metadataList}
+          returnMetadataList={setMetadataList}
+        />
+      )
     },
     {
       name: "Connection Type",

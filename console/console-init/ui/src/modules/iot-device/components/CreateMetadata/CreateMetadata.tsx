@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, GridItem, Grid } from "@patternfly/react-core";
 import { PlusCircleIcon } from "@patternfly/react-icons";
 import { MetaDataHeader } from "./MetaDataHeader";
@@ -16,7 +16,7 @@ export interface IMetadataProps {
   value: string | IMetadataProps[];
 }
 
-const getInitialMetadataState: IMetadataProps[] = [
+export const getInitialMetadataState: IMetadataProps[] = [
   {
     key: "",
     value: "",
@@ -24,10 +24,23 @@ const getInitialMetadataState: IMetadataProps[] = [
   }
 ];
 
-export const CreateMetadata: React.FC = () => {
+export interface ICreateMetadataProps {
+  metadataList?: IMetadataProps[];
+  returnMetadataList?: (metadata: IMetadataProps[]) => void;
+}
+
+export const CreateMetadata: React.FC<ICreateMetadataProps> = ({
+  metadataList: metadataProp,
+  returnMetadataList
+}) => {
   const [metadataList, setMetadataList] = useState<IMetadataProps[]>(
-    getInitialMetadataState
+    metadataProp || getInitialMetadataState
   );
+
+  useEffect(() => {
+    returnMetadataList && returnMetadataList(metadataList);
+  }, [metadataList]);
+
   const handleAddParentRow = () => {
     setMetadataList([
       ...metadataList,
