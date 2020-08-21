@@ -23,7 +23,8 @@ import {
 import {
   compareObject,
   getFormattedJsonString,
-  convertStringToJsonAndValidate
+  convertStringToJsonAndValidate,
+  getDeviceConnectionType
 } from "utils";
 import { types, MODAL_TYPES, useStoreContext } from "context-state-reducer";
 import { DeviceListAlert } from "modules/iot-device";
@@ -288,6 +289,28 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
       if (device.gateways?.gateways && parseDeviceDetail?.registration?.via) {
         device.gateways.gateways = parseDeviceDetail.registration.via;
       }
+      //add registration.viaGroups field to device object from the parseDeviceDetail
+      if (
+        device.gateways?.gatewayGroups &&
+        parseDeviceDetail?.registration?.viaGroups
+      ) {
+        device.gateways.gatewayGroups =
+          parseDeviceDetail.registration.viaGroups;
+      }
+      //add registration.memberOf field to device object from the parseDeviceDetail
+      if (parseDeviceDetail?.registration?.memberOf) {
+        device.memberOf = parseDeviceDetail.registration.memberOf;
+      }
+    }
+    const viaGateway =
+      (device.gateways.gateways && device.gateways.gateways.length > 0) ||
+      (device.gateways.gatewayGroups &&
+        device.gateways.gatewayGroups.length > 0);
+    if (viaGateway !== undefined && device.credentials) {
+      device.connectionType = getDeviceConnectionType(
+        viaGateway,
+        device.credentials
+      );
     }
     return device;
   };

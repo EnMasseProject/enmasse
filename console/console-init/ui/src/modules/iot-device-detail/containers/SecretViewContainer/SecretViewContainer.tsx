@@ -25,7 +25,8 @@ export const SecretsViewContainer: React.FC<ISecretsViewProps> = ({
   secrets,
   heading,
   authId,
-  credentialType
+  credentialType,
+  enableActions
 }) => {
   const { dispatch } = useStoreContext();
   const client = useApolloClient();
@@ -96,6 +97,7 @@ export const SecretsViewContainer: React.FC<ISecretsViewProps> = ({
       authId={authId}
       credentialType={credentialType}
       onOpenUpdatePasswordDialog={onOpenPasswordDialog}
+      enableActions={enableActions}
     />
   );
 };

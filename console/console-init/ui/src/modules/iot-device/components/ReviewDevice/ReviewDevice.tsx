@@ -4,7 +4,14 @@
  */
 import React from "react";
 import { IDeviceProp } from "modules/iot-device/containers/ReviewDeviceContainer";
-import { Title, Text, GridItem, Grid } from "@patternfly/react-core";
+import {
+  Title,
+  Text,
+  GridItem,
+  Grid,
+  Split,
+  SplitItem
+} from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
 import { CredentialsView } from "modules/iot-device-detail";
 interface IReviewDeviceProps {
@@ -15,6 +22,9 @@ interface IReviewDeviceProps {
 const style = StyleSheet.create({
   font_size_20: {
     fontSize: 20
+  },
+  split_right_margin: {
+    marginRight: 15
   }
 });
 
@@ -64,16 +74,43 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
   };
 
   const getConnectionType = () => {
-    const { connectionType } = device || {};
+    const { gateways, credentials } = device || {};
+
+    let connectionType: string = "";
+    const viaGateway = gateways
+      ? (gateways.gateways && gateways.gateways.length > 0) ||
+        (gateways.gatewayGroups && gateways.gatewayGroups.length > 0)
+      : false;
+    if (credentials && credentials.length > 0 && !viaGateway) {
+      connectionType = "Connected directly";
+    } else if (viaGateway && !credentials?.length) {
+      connectionType = "Connected via gateways";
+    } else {
+      connectionType = "N/A";
+    }
+
     return (
       <>
         <Text className={css(style.font_size_20)}>Connection Type</Text>
         <br />
-        {connectionType === "directly"
-          ? "Connected directly"
-          : "Connected via gateways"}
+        {connectionType}
         <br />
         <br />
+      </>
+    );
+  };
+  const renderSplitItems = (items?: string[]) => {
+    return (
+      <>
+        <Split>
+          {items && items?.length > 0
+            ? items.map(item => (
+                <SplitItem key={item} className={css(style.split_right_margin)}>
+                  {item}
+                </SplitItem>
+              ))
+            : "--"}
+        </Split>
       </>
     );
   };
@@ -83,15 +120,32 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
     return (
       <>
         <Text className={css(style.font_size_20)}>Gateways</Text>
-        {gateways && gateways?.length > 0
-          ? gateways.map(gateway => (
-              <span key="gateway">
-                <br />
-                {gateway}
-              </span>
-            ))
-          : "--"}
         <br />
+        <Split>{renderSplitItems(gateways)}</Split>
+        <br />
+      </>
+    );
+  };
+
+  const getGatewayGroups = () => {
+    const { gatewayGroups } = device?.gateways || {};
+    return (
+      <>
+        <Text className={css(style.font_size_20)}>Gateway groups</Text>
+        <br />
+        {renderSplitItems(gatewayGroups)}
+        <br />
+      </>
+    );
+  };
+
+  const getMemberOfs = () => {
+    const { memberOf } = device || {};
+    return (
+      <>
+        <Text className={css(style.font_size_20)}>Gateway Members</Text>
+        <br />
+        {renderSplitItems(memberOf)}
         <br />
       </>
     );
@@ -113,7 +167,8 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
       </>
     );
   };
-  const { deviceInformation, connectionType, credentials, gateways } =
+
+  const { deviceInformation, connectionType, credentials, gateways, memberOf } =
     device || {};
   return (
     <>
@@ -130,8 +185,10 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
           <br />
           {deviceInformation && getDeviceInformation()}
           {connectionType && getConnectionType()}
-          {gateways?.gateways && getGateways()}
           {credentials && credentials.length > 0 && getCredentials()}
+          {gateways?.gateways && getGateways()}
+          {gateways?.gatewayGroups && getGatewayGroups()}
+          {memberOf && getMemberOfs()}
         </GridItem>
       </Grid>
     </>

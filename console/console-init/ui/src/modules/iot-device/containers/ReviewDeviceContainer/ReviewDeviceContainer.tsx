@@ -22,6 +22,7 @@ export interface IDeviceProp {
     gateways?: string[];
     gatewayGroups?: string[];
   };
+  memberOf?: string[];
   credentials?: ICredentialView[];
 }
 
