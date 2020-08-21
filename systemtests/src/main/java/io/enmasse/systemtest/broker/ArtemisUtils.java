@@ -37,7 +37,7 @@ public class ArtemisUtils {
         UserCredentials credentials = getSupportCredentials(addressSpace);
 
         try {
-            kubernetes.awaitPodsReady(kubernetes.getInfraNamespace(), new TimeoutBudget(5, TimeUnit.MINUTES));
+            kubernetes.awaitPodsReady(kubernetes.getInfraNamespace(), Collections.singletonMap("app", "enmasse"), new TimeoutBudget(5, TimeUnit.MINUTES));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);

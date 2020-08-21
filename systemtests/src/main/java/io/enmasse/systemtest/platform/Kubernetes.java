@@ -20,6 +20,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -571,10 +572,10 @@ public abstract class Kubernetes {
         return client.pods().inNamespace(namespace).withName(name).get();
     }
 
-    public void awaitPodsReady(String namespace, TimeoutBudget budget) throws InterruptedException {
+    public void awaitPodsReady(String namespace, Map<String, String> labels, TimeoutBudget budget) throws InterruptedException {
         List<Pod> unready;
         do {
-            unready = new ArrayList<>(listPods(namespace));
+            unready = new ArrayList<>(listPods(namespace, labels));
             unready.removeIf(p -> TestUtils.isPodReady(p, true));
 
             if (!unready.isEmpty()) {
@@ -585,6 +586,10 @@ public abstract class Kubernetes {
         if (!unready.isEmpty()) {
             fail(String.format(" %d pod(s) still unready in namespace : %s", unready.size(), namespace));
         }
+    }
+
+    public void awaitPodsReady(String namespace, TimeoutBudget budget) throws InterruptedException {
+        awaitPodsReady(namespace, Collections.EMPTY_MAP, budget);
     }
 
     public Set<String> listNamespaces() {

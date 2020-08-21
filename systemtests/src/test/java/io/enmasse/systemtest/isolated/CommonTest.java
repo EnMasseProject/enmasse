@@ -118,7 +118,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
 
         Multimap<String, String> podsContainersWithNoLog = HashMultimap.create();
 
-        kubernetes.listPods().stream().filter(pod -> !pod.getMetadata().getName().contains("none-authservice")).forEach(pod -> kubernetes.getContainersFromPod(pod.getMetadata().getNamespace(), pod.getMetadata().getName()).forEach(container -> {
+        kubernetes.listPods(Collections.singletonMap("app", "enmasse")).stream().filter(pod -> !pod.getMetadata().getName().contains("none-authservice")).forEach(pod -> kubernetes.getContainersFromPod(pod.getMetadata().getNamespace(), pod.getMetadata().getName()).forEach(container -> {
             String podNamespace = pod.getMetadata().getNamespace();
             String podName = pod.getMetadata().getName();
             String containerName = container.getName();
@@ -199,7 +199,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         log.info("------------------- Start with restarting -------------------");
         log.info("------------------------------------------------------------");
 
-        List<Pod> pods = kubernetes.listPods();
+        List<Pod> pods = kubernetes.listPods(Collections.singletonMap("app", "enmasse"));
         int runningPodsBefore = pods.size();
         log.info("Number of running pods before restarting any: {}", runningPodsBefore);
         for (Label label : labels) {
@@ -321,7 +321,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         log.info("------------------- Start with restarting -------------------");
         log.info("------------------------------------------------------------");
 
-        List<Pod> pods = kubernetes.listPods();
+        List<Pod> pods = kubernetes.listPods(Collections.singletonMap("app", "enmasse"));
         int runningPodsBefore = pods.size();
         log.info("Number of running pods before restarting any: {}", runningPodsBefore);
 
@@ -499,7 +499,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         log.info("------------------- Start with restarting -------------------");
         log.info("------------------------------------------------------------");
 
-        List<Pod> pods = kubernetes.listPods();
+        List<Pod> pods = kubernetes.listPods(Collections.singletonMap("app", "enmasse"));
         int runningPodsBefore = pods.size();
         log.info("Number of running pods before restarting any: {}", runningPodsBefore);
 
