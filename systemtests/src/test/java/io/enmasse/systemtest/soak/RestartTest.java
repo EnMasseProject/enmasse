@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Executors;
@@ -94,7 +95,7 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
             log.info("............................................................");
             log.info("............................................................");
             log.info("..........Scheduler will pick pod and delete them...........");
-            List<Pod> pods = kubernetes.listPods();
+            List<Pod> pods = kubernetes.listPods(Collections.singletonMap("app", "enmasse"));
             int podNum = new Random(System.currentTimeMillis()).nextInt(pods.size() - 1);
             kubernetes.deletePod(environment.namespace(), pods.get(podNum).getMetadata().getName());
             log.info("............................................................");

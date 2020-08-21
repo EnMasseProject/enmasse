@@ -374,7 +374,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         try {
 
             //iterate over pods
-            List<Pod> enmassePods = kubernetes.listPods();
+            List<Pod> enmassePods = kubernetes.listPods(Collections.singletonMap("app", "enmasse"));
             int runningPodsBefore = enmassePods.size();
 
             for (var pod : enmassePods) {

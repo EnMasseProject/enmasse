@@ -166,7 +166,7 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
         TestUtils.waitForConsoleRollingUpdate(kubernetes.getInfraNamespace());
         TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
 
-        int podCount = kubernetes.listPods().size();
+        int podCount = kubernetes.listPods(Collections.singletonMap("app", "enmasse")).size();
         clientUtils.sendDurableMessages(resourcesManager, addSpace, address, credentials, messagesBatch);
         restartBrokers(podCount);
 
@@ -179,7 +179,7 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
     private void doTestTopicPersistentMessages(AddressSpace addSpace, Address topic, Address subscription) throws Exception {
         resourcesManager.setAddresses(topic, subscription);
 
-        int podCount = kubernetes.listPods().size();
+        int podCount = kubernetes.listPods(Collections.singletonMap("app", "enmasse")).size();
 
         AmqpClient client = resourcesManager.getAmqpClientFactory().createTopicClient(addSpace);
         client.getConnectOptions().setCredentials(credentials);

@@ -389,7 +389,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         TestUtils.waitUntilCondition("Images are updated", (phase) -> {
             AtomicBoolean ready = new AtomicBoolean(true);
             log.info("=======================================================");
-            kubernetes.listPods(infraNamespace).forEach(pod -> {
+            kubernetes.listPods(infraNamespace, Collections.singletonMap("app", "enmasse")).forEach(pod -> {
                 pod.getSpec().getContainers().forEach(container -> {
                     log.info("Pod {}, current container {}", pod.getMetadata().getName(), container.getImage());
                     String replaced = container.getImage()
