@@ -32,6 +32,8 @@ export interface IAddressDefinition extends IAddressConfigurationProps {
   setExpiryAddress: (value: string) => void;
   setTypeOptions: (values: IDropdownOption[]) => void;
   setPlanOptions: (values: IDropdownOption[]) => void;
+  setTopicForSubscription: (values: IDropdownOption[]) => void;
+  setDeadletterOptions: (values: IDropdownOption[]) => void;
 }
 
 interface IAddressPlans {
@@ -79,15 +81,13 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
   setExpiryAddress,
   setDeadletter,
   planOptions,
-  setPlanOptions
+  setPlanOptions,
+  topicsForSubscription,
+  setTopicForSubscription,
+  deadletterOptions,
+  setDeadletterOptions
 }) => {
   const client = useApolloClient();
-  const [topicsForSubscription, setTopicForSubscription] = useState<
-    IDropdownOption[]
-  >([]);
-  const [deadletterOptions, setDeadletterOptions] = useState<IDropdownOption[]>(
-    []
-  );
   const { loading, data } = useQuery<IAddressTypes>(RETURN_ADDRESS_TYPES, {
     variables: {
       a: addressSpaceType
@@ -175,7 +175,10 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
               };
             }
           );
-          setDeadletterOptions(deadletters);
+          setDeadletterOptions([
+            ...deadletters,
+            { key: "none", value: "", label: "none" }
+          ]);
         }
       }
     }

@@ -94,6 +94,7 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
       e.currentTarget.firstChild.value ||
       e.target.textContent;
     setIsOpen(!isOpen);
+    console.log(e.target.value);
     onFocus();
     if (onSelectItem) {
       onSelectItem(value);

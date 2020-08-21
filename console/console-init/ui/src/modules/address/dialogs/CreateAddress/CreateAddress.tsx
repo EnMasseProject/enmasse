@@ -33,7 +33,12 @@ export const CreateAddress: React.FunctionComponent = () => {
   const [expiryAddress, setExpiryAddress] = useState(" ");
   const [addressTypes, setAddressTypes] = useState<IDropdownOption[]>([]);
   const [addressPlans, setAddressPlans] = useState<IDropdownOption[]>([]);
-
+  const [topicsForSubscription, setTopicForSubscription] = useState<
+    IDropdownOption[]
+  >([]);
+  const [deadletterOptions, setDeadletterOptions] = useState<IDropdownOption[]>(
+    []
+  );
   const [isNameValid, setIsNameValid] = useState<boolean>(true);
 
   const resetFormState = () => {
@@ -131,10 +136,18 @@ export const CreateAddress: React.FunctionComponent = () => {
           (addressType && addressType.trim().toLowerCase() === "queue") ||
           addressType.trim().toLowerCase() === "subscription"
         ) {
-          if (deadletterAddress && deadletterAddress.trim() !== "") {
+          if (
+            deadletterAddress &&
+            deadletterAddress.trim() !== "" &&
+            deadletterAddress.trim() !== "none"
+          ) {
             variable.spec.deadLetterAddress = deadletterAddress.trim();
           }
-          if (expiryAddress && expiryAddress.trim() !== "") {
+          if (
+            expiryAddress &&
+            expiryAddress.trim() !== "" &&
+            expiryAddress.trim() !== "none"
+          ) {
             variable.spec.expiryAddress = expiryAddress.trim();
           }
         }
@@ -176,6 +189,10 @@ export const CreateAddress: React.FunctionComponent = () => {
           deadletter={deadletterAddress}
           setExpiryAddress={setExpiryAddress}
           expiryAddress={expiryAddress}
+          topicsForSubscription={topicsForSubscription}
+          setTopicForSubscription={setTopicForSubscription}
+          deadletterOptions={deadletterOptions}
+          setDeadletterOptions={setDeadletterOptions}
         />
       ),
       enableNext: isReviewButtonEnabled(),

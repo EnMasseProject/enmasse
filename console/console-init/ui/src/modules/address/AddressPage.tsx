@@ -212,7 +212,8 @@ export default function AddressPage() {
     const filteredAddresses = selectedAddresses.filter(
       address =>
         address.type.toLowerCase() === AddressTypes.QUEUE ||
-        address.type.toLowerCase() === AddressTypes.SUBSCRIPTION
+        address.type.toLowerCase() === AddressTypes.SUBSCRIPTION ||
+        address.type.toLowerCase() === AddressTypes.DEADLETTER
     );
 
     if (filteredAddresses.length > 0) {

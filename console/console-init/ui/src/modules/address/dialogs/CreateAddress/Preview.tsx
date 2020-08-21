@@ -65,9 +65,15 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
           type: type ? type.toLowerCase() : "",
           ...(topic && topic.trim() !== "" && { topic: topic }),
           ...(deadletter &&
-            deadletter.trim() !== "" && { deadLetterAddress: deadletter }),
+            deadletter.trim() !== "" &&
+            deadletter.trim() !== "none" && {
+              deadLetterAddress: deadletter
+            }),
           ...(expiryAddress &&
-            expiryAddress.trim() !== "" && { expiryAddress: expiryAddress }),
+            expiryAddress.trim() !== "" &&
+            expiryAddress.trim() !== "none" && {
+              expiryAddress: expiryAddress
+            }),
           address: name
         }
       },
@@ -136,22 +142,32 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                 </GridItem>
               </>
             )}
-            {deadletter && deadletter.trim() !== "" && (
-              <>
-                <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
-                  Deadletter Address
-                </GridItem>
-                <GridItem span={8}>{deadletter}</GridItem>
-              </>
-            )}
-            {expiryAddress && expiryAddress.trim() !== "" && (
-              <>
-                <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
-                  Expiry Address
-                </GridItem>
-                <GridItem span={8}>{expiryAddress}</GridItem>
-              </>
-            )}
+            {deadletter &&
+              deadletter.trim() !== "" &&
+              deadletter.trim() !== "none" && (
+                <>
+                  <GridItem
+                    span={4}
+                    style={{ marginBottom: 16, marginRight: 5 }}
+                  >
+                    Deadletter Address
+                  </GridItem>
+                  <GridItem span={8}>{deadletter}</GridItem>
+                </>
+              )}
+            {expiryAddress &&
+              expiryAddress.trim() !== "" &&
+              expiryAddress.trim() !== "none" && (
+                <>
+                  <GridItem
+                    span={4}
+                    style={{ marginBottom: 16, marginRight: 5 }}
+                  >
+                    Expiry Address
+                  </GridItem>
+                  <GridItem span={8}>{expiryAddress}</GridItem>
+                </>
+              )}
           </Grid>
         </GridItem>
         <GridItem span={7} className={css(Style.left_padding)}>

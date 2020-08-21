@@ -197,7 +197,9 @@ export default function AddressDetailPage() {
       addressDetail.spec.plan.spec.addressType.toLowerCase() ===
         AddressTypes.QUEUE ||
       addressDetail.spec.plan.spec.addressType.toLowerCase() ===
-        AddressTypes.SUBSCRIPTION
+        AddressTypes.SUBSCRIPTION ||
+      addressDetail.spec.plan.spec.addressType.toLowerCase() ===
+        AddressTypes.DEADLETTER
     ) {
       await purgeAddress({
         name: addressDetail.metadata.name,

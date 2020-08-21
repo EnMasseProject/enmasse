@@ -52,15 +52,15 @@ export const EditAddress: React.FunctionComponent = () => {
   );
 
   const [deadletterAddress, setDeadletterAddress] = useState<any>({
-    key: " ",
-    value: " ",
-    label: " "
+    key: "none",
+    value: "none",
+    label: "none"
   });
 
   const [expiryAddress, setExpiryAddress] = useState<any>({
-    key: " ",
-    value: " ",
-    label: " "
+    key: "none",
+    value: "none",
+    label: "none"
   });
 
   useEffect(() => {
@@ -115,9 +115,7 @@ export const EditAddress: React.FunctionComponent = () => {
     })
     .filter(plan => plan !== undefined);
 
-  let deadlettersAddress: IDropdownOption[] = [
-    { key: " ", value: " ", label: " " }
-  ];
+  let deadlettersAddress: IDropdownOption[] = [];
   addresses.addresses.forEach(address => {
     deadlettersAddress.push({
       key: address.spec.address,
@@ -125,6 +123,7 @@ export const EditAddress: React.FunctionComponent = () => {
       label: address.metadata.name
     });
   });
+  deadlettersAddress.push({ key: "none", value: "none", label: "none" });
 
   const onCloseDialog = () => {
     dispatch({ type: types.HIDE_MODAL });
@@ -172,7 +171,12 @@ export const EditAddress: React.FunctionComponent = () => {
     value: string | null
   ) => {
     let patchObject: IPatchObject;
-    if (!value || value.trim() === "" || value.trim() === null) {
+    if (
+      !value ||
+      value.trim() === "" ||
+      value.trim() === "none" ||
+      value.trim() === null
+    ) {
       patchObject = {
         op: op,
         path: path,
