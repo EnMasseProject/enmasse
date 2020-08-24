@@ -10,12 +10,15 @@ import { GridItem, TextInput, Grid, Button } from "@patternfly/react-core";
 import { MetaDataReviewRows } from "./MetaDataReviewRows";
 
 const styles = StyleSheet.create({
-  grid_align: { marginTop: 10, marginRight: 5, marginLeft: 5 },
+  grid_align: {
+    marginTop: "1rem",
+    marginRight: "0.5rem",
+    marginLeft: "0.5rem"
+  },
   grid_button_align: {
     textAlign: "right",
-    marginTop: 10,
-    marginRight: 5,
-    marginLeft: 5
+    marginTop: "1rem",
+    padding: "0 !important"
   }
 });
 
@@ -23,14 +26,16 @@ interface IMetaDataReviewRowProps {
   value: any;
   prevKey?: string;
   index?: number;
+  viewAll?: boolean;
 }
 
 const MetaDataReviewRow: React.FunctionComponent<IMetaDataReviewRowProps> = ({
   value,
   prevKey,
-  index
+  index,
+  viewAll = true
 }) => {
-  const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [isVisible, setIsVisible] = useState<boolean>(viewAll);
 
   const onToggle = () => {
     setIsVisible(!isVisible);

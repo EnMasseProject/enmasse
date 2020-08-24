@@ -12,11 +12,11 @@ import { MetaDataReviewRows } from "./MetaDataReviewRows";
 const styles = StyleSheet.create({
   text_center_align: { textAlign: "center" }
 });
-interface IReviewMetaDataProrps {
+interface IViewMetaDataProrps {
   defaults?: any[];
   ext?: any[];
 }
-const ReviewMetaData: React.FunctionComponent<IReviewMetaDataProrps> = ({
+const ViewMetaData: React.FunctionComponent<IViewMetaDataProrps> = ({
   defaults,
   ext
 }) => {
@@ -58,4 +58,4 @@ const ReviewMetaData: React.FunctionComponent<IReviewMetaDataProrps> = ({
   );
 };
 
-export { ReviewMetaData };
+export { ViewMetaData };

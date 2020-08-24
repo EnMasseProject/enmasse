@@ -209,12 +209,11 @@ const getDeviceFromDeviceString = (device: string) => {
         deviceDetail.registration.enabled = registration.enabled;
       }
       if (registration.defaults) {
-        try {
-          deviceDetail.registration.defaults = JSON.stringify(
-            registration.defaults
-          );
-        } catch (_err) {
-          // Inavalid json string
+        const { hasError, value } = convertJsonToStringAndValidate(
+          registration.defaults
+        );
+        if (value && !hasError) {
+          deviceDetail.registration.defaults = value;
         }
       }
       if (registration.via && registration.via.length > 0) {
@@ -227,18 +226,18 @@ const getDeviceFromDeviceString = (device: string) => {
         deviceDetail.registration.memberOf = registration.memberOf;
       }
       if (registration.ext) {
-        try {
-          deviceDetail.registration.ext = JSON.stringify(registration.ext);
-        } catch (_err) {
-          // Inavalid json string
+        const { hasError, value } = convertJsonToStringAndValidate(
+          registration.ext
+        );
+        if (value && !hasError) {
+          deviceDetail.registration.ext = value;
         }
       }
     }
-    if (credentials && credentials.length > 0) {
-      try {
-        deviceDetail.credentials = JSON.stringify(credentials);
-      } catch (_err) {
-        // Inavalid json string
+    if (Array.isArray(credentials)) {
+      const { hasError, value } = convertJsonToStringAndValidate(credentials);
+      if (value && !hasError) {
+        deviceDetail.credentials = value;
       }
     }
   }
