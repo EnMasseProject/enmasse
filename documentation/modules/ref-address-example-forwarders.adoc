@@ -15,7 +15,7 @@ To use an address forwarder, you must first configure a connector to the remote 
 
 Address forwarding is supported only in the `standard` address space type, and only for the `queue` and `subscription` address types. With the `queue` address type, you can forward messages to a remote AMQP server or from a remote AMQP server to a local queue. With the `subscription` address type, you can create a forwarder to a remote AMQP address, but you cannot create a forwarder that copies messages to the subscription. That is, the `subscription` address type supports forwarding in the `out` direction only, as shown in the example.
 
-For outgoing forwarders, it is possible to assign a `priority` value to the consumer associated with the forwarder. This allows you to influence the routing of messages within the AMQP network by favouring one link over another. If the forwarder has
+For outgoing forwarders, you can assign a `priority` value to the consumer associated with the forwarder. This allows you to influence message routing within the AMQP network by favoring one link over another. If the forwarder has
 a lower priority than other consumers, messages will only flow through the forwarder when the other consumers don't have credit or cannot accept a message for other reasons (e.g. messages selectors). The value must be an integral number in the range
 -2^31 to 2^31-1.  Values lower than zero reduces the forwarder's priority relative to other consumers while values greater than zero raise it.  If the priority is unassigned, a default value of 0 is used.
 
@@ -69,4 +69,3 @@ spec:
 <1> (Required) Specifies the name of the forwarder, which is used to ensure a unique identity.
 <2> (Required) Specifies the remote address to forward messages to. The address must be prefixed with the connector name and must be identical to the address matching patterns defined on the connector.
 <3> (Required) Specifies the direction of message flow, which is either `out` or `in`. A value of `out` forwards messages to the remote endpoint. A value of `in` forwards messages from the remote endpoint.
-
