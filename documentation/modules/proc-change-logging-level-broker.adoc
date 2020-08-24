@@ -3,7 +3,7 @@
 // assembly-ops-procedures.adoc
 
 [id='change-logging-level-broker-{context}']
-= Change the logging level for the Broker at runtime
+= Changing the broker logging level at runtime
 
 For diagnostic purposes, you can change the logging level of the broker at runtime. This can be helpful
 when troubleshooting issues with sending or receiving messages.
