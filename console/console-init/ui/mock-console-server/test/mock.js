@@ -123,7 +123,7 @@ describe('mock', function () {
         });
 
     });
-    describe('patchAddress', function () {
+    describe('patch_address', function () {
         it('known_plan', function () {
             var result = mock.patchAddress({
                     name: "jupiter_as1.io",
@@ -135,9 +135,51 @@ describe('mock', function () {
 
             assert.strictEqual(result.spec.plan.metadata.name, "standard-small-queue");
         });
+        it('add_deadletter', function () {
+            var result = mock.patchAddress({
+                    name: "jupiter_as1.io",
+                    namespace: "app1_ns"
+                },
+                "[{\"op\":\"add\",\"path\":\"/spec/deadletter\",\"value\":\"kale\"}]",
+                "application/json-patch+json"
+            );
+
+            assert.strictEqual(result.spec.deadletter, "kale");
+        });
+        it('add_expiry', function () {
+            var result = mock.patchAddress({
+                    name: "jupiter_as1.io",
+                    namespace: "app1_ns"
+                },
+                "[{\"op\":\"add\",\"path\":\"/spec/expiry\",\"value\":\"kale\"}]",
+                "application/json-patch+json"
+            );
+
+            assert.strictEqual(result.spec.expiry, "kale");
+        });
+        it('remove_expiry', function () {
+            var result = mock.patchAddress({
+                    name: "jupiter_as1.io",
+                    namespace: "app1_ns"
+                },
+                "[{\"op\":\"add\",\"path\":\"/spec/expiry\",\"value\":\"kale\"}]",
+                "application/json-patch+json"
+            );
+            assert.strictEqual(result.spec.expiry, "kale");
+
+            result = mock.patchAddress({
+                    name: "jupiter_as1.io",
+                    namespace: "app1_ns"
+                },
+                "[{\"op\":\"remove\",\"path\":\"/spec/expiry\",\"value\":\"kale\"}]",
+                "application/json-patch+json"
+            );
+
+            assert.strictEqual(result.spec.expiry, undefined);
+        });
     });
 
-    describe('addressCommand', function () {
+    describe('address_command', function () {
         it('with_resource_name', function () {
             var cmd = mock.addressCommand({
                 metadata: {
