@@ -45,7 +45,7 @@ endif::[]
 ----
 
 . Change the logging level for a single broker by `{cmdcli} rsh` into the broker pod and editing the
-`logging.properties`.  The broker uses the JBoss Logging framework.   Adjust the logging levels of the packages
+`logging.properties`.  The broker uses the JBoss Logging framework. Adjust the logging levels of the packages
 corresponding to the area of interest.  There are comments in the file to guide you.
 +
 [options="nowrap",subs="+quotes,attributes"]
