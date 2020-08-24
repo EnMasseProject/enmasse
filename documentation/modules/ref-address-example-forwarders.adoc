@@ -45,7 +45,7 @@ spec:
 <1> (Required) Specifies the name of the forwarder, which is used to ensure a unique identity.
 <2> (Required) Specifies the remote address to forward messages to. The address must be prefixed with the connector name and must be identical to the address matching patterns defined on the connector.
 <3> (Required) Specifies the direction of message flow, which is either `out` or `in`. A value of `out` forwards messages to the remote endpoint. A value of `in` forwards messages from the remote endpoint.
-<4> (Optional) Specifies the priority to be assigned to the consumer used by the forwarder (integral number in the range -2^31 to 2^31-1 with 0 being the default).  Applied to outgoing forwarders only.
+<4> (Optional) Specifies the priority assigned to the consumer used by the forwarder (integral number in the range -2^31 to 2^31-1 with a default of 0).  Applies to outgoing forwarders only.
 
 == Forwarding messages from a remote AMQP server to a local queue
 
