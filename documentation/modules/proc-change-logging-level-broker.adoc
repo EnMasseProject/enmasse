@@ -12,7 +12,7 @@ To do this, you `{cmdcli} rsh` into the broker pod and adjust the `logging.prope
 the broker.  The broker automatically reloads this file and immediately applies the changes without
 interrupting established messaging connections.
 
-The changes made to `logging.properties` are transient.  The logging level will be reverted to default levels
+The changes made to `logging.properties` are transient. The system reverts the logging level to default levels
 next time the broker pod restarts.
 
 WARNING: Increasing the logging verbosity increases the CPU overhead of the broker(s) and may decrease
