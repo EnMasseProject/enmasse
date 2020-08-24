@@ -17,7 +17,7 @@ Address forwarding is supported only in the `standard` address space type, and o
 
 For outgoing forwarders, you can assign a `priority` value to the consumer associated with the forwarder. This allows you to influence message routing within the AMQP network by favoring one link over another. If the forwarder has
 a lower priority than other consumers, messages will only flow through the forwarder when the other consumers do not have credit or cannot accept a message for other reasons (for example, message selectors). The value must be an integral number in the range
--2^31 to 2^31-1.  Values lower than zero reduces the forwarder's priority relative to other consumers while values greater than zero raise it.  If the priority is unassigned, a default value of 0 is used.
+-2^31 to 2^31-1.  Values lower than zero reduce the forwarder's priority relative to other consumers, while values greater than zero raise it.  If the priority is unassigned, a default value of 0 is used.
 
 In the following examples, it is assumed that a connector, `remote1`, has been configured for the address space.
 
