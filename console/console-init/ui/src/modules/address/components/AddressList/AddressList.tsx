@@ -31,8 +31,8 @@ export interface IAddress {
   name: string;
   displayName: string;
   namespace: string;
-  deadLetterAddress?: string | null;
-  expiryAddress?: string | null;
+  deadletter?: string | null;
+  expiry?: string | null;
   type: string;
   planLabel: string;
   planValue: string;

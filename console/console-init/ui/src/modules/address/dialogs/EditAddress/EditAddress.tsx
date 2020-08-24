@@ -40,7 +40,7 @@ interface IAddressPlans {
 interface IPatchObject {
   op: string;
   path: string;
-  value: string | null;
+  value?: string | null;
 }
 
 export const EditAddress: React.FunctionComponent = () => {
@@ -64,11 +64,11 @@ export const EditAddress: React.FunctionComponent = () => {
   });
 
   useEffect(() => {
-    if (address.deadLetterAddress && address.deadLetterAddress !== null) {
-      setDeadletterAddress({ value: address.deadLetterAddress });
+    if (address.deadletter) {
+      setDeadletterAddress({ value: address.deadletter });
     }
-    if (address.expiryAddress && address.expiryAddress !== null) {
-      setExpiryAddress({ value: address.expiryAddress });
+    if (address.expiry) {
+      setExpiryAddress({ value: address.expiry });
     }
   }, [address]);
 
@@ -179,8 +179,7 @@ export const EditAddress: React.FunctionComponent = () => {
     ) {
       patchObject = {
         op: op,
-        path: path,
-        value: null
+        path: path
       };
     } else {
       patchObject = {

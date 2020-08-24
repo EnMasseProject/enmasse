@@ -32,7 +32,7 @@ export interface IAddressPreview {
   namespace: string;
   addressspace: string;
   deadletter: string;
-  expiryAddress: string;
+  expiry: string;
 }
 const Style = StyleSheet.create({
   left_padding: {
@@ -51,7 +51,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
   namespace,
   addressspace,
   deadletter,
-  expiryAddress
+  expiry
 }) => {
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const { data, loading } = useQuery(ADDRESS_COMMAND_PREVIEW_DETAIL, {
@@ -67,12 +67,12 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
           ...(deadletter &&
             deadletter.trim() !== "" &&
             deadletter.trim() !== "none" && {
-              deadLetterAddress: deadletter
+              deadletter: deadletter
             }),
-          ...(expiryAddress &&
-            expiryAddress.trim() !== "" &&
-            expiryAddress.trim() !== "none" && {
-              expiryAddress: expiryAddress
+          ...(expiry &&
+            expiry.trim() !== "" &&
+            expiry.trim() !== "none" && {
+              expiry: expiry
             }),
           address: name
         }
@@ -155,19 +155,14 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                   <GridItem span={8}>{deadletter}</GridItem>
                 </>
               )}
-            {expiryAddress &&
-              expiryAddress.trim() !== "" &&
-              expiryAddress.trim() !== "none" && (
-                <>
-                  <GridItem
-                    span={4}
-                    style={{ marginBottom: 16, marginRight: 5 }}
-                  >
-                    Expiry Address
-                  </GridItem>
-                  <GridItem span={8}>{expiryAddress}</GridItem>
-                </>
-              )}
+            {expiry && expiry.trim() !== "" && expiry.trim() !== "none" && (
+              <>
+                <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
+                  Expiry Address
+                </GridItem>
+                <GridItem span={8}>{expiry}</GridItem>
+              </>
+            )}
           </Grid>
         </GridItem>
         <GridItem span={7} className={css(Style.left_padding)}>

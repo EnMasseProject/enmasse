@@ -115,8 +115,8 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
         senders: getFilteredValue(address.metrics, "enmasse_senders"),
         receivers: getFilteredValue(address.metrics, "enmasse_receivers"),
         topic: address.spec.topic,
-        deadLetterAddress: address.spec.deadLetterAddress,
-        expiryAddress: address.spec.expiryAddress,
+        deadletter: address.spec.deadletter,
+        expiry: address.spec.expiry,
         partitions:
           address.status && address.status.planStatus
             ? address.status.planStatus.partitions

@@ -81,7 +81,7 @@ describe('mock', function () {
                     type: "queue",
                     plan: "standard-small-queue",
                     address: "fooaddr",
-                    deadLetterAddress: "kale"
+                    deadletter: "kale"
                 }
 
             });

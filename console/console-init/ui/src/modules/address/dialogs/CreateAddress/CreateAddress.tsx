@@ -141,14 +141,14 @@ export const CreateAddress: React.FunctionComponent = () => {
             deadletterAddress.trim() !== "" &&
             deadletterAddress.trim() !== "none"
           ) {
-            variable.spec.deadLetterAddress = deadletterAddress.trim();
+            variable.spec.deadletter = deadletterAddress.trim();
           }
           if (
             expiryAddress &&
             expiryAddress.trim() !== "" &&
             expiryAddress.trim() !== "none"
           ) {
-            variable.spec.expiryAddress = expiryAddress.trim();
+            variable.spec.expiry = expiryAddress.trim();
           }
         }
         return variable;
@@ -207,7 +207,7 @@ export const CreateAddress: React.FunctionComponent = () => {
           type={addressType}
           topic={topic}
           deadletter={deadletterAddress}
-          expiryAddress={expiryAddress}
+          expiry={expiryAddress}
           namespace={namespace || ""}
           addressspace={name}
         />

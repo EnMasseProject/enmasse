@@ -155,8 +155,8 @@ const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
             address
             type
             topic
-            deadLetterAddress
-            expiryAddress
+            deadletter
+            expiry
             plan {
               spec {
                 displayName
@@ -238,8 +238,8 @@ const RETURN_ADDRESS_DETAIL = (
             address
             type
             topic
-            deadLetterAddress
-            expiryAddress
+            deadletter
+            expiry
               plan {
               spec {
                 displayName
