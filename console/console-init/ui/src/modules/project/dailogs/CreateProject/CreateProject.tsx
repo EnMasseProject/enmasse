@@ -12,7 +12,6 @@ import {
 } from "@patternfly/react-core";
 import { useQuery } from "@apollo/react-hooks";
 import { Loading } from "use-patternfly";
-
 import {
   ProjectTypeConfigurationStep,
   IIoTProjectInput,
@@ -28,9 +27,7 @@ import {
   RETURN_ADDRESS_SPACE_SCHEMAS
 } from "graphql-module";
 import { CREATE_IOT_PROJECT } from "graphql-module/queries/iot_project";
-import { FinishedStep } from "components";
 import {
-  ProjectType,
   getQueryVariableForCreateMessagingProject,
   isEnabledCertificateStep,
   isRouteStepValid
@@ -131,42 +128,35 @@ const CreateProject: React.FunctionComponent = () => {
     initialIoTProject
   );
   const [firstSelectedStep, setFirstSelectedStep] = useState<string>("iot");
-  const [isCreatedSuccessfully, setIsCreatedSuccessfully] = useState<boolean>();
 
   const onToggle = () => {
     setFirstSelectedStep("iot");
     setIotProjectDetail(initialIoTProject);
     setMessagingProjectDetail(initialMessageProject);
     setIsWizardOpen(!isWizardOpen);
-    setIsCreatedSuccessfully(undefined);
   };
 
   const resetForm = () => {
-    setIsCreatedSuccessfully(false);
+    setFirstSelectedStep("iot");
     setMessagingProjectDetail(initialMessageProject);
     setIotProjectDetail(initialIoTProject);
+    setIsWizardOpen(!isWizardOpen);
   };
 
   const refetchQueries: string[] = ["allProjects"];
-
-  const resetFormState = () => {
-    setIsCreatedSuccessfully(true);
-    setMessagingProjectDetail(initialMessageProject);
-    setIotProjectDetail(initialIoTProject);
-  };
 
   const [setMessagingVariables] = useMutationQuery(
     CREATE_ADDRESS_SPACE,
     refetchQueries,
     resetForm,
-    resetFormState
+    resetForm
   );
 
   const [setIoTVariables] = useMutationQuery(
     CREATE_IOT_PROJECT,
     refetchQueries,
     resetForm,
-    resetFormState
+    resetForm
   );
 
   const { data: addressSpaceSchema } = useQuery<IAddressSpaceSchema>(
@@ -249,23 +239,6 @@ const CreateProject: React.FunctionComponent = () => {
     nextButtonText: "Finish"
   };
 
-  const finishedStep = {
-    name: "Finish",
-    component: (
-      <FinishedStep
-        onClose={onToggle}
-        success={isCreatedSuccessfully}
-        routeDetail={routeDetail}
-        projectType={
-          firstSelectedStep === "messaging"
-            ? ProjectType.MESSAGING_PROJECT
-            : ProjectType.IOT_PROJECT
-        }
-      />
-    ),
-    isFinishedStep: true
-  };
-
   let steps: any[] = [step1];
 
   const messagingConfigurationStep = {
@@ -333,20 +306,16 @@ const CreateProject: React.FunctionComponent = () => {
     nextButtonText: "Finish"
   };
 
-  if (isCreatedSuccessfully === undefined) {
-    if (firstSelectedStep) {
-      if (firstSelectedStep === "iot") {
-        steps.push(configurationStepForIot);
-        steps.push(finalStepForIot);
-      } else {
-        steps.push(messagingConfigurationStep);
-        if (messagingProjectDetail.customizeEndpoint) {
-          steps = [...steps, endpointCustomizationStep];
-        }
-        steps.push(messagingReviewStep);
-      }
+  if (firstSelectedStep === "iot") {
+    steps.push(configurationStepForIot);
+    steps.push(finalStepForIot);
+  } else {
+    steps.push(messagingConfigurationStep);
+    if (messagingProjectDetail.customizeEndpoint) {
+      steps = [...steps, endpointCustomizationStep];
     }
-  } else steps = [finishedStep];
+    steps.push(messagingReviewStep);
+  }
 
   const handleNextIsEnabled = (step?: any) => {
     if (firstSelectedStep) {
