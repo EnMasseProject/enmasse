@@ -9,7 +9,7 @@ For diagnostic purposes, you can change the broker logging level at runtime, whi
 when troubleshooting issues with sending or receiving messages.
 
 To do this, you `{cmdcli} rsh` into the broker pod and adjust the `logging.properties` file used by
-the broker.  The broker automatically reloads this file and applies the changes immediately without
+the broker.  The broker automatically reloads this file and immediately applies the changes without
 interrupting established messaging connections.
 
 The changes made to `logging.properties` are transient.  The logging level will be reverted to default levels
