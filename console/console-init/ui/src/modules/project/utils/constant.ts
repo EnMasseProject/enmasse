@@ -8,7 +8,8 @@ enum StatusTypes {
   FAILED = "Failed",
   PENDING = "Pending",
   CONFIGURING = "Configuring",
-  TERMINATING = "Terminating"
+  TERMINATING = "Terminating",
+  EMPTY = ""
 }
 
 enum ProjectTypes {
