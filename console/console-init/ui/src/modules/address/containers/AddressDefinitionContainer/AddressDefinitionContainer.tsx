@@ -177,7 +177,7 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
             }
           );
         }
-        deadletters.push({ key: " ", value: " ", label: "None" });
+        deadletters.push({ key: " ", value: " ", label: "- None -" });
         setDeadletterOptions(deadletters);
       }
     }

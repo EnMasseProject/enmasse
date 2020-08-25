@@ -123,7 +123,7 @@ export const EditAddress: React.FunctionComponent = () => {
       label: address.metadata.name
     });
   });
-  deadlettersAddress.push({ key: " ", value: " ", label: " " });
+  deadlettersAddress.push({ key: " ", value: " ", label: "- None -" });
 
   const onCloseDialog = () => {
     dispatch({ type: types.HIDE_MODAL });
