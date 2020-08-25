@@ -9,26 +9,25 @@ import {
   AlertActionCloseButton,
   List,
   ListItem,
-  PageSection
+  AlertGroup,
+  AlertVariant
 } from "@patternfly/react-core";
-import { StyleSheet, css } from "aphrodite";
-import { useStoreContext, types } from "context-state-reducer";
+import { useStoreContext } from "context-state-reducer";
+import { uniqueId } from "utils";
+import { ActionStatus } from "constant";
 
-const styles = StyleSheet.create({
-  alert: {
-    backgroundColor: "var(--pf-c-alert--m-inline--BackgroundColor)"
-  }
-});
+interface IAlert {
+  key?: string;
+  query?: string;
+  title?: string;
+  variant?: AlertVariant;
+  message?: any;
+}
 
 export const ServerMessageAlert: React.FC = () => {
-  const { state, dispatch } = useStoreContext();
-  const { hasServerError, errors } = state && state.error;
-  const [alertVisible, setAlertVisible] = useState(true);
-
-  const onClose = () => {
-    setAlertVisible(false);
-    dispatch({ type: types.RESET_SERVER_ERROR });
-  };
+  const { state } = useStoreContext();
+  const { errors, status, message, title } = state && state.error;
+  const [alerts, setAlerts] = useState<IAlert[]>([]);
 
   const getErrorMessage = () => {
     let messages: string[] = [];
@@ -66,24 +65,83 @@ export const ServerMessageAlert: React.FC = () => {
     return messages[0];
   };
 
-  useEffect(() => {
-    hasServerError !== undefined && setAlertVisible(hasServerError);
-  }, [hasServerError]);
+  const getQueryName = () => {
+    return Array.isArray(errors) && errors[0]?.operation?.operationName;
+  };
 
-  if (hasServerError && alertVisible) {
+  const getQueryType = () => {
     return (
-      <PageSection>
-        <Alert
-          id="server-message-error-alert"
-          variant="danger"
-          title="Server Error"
-          actionClose={<AlertActionCloseButton onClose={onClose} />}
-          className={css(styles.alert)}
-        >
-          {getErrorMessage()}
-        </Alert>
-      </PageSection>
+      Array.isArray(errors) &&
+      errors[0]?.operation?.query.definitions[0].operation
     );
-  }
+  };
+
+  const getAlertDetail = () => {
+    if (status === ActionStatus.Failed) {
+      return {
+        key: uniqueId(),
+        query: getQueryName(),
+        title: title || "Server error",
+        variant: AlertVariant.danger,
+        message: message || getErrorMessage()
+      };
+    } else if (status === ActionStatus.Success) {
+      return {
+        key: uniqueId(),
+        query: getQueryName(),
+        title: title || "Action has completed successfuly",
+        variant: AlertVariant.success,
+        message
+      };
+    }
+  };
+
+  const shouldVisibleAlert = () => {
+    const query = getQueryName();
+    const alertIndex = alerts?.findIndex(
+      (alert: IAlert) => alert?.query === query
+    );
+    if (getQueryType() === "query" && alertIndex > -1) {
+      return false;
+    }
+    return true;
+  };
+
+  const removeAlert = (key: string | undefined) => {
+    const newAlerts = alerts?.filter((alert: IAlert) => alert?.key !== key);
+    setAlerts(newAlerts);
+  };
+
+  useEffect(() => {
+    if (errors && shouldVisibleAlert()) {
+      setAlerts([...alerts, { ...getAlertDetail() }]);
+    }
+  }, [errors]);
+
+  return (
+    <AlertGroup isToast>
+      {alerts?.map((alert: IAlert) => {
+        const { key, variant, title, message } = alert;
+        return (
+          <Alert
+            id="server-message-alert"
+            isLiveRegion
+            variant={variant}
+            title={title}
+            actionClose={
+              <AlertActionCloseButton
+                title={title}
+                variantLabel={`${variant} alert`}
+                onClose={() => removeAlert(key)}
+              />
+            }
+            key={key}
+          >
+            {message}
+          </Alert>
+        );
+      })}
+    </AlertGroup>
+  );
   return null;
 };

@@ -399,6 +399,72 @@ const convertJsonToStringAndValidate = (json: any) => {
   }
 };
 
+const getTitleForSuccessQuery = (action: string) => {
+  /**
+   * Todo: add title for all actions
+   */
+  const titles: any = {
+    createAddressSpace: "",
+    createAddress: "",
+    createIotDevice: "Device created",
+    createIotProject: "Project created",
+    updateIotDevice: "",
+    deleteAddressSpace: "",
+    deleteAddressSpaces: "",
+    deleteAddress: "",
+    deleteAddresses: "",
+    deleteIotDevices: "",
+    deleteCredentialsForDevice: "",
+    deleteIotProjects: "",
+    patchAddressSpace: "",
+    patchAddress: "",
+    patchIotProject: "",
+    purgeAddress: "",
+    closeConnections: "",
+    setCredentialsForDevice: "",
+    toggleIoTProjectsStatus: "",
+    toggleIoTDevicesStatus: ""
+  };
+
+  if (action in titles) {
+    return titles[action];
+  }
+  return "Action has completed successfuly";
+};
+
+const getTitleForFailedQuery = (action: string) => {
+  /**
+   * Todo: add title for all actions
+   */
+  const titles: any = {
+    createAddressSpace: "",
+    createAddress: "",
+    createIotDevice: "Device creation failed. Please try again.",
+    createIotProject: "Project creation failed. Please try again.",
+    updateIotDevice: "",
+    deleteAddressSpace: "",
+    deleteAddressSpaces: "",
+    deleteAddress: "",
+    deleteAddresses: "",
+    deleteIotDevices: "",
+    deleteCredentialsForDevice: "",
+    deleteIotProjects: "",
+    patchAddressSpace: "",
+    patchAddress: "",
+    patchIotProject: "",
+    purgeAddress: "",
+    closeConnections: "",
+    setCredentialsForDevice: "",
+    toggleIoTProjectsStatus: "",
+    toggleIoTDevicesStatus: ""
+  };
+
+  if (action in titles) {
+    return titles[action];
+  }
+  return "Server error";
+};
+
 export {
   getSelectOptionList,
   compareObject,
@@ -419,5 +485,7 @@ export {
   getDeviceConnectionType,
   deepClean,
   convertStringToJsonAndValidate,
-  convertJsonToStringAndValidate
+  convertJsonToStringAndValidate,
+  getTitleForSuccessQuery,
+  getTitleForFailedQuery
 };

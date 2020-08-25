@@ -4,7 +4,7 @@
  */
 
 import { types } from "context-state-reducer";
-import { QUERY } from "constant";
+import { QUERY, ActionStatus } from "constant";
 
 const onServerError = (error: any, dispactAction: any, states: any) => {
   const { graphQLErrors, networkError, operation } = error;
@@ -28,7 +28,7 @@ const onServerError = (error: any, dispactAction: any, states: any) => {
       dispactAction &&
       dispactAction({
         type: types.SET_SERVER_ERROR,
-        payload: { errors: [error] }
+        payload: { errors: [error], status: ActionStatus.Failed }
       });
   }
 };

@@ -31,12 +31,14 @@ export interface IAddGatewayGroupMembershipProps {
   onChangeInput?: (value: string) => Promise<any>;
   returnGatewayGroups?: (groups: string[]) => void;
   gatewayGroups?: string[];
+  placeholderText?: string;
 }
 
 export const AddGatewayGroupMembership: React.FC<IAddGatewayGroupMembershipProps> = ({
   id,
   returnGatewayGroups,
-  gatewayGroups: groups = []
+  gatewayGroups: groups = [],
+  placeholderText = "Input gateway group name"
 }) => {
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [gatewayGroups, setGatewayGroups] = useState<string[]>(groups);
@@ -115,7 +117,7 @@ export const AddGatewayGroupMembership: React.FC<IAddGatewayGroupMembershipProps
           typeAheadAriaLabel={"typeahead to select gateway group membership"}
           isMultiple={true}
           isCreatable={true}
-          placeholderText={"Input gateway group name"}
+          placeholderText={placeholderText}
         />
       </GridItem>
       <GridItem span={2}>
@@ -133,7 +135,7 @@ export const AddGatewayGroupMembership: React.FC<IAddGatewayGroupMembershipProps
         <ChipGroupsWithTitle
           id="gateway-group-membership-chipgroups"
           titleId="gateway-group-membership-title"
-          title={"Selected gateway groups"}
+          title={"Selected gateway groups:"}
           items={gatewayGroups}
           removeItem={removeGatewayGroup}
         />

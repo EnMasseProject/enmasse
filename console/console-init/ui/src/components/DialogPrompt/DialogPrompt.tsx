@@ -69,6 +69,7 @@ export const DialogPrompt: React.FunctionComponent<{}> = () => {
       id="dialogue-prompt-modal"
       variant={ModalVariant.small}
       title={""}
+      aria-label="dialog prompt"
       isOpen={true}
       onClose={onCloseDialog}
       actions={[

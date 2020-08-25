@@ -30,13 +30,16 @@ interface IDeviceActionType {
 }
 
 const errorReducer = (state = initialState, action: IActionType) => {
-  const { errors, statusCode } = action.payload || {};
+  const { errors, statusCode, status, message, title } = action.payload || {};
   switch (action.type) {
     case types.SET_SERVER_ERROR:
       return {
         ...state,
         hasServerError: true,
-        errors
+        errors,
+        status,
+        message,
+        title
       };
     case types.RESET_SERVER_ERROR:
     case types.RESET_NETWORK_ERROR:
