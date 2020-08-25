@@ -161,12 +161,13 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
           ),
           fetchPolicy: FetchPolicy.NETWORK_ONLY
         });
+        let deadletters: IDropdownOption[] = [];
         if (
           deadletterAddresses.data &&
           deadletterAddresses.data.addresses &&
           deadletterAddresses.data.addresses.addresses.length > 0
         ) {
-          const deadletters = deadletterAddresses.data.addresses.addresses.map(
+          deadletters = deadletterAddresses.data.addresses.addresses.map(
             address => {
               return {
                 key: address.spec.address,
@@ -175,11 +176,9 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
               };
             }
           );
-          setDeadletterOptions([
-            ...deadletters,
-            { key: " ", value: " ", label: "None" }
-          ]);
         }
+        deadletters.push({ key: " ", value: " ", label: "None" });
+        setDeadletterOptions(deadletters);
       }
     }
   };
