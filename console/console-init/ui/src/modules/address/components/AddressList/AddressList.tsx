@@ -48,6 +48,7 @@ export interface IAddress {
   status?: string;
   selected?: boolean;
   topic?: string | null;
+  addressSpaceName?: string;
 }
 
 interface IAddressListProps {

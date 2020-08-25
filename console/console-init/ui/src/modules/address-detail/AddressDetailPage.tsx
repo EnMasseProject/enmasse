@@ -107,6 +107,7 @@ export default function AddressDetailPage() {
   const addressDetail = addresses && addresses.addresses[0];
   const getAddress = () => {
     const address: IAddress = {
+      addressSpaceName: name,
       name: addressDetail.metadata.name,
       displayName: addressDetail.spec.address,
       namespace: addressDetail.metadata.namespace,
