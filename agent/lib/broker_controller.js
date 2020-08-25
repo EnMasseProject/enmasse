@@ -73,6 +73,7 @@ BrokerController.prototype.on_connection_open = function (context) {
     var self = this;
     this.broker = new artemis.Artemis(context.connection);
     this.id = context.connection.container_id;
+    this.initializeGlobalMaxSizeFromBrokerIfUnset();
     self.broker.getAddressSettings('#').then((root_address_settings) => {
         self.root_address_settings = root_address_settings;
         self.check_broker_addresses().then(() => {
@@ -90,6 +91,7 @@ BrokerController.prototype.set_connection = function (connection) {
     var self = this;
     this.broker = new artemis.Artemis(connection);
     this.id = connection.container_id;
+    this.initializeGlobalMaxSizeFromBrokerIfUnset();
     log.info('[%s] broker controller ready', this.id);
 
     return new Promise((resolve, reject) => {
@@ -98,6 +100,19 @@ BrokerController.prototype.set_connection = function (connection) {
             resolve();
         }).catch(reject);
     });
+}
+
+BrokerController.prototype.initializeGlobalMaxSizeFromBrokerIfUnset = function () {
+    var self = this;
+    if (this.global_max_size <= 0) {
+        this.broker.getGlobalMaxSize().then(function (global_max_size) {
+            log.info('[%s] global_max_size pulled from broker (%d)', self.id, global_max_size);
+            //Broker defaults global_max_size to 1/2 the jvm memory (1/4 of the container memory).  We need it to be 1/8th container memory.
+            self.global_max_size = (global_max_size / 2);
+        }).catch((e) => {
+            log.error("[%s] failed to get global_max_size from the broker", self.id, e);
+        });
+    }
 }
 
 BrokerController.prototype.addresses_defined = function (addresses) {
@@ -805,25 +820,14 @@ BrokerController.prototype.generate_address_settings = function (address, global
     }
 };
 
-BrokerController.prototype.get_address_settings = function (address) {
-    return this.get_address_settings_async(address, /* this.broker.getGlobalMaxSize()*/ Promise.resolve());
-};
-
 BrokerController.prototype.read_global_max_size = function () {
     return this.config.BROKER_GLOBAL_MAX_SIZE ? myutils.parseToBytes(this.config.BROKER_GLOBAL_MAX_SIZE) : 0;
 };
 
-BrokerController.prototype.get_address_settings_async = function (address, global_max_size_promise) {
+BrokerController.prototype.get_address_settings = function (address) {
     var self = this;
     if (self.global_max_size > 0) {
         return Promise.resolve(self.generate_address_settings(address, self.global_max_size));
-    } else if (global_max_size_promise) {
-        return global_max_size_promise.then(function (global_max_size) {
-            return Promise.resolve(self.generate_address_settings(address, global_max_size));
-        }).catch(function (e) {
-            log.debug('no global max, therefore not applying address settings %s', e);
-            return Promise.reject(e);
-        });
     } else {
         log.debug('no global max, therefore not applying address settings');
         return Promise.resolve();

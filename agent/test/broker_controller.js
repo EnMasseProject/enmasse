@@ -166,44 +166,49 @@ describe('broker controller', function() {
 
     var config = { BROKER_GLOBAL_MAX_SIZE: "64MB" };
 
-    it('get address settings async - returns setting maxSizeBytes calculated from infra', function(done) {
+    it('get address settings - returns setting maxSizeBytes calculated from infra', function(done) {
         this.timeout(15000);
         config.BROKER_GLOBAL_MAX_SIZE="64MB";
         var brokerAddressSettings = new broker_controller.BrokerController(undefined, config);
-        brokerAddressSettings.get_address_settings_async({address:'foo',type:'queue', plan: 'small-queue', status: {planStatus: {name: "small-queue", resources: {broker: 0.2}}}}).then(function (result) {
+        brokerAddressSettings.get_address_settings({address:'foo',type:'queue', plan: 'small-queue', status: {planStatus: {name: "small-queue", resources: {broker: 0.2}}}}).then(function (result) {
             assert.equal(13421773, result.maxSizeBytes);
             done();
         });
     });
 
-    it('get address settings async - returns setting maxSizeBytes calculated from infra with partitions', function(done) {
+    it('get address settings - returns setting maxSizeBytes calculated from infra with partitions', function(done) {
         this.timeout(15000);
         config.BROKER_GLOBAL_MAX_SIZE="64MB";
         var brokerAddressSettings =  new broker_controller.BrokerController(undefined, config);
-        brokerAddressSettings.get_address_settings_async({address:'foo',type:'queue', plan: 'small-queue', status: {planStatus: {name: "small-queue", partitions: 2, resources: {broker: 0.2}}}}).then(function (result) {
+        brokerAddressSettings.get_address_settings({address:'foo',type:'queue', plan: 'small-queue', status: {planStatus: {name: "small-queue", partitions: 2, resources: {broker: 0.2}}}}).then(function (result) {
             assert.equal(6710886, result.maxSizeBytes);
             done();
         });
     });
 
-    it('get address settings async - returns setting maxSizeBytes calculated from broker', function(done) {
-        this.timeout(15000);
-        config.BROKER_GLOBAL_MAX_SIZE=undefined;
-        var brokerAddressSettings =  new broker_controller.BrokerController(undefined, config);
-        brokerAddressSettings.get_address_settings_async({address:'foo',type:'queue', plan: 'small-queue', status: {planStatus: {name: "small-queue", resources: {broker: 0.1}}}}, Promise.resolve(1000000)).then(function (result) {
-            assert.equal(100000, result.maxSizeBytes);
-            done();
-        });
-    });
-
-    it('get address settings async - returns ttl settings', function(done) {
+    it('get address settings - returns ttl settings', function(done) {
         this.timeout(15000);
         var brokerAddressSettings =  new broker_controller.BrokerController(undefined, config);
-        brokerAddressSettings.get_address_settings_async({address:'foo',type:'queue', plan: 'small-queue', status: {messageTtl: {minimum: 1000, maximum: 2000}}}, Promise.resolve(undefined)).then(function (result) {
+        brokerAddressSettings.get_address_settings({address:'foo',type:'queue', plan: 'small-queue', status: {messageTtl: {minimum: 1000, maximum: 2000}}}, Promise.resolve(undefined)).then(function (result) {
             assert.equal(1000, result.minExpiryDelay);
             assert.equal(2000, result.maxExpiryDelay);
             done();
         });
+    });
+
+    it('initializeGlobalMaxSizeFromBrokerIfUnset- sets global_max_size from broker', function(done) {
+        config.BROKER_GLOBAL_MAX_SIZE='10MB';
+        var brokerController =  new broker_controller.BrokerController(undefined, config);
+        brokerController.initializeGlobalMaxSizeFromBrokerIfUnset();
+        assert.equal(10485760, brokerController.global_max_size);
+
+        config.BROKER_GLOBAL_MAX_SIZE=undefined;
+        brokerController =  new broker_controller.BrokerController(undefined, config);
+        brokerController.broker = broker;
+        broker.global_max_size = 44;
+        brokerController.initializeGlobalMaxSizeFromBrokerIfUnset();
+        assert.equal(44, brokerController.broker.global_max_size);
+        done();
     });
 
 });

@@ -16,6 +16,14 @@ echo "JAVA_OPTS=${JAVA_OPTS}"
 
 sed -i 's/@JAVA_OPTS@/${JAVA_OPTS}/g' ${BROKER_CUSTOM_DIR}/conf/artemis.profile
 
+if [ "${GLOBAL_MAX_SIZE}" == "-1" ]; then
+    CONTAINER_MEMORY=$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)
+    MAX_MEM_UNBOUNDED=$(cat /proc/meminfo | grep 'MemTotal:' | awk '{print $2*1024}')
+    if [ ${CONTAINER_MEMORY} -lt ${MAX_MEM_UNBOUNDED} ]; then
+        GLOBAL_MAX_SIZE=$((${CONTAINER_MEMORY} / 8))
+    fi
+fi
+sed -i "s|@GLOBAL_MAX_SIZE@|${GLOBAL_MAX_SIZE}|g" ${BROKER_CUSTOM_DIR}/conf/broker.xml
 
 # Parameters are
 # - instance directory
