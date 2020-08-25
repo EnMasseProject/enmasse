@@ -3,20 +3,22 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { Loading } from "use-patternfly";
 import { IDropdownOption } from "components";
 import {
   RETURN_ADDRESS_PLANS,
   RETURN_ADDRESS_TYPES,
-  RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION
+  RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION,
+  RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE
 } from "graphql-module/queries";
 import { IAddressResponse } from "schema/ResponseTypes";
 import {
   AddressConfiguration,
   IAddressConfigurationProps
 } from "modules/address/components";
+import { FetchPolicy } from "constant";
 
 export interface IAddressDefinition extends IAddressConfigurationProps {
   addressspaceName: string;
@@ -26,9 +28,12 @@ export interface IAddressDefinition extends IAddressConfigurationProps {
   setPlan: (value: any) => void;
   addressSpaceType?: string;
   setTopic: (value: string) => void;
+  setDeadletter: (value: string) => void;
+  setExpiryAddress: (value: string) => void;
   setTypeOptions: (values: IDropdownOption[]) => void;
   setPlanOptions: (values: IDropdownOption[]) => void;
-  setTopicForSubscripitons: (values: IDropdownOption[]) => void;
+  setTopicForSubscription: (values: IDropdownOption[]) => void;
+  setDeadletterOptions: (values: IDropdownOption[]) => void;
 }
 
 interface IAddressPlans {
@@ -71,10 +76,16 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
   setTopic,
   typeOptions,
   setTypeOptions,
-  topicsForSubscription,
-  setTopicForSubscripitons,
+  deadletter,
+  expiryAddress,
+  setExpiryAddress,
+  setDeadletter,
   planOptions,
-  setPlanOptions
+  setPlanOptions,
+  topicsForSubscription,
+  setTopicForSubscription,
+  deadletterOptions,
+  setDeadletterOptions
 }) => {
   const client = useApolloClient();
   const { loading, data } = useQuery<IAddressTypes>(RETURN_ADDRESS_TYPES, {
@@ -94,7 +105,8 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
       const type = value;
       setType(type);
       const addressPlans = await client.query<IAddressPlans>({
-        query: RETURN_ADDRESS_PLANS(addressSpacePlan, type)
+        query: RETURN_ADDRESS_PLANS(addressSpacePlan, type),
+        fetchPolicy: FetchPolicy.NETWORK_ONLY
       });
 
       if (addressPlans.data && addressPlans.data.addressPlans.length > 0) {
@@ -112,19 +124,20 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
       }
 
       if (type.toLowerCase() === "subscription") {
-        const topics_addresses = await client.query<IAddressResponse>({
+        const topicsAddresses = await client.query<IAddressResponse>({
           query: RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION(
             addressspaceName,
             namespace,
             type
-          )
+          ),
+          fetchPolicy: FetchPolicy.NETWORK_ONLY
         });
         if (
-          topics_addresses.data &&
-          topics_addresses.data.addresses &&
-          topics_addresses.data.addresses.addresses.length > 0
+          topicsAddresses.data &&
+          topicsAddresses.data.addresses &&
+          topicsAddresses.data.addresses.addresses.length > 0
         ) {
-          const topics = topics_addresses.data.addresses.addresses.map(
+          const topics = topicsAddresses.data.addresses.addresses.map(
             address => {
               return {
                 key: address.spec.address,
@@ -133,8 +146,39 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
               };
             }
           );
-          setTopicForSubscripitons(topics);
+          setTopicForSubscription(topics);
         }
+      }
+      if (
+        type?.toLowerCase() === "subscription" ||
+        type?.toLowerCase() === "queue"
+      ) {
+        const deadletterAddresses = await client.query<IAddressResponse>({
+          query: RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE(
+            addressspaceName,
+            namespace,
+            type
+          ),
+          fetchPolicy: FetchPolicy.NETWORK_ONLY
+        });
+        let deadletters: IDropdownOption[] = [];
+        if (
+          deadletterAddresses.data &&
+          deadletterAddresses.data.addresses &&
+          deadletterAddresses.data.addresses.addresses.length > 0
+        ) {
+          deadletters = deadletterAddresses.data.addresses.addresses.map(
+            address => {
+              return {
+                key: address.spec.address,
+                value: address.spec.address,
+                label: address.metadata.name
+              };
+            }
+          );
+        }
+        deadletters.push({ key: " ", value: " ", label: "- None -" });
+        setDeadletterOptions(deadletters);
       }
     }
   };
@@ -145,6 +189,12 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
 
   const onTopicSelect = (value: string) => {
     setTopic(value);
+  };
+  const onDeadletterSelect = (value: string) => {
+    setDeadletter(value);
+  };
+  const onExpiryAddressSelect = (value: string) => {
+    setExpiryAddress(value);
   };
 
   const types: IDropdownOption[] = addressTypes_v2.map(type => {
@@ -171,8 +221,13 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
       onTypeSelect={onTypeSelect}
       onPlanSelect={onPlanSelect}
       onTopicSelect={onTopicSelect}
+      onDeadletterSelect={onDeadletterSelect}
+      onExpiryAddressSelect={onExpiryAddressSelect}
       typeOptions={typeOptions}
       planOptions={planOptions}
+      deadletter={deadletter}
+      expiryAddress={expiryAddress}
+      deadletterOptions={deadletterOptions}
       topicsForSubscription={topicsForSubscription}
     />
   );

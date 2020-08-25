@@ -943,7 +943,7 @@ function patchAddressSpace(metadata, jsonPatch, patchType) {
 
   var patch = JSON.parse(jsonPatch);
   var current = JSON.parse(JSON.stringify(addressSpaces[index]));
-  var patched = applyPatch(JSON.parse(JSON.stringify(current)) , patch);
+  var patched = applyPatch(JSON.parse(JSON.stringify(current)) , patch, true);
   if (patched.newDocument) {
     var replacement = patched.newDocument;
     if (!_.isEqual(replacement.spec.plan, current.spec.plan)) {
@@ -1165,11 +1165,7 @@ function createAddress(addr, addressSpaceName) {
 
   var addressSpacesInNamespace = addressSpaces.filter(as => as.metadata.namespace === addr.metadata.namespace);
   if (addr.metadata.name) {
-    var parts = addr.metadata.name.split(".", 2);
-    if (parts.length < 2) {
-      throw `Address name '${addr.metadata.name}' is badly formed, expected for '<addressspace>.<name>'`;
-    }
-    addressSpaceName = parts[0];
+    addressSpaceName = splitAddress(addr.metadata)[0];
   } else if (addr.spec.address) {
     if (!addressSpaceName) {
       throw `addressSpace is not provided, cannot default resource name from address '${addr.spec.address}'`;
@@ -1262,15 +1258,22 @@ function createAddress(addr, addressSpaceName) {
       addressSpace: addr.spec.addressSpace,
       plan: plan,
       type: addr.spec.type,
-      topic: addr.spec.topic,
-      deadletter: addr.spec.deadletter,
-      expiry: addr.spec.expiry,
     },
     status: {
       phase:"",
       messages:[]
     },
   };
+
+  if (addr.spec.topic) {
+    address.spec.topic = addr.spec.topic;
+  }
+  if (addr.spec.deadletter) {
+    address.spec.deadletter = addr.spec.deadletter;
+  }
+  if (addr.spec.expiry) {
+    address.spec.expiry = addr.spec.expiry;
+  }
   scheduleSetAddressStatus(address, phase, messages, planStatus);
   addresses.push(address);
   return address.metadata;
@@ -1281,7 +1284,7 @@ function patchAddress(objectmeta, jsonPatch, patchType) {
   if (index < 0) {
     throw `Address with name  '${objectmeta.name}' in namespace ${objectmeta.namespace} does not exist`;
   }
-
+  var addressSpaceName = splitAddress(objectmeta)[0];
   var knownPatchTypes = ["application/json-patch+json", "application/merge-patch+json", "application/strategic-merge-patch+json"];
   if (knownPatchTypes.find(p => p === patchType) === undefined) {
     throw `Unsupported patch type '$patchType'`
@@ -1291,7 +1294,7 @@ function patchAddress(objectmeta, jsonPatch, patchType) {
 
   var patch = JSON.parse(jsonPatch);
   var current = JSON.parse(JSON.stringify(addresses[index]));
-  var patched = applyPatch(JSON.parse(JSON.stringify(current)) , patch);
+  var patched = applyPatch(JSON.parse(JSON.stringify(current)), patch, true);
   if (patched.newDocument) {
     var replacement = patched.newDocument;
     if (!_.isEqual(replacement.spec.plan,current.spec.plan)) {
@@ -1303,12 +1306,32 @@ function patchAddress(objectmeta, jsonPatch, patchType) {
       }
       replacement.spec.plan = spacePlan;
     }
+    var deadletters  = addresses.filter(a => a.metadata.name.startsWith(addressSpaceName) && a.spec.type === "deadletter");
+    var deadletterNames  = deadletters.map(t => t.spec.address);
+    if (replacement.spec.deadletter && !_.isEqual(replacement.spec.deadletter,current.spec.deadletter)) {
+      if (deadletters.find(t => t.spec.address === replacement.spec.deadletter) === undefined) {
+        throw `Unrecognised deadletter address '${replacement.spec.deadletter}', known ones are : '${deadletterNames}'`;
+      }
+    }
+    if (replacement.spec.expiry && !_.isEqual(replacement.spec.expiry,current.spec.expiry)) {
+      if (deadletters.find(t => t.spec.address === replacement.spec.expiry) === undefined) {
+        throw `Unrecognised expiry address '${replacement.spec.expiry}', known ones are : '${deadletterNames}'`;
+      }
+    }
 
     addresses[index].spec = replacement.spec;
     return addresses[index];
   } else {
     throw `Failed to patch address with name  '${objectmeta.name}' in namespace ${objectmeta.namespace}`
   }
+}
+
+function splitAddress(objectmeta) {
+  var parts = objectmeta.name.split(".", 2);
+  if (parts.length < 2) {
+    throw `Address name '${objectmeta.name}' is badly formed, expected for '<addressspace>.<name>'`;
+  }
+  return parts;
 }
 
 function titleCasePath(str) {

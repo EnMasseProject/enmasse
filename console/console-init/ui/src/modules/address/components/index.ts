@@ -12,3 +12,5 @@ export * from "./AddressToolbar";
 export * from "./EmptyAddress";
 export * from "./Message";
 export * from "./TypeAndPlan";
+export * from "./ExpiryAddress";
+export * from "./DeadLetterAddress";

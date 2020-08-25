@@ -19,7 +19,8 @@ const getFilteredAddressesByType = (addresses: any[]) => {
     return addresses.filter(
       address =>
         address.type.toLowerCase() === AddressTypes.QUEUE ||
-        address.type.toLowerCase() === AddressTypes.SUBSCRIPTION
+        address.type.toLowerCase() === AddressTypes.SUBSCRIPTION ||
+        address.type.toLowerCase() === AddressTypes.DEADLETTER
     );
   }
 };
@@ -38,7 +39,8 @@ const getFilteredAddressDisplayName = (addresses: any[]) => {
     return addresses.filter(
       address =>
         address.type.toLowerCase() === AddressTypes.QUEUE ||
-        address.type.toLowerCase() === AddressTypes.SUBSCRIPTION
+        address.type.toLowerCase() === AddressTypes.SUBSCRIPTION ||
+        address.type.toLowerCase() === AddressTypes.DEADLETTER
     )[0].displayName;
   }
 };
@@ -66,7 +68,8 @@ const getFilteredAdressNames = (addresses: any[]) => {
       .filter(
         address =>
           address.type.toLowerCase() === AddressTypes.QUEUE ||
-          address.type.toLowerCase() === AddressTypes.SUBSCRIPTION
+          address.type.toLowerCase() === AddressTypes.SUBSCRIPTION ||
+          address.type.toLowerCase() === AddressTypes.DEADLETTER
       )
       .map(address => address.name)
   );
