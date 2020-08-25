@@ -16,6 +16,8 @@ export interface IDeviceProp {
     deviceId?: string;
     status?: boolean;
     metadata?: any[];
+    ext?: any[];
+    defaults?: any[];
   };
   connectionType: string;
   gateways: {

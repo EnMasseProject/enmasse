@@ -94,7 +94,7 @@ const getDeviceRegistrationString = (
       if (hasError) {
         setErrorMessage(INVALID_JSON_ERROR);
       } else {
-        deviceRegistration.defaults = value;
+        deviceRegistration.ext = value;
       }
     }
     if ((!via || via.length === 0) && (!viaGroups || viaGroups?.length === 0)) {
@@ -280,6 +280,13 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
       if (parseDeviceDetail?.registration?.enabled !== undefined) {
         device.deviceInformation.status =
           parseDeviceDetail.registration.enabled;
+      }
+      if (parseDeviceDetail?.registration?.defaults !== undefined) {
+        device.deviceInformation.defaults =
+          parseDeviceDetail.registration.defaults;
+      }
+      if (parseDeviceDetail?.registration?.ext !== undefined) {
+        device.deviceInformation.ext = parseDeviceDetail.registration.ext;
       }
       //add credentials field to device object from the parseDeviceDetail
       if (device.credentials && parseDeviceDetail.credentials) {

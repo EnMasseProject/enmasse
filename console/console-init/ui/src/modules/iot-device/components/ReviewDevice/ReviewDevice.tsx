@@ -14,6 +14,7 @@ import {
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
 import { CredentialsView } from "modules/iot-device-detail";
+import { ViewMetaData } from "modules/iot-device";
 interface IReviewDeviceProps {
   device?: IDeviceProp;
   title?: string;
@@ -24,7 +25,7 @@ const style = StyleSheet.create({
     fontSize: 20
   },
   split_right_margin: {
-    marginRight: 15
+    marginRight: "1rem"
   }
 });
 
@@ -33,7 +34,8 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
   title
 }) => {
   const getDeviceInformation = () => {
-    const { deviceId, status, metadata } = device?.deviceInformation || {};
+    const { deviceId, status, metadata, defaults, ext } =
+      device?.deviceInformation || {};
     return (
       <>
         <Text className={css(style.font_size_20)}>Device Information</Text>
@@ -63,8 +65,8 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
             <Title size="lg" headingLevel="h5">
               MetaData
             </Title>
-            {/*TODO: {metadata} */}
-            --
+            <br />
+            <ViewMetaData defaults={defaults} ext={ext} />
             <br />
             <br />
           </>
@@ -158,11 +160,14 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
         <Text className={css(style.font_size_20)}>Credentials</Text>
         <br />
         {credentials && (
-          <CredentialsView
-            id={"review-device-crdentials-list"}
-            credentials={credentials}
-            enableActions={false}
-          />
+          <>
+            <CredentialsView
+              id={"review-device-crdentials-list"}
+              credentials={credentials}
+              enableActions={false}
+            />
+            <br />
+          </>
         )}
       </>
     );
