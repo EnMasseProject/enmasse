@@ -160,7 +160,7 @@ const getExtensionsFieldsInitialState = () => {
   const initialState: IExtension = {
     id: uniqueId(),
     key: "",
-    type: "",
+    type: "String",
     value: ""
   };
   return initialState;
