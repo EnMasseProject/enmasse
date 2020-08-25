@@ -177,7 +177,7 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
           );
           setDeadletterOptions([
             ...deadletters,
-            { key: "none", value: "", label: "none" }
+            { key: " ", value: " ", label: "None" }
           ]);
         }
       }

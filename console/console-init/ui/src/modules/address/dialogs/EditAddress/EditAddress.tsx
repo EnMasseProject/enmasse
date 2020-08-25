@@ -52,15 +52,15 @@ export const EditAddress: React.FunctionComponent = () => {
   );
 
   const [deadletterAddress, setDeadletterAddress] = useState<any>({
-    key: "none",
-    value: "none",
-    label: "none"
+    key: " ",
+    value: " ",
+    label: " "
   });
 
   const [expiryAddress, setExpiryAddress] = useState<any>({
-    key: "none",
-    value: "none",
-    label: "none"
+    key: " ",
+    value: " ",
+    label: " "
   });
 
   useEffect(() => {
@@ -123,7 +123,7 @@ export const EditAddress: React.FunctionComponent = () => {
       label: address.metadata.name
     });
   });
-  deadlettersAddress.push({ key: "none", value: "none", label: "none" });
+  deadlettersAddress.push({ key: " ", value: " ", label: " " });
 
   const onCloseDialog = () => {
     dispatch({ type: types.HIDE_MODAL });
@@ -166,61 +166,64 @@ export const EditAddress: React.FunctionComponent = () => {
   };
 
   const getJsonPatchObject = (
-    op: string,
     path: string,
-    value: string | null
+    value: string | null,
+    oldValue?: string
   ) => {
-    let patchObject: IPatchObject;
-    if (
-      !value ||
-      value.trim() === "" ||
-      value.trim() === "none" ||
-      value.trim() === null
-    ) {
-      patchObject = {
-        op: op,
-        path: path
-      };
+    let patchObject: IPatchObject | null = null;
+    if (oldValue && oldValue !== null && oldValue.trim() !== "") {
+      if (value !== null && value?.trim() != "") {
+        patchObject = { op: "replace", path: path, value: value?.trim() };
+      } else {
+        patchObject = { op: "remove", path: path, value: oldValue };
+      }
     } else {
-      patchObject = {
-        op: op,
-        path: path,
-        value: value.trim()
-      };
+      if (value !== null && value?.trim() != "") {
+        patchObject = { op: "add", path: path, value: value?.trim() };
+      }
     }
-    return JSON.stringify(patchObject);
+    return patchObject !== null ? JSON.stringify(patchObject) : null;
   };
 
   const onConfirmDialog = async () => {
+    const patchObjects: string[] = [];
     if (address && plan && deadletterAddress && expiryAddress) {
+      const planObject: string | null = getJsonPatchObject(
+        "/spec/plan",
+        plan.value,
+        address.planValue
+      );
+      const deadletterObject: string | null = getJsonPatchObject(
+        "/spec/deadletter",
+        deadletterAddress.value,
+        address.deadletter
+      );
+      const expiryObject: string | null = getJsonPatchObject(
+        "/spec/expiry",
+        expiryAddress.value,
+        address.expiry
+      );
+      if (planObject !== null) {
+        patchObjects.push(planObject);
+      }
+      if (deadletterObject !== null) {
+        patchObjects.push(deadletterObject);
+      }
+      if (expiryObject !== null) {
+        patchObjects.push(expiryObject);
+      }
       const variables = {
         a: {
           name: address.name,
           namespace: address.namespace
         },
-        jsonPatch:
-          "[" +
-          getJsonPatchObject("replace", "/spec/plan", plan.value) +
-          "," +
-          getJsonPatchObject(
-            "replace",
-            "/spec/deadLetterAddress",
-            deadletterAddress.value
-          ) +
-          "," +
-          getJsonPatchObject(
-            "replace",
-            "/spec/expiryAddress",
-            expiryAddress.value
-          ) +
-          "]",
+        jsonPatch: "[" + patchObjects.join(", ") + "]",
         patchType: "application/json-patch+json"
       };
+
       await setEditAddressQueryVariables(variables);
+      onConfirm && onConfirm();
       onCloseDialog();
-      if (onConfirm) {
-        onConfirm();
-      }
     }
   };
 

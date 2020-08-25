@@ -136,18 +136,10 @@ export const CreateAddress: React.FunctionComponent = () => {
           (addressType && addressType.trim().toLowerCase() === "queue") ||
           addressType.trim().toLowerCase() === "subscription"
         ) {
-          if (
-            deadletterAddress &&
-            deadletterAddress.trim() !== "" &&
-            deadletterAddress.trim() !== "none"
-          ) {
+          if (deadletterAddress && deadletterAddress.trim() !== "") {
             variable.spec.deadletter = deadletterAddress.trim();
           }
-          if (
-            expiryAddress &&
-            expiryAddress.trim() !== "" &&
-            expiryAddress.trim() !== "none"
-          ) {
+          if (expiryAddress && expiryAddress.trim() !== "") {
             variable.spec.expiry = expiryAddress.trim();
           }
         }

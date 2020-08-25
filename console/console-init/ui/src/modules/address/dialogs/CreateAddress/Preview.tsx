@@ -65,13 +65,11 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
           type: type ? type.toLowerCase() : "",
           ...(topic && topic.trim() !== "" && { topic: topic }),
           ...(deadletter &&
-            deadletter.trim() !== "" &&
-            deadletter.trim() !== "none" && {
+            deadletter.trim() !== "" && {
               deadletter: deadletter
             }),
           ...(expiry &&
-            expiry.trim() !== "" &&
-            expiry.trim() !== "none" && {
+            expiry.trim() !== "" && {
               expiry: expiry
             }),
           address: name
@@ -142,20 +140,15 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                 </GridItem>
               </>
             )}
-            {deadletter &&
-              deadletter.trim() !== "" &&
-              deadletter.trim() !== "none" && (
-                <>
-                  <GridItem
-                    span={4}
-                    style={{ marginBottom: 16, marginRight: 5 }}
-                  >
-                    Deadletter Address
-                  </GridItem>
-                  <GridItem span={8}>{deadletter}</GridItem>
-                </>
-              )}
-            {expiry && expiry.trim() !== "" && expiry.trim() !== "none" && (
+            {deadletter && deadletter.trim() !== "" && (
+              <>
+                <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
+                  Deadletter Address
+                </GridItem>
+                <GridItem span={8}>{deadletter}</GridItem>
+              </>
+            )}
+            {expiry && expiry.trim() !== "" && (
               <>
                 <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
                   Expiry Address
