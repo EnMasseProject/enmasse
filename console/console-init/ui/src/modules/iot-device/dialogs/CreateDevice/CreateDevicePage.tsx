@@ -48,6 +48,7 @@ import {
   serializeCredentials,
   serializeMetaData
 } from "modules/iot-device/utils";
+import { convertMetadataOptionsToJson, convertObjectIntoJson } from "utils";
 
 const getInitialDeviceForm = () => {
   const device: IDeviceProp = {
@@ -214,7 +215,6 @@ export default function CreateDevicePage() {
   const credentialsToCredentialView = (credential: any[]) => {
     return credential.map(
       ({ type, ext, enabled, secrets, "auth-id": authId }) => {
-        console.log(ext);
         return {
           type,
           ext: serializeExt(ext),
@@ -234,7 +234,8 @@ export default function CreateDevicePage() {
           deviceInformation: {
             deviceId: deviceIdInput,
             status: isEnabled,
-            metadata: metadataList
+            metadata: metadataList,
+            ext: JSON.parse(serializeMetaData(metadataList))
           },
           connectionType,
           gateways: {
