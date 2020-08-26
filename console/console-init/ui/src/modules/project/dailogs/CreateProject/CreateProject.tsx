@@ -109,6 +109,8 @@ const initialMessageProject: IMessagingProject = {
 };
 
 const initialIoTProject: IIoTProjectInput = {
+  iotProjectName: "",
+  namespace: "",
   isNameValid: true,
   isEnabled: true
 };
