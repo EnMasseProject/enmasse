@@ -207,7 +207,7 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
 
   const tableRows = projects?.map(toTableCells);
   const tableColumns = [
-    { title: "Name", transforms: [sortable] },
+    { title: "Name / Namespace", transforms: [sortable] },
     { title: "Type", transforms: [sortable] },
     { title: "Status", transforms: [sortable] },
     { title: "Time created", transforms: [sortable] },

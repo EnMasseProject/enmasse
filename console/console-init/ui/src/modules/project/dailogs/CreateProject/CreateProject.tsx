@@ -137,9 +137,9 @@ const CreateProject: React.FunctionComponent = () => {
   };
 
   const resetForm = () => {
-    setFirstSelectedStep("iot");
     setMessagingProjectDetail(initialMessageProject);
     setIotProjectDetail(initialIoTProject);
+    setFirstSelectedStep("iot");
     setIsWizardOpen(!isWizardOpen);
   };
 

@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router";
+import { useLocation, useHistory } from "react-router";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
 import {
   PageSection,
@@ -36,6 +36,13 @@ import {
   getHeaderForToggleDialog
 } from "./utils";
 import { ProjectToolbarContainer, ProjectListContainer } from "./containers";
+import { StyleSheet, css } from "aphrodite";
+
+export const styles = StyleSheet.create({
+  scroll_overflow: {
+    overflowY: "auto"
+  }
+});
 
 export interface ISelectSearchOption {
   value: string;
@@ -74,6 +81,7 @@ export default function ProjectPage() {
   );
   const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
   const location = useLocation();
+  const history = useHistory();
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
@@ -89,19 +97,37 @@ export default function ProjectPage() {
     setSelectedProjects([]);
   };
 
+  const setSearchParam = React.useCallback(
+    (name: string, value: string) => {
+      searchParams.set(name, value.toString());
+    },
+    [searchParams]
+  );
+
+  const resetFormOnDelete = () => {
+    if (page > 1) {
+      setSearchParam("page", (page - 1).toString());
+      history.push({
+        search: searchParams.toString()
+      });
+    }
+    setIsAllSelected(false);
+    setSelectedProjects([]);
+  };
+
   const refetchQueries: string[] = ["allProjects"];
   const [setDeleteProjectQueryVariables] = useMutationQuery(
     DELETE_MESSAGING_PROJECT,
     refetchQueries,
     undefined,
-    resetFormState
+    resetFormOnDelete
   );
 
   const [setDeleteIoTProjectQueryVariables] = useMutationQuery(
     DELETE_IOT_PROJECT,
     ["allProjects"],
     undefined,
-    resetFormState
+    resetFormOnDelete
   );
   const [setToggleIoTProjectQueryVariables] = useMutationQuery(
     TOGGLE_IOT_PROJECTS_STATUS,
@@ -298,7 +324,10 @@ export default function ProjectPage() {
             msgCount={msgCount}
           />
         </PageSection>
-        <PageSection variant={PageSectionVariants.light}>
+        <PageSection
+          variant={PageSectionVariants.light}
+          className={css(styles.scroll_overflow)}
+        >
           <Grid>
             <GridItem span={7}>
               <ProjectToolbarContainer
