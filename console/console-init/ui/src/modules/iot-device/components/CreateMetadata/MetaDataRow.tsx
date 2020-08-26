@@ -12,15 +12,17 @@ import { MetaDataType } from "./MetaDataType";
 import { MetaDataValue } from "./MetaDataValue";
 
 export interface IMetaDataRowProps {
+  metadataRow: any;
   metadataList: any;
-  setMetadataList: (metadataList: any) => void;
-  rowIndex: number;
+  setMetadataList: (metadataRow: any) => void;
+  rowId: string;
 }
 
 export const MetaDataRow: React.FC<IMetaDataRowProps> = ({
+  metadataRow,
   metadataList,
   setMetadataList,
-  rowIndex
+  rowId
 }) => {
   const [validationStatus, setValidationStatus] = useState<
     ValidationStatusType.DEFAULT | ValidationStatusType.ERROR
@@ -28,10 +30,22 @@ export const MetaDataRow: React.FC<IMetaDataRowProps> = ({
 
   const updateMetadataList = (property: string, value: string) => {
     let updatedMetadataList = [...metadataList];
-    updatedMetadataList[rowIndex][property] = value;
+    const index = searchMetadataById(rowId);
+    updatedMetadataList[index][property] = value;
     if (property === "type" && isObjectOrArray(value as any))
-      updatedMetadataList[rowIndex].value = "";
+      updatedMetadataList[0].value = [];
     setMetadataList(updatedMetadataList);
+  };
+
+  const searchMetadataById = (id: string) => {
+    let updatedMetadataList = [...metadataList];
+    let index = -1;
+    updatedMetadataList.forEach((metadataRowItem, rowIndex) => {
+      if (metadataRowItem.id === id) {
+        index = rowIndex;
+      }
+    });
+    return index;
   };
 
   const getValidationStatus = (type: string, value: string) => {
@@ -67,22 +81,21 @@ export const MetaDataRow: React.FC<IMetaDataRowProps> = ({
     return validationStatus;
   };
 
-  //TODO: Increase width of type dropdown
   return (
     <>
       <Grid hasGutter>
         <GridItem span={5}>
           <MetaDataProperty
-            metadataList={metadataList}
+            metadataRow={metadataRow}
             setMetadataList={setMetadataList}
-            rowIndex={rowIndex}
             updateMetadataList={updateMetadataList}
+            rowId={rowId}
+            searchMetadataById={searchMetadataById}
           />
         </GridItem>
         <GridItem span={2}>
           <MetaDataType
-            metadataList={metadataList}
-            rowIndex={rowIndex}
+            metadataRow={metadataRow}
             getValidationStatus={getValidationStatus}
             setValidationStatus={setValidationStatus}
             updateMetadataList={updateMetadataList}
@@ -90,8 +103,7 @@ export const MetaDataRow: React.FC<IMetaDataRowProps> = ({
         </GridItem>
         <GridItem span={5}>
           <MetaDataValue
-            metadataList={metadataList}
-            rowIndex={rowIndex}
+            metadataRow={metadataRow}
             getValidationStatus={getValidationStatus}
             setValidationStatus={setValidationStatus}
             updateMetadataList={updateMetadataList}

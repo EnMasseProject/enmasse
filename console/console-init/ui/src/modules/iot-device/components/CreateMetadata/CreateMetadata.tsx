@@ -6,18 +6,20 @@
 import React, { useState, useEffect } from "react";
 import { Button, GridItem, Grid } from "@patternfly/react-core";
 import { PlusCircleIcon } from "@patternfly/react-icons";
-import { MetaDataHeader } from "./MetaDataHeader";
 import { MetaDataRow } from "./MetaDataRow";
 import { deviceRegistrationTypeOptions } from "modules/iot-device/utils";
+import { uniqueId } from "lodash";
 
 export interface IMetadataProps {
+  id: string;
   key: string;
   type: string;
-  value: string | IMetadataProps[];
+  value: any;
 }
 
 export const getInitialMetadataState: IMetadataProps[] = [
   {
+    id: uniqueId(),
     key: "",
     value: "",
     type: deviceRegistrationTypeOptions[0].value
@@ -45,33 +47,43 @@ export const CreateMetadata: React.FC<ICreateMetadataProps> = ({
     setMetadataList([
       ...metadataList,
       {
+        id: uniqueId(),
         key: "",
         value: "",
         type: deviceRegistrationTypeOptions[0].value
       }
     ]);
   };
+  let metadataArr: IMetadataProps[] = [];
+
   const getMetadataRows = (metaDataRows: IMetadataProps[]) => {
-    return metaDataRows.map((metadataRow, index: number) => {
-      if (typeof metadataRow.value === "object") {
-        getMetadataRows(metadataRow.value as IMetadataProps[]);
-      } else {
-        return (
-          <MetaDataRow
-            key={index}
-            metadataList={metaDataRows}
-            setMetadataList={setMetadataList}
-            rowIndex={index}
-          />
-        );
+    metaDataRows.forEach(metadataRow => {
+      metadataArr.push(metadataRow);
+
+      if (
+        metadataRow.type === "object" &&
+        typeof metadataRow.value == "object" &&
+        metadataRow.value.length > 0
+      ) {
+        getMetadataRows(metadataRow.value);
       }
+    });
+    return metadataArr.map((metadata, index: number) => {
+      return (
+        <MetaDataRow
+          key={index}
+          metadataRow={metadata}
+          metadataList={metadataList}
+          setMetadataList={setMetadataList}
+          rowId={metadata.id}
+        />
+      );
     });
   };
 
   return (
     <Grid>
       <GridItem span={12}>
-        <MetaDataHeader sectionName="Default properties" />
         {getMetadataRows(metadataList)}
         <Grid>
           <GridItem span={3}>

@@ -17,21 +17,19 @@ const styles = StyleSheet.create({
 });
 
 interface IMetaDataTypeProps {
-  metadataList: any;
-  rowIndex: number;
+  metadataRow: any;
   updateMetadataList: (property: string, value: string) => void;
   getValidationStatus: (type: string, value: string) => ValidationStatusType;
   setValidationStatus: (value: ValidationStatusType) => void;
 }
 
 export const MetaDataType: React.FC<IMetaDataTypeProps> = ({
-  metadataList,
-  rowIndex,
+  metadataRow,
   updateMetadataList,
   getValidationStatus,
   setValidationStatus
 }) => {
-  const currentRow = metadataList[rowIndex];
+  const currentRow = metadataRow;
 
   const handleTypeChange = (type: string) => {
     const validationStatus = getValidationStatus(type, currentRow.value);

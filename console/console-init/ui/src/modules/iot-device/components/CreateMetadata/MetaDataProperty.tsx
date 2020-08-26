@@ -9,35 +9,42 @@ import { isObjectOrArray } from "utils";
 import { PlusIcon } from "@patternfly/react-icons";
 import { IMetadataProps } from "./CreateMetadata";
 import { deviceRegistrationTypeOptions } from "modules/iot-device";
+import { uniqueId } from "lodash";
 
 interface IMetaDataPropertyProps {
-  metadataList: any;
-  setMetadataList: (metadataList: any) => void;
-  rowIndex: number;
+  metadataRow: any;
+  setMetadataList: (metadataRow: any) => void;
   updateMetadataList: (property: string, value: string) => void;
+  rowId: string;
+  searchMetadataById: (id: string) => number;
 }
 
 export const MetaDataProperty: React.FC<IMetaDataPropertyProps> = ({
-  metadataList,
+  metadataRow,
   setMetadataList,
-  rowIndex,
   updateMetadataList,
+  rowId,
+  searchMetadataById
 }) => {
-  const currentRow = metadataList[rowIndex];
+  const currentRow = metadataRow;
 
   const handlePropertyChange = (property: string) => {
     updateMetadataList("key", property);
   };
 
   const handleAddChildRow = () => {
+    let updatedValueMetadata = [...metadataRow];
+    const index = searchMetadataById(rowId);
     let parentKey: string = currentRow.key;
-    let newRow: IMetadataProps = {
-      key: parentKey + "/",
-      value: "",
-      type: deviceRegistrationTypeOptions[0].value,
-    };
-    let updatedValueMetadata = [...metadataList];
-    updatedValueMetadata[rowIndex].value = newRow;
+    let newRow: IMetadataProps[] = [
+      {
+        id: uniqueId(),
+        key: parentKey + "/",
+        value: "",
+        type: deviceRegistrationTypeOptions[0].value
+      }
+    ];
+    updatedValueMetadata[index].value = newRow;
     setMetadataList(updatedValueMetadata);
   };
 

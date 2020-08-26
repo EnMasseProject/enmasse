@@ -10,25 +10,23 @@ import { MinusCircleIcon } from "@patternfly/react-icons";
 import { ValidationStatusType } from "modules/iot-device";
 
 interface IMetaDataValueProps {
-  metadataList: any;
-  rowIndex: number;
+  metadataRow: any;
   updateMetadataList: (property: string, value: string) => void;
   getValidationStatus: (type: string, value: string) => ValidationStatusType;
   setValidationStatus: (value: ValidationStatusType) => void;
-  setMetadataList: (metadataList: any) => void;
-  validationStatus:ValidationStatusType
+  setMetadataList: (metadataRow: any) => void;
+  validationStatus: ValidationStatusType;
 }
 
 export const MetaDataValue: React.FC<IMetaDataValueProps> = ({
-  metadataList,
-  rowIndex,
+  metadataRow,
   updateMetadataList,
   getValidationStatus,
   setValidationStatus,
   setMetadataList,
   validationStatus
 }) => {
-  const currentRow = metadataList[rowIndex];
+  const currentRow = metadataRow;
 
   const handleValueChange = (value: string) => {
     const validationStatus = getValidationStatus(currentRow.type, value);
@@ -37,7 +35,7 @@ export const MetaDataValue: React.FC<IMetaDataValueProps> = ({
   };
 
   const handleDeleteRow = (index: any) => {
-    const deletedRowMetadata = [...metadataList];
+    const deletedRowMetadata = [...metadataRow];
     deletedRowMetadata.splice(index, 1);
     setMetadataList(deletedRowMetadata);
   };

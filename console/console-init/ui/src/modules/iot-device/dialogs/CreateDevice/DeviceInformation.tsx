@@ -18,6 +18,7 @@ import {
 } from "@patternfly/react-core";
 import { CreateMetadata, IMetadataProps } from "modules/iot-device/components";
 import { StyleSheet, css } from "aphrodite";
+import { MetaDataHeader } from "modules/iot-device/components/CreateMetadata/MetaDataHeader";
 
 export interface IDeviceInfo {
   deviceId?: string;
@@ -40,7 +41,7 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
   const [isDeviceEnabled, setIsDeviceEnabled] = useState<boolean>(
     deviceStatus || false
   );
-  const handleTextInputChange1 = (val: string) => {
+  const handleDeviceIdChange = (val: string) => {
     setDeviceIdInput(val);
   };
   const handleStatusChange = (val: boolean) => {
@@ -82,7 +83,7 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
               name="device-id"
               aria-describedby="device-id-helper"
               value={deviceIdInput}
-              onChange={handleTextInputChange1}
+              onChange={handleDeviceIdChange}
             />
             <small>
               A device ID will be automatically generated if it's not specified
@@ -113,6 +114,12 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
           <br />
           <Divider />
           Metadata
+          <MetaDataHeader sectionName="Default properties parameter" />
+          <CreateMetadata
+            metadataList={metadataList}
+            returnMetadataList={returnMetadataList}
+          />
+          <MetaDataHeader sectionName="Extensions parameter" />
           <CreateMetadata
             metadataList={metadataList}
             returnMetadataList={returnMetadataList}

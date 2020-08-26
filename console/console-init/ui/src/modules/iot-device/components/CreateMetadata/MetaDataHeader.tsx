@@ -4,18 +4,36 @@
  */
 
 import React from "react";
-import { Grid, GridItem } from "@patternfly/react-core";
+import { Grid, GridItem, Title, Tooltip } from "@patternfly/react-core";
+import { OutlinedQuestionCircleIcon } from "@patternfly/react-icons";
 
 export interface IMetaDataHeader {
   sectionName: string;
 }
 
-export const MetaDataHeader: React.FC<IMetaDataHeader> = sectionName => {
+export const MetaDataHeader: React.FC<IMetaDataHeader> = ({ sectionName }) => {
   return (
     <Grid hasGutter>
       <GridItem span={5}>
-        {/* <b>{sectionName} parameter</b> */}
-        <b>Default properties parameter</b>
+        <Grid>
+          <GridItem span={10}>
+            <Title headingLevel="h6" size="md">
+              {sectionName}
+            </Title>
+          </GridItem>
+          <GridItem span={2}>
+            <Tooltip
+              content={
+                <div>
+                  Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                  Nullam id feugiat augue, nec fringilla turpis.
+                </div>
+              }
+            >
+              <OutlinedQuestionCircleIcon />
+            </Tooltip>
+          </GridItem>
+        </Grid>
       </GridItem>
       <GridItem span={2}>
         <b>Type</b>
