@@ -91,12 +91,22 @@ const getFilteredProjectsCount = (
   status?: StatusTypes
 ) => {
   let list: IProject[] = [];
+  if (status === StatusTypes.PENDING) {
+  }
   if (!status) {
     list = projectList.filter(project => project.projectType === type);
   } else {
-    list = projectList.filter(
-      project => project.projectType === type && project.status === status
-    );
+    if (status !== StatusTypes.PENDING) {
+      list = projectList.filter(
+        project => project.projectType === type && project.status === status
+      );
+    } else {
+      list = projectList.filter(
+        project =>
+          project.projectType === type &&
+          (project.status === status || project.status === StatusTypes.EMPTY)
+      );
+    }
   }
   return list.length;
 };
