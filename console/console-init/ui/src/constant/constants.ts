@@ -87,6 +87,11 @@ enum PageJourney {
   AddCredential = "AddCredential"
 }
 
+enum ActionStatus {
+  Failed = "failed",
+  Success = "success"
+}
+
 export {
   UNKNOWN,
   POLL_INTERVAL,
@@ -108,5 +113,6 @@ export {
   DeviceConnectionType,
   OperationType,
   Messages,
-  PageJourney
+  PageJourney,
+  ActionStatus
 };

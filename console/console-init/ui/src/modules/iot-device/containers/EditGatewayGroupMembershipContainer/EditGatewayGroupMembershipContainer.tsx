@@ -45,6 +45,7 @@ export const EditGatewayGroupMembershipContainer: React.FC<{
       <AddGatewayGroupMembership
         id="edit-gateway-group-membership"
         gatewayGroups={registration?.memberOf}
+        placeholderText="Input new or existing gateway group name"
       />
       <Flex>
         <FlexItem>

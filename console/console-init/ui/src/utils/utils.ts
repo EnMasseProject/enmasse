@@ -382,27 +382,99 @@ const isObjectOrArray = (type: DataType.ARRAY | DataType.OBJECT) => {
 };
 
 const convertStringToJsonAndValidate = (str: string) => {
-  let hasError = false;
   let value = {};
   try {
     value = JSON.parse(str);
-    return { hasError, value };
+    return { hasError: false, value };
   } catch (e) {
-    hasError = true;
-    return { hasError, value };
+    return { hasError: true, value };
   }
 };
 
 const convertJsonToStringAndValidate = (json: any) => {
-  let hasError = false;
   let value = "";
   try {
     value = JSON.stringify(json);
-    return { hasError, value };
+    return { hasError: false, value };
   } catch (e) {
-    hasError = true;
-    return { hasError, value };
+    return { hasError: true, value };
   }
+};
+
+const getTitleForSuccessQuery = (action: string) => {
+  /**
+   * Todo: add title for all actions
+   */
+  const titles: any = {
+    createAddressSpace: "Address space created",
+    createAddress: "Address created",
+    createIotDevice: "Device created",
+    createIotProject: "Project created",
+    updateIotDevice: "Device setting updated",
+    deleteAddressSpace: "Address space deleted",
+    deleteAddressSpaces: "Selected address spaces deleted",
+    deleteAddress: "Address deleted",
+    deleteAddresses: "Selected addresses deleted",
+    deleteIotDevices: "Selected devices deleted",
+    deleteCredentialsForDevice: "",
+    deleteIotProjects: "Selected projects deleted",
+    patchAddressSpace: "Address space patched",
+    patchAddress: "Address patched",
+    patchIotProject: "",
+    purgeAddress: "",
+    purgeAddresses: "",
+    closeConnections: "Selected connections closed",
+    setCredentialsForDevice: "",
+    toggleIoTProjectsStatus: "Selected projects status updated",
+    toggleIoTProjectStatus: "Project status updated",
+    toggleIoTDevicesStatus: "Selected devices status updated",
+    toggleIoTDeviceStatus: "Device status updated"
+  };
+
+  if (action in titles) {
+    return titles[action];
+  }
+  return "Action has completed successfuly";
+};
+
+const getTitleForFailedQuery = (action: string) => {
+  /**
+   * Todo: add title for all actions
+   */
+  const titles: any = {
+    createAddressSpace: "Address space creation failed, Please try again.",
+    createAddress: "Address creation failed. Please try again.",
+    createIotDevice: "Device creation failed. Please try again.",
+    createIotProject: "Project creation failed. Please try again.",
+    updateIotDevice: "Device setting update failed. Please try again.",
+    deleteAddressSpace: "Deleting address space failed. Please try again.",
+    deleteAddressSpaces:
+      "Deleting selected address spaces failed. Please try again.",
+    deleteAddress: "Deleting address failed. Please try again.",
+    deleteAddresses: "Deleting selected addresses failed. Please try again.",
+    deleteIotDevices: "Deleting device failed. Please try again.",
+    deleteCredentialsForDevice: "",
+    deleteIotProjects: "Deleting selected projects failed. Please try again.",
+    patchAddressSpace: "",
+    patchAddress: "",
+    patchIotProject: "",
+    purgeAddress: "",
+    purgeAddresses: "",
+    closeConnections: "Closing connections failed. Please try again.",
+    setCredentialsForDevice: "",
+    toggleIoTProjectsStatus:
+      "Unable to enable/disable selected projects. Please try again.",
+    toggleIoTProjectStatus:
+      "Unable to enable/disable project. Please try again.",
+    toggleIoTDevicesStatus:
+      "Unable to enable/disable selected devices. Please try again.",
+    toggleIoTDeviceStatus: "Unable to enable/disable device. Please try again."
+  };
+
+  if (action in titles) {
+    return titles[action];
+  }
+  return "Server error";
 };
 
 export {
@@ -425,5 +497,7 @@ export {
   getDeviceConnectionType,
   deepClean,
   convertStringToJsonAndValidate,
-  convertJsonToStringAndValidate
+  convertJsonToStringAndValidate,
+  getTitleForSuccessQuery,
+  getTitleForFailedQuery
 };

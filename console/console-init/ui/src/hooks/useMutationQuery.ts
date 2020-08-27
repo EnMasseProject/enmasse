@@ -8,6 +8,8 @@ import { useMutation } from "@apollo/react-hooks";
 import { ApolloError, OperationVariables } from "apollo-client";
 import { DocumentNode } from "graphql";
 import { useStoreContext, types } from "context-state-reducer";
+import { ActionStatus } from "constant";
+import { getTitleForSuccessQuery, getTitleForFailedQuery } from "utils";
 
 export const useMutationQuery = <TData = any, TVariables = OperationVariables>(
   query: DocumentNode,
@@ -17,16 +19,39 @@ export const useMutationQuery = <TData = any, TVariables = OperationVariables>(
 ) => {
   const [variables, setVariables] = useState<TVariables>();
   const { dispatch } = useStoreContext();
+
+  const getQueryName = () => {
+    const queryName =
+      Array.isArray(query.definitions) &&
+      query.definitions[0].selectionSet?.selections[0].name?.value;
+    return queryName;
+  };
+
   const [addVariables] = useMutation<TData>(query, {
     onError(errors: ApolloError) {
+      const queryName = getQueryName();
       dispatch &&
         dispatch({
           type: types.SET_SERVER_ERROR,
-          payload: { errors: [errors] }
+          payload: {
+            errors: [errors],
+            status: ActionStatus.Failed,
+            title: getTitleForFailedQuery(queryName)
+          }
         });
       callbackOnError && callbackOnError(errors);
     },
     onCompleted(data: TData) {
+      const queryName = getQueryName();
+      dispatch &&
+        dispatch({
+          type: types.SET_SERVER_ERROR,
+          payload: {
+            errors: [],
+            status: ActionStatus.Success,
+            title: getTitleForSuccessQuery(queryName)
+          }
+        });
       callbackOnCompleted && callbackOnCompleted(data);
     },
     refetchQueries,
