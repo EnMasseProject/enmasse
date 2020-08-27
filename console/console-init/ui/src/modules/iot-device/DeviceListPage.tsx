@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useDocumentTitle } from "use-patternfly";
 import {
   Grid,
@@ -60,16 +60,11 @@ export default function DeviceListPage() {
     getInitialFilter()
   );
   const [showEmptyDevice, setShowEmptyDevice] = useState<boolean>(false);
-
+  const [deletedSuccessfully, setDeletedSuccessfully] = useState<boolean>(
+    false
+  );
   const createDeviceFormLink = `/iot-projects/${namespace}/${projectname}/devices/addform`;
   const createDeviceJsonLink = `/iot-projects/${namespace}/${projectname}/devices/addjson`;
-
-  const setSearchParam = useCallback(
-    (name: string, value: string) => {
-      searchParams.set(name, value.toString());
-    },
-    [searchParams]
-  );
 
   const [deviceAlert, setDeviceAlert] = useState<{
     isVisible: boolean;
@@ -92,13 +87,13 @@ export default function DeviceListPage() {
     });
   }, []);
 
+  useSearchParamsPageChange(
+    [deletedSuccessfully],
+    deletedSuccessfully && page > 1 ? (page - 1).toString() : page.toString()
+  );
+
   const resetFormOnDelete = () => {
-    if (page > 1) {
-      setSearchParam("page", (page - 1).toString());
-      history.push({
-        search: searchParams.toString()
-      });
-    }
+    isAllSelected && setDeletedSuccessfully(true);
     setIsAllSelected(false);
     setSelectedDevices([]);
   };
