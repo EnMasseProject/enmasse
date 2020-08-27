@@ -142,7 +142,6 @@ const address = `{
     }
   ],
   "depth": 350,
-  "dlq_depth": 0,
   "shards": [
     {
       "name": "broker-4f5fcdf-f0pv-0",

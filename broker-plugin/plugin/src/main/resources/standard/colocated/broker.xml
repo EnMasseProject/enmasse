@@ -93,7 +93,6 @@ under the License.
             <redelivery-delay>1</redelivery-delay>
             <redelivery-delay-multiplier>1.5</redelivery-delay-multiplier>
             <max-redelivery-delay>10000</max-redelivery-delay>
-            <dead-letter-address>!!GLOBAL_DLQ</dead-letter-address>
             <!-- with -1 only the global-max-size is in use for limiting -->
             <max-size-bytes>-1</max-size-bytes>
             <message-counter-history-day-limit>10</message-counter-history-day-limit>
@@ -147,15 +146,6 @@ under the License.
           <param key="host" value="$MESSAGING_SERVICE_HOST" />
           <param key="port" value="$MESSAGING_SERVICE_PORT_AMQPS_BROKER" />
           <param key="containerId" value="$CONTAINER_ID-out" />
-          <param key="clusterId" value="$CLUSTER_ID" />
-          <param key="idleTimeoutMs" value="$CONNECTOR_OUT_IDLE_TIMEOUT_MS" />
-          <param key="nettyThreads" value="$CONNECTOR_OUT_NETTY_THREADS" />
-        </connector-service>
-        <connector-service name="$${dummy}override-dlq-out">
-          <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
-          <param key="host" value="$MESSAGING_SERVICE_HOST" />
-          <param key="port" value="$MESSAGING_SERVICE_PORT_AMQPS_BROKER" />
-          <param key="containerId" value="broker-global-dlq-out" />
           <param key="clusterId" value="$CLUSTER_ID" />
           <param key="idleTimeoutMs" value="$CONNECTOR_OUT_IDLE_TIMEOUT_MS" />
           <param key="nettyThreads" value="$CONNECTOR_OUT_NETTY_THREADS" />
