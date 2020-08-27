@@ -48,6 +48,7 @@ import {
   serializeCredentials,
   serializeMetaData
 } from "modules/iot-device/utils";
+import { convertMetadataOptionsToJson, convertObjectIntoJson } from "utils";
 
 const getInitialDeviceForm = () => {
   const device: IDeviceProp = {
@@ -60,7 +61,7 @@ const getInitialDeviceForm = () => {
 
 export default function CreateDevicePage() {
   const history = useHistory();
-  // const [connectionType, setConnectionType] = useState<string>("directly");
+  const [connectionType, setConnectionType] = useState<string>("directly");
   const [deviceIdInput, setDeviceIdInput] = useState<string>("");
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const [metadataList, setMetadataList] = useState<IMetadataProps[]>(
@@ -81,8 +82,6 @@ export default function CreateDevicePage() {
   });
 
   const deviceListRouteLink = `/iot-projects/${namespace}/${projectname}/devices`;
-  // TODO: Device is subjected to change in accordance with DeviceReview
-  const [device, setDevice] = useState<IDeviceProp>(getInitialDeviceForm());
   const breadcrumb = useMemo(
     () => (
       <Breadcrumb>
@@ -136,12 +135,18 @@ export default function CreateDevicePage() {
   const addGateway = {
     name: "Add gateways",
     component: (
-      <AddGateways
-        gatewayDevices={gatewayDevices}
-        gatewayGroups={gatewayGroups}
-        returnGatewayDevices={getGateways}
-        returnGatewayGroups={getGatewayGroups}
-      />
+      <>
+        <Title size="2xl" headingLevel="h1">
+          Choose existing gateways or gateway groups for connection
+        </Title>
+        <br />
+        <AddGateways
+          gatewayDevices={gatewayDevices}
+          gatewayGroups={gatewayGroups}
+          returnGatewayDevices={getGateways}
+          returnGatewayGroups={getGatewayGroups}
+        />
+      </>
     )
   };
 
@@ -186,11 +191,62 @@ export default function CreateDevicePage() {
     )
   };
 
+  const serializeExt = (ext: any[]) => {
+    let serializedExt: any = {};
+
+    Array.isArray(ext) &&
+      ext.forEach((ele: any) => {
+        if (ele.key.trim() !== "") {
+          if (ele.type === "String") {
+            (serializedExt[ele.key] as any) = ele.value;
+          }
+          if (ele.type === "Number") {
+            (serializedExt[ele.key] as any) = Number(ele.value);
+          }
+          if (ele.type === "Boolean") {
+            (serializedExt[ele.key] as any) = ele.value === "true";
+          }
+        }
+      });
+
+    return serializedExt;
+  };
+
+  const credentialsToCredentialView = (credential: any[]) => {
+    return credential.map(
+      ({ type, ext, enabled, secrets, "auth-id": authId }) => {
+        return {
+          type,
+          ext: serializeExt(ext),
+          enabled,
+          secrets,
+          "auth-id": authId
+        };
+      }
+    );
+  };
+
   const reviewForm = {
     name: "Review",
     component: (
       <ReviewDeviceContainer
-        device={device}
+        device={{
+          deviceInformation: {
+            deviceId: deviceIdInput,
+            status: isEnabled,
+            metadata: metadataList,
+            ext: JSON.parse(serializeMetaData(metadataList))
+          },
+          connectionType,
+          gateways: {
+            gatewayGroups,
+            gateways: gatewayDevices
+          },
+          memberOf,
+          ...(connectionType == "directly" && {
+            credentials: credentialsToCredentialView(credentials)
+          })
+        }}
         title={"Verify that the following information is correct before done"}
       />
     )
@@ -205,7 +261,7 @@ export default function CreateDevicePage() {
         setGatewayDevices([]);
         setGatewayGroups([]);
       }
-      setDevice({ ...device, connectionType });
+      setConnectionType(connectionType);
     }
   };
 
@@ -222,7 +278,9 @@ export default function CreateDevicePage() {
           viaGroups: gatewayGroups,
           memberOf
         },
-        credentials: serializeCredentials(credentials)
+        ...(connectionType === "directly" && {
+          credentials: serializeCredentials(credentials)
+        })
       }
     };
     setCreateDeviceQueryVariables(variable);
@@ -246,15 +304,15 @@ export default function CreateDevicePage() {
       name: "Connection Type",
       component: (
         <ConnectionType
-          connectionType={device.connectionType}
+          connectionType={connectionType}
           onChangeConnection={onChangeConnection}
         />
       )
     }
   ];
 
-  if (device.connectionType) {
-    if (device.connectionType === "directly") {
+  if (connectionType) {
+    if (connectionType === "directly") {
       steps.push(addCredentials);
     } else {
       steps.push(addGateway);
@@ -283,8 +341,7 @@ export default function CreateDevicePage() {
                   type="submit"
                   onClick={onNext}
                   className={
-                    activeStep.name === "Connection Type" &&
-                    !device.connectionType
+                    activeStep.name === "Connection Type" && !connectionType
                       ? "pf-m-disabled"
                       : ""
                   }

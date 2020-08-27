@@ -240,9 +240,9 @@ const convertJsonToMetadataOptions = (
  * @param object
  * Internal function used in convertMetadataOptionsToJson
  * */
-const convertObjectIntoJson = (object: any) => {
+export const convertObjectIntoJson = (object: any) => {
   const obj: any = {};
-  switch (object.type) {
+  switch (object?.type?.toLowerCase()) {
     case "array":
       let res: any[] = [];
       for (let objectValue of object.value) {
@@ -260,6 +260,12 @@ const convertObjectIntoJson = (object: any) => {
         objs[key] = value;
       }
       obj[object.key] = objs;
+      break;
+    case "number":
+      obj[object.key] = Number(objs);
+      break;
+    case "boolean":
+      obj[object.key] = object.value === "true";
       break;
     default:
       obj[object.key] = object.value;

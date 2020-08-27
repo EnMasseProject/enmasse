@@ -8,9 +8,11 @@ import {
   FormGroup,
   Form,
   Button,
-  GridItem,
+  DropdownPosition,
   Grid,
-  DropdownPosition
+  GridItem,
+  Split,
+  SplitItem
 } from "@patternfly/react-core";
 import { DropdownWithToggle, TypeAheadSelect } from "components";
 import "./pf-overrides.css";
@@ -21,7 +23,8 @@ import { ChipGroupsWithTitle } from "components";
 
 const styles = StyleSheet.create({
   dropdown_min_width: {
-    "min-width": "12rem"
+    "min-width": "12rem",
+    width: "100%"
   }
 });
 
@@ -136,8 +139,8 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
             fieldId="add-gateway-device-id-input"
             validated="default"
           >
-            <Grid hasGutter>
-              <GridItem span={2}>
+            <Split hasGutter>
+              <SplitItem>
                 <DropdownWithToggle
                   id="add-gateway-type-dropdown"
                   toggleId="add-gateway-type-dropdown-toggle"
@@ -148,8 +151,8 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
                   isLabelAndValueNotSame={true}
                   toggleClass={css(styles.dropdown_min_width)}
                 />
-              </GridItem>
-              <GridItem span={5}>
+              </SplitItem>
+              <SplitItem isFilled>
                 <TypeAheadSelect
                   id="add-gateway-typeahead"
                   aria-label="Input gateway"
@@ -162,8 +165,8 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
                   onChangeInput={onChangeDeviceIdInput}
                   placeholderText={getPlaceholderText()}
                 />
-              </GridItem>
-              <GridItem span={2}>
+              </SplitItem>
+              <SplitItem>
                 <Button
                   id="add-gateway-button"
                   isDisabled={isDisableAddGatewayButton()}
@@ -172,8 +175,8 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
                 >
                   Add
                 </Button>
-              </GridItem>
-            </Grid>
+              </SplitItem>
+            </Split>
           </FormGroup>
         </Form>
         <br />
