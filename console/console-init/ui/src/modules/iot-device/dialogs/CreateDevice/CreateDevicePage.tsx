@@ -49,13 +49,8 @@ import {
 } from "modules/iot-device/utils";
 import { convertMetadataOptionsToJson, convertObjectIntoJson } from "utils";
 
-const getInitialDeviceForm = () => {
-  const device: IDeviceProp = {
-    connectionType: "directly",
-    registration: {},
-    gateways: {}
-  };
-  return device;
+const getInitalMetaData = () => {
+  return [{ key: "", value: "", type: "string" }];
 };
 
 export default function CreateDevicePage() {
@@ -64,7 +59,7 @@ export default function CreateDevicePage() {
   const [deviceIdInput, setDeviceIdInput] = useState<string>("");
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const [metadataList, setMetadataList] = useState<IMetadataProps[]>(
-    getInitialMetadataState
+    getInitalMetaData()
   );
   const [gatewayDevices, setGatewayDevices] = useState<string[]>([]);
   const [gatewayGroups, setGatewayGroups] = useState<string[]>([]);
@@ -108,7 +103,7 @@ export default function CreateDevicePage() {
     setGatewayGroups([]);
     setMemberOf([]);
     setCredentials([getCredentialsFieldsInitialState()]);
-    setMetadataList(getInitialMetadataState);
+    setMetadataList(getInitalMetaData());
   };
 
   const [setCreateDeviceQueryVariables] = useMutationQuery(
