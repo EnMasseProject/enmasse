@@ -776,6 +776,13 @@ BrokerController.prototype.generate_address_settings = function (address, global
         if (notTopic) {
             if (address.deadletter) {
                 addressSettings.DLA = address.deadletter;
+                // Specify default redelivery settings by default when using a DLQ. These are based
+                // on Artemis defaults.
+                addressSettings.maxDeliveryAttempts = 10;
+                addressSettings.redeliveryDelay = 0;
+                addressSettings.redeliveryMultiplier = 1.0;
+                addressSettings.maxRedeliveryDelay = 0;
+
                 upd++;
             }
             if (address.expiry) {
