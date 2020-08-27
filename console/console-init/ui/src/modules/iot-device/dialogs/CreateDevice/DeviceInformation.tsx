@@ -39,7 +39,7 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
 }) => {
   const [deviceIdInput, setDeviceIdInput] = useState<string>(deviceId || "");
   const [isDeviceEnabled, setIsDeviceEnabled] = useState<boolean>(
-    deviceStatus || false
+    deviceStatus || true
   );
   const handleDeviceIdChange = (val: string) => {
     setDeviceIdInput(val);
@@ -73,7 +73,6 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
           <FormGroup
             id="cd-device-info-device-id"
             label="Device ID"
-            isRequired
             fieldId="device-info-id-input"
           >
             <TextInput
