@@ -73,7 +73,7 @@ describe("<ProjectList/>", () => {
       </MemoryRouter>
     );
     // table Header
-    getByText("Name");
+    getByText("Name / Namespace");
     getByText("Type");
     getByText("Status");
     getByText("Time created");
