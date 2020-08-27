@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useDocumentTitle } from "use-patternfly";
 import {
   Grid,
@@ -64,6 +64,13 @@ export default function DeviceListPage() {
   const createDeviceFormLink = `/iot-projects/${namespace}/${projectname}/devices/addform`;
   const createDeviceJsonLink = `/iot-projects/${namespace}/${projectname}/devices/addjson`;
 
+  const setSearchParam = useCallback(
+    (name: string, value: string) => {
+      searchParams.set(name, value.toString());
+    },
+    [searchParams]
+  );
+
   const [deviceAlert, setDeviceAlert] = useState<{
     isVisible: boolean;
     variant: AlertVariant;
@@ -85,9 +92,23 @@ export default function DeviceListPage() {
     });
   }, []);
 
-  const [setDeleteDeviceQueryVariables] = useMutationQuery(DELETE_IOT_DEVICE, [
-    "devices_for_iot_project"
-  ]);
+  const resetFormOnDelete = () => {
+    if (page > 1) {
+      setSearchParam("page", (page - 1).toString());
+      history.push({
+        search: searchParams.toString()
+      });
+    }
+    setIsAllSelected(false);
+    setSelectedDevices([]);
+  };
+
+  const [setDeleteDeviceQueryVariables] = useMutationQuery(
+    DELETE_IOT_DEVICE,
+    ["devices_for_iot_project"],
+    undefined,
+    resetFormOnDelete
+  );
 
   const [
     setUpdateDeviceQueryVariables
@@ -364,7 +385,6 @@ export default function DeviceListPage() {
                     isChecked={isAllSelected}
                     items={[]}
                     onChange={() => {}}
-                    onSelectAllDevices={onSelectAllDevices}
                     handleToggleModal={handleToggleModal}
                   />
                 </GridItem>
@@ -386,6 +406,7 @@ export default function DeviceListPage() {
                 resetFilter={resetFilter}
                 namespace={namespace}
                 selectedColumns={selectedColumns}
+                onSelectAllDevices={onSelectAllDevices}
               />
               <br />
               {renderPagination()}

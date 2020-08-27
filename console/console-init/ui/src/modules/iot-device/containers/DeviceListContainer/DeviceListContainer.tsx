@@ -29,7 +29,6 @@ import {
   IExtraData,
   IExtraColumnData
 } from "@patternfly/react-table";
-import { getTableCells } from "modules/iot-device";
 import { compareObject } from "utils";
 import { DialogTypes } from "constant";
 import { useMutationQuery } from "hooks";
@@ -57,6 +56,7 @@ export interface IDeviceListContainerProps {
   namespace: string;
   selectedColumns: string[];
   setIsAllSelected: (value: boolean) => void;
+  onSelectAllDevices: (isSelected: boolean) => void;
 }
 export interface ISortByWrapper extends ISortBy {
   property?: string;
@@ -77,7 +77,8 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   projectname,
   namespace,
   setIsAllSelected,
-  selectedColumns
+  selectedColumns,
+  onSelectAllDevices
 }) => {
   const { dispatch } = useStoreContext();
 
@@ -255,6 +256,7 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
         onSort={onSort}
         sortBy={sortValue}
         selectedColumns={selectedColumns}
+        onSelectAllDevices={onSelectAllDevices}
       />
       {total === 0 && !compareObject(appliedFilter, getInitialFilter()) ? (
         <NoResultFound clearFilters={resetFilter} />

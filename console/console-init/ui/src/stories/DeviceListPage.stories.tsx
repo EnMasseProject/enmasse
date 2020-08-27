@@ -14,11 +14,7 @@ import {
 } from "modules/iot-device";
 import { text, boolean } from "@storybook/addon-knobs";
 import { action } from "@storybook/addon-actions";
-import {
-  getTableCells,
-  getInitialFilter,
-  getInitialSelectedColumns
-} from "modules/iot-device/utils";
+import { getInitialSelectedColumns } from "modules/iot-device/utils";
 import {
   PageSection,
   Page,
@@ -149,7 +145,6 @@ const Data = (
         onToggle={action("On toggle handler for bulk select component")}
         isChecked={boolean("isChecked", false)}
         items={bulkSelectItems}
-        onSelectAllDevices={action("All devices selected")}
         onChange={action("checkbox dropdown changed")}
         handleToggleModal={action("on toggle manage columns")}
       />
@@ -159,6 +154,7 @@ const Data = (
         onSelectDevice={async () => {}}
         actionResolver={actionResolver}
         selectedColumns={getInitialSelectedColumns()}
+        onSelectAllDevices={action("All device action")}
       />
     </GridItem>
   </Grid>
