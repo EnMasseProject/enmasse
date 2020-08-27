@@ -200,8 +200,9 @@ export default function CreateDevicePage() {
   };
 
   const credentialsToCredentialView = (credential: any[]) => {
-    return credential.map(
-      ({ type, ext, enabled, secrets, "auth-id": authId }) => {
+    return credential
+      .filter(c => c["auth-id"] && c["auth-id"].trim() != "" && c.type)
+      .map(({ type, ext, enabled, secrets, "auth-id": authId }) => {
         return {
           type,
           ext: Array.isArray(ext) ? convertMetadataOptionsToJson(ext) : ext,
@@ -209,8 +210,7 @@ export default function CreateDevicePage() {
           secrets,
           "auth-id": authId
         };
-      }
-    );
+      });
   };
 
   const getDevice = () => {

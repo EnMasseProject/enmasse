@@ -13,8 +13,7 @@ import {
 import {
   ICredential,
   ISecret,
-  IExtension,
-  IMetadataProps
+  IExtension
 } from "modules/iot-device/components";
 import { CredentialsType } from "constant";
 import { ICreateDeviceResponse } from "schema/iot_device";
