@@ -81,11 +81,14 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
         tableColumns.push({ title: "Added date", transforms: [sortable] });
         break;
       case "memberof":
-        tableColumns.push({ title: "MemberOf", cellTransforms: [truncate] });
+        tableColumns.push({
+          title: "Gateway group membership",
+          cellTransforms: [truncate]
+        });
         break;
       case "viagateways":
         tableColumns.push({
-          title: "Via Gateways",
+          title: "Gateway connections",
           cellTransforms: [truncate]
         });
         break;
