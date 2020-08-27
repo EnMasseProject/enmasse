@@ -112,6 +112,7 @@ export const deviceTable = () => (
       onSelectDevice={action("Device selected")}
       actionResolver={actionResolver}
       selectedColumns={getInitialSelectedColumns()}
+      onSelectAllDevices={action("All device action")}
     />
   </MemoryRouter>
 );
@@ -147,7 +148,6 @@ export const deviceToolbar = () => {
         isChecked={boolean("isChecked", false)}
         items={bulkSelectItems}
         onChange={action("checkbox dropdown changed")}
-        onSelectAllDevices={action("All devices selected")}
         handleToggleModal={action("on toggle manage columns")}
       />
     </MemoryRouter>

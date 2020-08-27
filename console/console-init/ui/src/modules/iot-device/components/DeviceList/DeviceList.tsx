@@ -30,6 +30,7 @@ export interface IDeviceListProps
     extraData: IExtraColumnData
   ) => void;
   selectedColumns: string[];
+  onSelectAllDevices: (isSelected: boolean) => void;
 }
 
 export interface IDevice {
@@ -57,7 +58,8 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
   onSort,
   actionResolver,
   onSelectDevice,
-  selectedColumns
+  selectedColumns,
+  onSelectAllDevices
 }) => {
   const tableColumns: (string | ICell)[] = [];
   selectedColumns.forEach(column => {
@@ -81,11 +83,14 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
         tableColumns.push({ title: "Added date", transforms: [sortable] });
         break;
       case "memberof":
-        tableColumns.push({ title: "MemberOf", cellTransforms: [truncate] });
+        tableColumns.push({
+          title: "Gateway group membership",
+          cellTransforms: [truncate]
+        });
         break;
       case "viagateways":
         tableColumns.push({
-          title: "Via Gateways",
+          title: "Gateway connections",
           cellTransforms: [truncate]
         });
         break;
@@ -104,8 +109,13 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
     rowIndex: number
   ) => {
     const deviceRows = [...mappedDeviceRows];
-    deviceRows[rowIndex].selected = isSelected;
-    onSelectDevice(deviceRows[rowIndex].originalData, isSelected);
+    if (rowIndex === -1) {
+      deviceRows.map(row => (row.selected = isSelected));
+      onSelectAllDevices(isSelected);
+    } else {
+      deviceRows[rowIndex].selected = isSelected;
+      onSelectDevice(deviceRows[rowIndex].originalData, isSelected);
+    }
   };
 
   return (
@@ -115,7 +125,7 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
     >
       <Table
         variant={TableVariant.compact}
-        canSelectAll={false}
+        canSelectAll={true}
         onSelect={onSelect}
         cells={tableColumns}
         rows={mappedDeviceRows}

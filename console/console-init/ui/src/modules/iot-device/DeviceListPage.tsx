@@ -60,7 +60,9 @@ export default function DeviceListPage() {
     getInitialFilter()
   );
   const [showEmptyDevice, setShowEmptyDevice] = useState<boolean>(false);
-
+  const [deletedSuccessfully, setDeletedSuccessfully] = useState<boolean>(
+    false
+  );
   const createDeviceFormLink = `/iot-projects/${namespace}/${projectname}/devices/addform`;
   const createDeviceJsonLink = `/iot-projects/${namespace}/${projectname}/devices/addjson`;
 
@@ -85,9 +87,23 @@ export default function DeviceListPage() {
     });
   }, []);
 
-  const [setDeleteDeviceQueryVariables] = useMutationQuery(DELETE_IOT_DEVICE, [
-    "devices_for_iot_project"
-  ]);
+  useSearchParamsPageChange(
+    [deletedSuccessfully],
+    deletedSuccessfully && page > 1 ? (page - 1).toString() : page.toString()
+  );
+
+  const resetFormOnDelete = () => {
+    isAllSelected && setDeletedSuccessfully(true);
+    setIsAllSelected(false);
+    setSelectedDevices([]);
+  };
+
+  const [setDeleteDeviceQueryVariables] = useMutationQuery(
+    DELETE_IOT_DEVICE,
+    ["devices_for_iot_project"],
+    undefined,
+    resetFormOnDelete
+  );
 
   const [
     setUpdateDeviceQueryVariables
@@ -364,7 +380,6 @@ export default function DeviceListPage() {
                     isChecked={isAllSelected}
                     items={[]}
                     onChange={() => {}}
-                    onSelectAllDevices={onSelectAllDevices}
                     handleToggleModal={handleToggleModal}
                   />
                 </GridItem>
@@ -386,6 +401,7 @@ export default function DeviceListPage() {
                 resetFilter={resetFilter}
                 namespace={namespace}
                 selectedColumns={selectedColumns}
+                onSelectAllDevices={onSelectAllDevices}
               />
               <br />
               {renderPagination()}

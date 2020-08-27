@@ -27,7 +27,8 @@ export interface IDeviceListToolbarProps
     "dropdownId" | "dropdownToggleId" | "checkBoxId" | "ariaLabel"
   > {
   kebabItems: React.ReactNode[];
-  onSelectAllDevices: (val: boolean) => void;
+  // comment: will be used if server supports bulk operation
+  // onSelectAllDevices: (val: boolean) => void;
   onChange: (val: boolean) => void;
   handleToggleModal: () => void;
 }
@@ -36,15 +37,16 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
   ICreateDeviceButtonProps> = ({
   handleInputDeviceInfo,
   handleJSONUpload,
-  onSelectAllDevices,
-  isChecked,
+  // comment: will be used if server supports bulk operation
+  // onSelectAllDevices,
   kebabItems,
   handleToggleModal
 }) => {
   return (
     <Toolbar id="device-data-toolbar" data-codemods="true">
       <ToolbarContent id="device-data-toolbar-content">
-        <ToolbarItem
+        {/** comment: will be used if server supports bulk operation */}
+        {/* <ToolbarItem
           variant="bulk-select"
           id="device-list-bulk-select-toolabritem"
           key="bulk-select"
@@ -59,6 +61,17 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
             isChecked={isChecked}
             onChange={onSelectAllDevices}
           />
+        </ToolbarItem> */}
+        <ToolbarItem
+          id="device-list-create-device-button"
+          key="create-device"
+          aria-label="Create device button"
+          data-codemods="true"
+        >
+          <CreateDeviceButton
+            handleInputDeviceInfo={handleInputDeviceInfo}
+            handleJSONUpload={handleJSONUpload}
+          />
         </ToolbarItem>
         <ToolbarItem
           id="device-list-kebab-dropdown-toolbaritem"
@@ -71,17 +84,6 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
             dropdownItems={kebabItems}
             toggleId="device-list-kebab-dropdowntoggle"
             id="device-list-kebab-dropdown"
-          />
-        </ToolbarItem>
-        <ToolbarItem
-          id="device-list-create-device-button"
-          key="create-device"
-          aria-label="Create device button"
-          data-codemods="true"
-        >
-          <CreateDeviceButton
-            handleInputDeviceInfo={handleInputDeviceInfo}
-            handleJSONUpload={handleJSONUpload}
           />
         </ToolbarItem>
         <ToolbarItem>
