@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { useLocation, useHistory } from "react-router";
+import { useLocation } from "react-router";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
 import {
   PageSection,
@@ -64,14 +64,6 @@ export default function ProjectPage() {
   const [filter, setFilter] = useState<IProjectFilter>(
     initialiseFilterForProject()
   );
-
-  useSearchParamsPageChange([
-    filter.names,
-    filter.namespaces,
-    filter.projectType,
-    filter.status,
-    filter.type
-  ]);
   const [totalProjects, setTotalProjects] = useState<number>(0);
   const [msgCount, setMsgCount] = useState<IProjectCount>(
     setInitialProjcetCount()
@@ -81,12 +73,14 @@ export default function ProjectPage() {
   );
   const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
   const location = useLocation();
-  const history = useHistory();
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const [selectedProjects, setSelectedProjects] = useState<IProject[]>([]);
   const [isAllSelected, setIsAllSelected] = useState<boolean>(false);
+  const [deletedSuccessfully, setDeletedSuccessfully] = useState<boolean>(
+    false
+  );
 
   useEffect(() => {
     setIsAllSelected(false);
@@ -97,20 +91,19 @@ export default function ProjectPage() {
     setSelectedProjects([]);
   };
 
-  const setSearchParam = React.useCallback(
-    (name: string, value: string) => {
-      searchParams.set(name, value.toString());
-    },
-    [searchParams]
+  useSearchParamsPageChange(
+    [
+      filter.names,
+      filter.namespaces,
+      filter.projectType,
+      filter.status,
+      filter.type
+    ],
+    deletedSuccessfully && page > 1 ? (page - 1).toString() : page.toString()
   );
 
   const resetFormOnDelete = () => {
-    if (page > 1) {
-      setSearchParam("page", (page - 1).toString());
-      history.push({
-        search: searchParams.toString()
-      });
-    }
+    isAllSelected && setDeletedSuccessfully(true);
     setIsAllSelected(false);
     setSelectedProjects([]);
   };
