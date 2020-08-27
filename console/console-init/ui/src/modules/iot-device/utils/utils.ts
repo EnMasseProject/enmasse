@@ -103,27 +103,6 @@ const deserializeCredentials = (
   return newCredentials;
 };
 
-// TODO: Handle complex metadata. Currently supports only fundamental types
-const serializeMetaData = (metadata: IMetadataProps[]) => {
-  let serializedMetadata: any = {};
-
-  metadata.forEach((data: IMetadataProps) => {
-    if (data.key.trim() !== "") {
-      if (data.type === "string") {
-        (serializedMetadata[data.key] as any) = data.value;
-      }
-      if (data.type === "number") {
-        (serializedMetadata[data.key] as any) = Number(data.value);
-      }
-      if (data.type === "boolean") {
-        (serializedMetadata[data.key] as any) = data.value === "true";
-      }
-    }
-  });
-
-  return JSON.stringify(serializedMetadata);
-};
-
 const getSecretsFieldsInitialState = (
   credentials: ICredential[],
   credIndex: number = 0
@@ -325,6 +304,5 @@ export {
   getSecretsFieldsInitialState,
   deserializeCredentials,
   getDeviceFromDeviceString,
-  serialize_IoT_Device,
-  serializeMetaData
+  serialize_IoT_Device
 };

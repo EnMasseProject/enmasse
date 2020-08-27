@@ -241,35 +241,38 @@ const convertJsonToMetadataOptions = (
  * Internal function used in convertMetadataOptionsToJson
  * */
 export const convertObjectIntoJson = (object: any) => {
-  const obj: any = {};
-  switch (object?.type?.toLowerCase()) {
-    case "array":
-      let res: any[] = [];
-      for (let objectValue of object.value) {
-        const data = convertMetadataOptionsToJson(objectValue);
-        res.push(data[objectValue.key]);
-      }
-      obj[object.key] = res;
-      break;
-    case "object":
-      let objs: any = {};
-      for (let objectValue of object.value) {
-        const data = convertObjectIntoJson(objectValue);
-        const key = Object.keys(data)[0];
-        const value = data[key];
-        objs[key] = value;
-      }
-      obj[object.key] = objs;
-      break;
-    case "number":
-      obj[object.key] = Number(objs);
-      break;
-    case "boolean":
-      obj[object.key] = object.value === "true";
-      break;
-    default:
-      obj[object.key] = object.value;
-      break;
+  let obj: any;
+  if (object && (object.key?.trim() !== "" || object.value?.trim() !== "")) {
+    obj = {};
+    switch (object?.type?.toLowerCase()) {
+      case "array":
+        let res: any[] = [];
+        for (let objectValue of object.value) {
+          const data = convertMetadataOptionsToJson(objectValue);
+          res.push(data[objectValue.key]);
+        }
+        obj[object.key] = res;
+        break;
+      case "object":
+        let objs: any = {};
+        for (let objectValue of object.value) {
+          const data = convertObjectIntoJson(objectValue);
+          const key = Object.keys(data)[0];
+          const value = data[key];
+          objs[key] = value;
+        }
+        obj[object.key] = objs;
+        break;
+      case "number":
+        obj[object.key] = Number(object.value);
+        break;
+      case "boolean":
+        obj[object.key] = object.value === "true";
+        break;
+      default:
+        obj[object.key] = object.value;
+        break;
+    }
   }
   return obj;
 };
@@ -303,7 +306,9 @@ const convertMetadataOptionsToJson = (objects: any[]) => {
   let object: any = {};
   for (let option of options) {
     const data = convertObjectIntoJson(option);
-    object = Object.assign(object, data);
+    if (data) {
+      object = Object.assign(object, data);
+    }
   }
   return object;
 };
