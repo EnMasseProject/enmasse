@@ -276,19 +276,20 @@ function is_not_internal(conn) {
     return conn.user !== undefined && conn.user.match('^agent.[a-z0-9]+$') == null; //Can't get properties or anything else on which to base decision yet
 }
 
-function compare_address_settings(orig_address_settings, new_address_settings) {
-    for (var name in orig_address_settings) {
-        log.debug('comparing %s: %s %s', name, orig_address_settings[name], new_address_settings[name])
-        if (new_address_settings[name]) {
-            var compare = myutils.string_compare(orig_address_settings[name], new_address_settings[name]);
-            if (compare !== 0) {
-                return compare;
-            }
-        } else {
-            //Ignoring settings that are from the broker & not in the new calculated set.
+function same_address_settings(orig_address_settings, new_address_settings) {
+    const keys1 = Object.keys(orig_address_settings);
+    const keys2 = Object.keys(new_address_settings);
+
+    if (keys1.length !== keys2.length) {
+        return false;
+    }
+
+    for (let key of keys1) {
+        if (orig_address_settings[key] !== new_address_settings[key]) {
+            return false;
         }
     }
-    return 0;
+    return true;
 }
 
 BrokerController.prototype.retrieve_stats = function () {
@@ -435,14 +436,14 @@ BrokerController.prototype.update_address_setting = function (a) {
     return self.broker.getAddressSettings(name).then(function (orig_settings) {
         return self.get_address_settings(a).then(function (new_settings) {
             if (new_settings) {
-                if (compare_address_settings(orig_settings, new_settings) !== 0) {
+                if (!same_address_settings(orig_settings, new_settings)) {
                     log.info('[%s] Adding/updating address settings: %s', self.id, name);
                     return self.broker.addAddressSettings(name, new_settings);
                 } else {
                     log.debug('[%s] Address settings match for %s: not updating', self.id, name);
                     return Promise.resolve();
                 }
-            } else if (compare_address_settings(orig_settings, self.root_address_settings) !== 0) {
+            } else if (!same_address_settings(orig_settings, self.root_address_settings)) {
                 // Settings were previously applied but now no longer required.  To remove them first we
                 // reset the address settings to the root values then remove the record.
                 log.info('[%s] Removing address settings: %s', self.id, name);

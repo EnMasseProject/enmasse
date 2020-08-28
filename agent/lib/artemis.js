@@ -564,7 +564,17 @@ Artemis.prototype.removeAddressSettings = function (match) {
 
 Artemis.prototype.getAddressSettings = function (match) {
     return this._request('broker', 'getAddressSettingsAsJSON', [match]).then(function (result) {
-        return JSON.parse(result);
+        var settings = JSON.parse(result);
+
+        // The broker handles expiryAddress and DLA differently to the other attributes: they are missing from the
+        // result when they are not present.
+        if (settings && !"expiryAddress" in settings) {
+            settings.expiryAddress = null;
+        }
+        if (settings && !"DLA" in settings) {
+            settings.DLA = null;
+        }
+        return settings;
     });
 };
 
