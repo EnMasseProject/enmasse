@@ -37,7 +37,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.admin.model.AddressSpacePlan;
-import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.amqp.RouterManagement;
@@ -284,16 +283,23 @@ public class AddressController implements Watcher<Address> {
                 if (!address.getStatus().getPhase().equals(Pending) && existing.getStatus().getPhase().equals(Pending)) {
                     // If existing address is pending, and we are not pending, we take priority
                     String errorMessage = String.format("Address '%s' already exists with resource name '%s'", address.getSpec().getAddress(), address.getMetadata().getName());
-                    existing.getStatus().setPhase(Pending);
-                    existing.getStatus().appendMessage(errorMessage);
+                    updateAddressStatus(existing, errorMessage, true);
                     validAddresses.put(address.getSpec().getAddress(), address);
                 } else {
                     // Existing address has already been accepted, or we are both pending, existing takes priority.
                     String errorMessage = String.format("Address '%s' already exists with resource name '%s'", address.getSpec().getAddress(), existing.getMetadata().getName());
-                    address.getStatus().setPhase(Pending);
-                    address.getStatus().appendMessage(errorMessage);
+                    updateAddressStatus(address, errorMessage, true);
                 }
                 continue;
+            }
+
+            // If the address is already assigned to at least one broker then the address must have been valid in
+            // the past. Add to the list of valid addresses to ensure it is not prematurely de-provisioned owing
+            // to a later update to the address's spec (e.g. bad deadletter assignment).
+            boolean updateStatus = true;
+            if (!address.getStatus().getBrokerStatuses().isEmpty()) {
+                validAddresses.put(address.getSpec().getAddress(), address);
+                updateStatus = false;
             }
 
             if ("subscription".equals(address.getSpec().getType())) {
@@ -302,8 +308,7 @@ public class AddressController implements Watcher<Address> {
                     String errorMessage = String.format("Subscription address '%s' (resource name '%s') must reference a known topic address.",
                             address.getSpec().getAddress(),
                             address.getMetadata().getName());
-                    address.getStatus().setPhase(Pending);
-                    address.getStatus().appendMessage(errorMessage);
+                    updateAddressStatus(address, errorMessage, updateStatus);
                     continue;
                 } else {
                     Optional<Address> refTopic = addressList.stream().filter(a -> topic.equals(a.getSpec().getAddress())).findFirst();
@@ -313,8 +318,7 @@ public class AddressController implements Watcher<Address> {
                                 address.getSpec().getAddress(),
                                 address.getMetadata().getName(),
                                 topic);
-                        address.getStatus().setPhase(Pending);
-                        address.getStatus().appendMessage(errorMessage);
+                        updateAddressStatus(address, errorMessage, updateStatus);
                         continue;
                     } else {
                         Address target = refTopic.get();
@@ -327,8 +331,7 @@ public class AddressController implements Watcher<Address> {
                                     topic,
                                     target.getMetadata().getName(),
                                     target.getSpec().getType());
-                            address.getStatus().setPhase(Pending);
-                            address.getStatus().appendMessage(errorMessage);
+                            updateAddressStatus(address, errorMessage, updateStatus);
                             continue;
                         }
                     }
@@ -343,8 +346,7 @@ public class AddressController implements Watcher<Address> {
                             address.getSpec().getAddress(),
                             address.getMetadata().getName(),
                             address.getSpec().getType());
-                    address.getStatus().setPhase(Pending);
-                    address.getStatus().appendMessage(errorMessage);
+                    updateAddressStatus(address, errorMessage, updateStatus);
                     continue;
                 }
 
@@ -355,8 +357,7 @@ public class AddressController implements Watcher<Address> {
                             address.getSpec().getAddress(),
                             address.getMetadata().getName(),
                             deadletter);
-                    address.getStatus().setPhase(Pending);
-                    address.getStatus().appendMessage(errorMessage);
+                    updateAddressStatus(address, errorMessage, updateStatus);
                     continue;
                 } else {
                     Address target = refDlq.get();
@@ -369,8 +370,7 @@ public class AddressController implements Watcher<Address> {
                                 deadletter,
                                 target.getMetadata().getName(),
                                 target.getSpec().getType());
-                        address.getStatus().setPhase(Pending);
-                        address.getStatus().appendMessage(errorMessage);
+                        updateAddressStatus(address, errorMessage, updateStatus);
                         continue;
                     }
                 }
@@ -384,8 +384,7 @@ public class AddressController implements Watcher<Address> {
                             address.getSpec().getAddress(),
                             address.getMetadata().getName(),
                             address.getSpec().getType());
-                    address.getStatus().setPhase(Pending);
-                    address.getStatus().appendMessage(errorMessage);
+                    updateAddressStatus(address, errorMessage, updateStatus);
                     continue;
                 }
 
@@ -396,8 +395,7 @@ public class AddressController implements Watcher<Address> {
                             address.getSpec().getAddress(),
                             address.getMetadata().getName(),
                             expiry);
-                    address.getStatus().setPhase(Pending);
-                    address.getStatus().appendMessage(errorMessage);
+                    updateAddressStatus(address, errorMessage, updateStatus);
                     continue;
                 } else {
                     Address target = refDlq.get();
@@ -410,8 +408,7 @@ public class AddressController implements Watcher<Address> {
                                 expiry,
                                 target.getMetadata().getName(),
                                 target.getSpec().getType());
-                        address.getStatus().setPhase(Pending);
-                        address.getStatus().appendMessage(errorMessage);
+                        updateAddressStatus(address, errorMessage, updateStatus);
                         continue;
                     }
                 }
@@ -543,6 +540,13 @@ public class AddressController implements Watcher<Address> {
         numAddresses = (long) addressList.size();
         totalTime = gcTerminating - start;
         this.countByPhase = countByPhase;
+    }
+
+    private void updateAddressStatus(Address address, String errorMessage, boolean updateStatus) {
+        if (updateStatus) {
+            address.getStatus().setPhase(Pending);
+        }
+        address.getStatus().appendMessage(errorMessage);
     }
 
     private long countForwardersReady(Set<Address> addressesWithForwarders, boolean desired) {
