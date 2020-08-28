@@ -10,11 +10,13 @@ import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.config.LabelKeys;
+import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Strings;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.certs.CertProvider;
 import io.enmasse.systemtest.certs.openssl.CertPair;
@@ -28,6 +30,8 @@ import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
+import io.enmasse.systemtest.manager.IsolatedResourcesManager;
+import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
@@ -83,13 +87,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.either;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class ConsoleTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
@@ -1890,7 +1888,7 @@ public abstract class ConsoleTest extends TestBase {
     }
 
     //DLQ
-    protected void doTestMessageRedelivery(AddressSpaceType addressSpaceType, AddressType addressType, MessageRedelivery addrPlanRedelivery, MessageRedelivery addrRedelivery, MessageRedelivery expectedRedelivery) throws Exception {
+    protected void doTestMessageRedelivery(AddressSpaceType addressSpaceType, AddressType addressType) throws Exception {
         final String infraConfigName = "redelivery-infra";
         final String spacePlanName = "space-plan-redelivery";
         final String addrPlanName = "addr-plan-redelivery";
@@ -1949,31 +1947,6 @@ public abstract class ConsoleTest extends TestBase {
         AddressPlan smallPlan = kubernetes.getAddressPlanClient().withName(baseAddressPlan).get();
         AddressPlan deadletterPlan = kubernetes.getAddressPlanClient().withName(deadLetterAddressPlan).get();
 
-        AddressPlan addrPlan = new AddressPlanBuilder()
-                .withNewMetadata()
-                .withName(addrPlanName)
-                .endMetadata()
-                .withNewSpecLike(smallPlan.getSpec())
-                .withMessageRedelivery(addrPlanRedelivery)
-                .endSpec()
-                .build();
-
-        List<String> plans = new ArrayList<>(smallSpacePlan.getSpec().getAddressPlans());
-        plans.add(addrPlan.getMetadata().getName());
-
-        AddressSpacePlan spacePlan = new AddressSpacePlanBuilder()
-                .withNewMetadata()
-                .withName(spacePlanName)
-                .endMetadata()
-                .withNewSpecLike(smallSpacePlan.getSpec())
-                .withAddressPlans(plans)
-                .withInfraConfigRef(infraConfigName)
-                .endSpec()
-                .build();
-
-        resourcesManager.createAddressPlan(addrPlan);
-        resourcesManager.createAddressSpacePlan(spacePlan);
-
 
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -1981,8 +1954,8 @@ public abstract class ConsoleTest extends TestBase {
                 .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
-                .withType(spacePlan.getAddressSpaceType())
-                .withPlan(spacePlan.getMetadata().getName())
+                .withType(smallSpacePlan.getAddressSpaceType())
+                .withPlan(smallSpacePlan.getMetadata().getName())
                 .withNewAuthenticationService()
                 .withName("standard-authservice")
                 .endAuthenticationService()
@@ -2008,10 +1981,10 @@ public abstract class ConsoleTest extends TestBase {
                 .endMetadata()
                 .withNewSpec()
                 .withType(addressType.toString())
-                .withMessageRedelivery(addressType == AddressType.TOPIC ? null : addrRedelivery)
                 .withAddress("message-redelivery")
                 .withDeadletter(addressType == AddressType.TOPIC ? null : deadletter.getSpec().getAddress())
-                .withPlan(addrPlan.getMetadata().getName())
+                .withExpiry(addressType == AddressType.TOPIC ? null : deadletter.getSpec().getAddress())
+                .withPlan(smallPlan.getMetadata().getName())
                 .endSpec()
                 .build();
         consolePage.createAddressSpace(addressSpace);
@@ -2029,9 +2002,9 @@ public abstract class ConsoleTest extends TestBase {
                     .endMetadata()
                     .withNewSpec()
                     .withType(AddressType.SUBSCRIPTION.toString())
-                    .withMessageRedelivery(addrRedelivery)
                     .withAddress("message-redelivery-sub")
                     .withDeadletter(deadletter.getSpec().getAddress())
+                    .withExpiry(deadletter.getSpec().getAddress())
                     .withTopic(addr.getSpec().getAddress())
                     .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
                     .endSpec()
@@ -2040,84 +2013,40 @@ public abstract class ConsoleTest extends TestBase {
         } else {
             recvAddr = addr;
         }
-        AddressUtils.assertRedeliveryStatus(recvAddr, expectedRedelivery);
-        AddressUtils.awaitAddressSettingsSync(addressSpace, recvAddr);
 
         UserCredentials user = new UserCredentials("user", "passwd");
         resourcesManager.createOrUpdateUser(addressSpace, user);
 
-        sendAndReceiveFailingDeliveries(addressSpace, addr, recvAddr, user, List.of(createMessage(addr)));
 
-        if (addrPlan.getSpec().getMessageRedelivery() != null) {
-            resourcesManager.replaceAddressPlan(new AddressPlanBuilder()
-                    .withMetadata(addrPlan.getMetadata())
-                    .withNewSpecLike(addrPlan.getSpec())
-                    .withMessageRedelivery(new MessageRedelivery())
-                    .endSpec()
-                    .build());
-        }
+        List<Message> messages = new ArrayList<>();
 
-        if (recvAddr.getSpec().getMessageRedelivery() != null || recvAddr.getSpec().getDeadletter() != null) {
-            resourcesManager.replaceAddress(new AddressBuilder()
-                    .withMetadata(recvAddr.getMetadata())
-                    .withNewSpecLike(recvAddr.getSpec())
-                    .withMessageRedelivery(new MessageRedelivery())
-                    .withDeadletter(null)
-                    .endSpec()
-                    .build());
-        }
+        List.of(0L,
+                Duration.ofSeconds(10).toMillis(),
+                Duration.ofDays(1).toMillis()).forEach(expiry -> {
+            Message msg = Message.Factory.create();
+            msg.setAddress(addr.getSpec().getAddress());
+            msg.setDurable(true);
+            if (expiry > 0) {
+                msg.setExpiryTime(expiry);
+            }
+            messages.add(msg);
+        });
+        sendTtlAndCheckInUI(addressSpace, addr, recvAddr, deadletter, user, messages, Duration.ofSeconds(15).toMillis());
 
-        log.info("Successfully removed redelivery/DLQ settings");
-        AddressUtils.awaitAddressSettingsSync(addressSpace, recvAddr);
-
-        sendAndReceiveFailingDeliveries(addressSpace, addr, recvAddr, user, List.of(createMessage(addr)));
     }
 
-    private void sendAndReceiveFailingDeliveries(AddressSpace addressSpace, Address sendAddr, Address recvAddr, UserCredentials user, List<Message> messages) throws Exception {
-        sendAddr = resourcesManager.getAddress(sendAddr.getMetadata().getNamespace(), sendAddr);
-        MessageRedelivery redelivery = sendAddr.getStatus().getMessageRedelivery() == null ? new MessageRedelivery() : sendAddr.getStatus().getMessageRedelivery();
-
-        AddressType addressType = AddressType.getEnum(sendAddr.getSpec().getType());
-        try(AmqpClient client = addressType == AddressType.TOPIC ? resourcesManager.getAmqpClientFactory().createTopicClient(addressSpace) : resourcesManager.getAmqpClientFactory().createQueueClient(addressSpace)) {
+    private void sendTtlAndCheckInUI(AddressSpace addressSpace, Address addr, Address recvAdd, Address expiryAddress, UserCredentials user, List<Message> messages, long waitTime) throws Exception {
+        AddressType addressType = AddressType.getEnum(addr.getSpec().getType());
+        try(AmqpClient client = addressType == AddressType.TOPIC ? IsolatedResourcesManager.getInstance().getAmqpClientFactory().createTopicClient(addressSpace) : IsolatedResourcesManager.getInstance().getAmqpClientFactory().createQueueClient(addressSpace)) {
             client.getConnectOptions().setCredentials(user);
 
             AtomicInteger count = new AtomicInteger();
-            CompletableFuture<Integer> sent = client.sendMessages(sendAddr.getSpec().getAddress(), messages, (message -> count.getAndIncrement() == messages.size()));
+            CompletableFuture<Integer> sent = client.sendMessages(addr.getSpec().getAddress(), messages, (message -> count.getAndIncrement()  == messages.size()));
             assertThat("all messages should have been sent", sent.get(20, TimeUnit.SECONDS), is(messages.size()));
-
-            AtomicInteger totalDeliveries = new AtomicInteger();
-            String recvAddress = AddressType.getEnum(recvAddr.getSpec().getType()) == AddressType.SUBSCRIPTION ?  sendAddr.getSpec().getAddress() + "::" + recvAddr.getSpec().getAddress() : recvAddr.getSpec().getAddress();
-            Source source = createSource(recvAddress);
-            int expected = messages.size() * Math.max(redelivery.getMaximumDeliveryAttempts() == null ? 0 : redelivery.getMaximumDeliveryAttempts(), 1);
-            assertThat("unexpected number of failed deliveries", client.recvMessages(source, message -> {
-                        log.info("message: {}, delivery count: {}", message.getMessageId(), message.getHeader().getDeliveryCount());
-                        return totalDeliveries.incrementAndGet() >= expected;}, Optional.empty(),
-                    delivery -> delivery.disposition(DELIVERY_FAILED, true)).getResult().get(1, TimeUnit.MINUTES).size(), is(expected));
-
-            if (redelivery.getMaximumDeliveryAttempts() != null && redelivery.getMaximumDeliveryAttempts() >= 0) {
-                if (sendAddr.getSpec().getDeadletter() != null) {
-                    // Messages should have been routed to the dead letter address
-                    assertThat("all messages should have been routed to the dead letter address", client.recvMessages(sendAddr.getSpec().getDeadletter(), 1).get(1, TimeUnit.MINUTES).size(), is(messages.size()));
-                }
-            } else {
-                // Infinite delivery attempts configured - consume normally
-                assertThat("all messages should have been eligible for consumption", client.recvMessages(recvAddress, 1).get(1, TimeUnit.MINUTES).size(), is(messages.size()));
-            }
+            Thread.sleep(waitTime);  // Give sufficient time for an expiration
+            assertThat("Non expired message should be still stored in queue", consolePage.getAddressItem(recvAdd).getMessagesStored(), is(1));
+            assertThat("Expired messages should be stored in dlq", consolePage.getAddressItem(expiryAddress).getMessagesStored(), is(2));
         }
-    }
-
-    private Source createSource(String recvAddress) {
-        Source source = new Source();
-        source.setAddress(recvAddress);
-        return source;
-    }
-
-    private Message createMessage(Address addr) {
-        Message msg = Message.Factory.create();
-        msg.setMessageId(UUID.randomUUID());
-        msg.setAddress(addr.getSpec().getAddress());
-        msg.setDurable(true);
-        return msg;
     }
 
     private void awaitEnMasseConsoleAvailable(String forWhat) {

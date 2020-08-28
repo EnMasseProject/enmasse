@@ -170,18 +170,26 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
         doTestEndpointCustomCertsProvided();
     }
 
+    @ParameterizedTest(name = "testAddressExpiry-{0}")
+    @ValueSource(strings = {"standard", "brokered"})
+    void testAddressExpiry(String type) throws Exception {
+        doTestMessageRedelivery(AddressSpaceType.getEnum(type), AddressType.QUEUE);
+    }
+
+    @Test
+    void testAddressExpiryTopic() throws Exception {
+        doTestMessageRedelivery(AddressSpaceType.STANDARD, AddressType.TOPIC);
+    }
+
     @ParameterizedTest(name = "testAddressSpecified-{0}-space-web")
     @ValueSource(strings = {"standard"/*, "brokered"*/})
     void testAddressSpecified(String type) throws Exception {
-        doTestMessageRedelivery(AddressSpaceType.getEnum(type), AddressType.QUEUE, null, new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(10).build(),
-                new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(10).build());
+        doTestMessageRedelivery(AddressSpaceType.getEnum(type), AddressType.QUEUE);
     }
 
-    @ParameterizedTest(name = "testSubscriptionAddressSpecified-{0}-space-web")
-    @ValueSource(strings = {"standard"})
-    void testSubscriptionAddressSpecified(String type) throws Exception {
-        doTestMessageRedelivery(AddressSpaceType.getEnum(type), AddressType.TOPIC, null, new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(10).build(),
-                new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(10).build());
+    @Test
+    void testSubscriptionAddressSpecifiedUI(String type) throws Exception {
+        doTestMessageRedelivery(AddressSpaceType.STANDARD, AddressType.TOPIC);
     }
 
 }
