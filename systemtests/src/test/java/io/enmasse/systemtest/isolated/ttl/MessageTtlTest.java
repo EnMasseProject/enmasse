@@ -295,6 +295,7 @@ class MessageTtlTest extends TestBase implements ITestBaseIsolated {
         try(AmqpClient client = addressType == AddressType.TOPIC ? getAmqpClientFactory().createTopicClient(addressSpace) : getAmqpClientFactory().createQueueClient(addressSpace)) {
             client.getConnectOptions().setCredentials(user);
 
+
             // TODO: for a brokered topic test, we need to be able to create the receiver first but not grant credit until after the
             // messages are sent.  The test framework does not currently permit this.
 
