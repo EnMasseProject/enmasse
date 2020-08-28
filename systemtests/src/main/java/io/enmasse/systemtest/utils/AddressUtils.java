@@ -458,9 +458,9 @@ public class AddressUtils {
     // It'd be better if the address's status reflected when the expiry/address settings spaces were applied
     // but with our current architecture, agent (for the standard case) doesn't write the address status.
     // For now peep at the broker(s)
-    public static void awaitAddressSettingsSync(AddressSpace addressSpace, Address addr) {
+    public static void awaitAddressSettingsSync(AddressSpace addressSpace, Address addr, MessageRedelivery messageRedelivery) {
         Address reread = IsolatedResourcesManager.getInstance().getAddress(addr.getMetadata().getNamespace(), addr);
-        MessageRedelivery expectedRedelivery = reread.getStatus().getMessageRedelivery() == null ? new MessageRedelivery() : reread.getStatus().getMessageRedelivery();
+        MessageRedelivery expectedRedelivery =(messageRedelivery == null ? (reread.getStatus().getMessageRedelivery() == null ? new MessageRedelivery() : reread.getStatus().getMessageRedelivery()) : messageRedelivery);
 
         UserCredentials supportCredentials = ArtemisUtils.getSupportCredentials(addressSpace);
         List<String> brokers = new ArrayList<>();

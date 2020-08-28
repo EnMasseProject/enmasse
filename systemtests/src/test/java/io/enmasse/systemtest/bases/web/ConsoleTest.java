@@ -1888,10 +1888,8 @@ public abstract class ConsoleTest extends TestBase {
     }
 
     //DLQ
-    protected void doTestMessageRedelivery(AddressSpaceType addressSpaceType, AddressType addressType) throws Exception {
+    protected void doTestMessageRedelivery(AddressSpaceType addressSpaceType, AddressType addressType, Boolean ttl) throws Exception {
         final String infraConfigName = "redelivery-infra";
-        final String spacePlanName = "space-plan-redelivery";
-        final String addrPlanName = "addr-plan-redelivery";
 
         final String baseSpacePlan;
         final String baseAddressPlan;
@@ -2017,22 +2015,47 @@ public abstract class ConsoleTest extends TestBase {
         UserCredentials user = new UserCredentials("user", "passwd");
         resourcesManager.createOrUpdateUser(addressSpace, user);
 
+        if (ttl) {
+            List<Message> messages = new ArrayList<>();
 
-        List<Message> messages = new ArrayList<>();
+            List.of(0L,
+                    Duration.ofSeconds(10).toMillis(),
+                    Duration.ofDays(1).toMillis()).forEach(expiry -> {
+                Message msg = Message.Factory.create();
+                msg.setAddress(addr.getSpec().getAddress());
+                msg.setDurable(true);
+                if (expiry > 0) {
+                    msg.setExpiryTime(expiry);
+                }
+                messages.add(msg);
+            });
+            LOGGER.info("Sending messages with TLL expired");
+            sendTtlAndCheckInUI(addressSpace, addr, recvAddr, deadletter, user, messages, Duration.ofSeconds(15).toMillis());
 
-        List.of(0L,
-                Duration.ofSeconds(10).toMillis(),
-                Duration.ofDays(1).toMillis()).forEach(expiry -> {
-            Message msg = Message.Factory.create();
-            msg.setAddress(addr.getSpec().getAddress());
-            msg.setDurable(true);
-            if (expiry > 0) {
-                msg.setExpiryTime(expiry);
-            }
-            messages.add(msg);
-        });
-        sendTtlAndCheckInUI(addressSpace, addr, recvAddr, deadletter, user, messages, Duration.ofSeconds(15).toMillis());
+        } else {
 
+
+            MessageRedelivery expectedRedelivery = new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(10)
+                    .withRedeliveryDelayMultiplier(1.0).withRedeliveryDelay(0L).withMaximumDeliveryDelay(0L).build();
+            // Cannot check now because defaults are not yet visible for users in address status section
+            //AddressUtils.assertRedeliveryStatus(recvAddr, expectedRedelivery);
+            AddressUtils.awaitAddressSettingsSync(addressSpace, recvAddr, expectedRedelivery);
+            LOGGER.info("Sending to DLQ");
+            sendAndReceiveFailingDeliveries(addressSpace, addr, recvAddr, deadletter, user, List.of(createMessage(addr)), expectedRedelivery);
+
+
+            LOGGER.info("Deleting message redelivery settings");
+            resourcesManager.replaceAddress(new AddressBuilder()
+                    .withMetadata(recvAddr.getMetadata())
+                    .withNewSpecLike(recvAddr.getSpec())
+                    .withMessageRedelivery(new MessageRedelivery())
+                    .withDeadletter(null)
+                    .endSpec()
+                    .build());
+            AddressUtils.awaitAddressSettingsSync(addressSpace, recvAddr, null);
+            LOGGER.info("Redelivery settings swapped swapped and sync. Sending to standard address");
+            sendAndReceiveFailingDeliveries(addressSpace, addr, recvAddr, deadletter, user, List.of(createMessage(addr)), new MessageRedelivery());
+        }
     }
 
     private void sendTtlAndCheckInUI(AddressSpace addressSpace, Address addr, Address recvAdd, Address expiryAddress, UserCredentials user, List<Message> messages, long waitTime) throws Exception {
@@ -2047,6 +2070,56 @@ public abstract class ConsoleTest extends TestBase {
             assertThat("Non expired message should be still stored in queue", consolePage.getAddressItem(recvAdd).getMessagesStored(), is(1));
             assertThat("Expired messages should be stored in dlq", consolePage.getAddressItem(expiryAddress).getMessagesStored(), is(2));
         }
+    }
+
+    private void sendAndReceiveFailingDeliveries(AddressSpace addressSpace, Address sendAddr, Address recvAddr, Address deadletter, UserCredentials user, List<Message> messages, MessageRedelivery redelivery) throws Exception {
+        sendAddr = resourcesManager.getAddress(sendAddr.getMetadata().getNamespace(), sendAddr);
+
+        AddressType addressType = AddressType.getEnum(sendAddr.getSpec().getType());
+        try(AmqpClient client = addressType == AddressType.TOPIC ? IsolatedResourcesManager.getInstance().getAmqpClientFactory().createTopicClient(addressSpace) : IsolatedResourcesManager.getInstance().getAmqpClientFactory().createQueueClient(addressSpace)) {
+            client.getConnectOptions().setCredentials(user);
+
+            AtomicInteger count = new AtomicInteger();
+            CompletableFuture<Integer> sent = client.sendMessages(sendAddr.getSpec().getAddress(), messages, (message -> count.getAndIncrement() == messages.size()));
+            assertThat("all messages should have been sent", sent.get(20, TimeUnit.SECONDS), is(messages.size()));
+
+            AtomicInteger totalDeliveries = new AtomicInteger();
+            String recvAddress = AddressType.getEnum(recvAddr.getSpec().getType()) == AddressType.SUBSCRIPTION ?  sendAddr.getSpec().getAddress() + "::" + recvAddr.getSpec().getAddress() : recvAddr.getSpec().getAddress();
+            Source source = createSource(recvAddress);
+            int expected = messages.size() * Math.max(redelivery.getMaximumDeliveryAttempts() == null ? 0 : redelivery.getMaximumDeliveryAttempts(), 1);
+            assertThat("unexpected number of failed deliveries", client.recvMessages(source, message -> {
+                        log.info("message: {}, delivery count: {}", message.getMessageId(), message.getHeader().getDeliveryCount());
+                        return totalDeliveries.incrementAndGet() >= expected;}, Optional.empty(),
+                    delivery -> delivery.disposition(DELIVERY_FAILED, true)).getResult().get(1, TimeUnit.MINUTES).size(), is(expected));
+
+            if (redelivery.getMaximumDeliveryAttempts() != null && redelivery.getMaximumDeliveryAttempts() >= 0) {
+                if (sendAddr.getSpec().getDeadletter() != null) {
+                    // Messages should have been routed to the dead letter address
+                    TestUtils.waitUntilCondition("Messages to be stored",
+                            phase -> consolePage.getAddressItem(deadletter).getMessagesStored() == messages.size(), new TimeoutBudget(1, TimeUnit.MINUTES));
+                    assertThat("all messages should have been routed to the dead letter address", consolePage.getAddressItem(deadletter).getMessagesStored(), is(messages.size()));
+                }
+            } else {
+                // Infinite delivery attempts configured - consume normally
+                TestUtils.waitUntilCondition("Messages to be stored",
+                        phase -> consolePage.getAddressItem(recvAddr).getMessagesStored() == messages.size(), new TimeoutBudget(1, TimeUnit.MINUTES));
+                assertThat("all messages should have been eligible for consumption", consolePage.getAddressItem(recvAddr).getMessagesStored(), is(messages.size()));
+            }
+        }
+    }
+
+    private Source createSource(String recvAddress) {
+        Source source = new Source();
+        source.setAddress(recvAddress);
+        return source;
+    }
+
+    private Message createMessage(Address addr) {
+        Message msg = Message.Factory.create();
+        msg.setMessageId(UUID.randomUUID());
+        msg.setAddress(addr.getSpec().getAddress());
+        msg.setDurable(true);
+        return msg;
     }
 
     private void awaitEnMasseConsoleAvailable(String forWhat) {

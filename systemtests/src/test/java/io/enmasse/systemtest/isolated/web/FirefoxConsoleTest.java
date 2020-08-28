@@ -173,23 +173,23 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     @ParameterizedTest(name = "testAddressExpiry-{0}")
     @ValueSource(strings = {"standard", "brokered"})
     void testAddressExpiry(String type) throws Exception {
-        doTestMessageRedelivery(AddressSpaceType.getEnum(type), AddressType.QUEUE);
+        doTestMessageRedelivery(AddressSpaceType.getEnum(type), AddressType.QUEUE, true);
     }
 
     @Test
     void testAddressExpiryTopic() throws Exception {
-        doTestMessageRedelivery(AddressSpaceType.STANDARD, AddressType.TOPIC);
+        doTestMessageRedelivery(AddressSpaceType.STANDARD, AddressType.TOPIC, true);
     }
 
-    @ParameterizedTest(name = "testAddressSpecified-{0}-space-web")
-    @ValueSource(strings = {"standard"/*, "brokered"*/})
+    @ParameterizedTest(name = "testAddressSpecified-{0}-UI")
+    @ValueSource(strings = {"standard", "brokered"})
     void testAddressSpecified(String type) throws Exception {
-        doTestMessageRedelivery(AddressSpaceType.getEnum(type), AddressType.QUEUE);
+        doTestMessageRedelivery(AddressSpaceType.getEnum(type), AddressType.QUEUE, false);
     }
 
     @Test
-    void testSubscriptionAddressSpecifiedUI(String type) throws Exception {
-        doTestMessageRedelivery(AddressSpaceType.STANDARD, AddressType.TOPIC);
+    void testSubscriptionAddressSpecifiedUI() throws Exception {
+        doTestMessageRedelivery(AddressSpaceType.STANDARD, AddressType.TOPIC, false);
     }
 
 }
