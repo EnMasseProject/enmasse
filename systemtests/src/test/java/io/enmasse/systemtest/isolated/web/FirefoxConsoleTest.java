@@ -5,7 +5,6 @@
 package io.enmasse.systemtest.isolated.web;
 
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.MessageRedeliveryBuilder;
 import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.annotations.SeleniumFirefox;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
