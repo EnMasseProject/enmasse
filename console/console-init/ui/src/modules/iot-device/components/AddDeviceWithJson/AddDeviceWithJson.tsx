@@ -264,7 +264,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
 
   const getDeviceDetail = () => {
     const device: IDeviceProp = {
-      deviceInformation: {
+      registration: {
         metadata: []
       },
       connectionType: "",
@@ -275,18 +275,16 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
       const parseDeviceDetail = JSON.parse(deviceJsonString);
 
       //add deviceId to device object from the parseDeviceDetail
-      device.deviceInformation.deviceId = parseDeviceDetail.id;
+      device.id = parseDeviceDetail.id;
       //add registration.enabled field to device object from the parseDeviceDetail
       if (parseDeviceDetail?.registration?.enabled !== undefined) {
-        device.deviceInformation.status =
-          parseDeviceDetail.registration.enabled;
+        device.registration.status = parseDeviceDetail.registration.enabled;
       }
       if (parseDeviceDetail?.registration?.defaults !== undefined) {
-        device.deviceInformation.defaults =
-          parseDeviceDetail.registration.defaults;
+        device.registration.defaults = parseDeviceDetail.registration.defaults;
       }
       if (parseDeviceDetail?.registration?.ext !== undefined) {
-        device.deviceInformation.ext = parseDeviceDetail.registration.ext;
+        device.registration.ext = parseDeviceDetail.registration.ext;
       }
       //add credentials field to device object from the parseDeviceDetail
       if (device.credentials && parseDeviceDetail.credentials) {
@@ -310,9 +308,10 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
       }
     }
     const viaGateway =
-      (device.gateways.gateways && device.gateways.gateways.length > 0) ||
-      (device.gateways.gatewayGroups &&
-        device.gateways.gatewayGroups.length > 0);
+      device.gateways &&
+      ((device.gateways.gateways && device.gateways.gateways.length > 0) ||
+        (device.gateways.gatewayGroups &&
+          device.gateways.gatewayGroups.length > 0));
     if (viaGateway !== undefined && device.credentials) {
       device.connectionType = getDeviceConnectionType(
         viaGateway,
