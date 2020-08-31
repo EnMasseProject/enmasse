@@ -97,7 +97,8 @@ export default function ProjectPage() {
       filter.namespaces,
       filter.projectType,
       filter.status,
-      filter.type
+      filter.type,
+      deletedSuccessfully
     ],
     deletedSuccessfully && page > 1 ? (page - 1).toString() : page.toString()
   );
