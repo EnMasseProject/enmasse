@@ -19,6 +19,7 @@ var assert = require('assert');
 var util = require('util');
 var MockBroker = require('../testlib/mock_broker.js');
 var broker_controller = require('../lib/broker_controller.js');
+var log = require("../lib/log.js").logger();
 
 function random_number(max) {
     return Math.floor(Math.random() * Math.floor(max));
@@ -152,7 +153,10 @@ describe('broker controller', function() {
             controller.close();
             broker.verify_addresses(desired);
             done();
-        }).catch(done);
+        }).catch(e => {
+            log.warn('KWDEBUG failed to creates lots of topics', e);
+            done(e);
+        });
     });
     it('creates lots of queues and topics', function(done) {
         this.timeout(15000);
