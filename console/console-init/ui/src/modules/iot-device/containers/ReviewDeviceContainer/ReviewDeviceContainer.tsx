@@ -12,15 +12,15 @@ interface IReviewDeviceContainerProps {
 }
 
 export interface IDeviceProp {
-  id?: string;
-  registration: {
+  deviceInformation: {
+    deviceId?: string;
     status?: boolean;
     metadata?: any[];
     ext?: any[];
     defaults?: any[];
   };
   connectionType: string;
-  gateways?: {
+  gateways: {
     gateways?: string[];
     gatewayGroups?: string[];
   };

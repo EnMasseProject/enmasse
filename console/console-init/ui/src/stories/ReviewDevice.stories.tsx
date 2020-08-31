@@ -14,8 +14,8 @@ export default {
 
 export const ReviewDevicePage = () => {
   const initialDevice: IDeviceProp = {
-    id: "DEVICE ID",
-    registration: {
+    deviceInformation: {
+      deviceId: "DEVICE ID",
       status: false,
       metadata: []
     },
