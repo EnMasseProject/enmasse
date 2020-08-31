@@ -17,7 +17,7 @@ img.pf-c-brand {
 }
 
 header.pf-c-page__header {
-  background-color: #151515;
+  background-color: #f31616;
 }
 
 .App-logo {
@@ -25,7 +25,7 @@ header.pf-c-page__header {
 }
 
 .App-header {
-  background-color: #282c34;
+  background-color: #1966ff;
   min-height: 100vh;
   display: flex;
   flex-direction: column;

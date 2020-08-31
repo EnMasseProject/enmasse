@@ -42,7 +42,7 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
         {device?.id && (
           <>
             <Title size="lg" headingLevel="h5">
-              Devicedevice. ID
+              Device ID
             </Title>
             {device.id}
             <br />
