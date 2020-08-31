@@ -65,6 +65,7 @@ public class Environment {
     private static final String OCP4_EXTERNAL_IMAGE_REGISTRY = "OCP4_EXTERNAL_IMAGE_REGISTRY";
     private static final String OCP4_INTERNAL_IMAGE_REGISTRY = "OCP4_INTERNAL_IMAGE_REGISTRY";
     private static final String OVERRIDE_CLUSTER_TYPE = "OVERRIDE_CLUSTER_TYPE";
+    private static final String PRE_RELEASE_TESTING_ENV = "PRE_RELEASE_TESTING";
 
     //Config paths
     private static final String scaleConfig = System.getenv().getOrDefault(SCALE_CONFIG, Paths.get(System.getProperty("user.dir"), "scale-config.json").toAbsolutePath().toString());
@@ -74,6 +75,7 @@ public class Environment {
     private static Environment instance;
     private final String namespace = getOrDefault(jsonEnv, K8S_NAMESPACE_ENV, "enmasse-infra");
     private final String testLogDir = getOrDefault(jsonEnv, TEST_LOG_DIR_ENV, "/tmp/testlogs");
+    private final boolean preReleaseTesting = getOrDefault(jsonEnv, PRE_RELEASE_TESTING_ENV, Boolean::parseBoolean, true);
     private final String overrideClusterType = getOrDefault(jsonEnv, OVERRIDE_CLUSTER_TYPE, "");
     private String token = getOrDefault(jsonEnv, K8S_API_TOKEN_ENV, "");
     private String url = getOrDefault(jsonEnv, K8S_API_URL_ENV, "");
@@ -333,6 +335,10 @@ public class Environment {
 
     public String getOverrideClusterType() {
         return overrideClusterType;
+    }
+
+    public boolean isPreReleaseTesting() {
+        return preReleaseTesting;
     }
 
     private String getOrDefault(JsonNode jsonConfig, String varName, String defaultValue) {
