@@ -48,6 +48,7 @@ describe("<ProjectList/>", () => {
         <ProjectList
           projects={projects}
           onSelectProject={jest.fn()}
+          onSelectAllProject={jest.fn()}
           onEdit={jest.fn()}
           onDelete={jest.fn()}
           onDownload={jest.fn()}
@@ -64,6 +65,7 @@ describe("<ProjectList/>", () => {
         <ProjectList
           projects={projects}
           onSelectProject={jest.fn()}
+          onSelectAllProject={jest.fn()}
           onEdit={jest.fn()}
           onDelete={jest.fn()}
           onDownload={jest.fn()}
@@ -73,7 +75,7 @@ describe("<ProjectList/>", () => {
       </MemoryRouter>
     );
     // table Header
-    getByText("Name");
+    getByText("Name / Namespace");
     getByText("Type");
     getByText("Status");
     getByText("Time created");

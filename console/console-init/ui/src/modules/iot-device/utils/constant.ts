@@ -159,13 +159,13 @@ const getInitialManageColumnsForDevices = () => {
     {
       key: "memberof",
       value: "memberOf",
-      label: "Member Of",
+      label: "Gateway group membership",
       isChecked: false
     },
     {
       key: "via-gateways",
       value: "viaGateways",
-      label: "Via Gateways",
+      label: "Gateway connections",
       isChecked: false
     }
   ];

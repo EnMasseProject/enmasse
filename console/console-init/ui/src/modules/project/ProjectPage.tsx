@@ -36,6 +36,13 @@ import {
   getHeaderForToggleDialog
 } from "./utils";
 import { ProjectToolbarContainer, ProjectListContainer } from "./containers";
+import { StyleSheet, css } from "aphrodite";
+
+export const styles = StyleSheet.create({
+  scroll_overflow: {
+    overflowY: "auto"
+  }
+});
 
 export interface ISelectSearchOption {
   value: string;
@@ -57,14 +64,6 @@ export default function ProjectPage() {
   const [filter, setFilter] = useState<IProjectFilter>(
     initialiseFilterForProject()
   );
-
-  useSearchParamsPageChange([
-    filter.names,
-    filter.namespaces,
-    filter.projectType,
-    filter.status,
-    filter.type
-  ]);
   const [totalProjects, setTotalProjects] = useState<number>(0);
   const [msgCount, setMsgCount] = useState<IProjectCount>(
     setInitialProjcetCount()
@@ -79,6 +78,9 @@ export default function ProjectPage() {
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const [selectedProjects, setSelectedProjects] = useState<IProject[]>([]);
   const [isAllSelected, setIsAllSelected] = useState<boolean>(false);
+  const [deletedSuccessfully, setDeletedSuccessfully] = useState<boolean>(
+    false
+  );
 
   useEffect(() => {
     setIsAllSelected(false);
@@ -89,19 +91,37 @@ export default function ProjectPage() {
     setSelectedProjects([]);
   };
 
+  useSearchParamsPageChange(
+    [
+      filter.names,
+      filter.namespaces,
+      filter.projectType,
+      filter.status,
+      filter.type,
+      deletedSuccessfully
+    ],
+    deletedSuccessfully && page > 1 ? (page - 1).toString() : page.toString()
+  );
+
+  const resetFormOnDelete = () => {
+    isAllSelected && setDeletedSuccessfully(true);
+    setIsAllSelected(false);
+    setSelectedProjects([]);
+  };
+
   const refetchQueries: string[] = ["allProjects"];
   const [setDeleteProjectQueryVariables] = useMutationQuery(
     DELETE_MESSAGING_PROJECT,
     refetchQueries,
     undefined,
-    resetFormState
+    resetFormOnDelete
   );
 
   const [setDeleteIoTProjectQueryVariables] = useMutationQuery(
     DELETE_IOT_PROJECT,
     ["allProjects"],
     undefined,
-    resetFormState
+    resetFormOnDelete
   );
   const [setToggleIoTProjectQueryVariables] = useMutationQuery(
     TOGGLE_IOT_PROJECTS_STATUS,
@@ -298,7 +318,10 @@ export default function ProjectPage() {
             msgCount={msgCount}
           />
         </PageSection>
-        <PageSection variant={PageSectionVariants.light}>
+        <PageSection
+          variant={PageSectionVariants.light}
+          className={css(styles.scroll_overflow)}
+        >
           <Grid>
             <GridItem span={7}>
               <ProjectToolbarContainer
