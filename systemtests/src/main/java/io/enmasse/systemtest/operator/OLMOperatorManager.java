@@ -26,7 +26,7 @@ import io.enmasse.systemtest.utils.TestUtils;
 
 public class OLMOperatorManager {
 
-    private static final String DEFAULT_NAME_ENMASSE_SOURCE = "enmasse-source";
+    private static String DEFAULT_NAME_ENMASSE_SOURCE;
     private static final Logger log = CustomLogger.getLogger();
     private Kubernetes kube = Kubernetes.getInstance();
     private String clusterExternalImageRegistry;
@@ -34,15 +34,20 @@ public class OLMOperatorManager {
     private static OLMOperatorManager instance;
 
     private OLMOperatorManager() {
-        clusterExternalImageRegistry = Environment.getInstance().getClusterExternalImageRegistry();
-        if (clusterExternalImageRegistry == null || clusterExternalImageRegistry.isBlank()) {
-            clusterExternalImageRegistry = kube.getClusterExternalImageRegistry();
+        if (Environment.getInstance().isPreReleaseTesting()) {
+            DEFAULT_NAME_ENMASSE_SOURCE  = "enmasse-source";
+            clusterExternalImageRegistry = Environment.getInstance().getClusterExternalImageRegistry();
+            if (clusterExternalImageRegistry == null || clusterExternalImageRegistry.isBlank()) {
+                clusterExternalImageRegistry = kube.getClusterExternalImageRegistry();
+            }
+            clusterInternalImageRegistry = Environment.getInstance().getClusterInternalImageRegistry();
+            if (clusterInternalImageRegistry == null || clusterInternalImageRegistry.isBlank()) {
+                clusterInternalImageRegistry = kube.getClusterInternalImageRegistry();
+            }
+            log.info("Using image registries: {} and {}", clusterExternalImageRegistry, clusterInternalImageRegistry);
+        } else {
+            log.info("Using released version of product from catalog");
         }
-        clusterInternalImageRegistry = Environment.getInstance().getClusterInternalImageRegistry();
-        if (clusterInternalImageRegistry == null || clusterInternalImageRegistry.isBlank()) {
-            clusterInternalImageRegistry = kube.getClusterInternalImageRegistry();
-        }
-        log.info("Using image registries: {} and {}", clusterExternalImageRegistry, clusterInternalImageRegistry);
     }
 
     public static synchronized OLMOperatorManager getInstance() {
@@ -67,9 +72,11 @@ public class OLMOperatorManager {
         String catalogSourceName = DEFAULT_NAME_ENMASSE_SOURCE;
         String catalogNamespace = namespace;
 
-        buildPushCustomOperatorRegistry(catalogNamespace, manifestsImage);
-        String customRegistryImageToUse = getCustomOperatorRegistryInternalImage(catalogNamespace);
-        deployCatalogSource(catalogSourceName, catalogNamespace, customRegistryImageToUse);
+        if (Environment.getInstance().isPreReleaseTesting()) {
+            buildPushCustomOperatorRegistry(catalogNamespace, manifestsImage);
+            String customRegistryImageToUse = getCustomOperatorRegistryInternalImage(catalogNamespace);
+            deployCatalogSource(catalogSourceName, catalogNamespace, customRegistryImageToUse);
+        }
 
         if (installation == OLMInstallationType.SPECIFIC) {
             Path operatorGroupFile = Files.createTempFile("operatorgroup", ".yaml");
@@ -91,15 +98,21 @@ public class OLMOperatorManager {
 
     public void applySubscription(String installationNamespace, String catalogSourceName, String catalogNamespace, String csvName, String operatorName, String operatorChannel) throws IOException {
         Path subscriptionFile = Files.createTempFile("subscription", ".yaml");
-        String subscription = Files.readString(Paths.get("custom-operator-registry", "subscription.yaml"));
-        Files.writeString(subscriptionFile,
-                subscription
-                    .replaceAll("\\$\\{OPERATOR_NAME}", operatorName)
-                    .replaceAll("\\$\\{OPERATOR_CHANNEL}", operatorChannel)
-                    .replaceAll("\\$\\{OPERATOR_NAMESPACE}", installationNamespace)
-                    .replaceAll("\\$\\{CATALOG_SOURCE_NAME}", catalogSourceName)
-                    .replaceAll("\\$\\{CATALOG_NAMESPACE}", catalogNamespace)
-                    .replaceAll("\\$\\{CSV}", csvName));
+        String subscription = Files.readString(Paths.get("custom-operator-registry", Environment.getInstance().isPreReleaseTesting() ? "subscription.yaml" : "subscription-release.yaml"));
+        if (Environment.getInstance().isPreReleaseTesting()) {
+            Files.writeString(subscriptionFile,
+                    subscription
+                            .replaceAll("\\$\\{OPERATOR_NAME}", operatorName)
+                            .replaceAll("\\$\\{OPERATOR_CHANNEL}", operatorChannel)
+                            .replaceAll("\\$\\{OPERATOR_NAMESPACE}", installationNamespace)
+                            .replaceAll("\\$\\{CATALOG_SOURCE_NAME}", catalogSourceName)
+                            .replaceAll("\\$\\{CATALOG_NAMESPACE}", catalogNamespace)
+                            .replaceAll("\\$\\{CSV}", csvName));
+        } else {
+            Files.writeString(subscriptionFile,
+                    subscription
+                            .replaceAll("\\$\\{OPERATOR_NAMESPACE}", installationNamespace));
+        }
         KubeCMDClient.applyFromFile(installationNamespace, subscriptionFile);
     }
 
@@ -158,13 +171,13 @@ public class OLMOperatorManager {
     }
 
     public String getLatestStartingCsv() throws Exception {
-        String enmasseCSV = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath().toString(), "install", "components", "example-olm", "subscription.yaml"));
+        String enmasseCSV = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "subscription.yaml"));
         var yaml = new YAMLMapper().readTree(enmasseCSV);
         return yaml.get("spec").get("startingCSV").asText();
     }
 
     public String getLatestManifestsImage() throws Exception {
-        String exampleCatalogSource = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath().toString(), "install", "components", "example-olm", "catalog-source.yaml"));
+        String exampleCatalogSource = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "catalog-source.yaml"));
         var tree = new YAMLMapper().readTree(exampleCatalogSource);
         return tree.get("spec").get("image").asText();
     }
