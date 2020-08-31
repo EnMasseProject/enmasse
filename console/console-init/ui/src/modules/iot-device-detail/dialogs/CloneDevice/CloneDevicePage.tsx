@@ -36,7 +36,7 @@ import {
 const getInitialDeviceForm = () => {
   const device: IDeviceProp = {
     connectionType: "directly",
-    deviceInformation: {},
+    registration: {},
     gateways: {}
   };
   return device;

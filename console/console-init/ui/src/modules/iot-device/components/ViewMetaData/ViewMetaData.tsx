@@ -23,8 +23,10 @@ const ViewMetaData: React.FunctionComponent<IViewMetaDataProrps> = ({
   if (ext === undefined && defaults === undefined) {
     return <>--</>;
   }
-  const convertedDefaultsData = convertJsonToMetadataOptions(defaults);
-  const convertedExtData = convertJsonToMetadataOptions(ext);
+  const convertedDefaultsData = defaults
+    ? convertJsonToMetadataOptions(defaults)
+    : [];
+  const convertedExtData = ext ? convertJsonToMetadataOptions(ext) : [];
   if (convertedDefaultsData.length === 0 && convertedExtData.length === 0) {
     return <>--</>;
   }
