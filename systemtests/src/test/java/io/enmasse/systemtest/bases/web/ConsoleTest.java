@@ -2113,7 +2113,7 @@ public abstract class ConsoleTest extends TestBase {
                     delivery -> delivery.disposition(DELIVERY_FAILED, true)).getResult().get(1, TimeUnit.MINUTES).size(), is(expected));
 
             if (redelivery.getMaximumDeliveryAttempts() != null && redelivery.getMaximumDeliveryAttempts() >= 0) {
-                if (sendAddr.getSpec().getDeadletter() != null) {
+                if (sendAddr.getSpec().getType().equals(AddressType.TOPIC.toString()) && recvAddr.getSpec().getDeadletter() != null) {
                     // Messages should have been routed to the dead letter address
                     TestUtils.waitUntilCondition("Messages to be stored",
                             phase -> consolePage.getAddressItem(deadletter).getMessagesStored() == messages.size(), new TimeoutBudget(1, TimeUnit.MINUTES));
