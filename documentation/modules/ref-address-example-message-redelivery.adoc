@@ -3,7 +3,7 @@
 // assembly-managing-addresses.adoc
 
 [id='ref-address-example-ttl{context}']
-= Address Message Redelivery/Dead Letter example
+= Address message redelivery/dead letter example
 
 [source,yaml,options="nowrap"]
 ----
