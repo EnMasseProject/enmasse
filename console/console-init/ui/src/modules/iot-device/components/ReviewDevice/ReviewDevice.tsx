@@ -34,17 +34,18 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
   title
 }) => {
   const getDeviceInformation = () => {
-    const { status, defaults, ext } = device?.registration || {};
+    const { deviceId, status, metadata, defaults, ext } =
+      device?.deviceInformation || {};
     return (
       <>
         <Text className={css(style.font_size_20)}>Device Information</Text>
         <br />
-        {device?.id && (
+        {deviceId && (
           <>
             <Title size="lg" headingLevel="h5">
               Device ID
             </Title>
-            {device.id}
+            {deviceId}
             <br />
             <br />
           </>
@@ -59,15 +60,17 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
             <br />
           </>
         )}
-        <>
-          <Title size="lg" headingLevel="h5">
-            MetaData
-          </Title>
-          <br />
-          <ViewMetaData defaults={defaults} ext={ext} />
-          <br />
-          <br />
-        </>
+        {metadata !== undefined && (
+          <>
+            <Title size="lg" headingLevel="h5">
+              MetaData
+            </Title>
+            <br />
+            <ViewMetaData defaults={defaults} ext={ext} />
+            <br />
+            <br />
+          </>
+        )}
       </>
     );
   };
@@ -170,7 +173,7 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
     );
   };
 
-  const { registration, connectionType, credentials, gateways, memberOf } =
+  const { deviceInformation, connectionType, credentials, gateways, memberOf } =
     device || {};
   return (
     <>
@@ -185,7 +188,7 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
             </>
           )}
           <br />
-          {registration && getDeviceInformation()}
+          {deviceInformation && getDeviceInformation()}
           {connectionType && getConnectionType()}
           {credentials && credentials.length > 0 && getCredentials()}
           {gateways?.gateways && getGateways()}

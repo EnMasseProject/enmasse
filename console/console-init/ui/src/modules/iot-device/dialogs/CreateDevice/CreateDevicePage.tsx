@@ -34,7 +34,7 @@ import {
 import { useHistory, useParams } from "react-router";
 import { Link } from "react-router-dom";
 import { useBreadcrumb } from "use-patternfly";
-import { SwitchWithToggle, JsonEditor } from "components";
+import { SwitchWithToggle } from "components";
 import {
   ReviewDeviceContainer,
   IDeviceProp
@@ -45,12 +45,18 @@ import { CREATE_IOT_DEVICE } from "graphql-module";
 import { OperationType } from "constant";
 import {
   getCredentialsFieldsInitialState,
-  serializeCredentials
+  serializeCredentials,
+  serializeMetaData
 } from "modules/iot-device/utils";
 import { convertMetadataOptionsToJson, convertObjectIntoJson } from "utils";
 
-const getInitalMetaData = () => {
-  return [{ key: "", value: "", type: "string" }];
+const getInitialDeviceForm = () => {
+  const device: IDeviceProp = {
+    connectionType: "directly",
+    deviceInformation: {},
+    gateways: {}
+  };
+  return device;
 };
 
 export default function CreateDevicePage() {
@@ -59,7 +65,7 @@ export default function CreateDevicePage() {
   const [deviceIdInput, setDeviceIdInput] = useState<string>("");
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const [metadataList, setMetadataList] = useState<IMetadataProps[]>(
-    getInitalMetaData()
+    getInitialMetadataState
   );
   const [gatewayDevices, setGatewayDevices] = useState<string[]>([]);
   const [gatewayGroups, setGatewayGroups] = useState<string[]>([]);
@@ -67,7 +73,6 @@ export default function CreateDevicePage() {
   const [credentials, setCredentials] = useState<ICredential[]>([
     getCredentialsFieldsInitialState()
   ]);
-  const [viewInJson, setViewInJson] = useState<boolean>(false);
   const { projectname, namespace } = useParams();
 
   const styles = StyleSheet.create({
@@ -103,7 +108,7 @@ export default function CreateDevicePage() {
     setGatewayGroups([]);
     setMemberOf([]);
     setCredentials([getCredentialsFieldsInitialState()]);
-    setMetadataList(getInitalMetaData());
+    setMetadataList(getInitialMetadataState);
   };
 
   const [setCreateDeviceQueryVariables] = useMutationQuery(
@@ -186,60 +191,62 @@ export default function CreateDevicePage() {
     )
   };
 
-  const jsonEditor = () => {
-    return (
-      <JsonEditor
-        value={JSON.stringify(getDevice(), undefined, 2)}
-        style={{
-          minHeight: "45rem"
-        }}
-        readOnly={true}
-        name={"editor-add-device"}
-      />
-    );
+  const serializeExt = (ext: any[]) => {
+    let serializedExt: any = {};
+
+    Array.isArray(ext) &&
+      ext.forEach((ele: any) => {
+        if (ele.key.trim() !== "") {
+          if (ele.type === "String") {
+            (serializedExt[ele.key] as any) = ele.value;
+          }
+          if (ele.type === "Number") {
+            (serializedExt[ele.key] as any) = Number(ele.value);
+          }
+          if (ele.type === "Boolean") {
+            (serializedExt[ele.key] as any) = ele.value === "true";
+          }
+        }
+      });
+
+    return serializedExt;
   };
 
   const credentialsToCredentialView = (credential: any[]) => {
-    return credential
-      .filter(c => c["auth-id"] && c["auth-id"].trim() != "" && c.type)
-      .map(({ type, ext, enabled, secrets, "auth-id": authId }) => {
+    return credential.map(
+      ({ type, ext, enabled, secrets, "auth-id": authId }) => {
         return {
           type,
-          ext: Array.isArray(ext) ? convertMetadataOptionsToJson(ext) : ext,
+          ext: serializeExt(ext),
           enabled,
           secrets,
           "auth-id": authId
         };
-      });
+      }
+    );
   };
 
-  const getDevice = () => {
-    const device: IDeviceProp = {
-      id: deviceIdInput,
-      registration: {
-        status: isEnabled,
-        ext: convertMetadataOptionsToJson(metadataList),
-        //TODO: replace [] with defaults
-        defaults: convertMetadataOptionsToJson([])
-      },
-      connectionType
-    };
-    if (connectionType === "directly") {
-      device.memberOf = memberOf;
-      device.credentials = credentialsToCredentialView(credentials);
-    } else {
-      device.gateways = {
-        gatewayGroups,
-        gateways: gatewayDevices
-      };
-    }
-    return device;
-  };
   const reviewForm = {
     name: "Review",
     component: (
       <ReviewDeviceContainer
-        device={getDevice()}
+        device={{
+          deviceInformation: {
+            deviceId: deviceIdInput,
+            status: isEnabled,
+            metadata: metadataList,
+            ext: JSON.parse(serializeMetaData(metadataList))
+          },
+          connectionType,
+          gateways: {
+            gatewayGroups,
+            gateways: gatewayDevices
+          },
+          memberOf,
+          ...(connectionType == "directly" && {
+            credentials: credentialsToCredentialView(credentials)
+          })
+        }}
         title={"Verify that the following information is correct before done"}
       />
     )
@@ -258,31 +265,19 @@ export default function CreateDevicePage() {
     }
   };
 
-  const onToggleSwitch = (
-    value: boolean,
-    _: React.FormEvent<HTMLInputElement>
-  ) => {
-    setViewInJson(value);
-  };
-
   const handleSave = async () => {
     // Add query to add device
     const variable = {
       iotproject: { name: projectname, namespace },
       device: {
+        deviceId: deviceIdInput,
         registration: {
           enabled: isEnabled,
-          ext:
-            metadataList &&
-            JSON.stringify(convertMetadataOptionsToJson(metadataList)),
+          ext: serializeMetaData(metadataList),
           via: gatewayDevices,
           viaGroups: gatewayGroups,
           memberOf
         },
-        ...(deviceIdInput &&
-          deviceIdInput.trim() !== "" && {
-            deviceId: deviceIdInput
-          }),
         ...(connectionType === "directly" && {
           credentials: serializeCredentials(credentials)
         })
@@ -449,7 +444,9 @@ export default function CreateDevicePage() {
             <SwitchWithToggle
               id={"create-device-page-view-json-switchtoggle"}
               labelOff={"View JSON Format"}
-              onChange={onToggleSwitch}
+              onChange={() => {
+                console.log("View in JSON");
+              }}
               label={"View Form Format"}
             />
           </FlexItem>
@@ -457,20 +454,13 @@ export default function CreateDevicePage() {
         <br />
         <Divider />
       </PageSection>
-      {!viewInJson && (
-        <Wizard
-          id="create-device-page-wizard"
-          onClose={onCloseDialog}
-          onSave={handleSave}
-          footer={CustomFooter}
-          steps={steps}
-        />
-      )}
-      {viewInJson && (
-        <PageSection variant={PageSectionVariants.light}>
-          {jsonEditor()}
-        </PageSection>
-      )}
+      <Wizard
+        id="create-device-page-wizard"
+        onClose={onCloseDialog}
+        onSave={handleSave}
+        footer={CustomFooter}
+        steps={steps}
+      />
     </Page>
   );
 }
