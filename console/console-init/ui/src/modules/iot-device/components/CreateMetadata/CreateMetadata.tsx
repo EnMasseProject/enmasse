@@ -94,7 +94,7 @@ export const CreateMetadata: React.FC<ICreateMetadataProps> = ({
               icon={<PlusCircleIcon />}
               onClick={handleAddParentRow}
             >
-              Add More
+              Add another parameter
             </Button>
           </GridItem>
         </Grid>
