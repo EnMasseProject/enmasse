@@ -7,16 +7,16 @@ import React from "react";
 import { Grid, GridItem } from "@patternfly/react-core";
 import { convertJsonToMetadataOptions } from "utils";
 import { StyleSheet, css } from "aphrodite";
-import { MetaDataReviewRows } from "./MetaDataReviewRows";
+import { MetadataReviewRows } from "./MetadataReviewRows";
 
 const styles = StyleSheet.create({
   text_center_align: { textAlign: "center" }
 });
-interface IViewMetaDataProrps {
+interface IViewMetadataProrps {
   defaults?: any[];
   ext?: any[];
 }
-const ViewMetaData: React.FunctionComponent<IViewMetaDataProrps> = ({
+const ViewMetadata: React.FunctionComponent<IViewMetadataProrps> = ({
   defaults,
   ext
 }) => {
@@ -45,7 +45,7 @@ const ViewMetaData: React.FunctionComponent<IViewMetaDataProrps> = ({
             <b>Value</b>
           </GridItem>
         </Grid>
-        <MetaDataReviewRows values={values} />
+        <MetadataReviewRows values={values} />
       </>
     );
   };
@@ -60,4 +60,4 @@ const ViewMetaData: React.FunctionComponent<IViewMetaDataProrps> = ({
   );
 };
 
-export { ViewMetaData };
+export { ViewMetadata };

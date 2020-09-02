@@ -25,7 +25,7 @@ import {
 } from "modules/iot-device-detail/components";
 import { SwitchWithToggle, JsonEditor } from "components";
 import { ErrorStateAlert, IErrorStateAlertProps } from "./ErrorStateAlert";
-import { ViewMetaData } from "modules/iot-device/components";
+import { ViewMetadata } from "modules/iot-device/components";
 
 const styles = StyleSheet.create({
   card_body: {
@@ -77,7 +77,7 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
     setIsHidden(isEnabled);
   };
 
-  const isMetaDataPresent = () => {
+  const shouldRenderMetadata = () => {
     return metadetaJson && (metadetaJson.default || metadetaJson.ext);
   };
 
@@ -132,7 +132,7 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
               {memberOf && memberOf?.length > 0 && (
                 <GatewayMembership memberOf={memberOf} />
               )}
-              {isMetaDataPresent() && (
+              {shouldRenderMetadata() && (
                 <Card id={id}>
                   <CardTitle>
                     <Title
@@ -144,7 +144,7 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
                     </Title>
                   </CardTitle>
                   <CardBody className={css(styles.card_body)}>
-                    <ViewMetaData
+                    <ViewMetadata
                       ext={metadetaJson.ext}
                       defaults={metadetaJson.default}
                     />

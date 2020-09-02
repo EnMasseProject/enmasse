@@ -7,8 +7,9 @@ import React, { useState } from "react";
 import { StyleSheet, css } from "aphrodite";
 import { AngleRightIcon, AngleDownIcon } from "@patternfly/react-icons";
 import { GridItem, TextInput, Grid, Button } from "@patternfly/react-core";
-import { MetaDataReviewRows } from "./MetaDataReviewRows";
+import { MetadataReviewRows } from "./MetadataReviewRows";
 import { uniqueId } from "utils";
+import { DataType } from "constant";
 
 const styles = StyleSheet.create({
   grid_align: {
@@ -23,13 +24,13 @@ const styles = StyleSheet.create({
   }
 });
 
-interface IMetaDataReviewRowProps {
+interface IMetadataReviewRowProps {
   value: any;
   prevKey?: string;
   viewAll?: boolean;
 }
 
-const MetaDataReviewRow: React.FunctionComponent<IMetaDataReviewRowProps> = ({
+const MetadataReviewRow: React.FunctionComponent<IMetadataReviewRowProps> = ({
   value,
   prevKey,
   viewAll = true
@@ -54,7 +55,7 @@ const MetaDataReviewRow: React.FunctionComponent<IMetaDataReviewRowProps> = ({
   };
 
   const hasObjectValue: boolean =
-    value.type === "array" || value.type === "object";
+    value.type === DataType.ARRAY || value.type === DataType.OBJECT;
   const key: string = prevKey
     ? value.key !== ""
       ? prevKey + "/" + value.key
@@ -80,11 +81,11 @@ const MetaDataReviewRow: React.FunctionComponent<IMetaDataReviewRowProps> = ({
         {renderGridItem(hasObjectValue ? "" : value.value)}
         {hasObjectValue && isVisible && (
           <>
-            <MetaDataReviewRows values={value.value} prevkey={key} />
+            <MetadataReviewRows values={value.value} prevkey={key} />
           </>
         )}
       </Grid>
     </>
   );
 };
-export { MetaDataReviewRow };
+export { MetadataReviewRow };
