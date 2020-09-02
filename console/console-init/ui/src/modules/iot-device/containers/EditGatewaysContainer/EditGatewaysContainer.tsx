@@ -21,8 +21,9 @@ export const EditGatewaysContainer: React.FC<{
   onCancel: () => void;
 }> = ({ onCancel }) => {
   const { deviceid, projectname, namespace } = useParams();
-  const [gatewayDevices, addGatewayDevices] = useState<string[]>([]);
+  const [gatewayDevices, setGatewayDevices] = useState<string[]>([]);
   const [gatewayGroups, setGatewayGroups] = useState<string[]>([]);
+  const [isDisabledSaveButton, setIsDisabledSaveButton] = useState(true);
 
   const { data } = useQuery<IDeviceDetailResponse>(
     RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid)
@@ -35,11 +36,22 @@ export const EditGatewaysContainer: React.FC<{
   const { registration } = devices?.devices[0] || {};
   const { via: gatewayList, viaGroups: gatewayGroupList } = registration || {};
 
+  const shouldDisabledSaveBUtton = () => {
+    if (
+      isDisabledSaveButton &&
+      (gatewayDevices?.length > 0 || gatewayGroups?.length > 0)
+    ) {
+      setIsDisabledSaveButton(false);
+    }
+  };
+
   const getGatewayDevices = (gateway: string[]) => {
-    addGatewayDevices(gateway);
+    shouldDisabledSaveBUtton();
+    setGatewayDevices(gateway);
   };
 
   const getGatewayGroups = (groups: string[]) => {
+    shouldDisabledSaveBUtton();
     setGatewayGroups(groups);
   };
 
@@ -63,6 +75,7 @@ export const EditGatewaysContainer: React.FC<{
             id="edit-gateways-container-save-button"
             variant={ButtonVariant.primary}
             onClick={onGatewaysSave}
+            isDisabled={isDisabledSaveButton}
           >
             Save
           </Button>

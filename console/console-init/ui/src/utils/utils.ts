@@ -421,19 +421,19 @@ const getTitleForSuccessQuery = (action: string) => {
     deleteAddress: "Address deleted",
     deleteAddresses: "Selected addresses deleted",
     deleteIotDevices: "Selected devices deleted",
-    deleteCredentialsForDevice: "",
+    deleteCredentialsForDevice: "Selected connection information removed.",
     deleteIotProjects: "Selected projects deleted",
     patchAddressSpace: "Address space patched",
     patchAddress: "Address patched",
     patchIotProject: "",
-    purgeAddress: "",
-    purgeAddresses: "",
+    purgeAddress: "Address purged.",
+    purgeAddresses: "Selected addresses purged.",
     closeConnections: "Selected connections closed",
-    setCredentialsForDevice: "",
-    toggleIoTProjectsStatus: "Selected projects status updated",
-    toggleIoTProjectStatus: "Project status updated",
-    toggleIoTDevicesStatus: "Selected devices status updated",
-    toggleIoTDeviceStatus: "Device status updated"
+    setCredentialsForDevice: "Credentials setting updated.",
+    toggleIoTProjectsStatus: "Selected projects status updated.",
+    toggleIoTProjectStatus: "Project status updated.",
+    toggleIoTDevicesStatus: "Selected devices status updated.",
+    toggleIoTDeviceStatus: "Device status updated."
   };
 
   if (action in titles) {
@@ -458,15 +458,17 @@ const getTitleForFailedQuery = (action: string) => {
     deleteAddress: "Deleting address failed. Please try again.",
     deleteAddresses: "Deleting selected addresses failed. Please try again.",
     deleteIotDevices: "Deleting device failed. Please try again.",
-    deleteCredentialsForDevice: "",
+    deleteCredentialsForDevice:
+      " Deleting selected connection information failed. Please try again.",
     deleteIotProjects: "Deleting selected projects failed. Please try again.",
-    patchAddressSpace: "",
-    patchAddress: "",
+    patchAddressSpace: "Address space patch failed. Please try again.",
+    patchAddress: "Address patch failed. Please try again.",
     patchIotProject: "",
-    purgeAddress: "",
-    purgeAddresses: "",
+    purgeAddress: "Address purge failed. Please try again.",
+    purgeAddresses: "Selected addresses purge failed. Please try again.",
     closeConnections: "Closing connections failed. Please try again.",
-    setCredentialsForDevice: "",
+    setCredentialsForDevice:
+      "Credentials setting update failed. Please try again.",
     toggleIoTProjectsStatus:
       "Unable to enable/disable selected projects. Please try again.",
     toggleIoTProjectStatus:
@@ -480,6 +482,15 @@ const getTitleForFailedQuery = (action: string) => {
     return titles[action];
   }
   return "Server error";
+};
+
+const convertStringToBoolean = (value: string) => {
+  if (value === "true") {
+    return true;
+  } else if (value === "false") {
+    return false;
+  }
+  return value;
 };
 
 export {
@@ -504,5 +515,6 @@ export {
   convertStringToJsonAndValidate,
   convertJsonToStringAndValidate,
   getTitleForSuccessQuery,
-  getTitleForFailedQuery
+  getTitleForFailedQuery,
+  convertStringToBoolean
 };

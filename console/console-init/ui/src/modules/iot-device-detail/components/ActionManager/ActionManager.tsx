@@ -118,6 +118,7 @@ export const ActionManager: React.FC<IActionManagerProps> = ({
       case DeviceActionType.ADD_CREDENTIALS:
         return <AddCredentialsContainer onCancel={onCancel} />;
       case DeviceActionType.ADD_GATEWAYS:
+      case DeviceActionType.CHANGE_CONNECTION_TYPE_VIA_GATEWAYS:
         return <AddGatewaysContainer onCancel={onCancel} />;
       case DeviceActionType.CHANGE_CONNECTION_TYPE_CONNECTED_DIRECTLY:
         return (
@@ -126,8 +127,6 @@ export const ActionManager: React.FC<IActionManagerProps> = ({
             onCancel={onCancel}
           />
         );
-      case DeviceActionType.CHANGE_CONNECTION_TYPE_VIA_GATEWAYS:
-        return <AddGateways />;
       case DeviceActionType.EDIT_GATEWAY_GROUP_MEMBERSHIP:
         return <EditGatewayGroupMembershipContainer onCancel={onCancel} />;
       default:

@@ -27,10 +27,6 @@ const styles = StyleSheet.create({
   card_body: {
     marginBottom: "1.25rem"
   },
-  flex_item_margin: {
-    marginLeft: "0.625rem",
-    paddingLeft: "0"
-  },
   tooltip_margin: {
     paddingRight: "3.125rem"
   },
@@ -71,7 +67,7 @@ export const GatewayMembership: React.FC<IGatewayMembershipProps> = ({
         </Title>
       </CardTitle>
 
-      <CardBody className={css(styles.flex_item_margin)}>
+      <CardBody>
         <Flex>
           <br />
           {memberOf &&

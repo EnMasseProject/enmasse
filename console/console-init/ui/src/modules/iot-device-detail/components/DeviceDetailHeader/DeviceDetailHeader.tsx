@@ -182,7 +182,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
           aria-label="edit gateways"
           onClick={onSelctEditGateways}
         >
-          Edit connection gateways
+          Edit gateway connections
         </DropdownItem>
       );
     }

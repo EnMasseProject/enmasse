@@ -129,7 +129,7 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
 
   return (
     <Grid>
-      <GridItem span={8}>
+      <GridItem span={6}>
         <Form>
           <FormGroup
             label="gateway device id or gateway group name"
