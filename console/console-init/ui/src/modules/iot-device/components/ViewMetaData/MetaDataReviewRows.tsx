@@ -18,7 +18,7 @@ const MetaDataReviewRows: React.FC<IMetaDataReviewRowProps> = ({
     <>
       {values.map((val, index) => (
         <>
-          <MetaDataReviewRow value={val} prevKey={prevkey} index={index} />
+          <MetaDataReviewRow value={val} prevKey={prevkey} />
           {val.type === "array" || (val.type === "object" && <br />)}
         </>
       ))}

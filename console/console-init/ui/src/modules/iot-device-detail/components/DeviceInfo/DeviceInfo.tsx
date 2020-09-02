@@ -23,8 +23,9 @@ import {
   CredentialsView,
   ICredentialsViewProps
 } from "modules/iot-device-detail/components";
-import { SwitchWithToggle, JsonEditor, MetadataListTable } from "components";
+import { SwitchWithToggle, JsonEditor } from "components";
 import { ErrorStateAlert, IErrorStateAlertProps } from "./ErrorStateAlert";
+import { ViewMetaData } from "modules/iot-device/components";
 
 const styles = StyleSheet.create({
   card_body: {
@@ -72,25 +73,12 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
     credentials
   };
 
-  const prepareMetadataList = () => {
-    const metadataList = [];
-    if (metadetaJson?.default) {
-      metadataList.push({
-        headers: ["Message info parameter", "Type", "Value"],
-        data: metadetaJson?.default
-      });
-    }
-    if (metadetaJson?.ext) {
-      metadataList.push({
-        headers: ["Basic info parameter", "Type", "Value"],
-        data: metadetaJson?.ext
-      });
-    }
-    return metadataList;
-  };
-
   const onToggle = (isEnabled: boolean) => {
     setIsHidden(isEnabled);
+  };
+
+  const isMetaDataPresent = () => {
+    return metadetaJson && (metadetaJson.default || metadetaJson.ext);
   };
 
   return (
@@ -144,25 +132,25 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
               {memberOf && memberOf?.length > 0 && (
                 <GatewayMembership memberOf={memberOf} />
               )}
-              <Card id={id}>
-                <CardTitle>
-                  <Title
-                    headingLevel="h1"
-                    size="2xl"
-                    id="device-info-metadata-title"
-                  >
-                    Device metadata
-                  </Title>
-                </CardTitle>
-                <CardBody className={css(styles.card_body)}>
-                  <MetadataListTable
-                    dataList={prepareMetadataList()}
-                    id={"device-info-metadata-table"}
-                    aria-label={"device info metadata"}
-                    aria-labelledby={"device info metadata header"}
-                  />
-                </CardBody>
-              </Card>
+              {isMetaDataPresent() && (
+                <Card id={id}>
+                  <CardTitle>
+                    <Title
+                      headingLevel="h1"
+                      size="2xl"
+                      id="device-info-metadata-title"
+                    >
+                      Device metadata
+                    </Title>
+                  </CardTitle>
+                  <CardBody className={css(styles.card_body)}>
+                    <ViewMetaData
+                      ext={metadetaJson.ext}
+                      defaults={metadetaJson.default}
+                    />
+                  </CardBody>
+                </Card>
+              )}
             </GridItem>
           </Grid>
         )}

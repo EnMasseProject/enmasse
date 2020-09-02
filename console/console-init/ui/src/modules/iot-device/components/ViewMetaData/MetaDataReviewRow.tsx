@@ -8,6 +8,7 @@ import { StyleSheet, css } from "aphrodite";
 import { AngleRightIcon, AngleDownIcon } from "@patternfly/react-icons";
 import { GridItem, TextInput, Grid, Button } from "@patternfly/react-core";
 import { MetaDataReviewRows } from "./MetaDataReviewRows";
+import { uniqueId } from "utils";
 
 const styles = StyleSheet.create({
   grid_align: {
@@ -25,14 +26,12 @@ const styles = StyleSheet.create({
 interface IMetaDataReviewRowProps {
   value: any;
   prevKey?: string;
-  index?: number;
   viewAll?: boolean;
 }
 
 const MetaDataReviewRow: React.FunctionComponent<IMetaDataReviewRowProps> = ({
   value,
   prevKey,
-  index,
   viewAll = true
 }) => {
   const [isVisible, setIsVisible] = useState<boolean>(viewAll);
@@ -44,8 +43,8 @@ const MetaDataReviewRow: React.FunctionComponent<IMetaDataReviewRowProps> = ({
     return (
       <GridItem span={3} className={css(styles.grid_align)}>
         <TextInput
-          key={value + index}
-          id={value + index}
+          key={uniqueId()}
+          id={uniqueId()}
           type="text"
           value={value}
           isReadOnly={true}
