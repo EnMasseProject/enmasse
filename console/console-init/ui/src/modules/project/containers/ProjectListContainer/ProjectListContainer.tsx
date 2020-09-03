@@ -27,9 +27,14 @@ import {
   DELETE_IOT_PROJECT,
   TOGGLE_IOT_PROJECTS_STATUS,
   RETURN_ALL_PROJECTS,
+  RETURN_COUNT_PROJECTS,
   DOWNLOAD_CERTIFICATE
 } from "graphql-module";
-import { IAllProjectsResponse } from "schema/iot_project";
+import {
+  IAllProjectsResponse,
+  IAddressSpaceType,
+  IIotProjectType
+} from "schema/iot_project";
 import { POLL_INTERVAL, FetchPolicy } from "constant";
 
 export interface IProjectListContainerProps {
@@ -82,6 +87,15 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   const [
     setDeleteIoTProjectQueryVariables
   ] = useMutationQuery(DELETE_IOT_PROJECT, ["allProjects"]);
+
+  var project_count = useQuery<IAllProjectsResponse>(RETURN_COUNT_PROJECTS(), {
+    fetchPolicy: FetchPolicy.NETWORK_ONLY,
+    pollInterval: POLL_INTERVAL
+  });
+
+  const totalProjects = (project_count && project_count.data) || {
+    allProjects: { total: 0, objects: [] }
+  };
 
   const { loading, data } = useQuery<IAllProjectsResponse>(
     RETURN_ALL_PROJECTS(page, perPage, filter, undefined, sortBy),
@@ -252,8 +266,10 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
     });
   };
 
-  const getProjects = () => {
-    return projects?.map((project: any) => {
+  const getProjects = (
+    projects: Array<IAddressSpaceType | IIotProjectType>
+  ) => {
+    return projects.map((project: any) => {
       if (project.kind === "IoTProject") {
         const { metadata, iotStatus, enabled } = project || {};
         return {
@@ -287,52 +303,55 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
     });
   };
 
-  const projectList: IProject[] = getProjects();
+  const projectList: IProject[] = getProjects(projects);
+
+  const project_info =
+    totalProjects && getProjects(totalProjects.allProjects.objects || []);
 
   const ioTCount: IProjectCount = {
-    total: getFilteredProjectsCount(ProjectTypes.IOT, projectList),
+    total: getFilteredProjectsCount(ProjectTypes.IOT, project_info),
     failed: getFilteredProjectsCount(
       ProjectTypes.IOT,
-      projectList,
+      project_info,
       StatusTypes.FAILED
     ),
     active: getFilteredProjectsCount(
       ProjectTypes.IOT,
-      projectList,
+      project_info,
       StatusTypes.ACTIVE
     ),
     pending: getFilteredProjectsCount(
       ProjectTypes.IOT,
-      projectList,
+      project_info,
       StatusTypes.PENDING
     ),
     configuring: getFilteredProjectsCount(
       ProjectTypes.IOT,
-      projectList,
+      project_info,
       StatusTypes.CONFIGURING
     )
   };
 
   const msgCount: IProjectCount = {
-    total: getFilteredProjectsCount(ProjectTypes.MESSAGING, projectList),
+    total: getFilteredProjectsCount(ProjectTypes.MESSAGING, project_info),
     failed: getFilteredProjectsCount(
       ProjectTypes.MESSAGING,
-      projectList,
+      project_info,
       StatusTypes.FAILED
     ),
     active: getFilteredProjectsCount(
       ProjectTypes.MESSAGING,
-      projectList,
+      project_info,
       StatusTypes.ACTIVE
     ),
     pending: getFilteredProjectsCount(
       ProjectTypes.MESSAGING,
-      projectList,
+      project_info,
       StatusTypes.PENDING
     ),
     configuring: getFilteredProjectsCount(
       ProjectTypes.MESSAGING,
-      projectList,
+      project_info,
       StatusTypes.CONFIGURING
     )
   };

@@ -172,6 +172,66 @@ const RETURN_ALL_PROJECTS = (
   return ALL_PROJECTS;
 };
 
+const RETURN_COUNT_PROJECTS = () => {
+  const COUNT_PROJECTS = gql(`
+  query all_projects {
+  allProjects{  
+  total
+  objects {
+    ... on AddressSpace_consoleapi_enmasse_io_v1beta1 {
+      kind
+      metadata {
+        name
+        namespace
+        creationTimestamp
+      }
+      messagingStatus: status {
+        isReady 
+        phase
+        messages
+      }
+      spec{
+        plan{
+          spec{
+            displayName
+          }
+          metadata{
+            name
+          }
+        }
+        type
+        authenticationService{
+          name
+        }
+      }
+      addresses{
+        total
+      }
+      connections{
+        total
+      }
+    }
+    ... on IoTProject_iot_enmasse_io_v1alpha1 {
+      kind
+      metadata {
+        name
+        namespace
+        creationTimestamp
+      }
+      iotStatus: status{
+        phase
+        phaseReason 
+      }
+      enabled
+    }
+  }
+}
+}
+`);
+
+  return COUNT_PROJECTS;
+};
+
 const RETURN_ALL_PROJECTS_FOR_NAME_OR_NAMESPACE = (
   propertyName: string,
   value: string
@@ -210,4 +270,8 @@ const RETURN_ALL_PROJECTS_FOR_NAME_OR_NAMESPACE = (
   return all_proejcts;
 };
 
-export { RETURN_ALL_PROJECTS, RETURN_ALL_PROJECTS_FOR_NAME_OR_NAMESPACE };
+export {
+  RETURN_ALL_PROJECTS,
+  RETURN_ALL_PROJECTS_FOR_NAME_OR_NAMESPACE,
+  RETURN_COUNT_PROJECTS
+};

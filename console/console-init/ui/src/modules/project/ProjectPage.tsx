@@ -69,9 +69,7 @@ export default function ProjectPage() {
   const [msgCount, setMsgCount] = useState<IProjectCount>(
     setInitialProjcetCount()
   );
-  const [ioTCount, setIoTCount] = useState<IProjectCount>(
-    setInitialProjcetCount()
-  );
+  const [ioTCount, setIoTCount] = useState(setInitialProjcetCount());
   const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -288,6 +286,7 @@ export default function ProjectPage() {
       setMsgCount(count);
     }
   };
+  console.log(setCount);
   return (
     <>
       <Page>
