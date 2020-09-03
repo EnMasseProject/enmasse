@@ -378,7 +378,7 @@ public class AddressController implements Watcher<Address> {
 
             String expiry = address.getSpec().getExpiry();
             if (expiry != null) {
-                if (!Set.of("queue", "subscription").contains(address.getSpec().getType())) {
+                if (!Set.of("queue", "topic").contains(address.getSpec().getType())) {
                     String errorMessage = String.format(
                             "Address '%s' (resource name '%s') of type '%s' cannot reference an expiry address.",
                             address.getSpec().getAddress(),
@@ -864,9 +864,6 @@ public class AddressController implements Watcher<Address> {
                         if (address.getSpec().getDeadletter() != null) {
                             ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getDeadletter(), queueNames, address.getSpec().getDeadletter());
                         }
-                        if (address.getSpec().getExpiry() != null) {
-                            ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getExpiry(), queueNames, address.getSpec().getExpiry());
-                        }
                     }
                     ok += RouterStatus.checkForwarderLinks(address, routerStatusList);
                     updateMessageRedeliveryStatus(addressPlan, address);
@@ -879,7 +876,12 @@ public class AddressController implements Watcher<Address> {
                     if (isPooled(addressPlan)) {
                         for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
                             Set<String> addressNames = clusterAddresses.get(brokerStatus.getClusterId());
+                            Set<String> queueNames = clusterQueues.get(brokerStatus.getClusterId());
                             ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getAddress(), null, null);
+
+                            if (address.getSpec().getExpiry() != null) {
+                                ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getExpiry(), queueNames, address.getSpec().getExpiry());
+                            }
                         }
                         ok += RouterStatus.checkActiveLinkRoute(address, routerStatusList);
                     } else {

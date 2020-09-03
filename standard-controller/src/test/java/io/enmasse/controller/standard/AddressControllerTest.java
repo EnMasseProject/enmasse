@@ -790,7 +790,7 @@ public class AddressControllerTest {
                 .endMetadata()
                 .withNewSpec()
                 .withAddress("a1")
-                .withExpiry("illegal")
+                .withExpiry("legal")
                 .withType("topic")
                 .withPlan("small-topic")
                 .endSpec()
@@ -802,7 +802,7 @@ public class AddressControllerTest {
 
         sub = captured.get(0);
         assertEquals(Phase.Pending, sub.getStatus().getPhase());
-        assertThat(sub.getStatus().getMessages(), is(singletonList("Address 'a1' (resource name 'myspace.a1') of type 'topic' cannot reference an expiry address.")));
+        assertThat(sub.getStatus().getMessages(), is(singletonList("Address 'a1' (resource name 'myspace.a1') references an expiry address 'legal' that does not exist.")));
     }
 
     @Test
