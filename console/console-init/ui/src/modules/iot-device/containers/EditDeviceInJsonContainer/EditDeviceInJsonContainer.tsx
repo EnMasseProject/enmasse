@@ -39,7 +39,7 @@ export const EditDeviceInJsonContainer: React.FC<{
   const { projectname, deviceid, namespace } = useParams();
   const [deviceJson, setDeviceJson] = useState<any>();
   const [hasError, setHasError] = useState<boolean>(false);
-  const [isDisabledSaveButton, setDisabledSaveButton] = useState<boolean>(true);
+  const [isSaveDisabled, setIsSaveDisabled] = useState<boolean>(true);
 
   const queryResolver = `
     devices{
@@ -124,8 +124,8 @@ export const EditDeviceInJsonContainer: React.FC<{
   };
 
   const setDeviceDetail = (value: string | undefined) => {
-    if (isDisabledSaveButton && deviceJson?.trim()) {
-      setDisabledSaveButton(false);
+    if (isSaveDisabled && deviceJson?.trim()) {
+      setIsSaveDisabled(false);
     }
     setDeviceJson(value);
   };
@@ -154,7 +154,7 @@ export const EditDeviceInJsonContainer: React.FC<{
             id="edit-device-json-container-save-button"
             variant={ButtonVariant.primary}
             onClick={onSave}
-            isDisabled={isDisabledSaveButton}
+            isDisabled={isSaveDisabled}
           >
             Save
           </Button>

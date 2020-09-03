@@ -50,7 +50,7 @@ export const AddCredentialsContainer: React.FC<{
     await setCredentialQueryVariable(variable);
   };
 
-  const shouldDisabledSaveBUtton = () => {
+  const shouldDisabledSaveButton = () => {
     const credential = credentials?.[0];
     if (
       credential?.["auth-id"]?.trim() &&
@@ -77,7 +77,7 @@ export const AddCredentialsContainer: React.FC<{
               id="add-credentials-container-save-button"
               variant={ButtonVariant.primary}
               onClick={onSave}
-              isDisabled={shouldDisabledSaveBUtton()}
+              isDisabled={shouldDisabledSaveButton()}
             >
               Save
             </Button>

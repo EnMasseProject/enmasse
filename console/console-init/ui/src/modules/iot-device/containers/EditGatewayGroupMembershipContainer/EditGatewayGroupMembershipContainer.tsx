@@ -16,9 +16,7 @@ export const EditGatewayGroupMembershipContainer: React.FC<{
 }> = ({ onCancel }) => {
   const { projectname, deviceid, namespace } = useParams();
   const [groupMembers, setGroupMembers] = useState<string[]>([]);
-  const [isDisabledSaveButton, setIsDisabledSaveButton] = useState<boolean>(
-    true
-  );
+  const [isSaveDisabled, setIsSaveDisabled] = useState<boolean>(true);
 
   const queryResolver = `
     devices{
@@ -46,8 +44,8 @@ export const EditGatewayGroupMembershipContainer: React.FC<{
   };
 
   const setGatewayGroups = (groups: string[]) => {
-    if (isDisabledSaveButton && groupMembers?.length > 0) {
-      setIsDisabledSaveButton(false);
+    if (isSaveDisabled && groupMembers?.length > 0) {
+      setIsSaveDisabled(false);
     }
     setGroupMembers(groups);
   };
@@ -66,7 +64,7 @@ export const EditGatewayGroupMembershipContainer: React.FC<{
             id="connected-directly-next-button"
             variant={ButtonVariant.primary}
             onClick={onSave}
-            isDisabled={isDisabledSaveButton}
+            isDisabled={isSaveDisabled}
           >
             Save
           </Button>
