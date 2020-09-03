@@ -151,7 +151,8 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
       }
       if (
         type?.toLowerCase() === "subscription" ||
-        type?.toLowerCase() === "queue"
+        type?.toLowerCase() === "queue" ||
+        type?.toLowerCase() === "topic"
       ) {
         const deadletterAddresses = await client.query<IAddressResponse>({
           query: RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE(

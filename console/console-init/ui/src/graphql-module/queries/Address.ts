@@ -508,7 +508,8 @@ const RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE = (
   }
   if (
     type.trim().toLowerCase() === "subscription" ||
-    type.trim().toLowerCase() === "queue"
+    type.trim().toLowerCase() === "queue" ||
+    type.trim().toLowerCase() === "topic"
   ) {
     filter += " AND `$.spec.type` = 'deadletter'";
   }

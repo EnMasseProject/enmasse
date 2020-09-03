@@ -328,6 +328,11 @@ export const EditAddress: React.FunctionComponent = () => {
                 ))}
               </FormSelect>
             </FormGroup>
+          </>
+        )}
+        {(address.type?.trim() === "topic" ||
+          address.type?.trim() === "queue") && (
+          <>
             <FormGroup
               label="Expiry Address"
               fieldId="edit-address-expiry-addr-form-select"

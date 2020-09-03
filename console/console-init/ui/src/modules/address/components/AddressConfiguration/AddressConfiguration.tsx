@@ -155,14 +155,17 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                 />
               </FormGroup>
             )}
+            {(type?.toLocaleLowerCase() === "topic" ||
+              type?.toLocaleLowerCase() === "queue") && (
+              <ExpiryAddress
+                expiryAddress={expiryAddress}
+                onExpiryAddressSelect={onExpiryAddressSelect}
+                deadletterOptions={deadletterOptions}
+              />
+            )}
             {(type?.toLowerCase() === "subscription" ||
               type?.toLowerCase() === "queue") && (
               <>
-                <ExpiryAddress
-                  expiryAddress={expiryAddress}
-                  onExpiryAddressSelect={onExpiryAddressSelect}
-                  deadletterOptions={deadletterOptions}
-                />
                 <DeadLetterAddress
                   deadletterAddress={deadletter}
                   onDeadletterSelect={onDeadletterSelect}

@@ -1212,18 +1212,23 @@ function createAddress(addr, addressSpaceName) {
         var deadletterNames  = deadletters.map(t => t.spec.address);
         throw `Unrecognised deadletter address '${addr.spec.deadletter}', known ones are : '${deadletterNames}'`;
       }
-      if (addr.spec.expiry && deadletters.find(t => t.spec.address === addr.spec.expiry) === undefined) {
-        var deadletterNames  = deadletters.map(t => t.spec.address);
-        throw `Unrecognised expiry address '${addr.spec.expiry}', known ones are : '${deadletterNames}'`;
-      }
   } else {
       if (addr.spec.deadletter) {
         throw `spec.deadletter is not allowed for the address type '${addr.spec.type}'.`;
       }
-      if (addr.spec.expiry) {
-        throw `spec.expiry is not allowed for the address type '${addr.spec.type}'.`;
-      }
   }
+
+  if (addr.spec.type === 'queue' || addr.spec.type === 'topic') {
+    var deadletters  = addresses.filter(a => a.metadata.name.startsWith(addressSpaceName) && a.spec.type === "deadletter");
+    if (addr.spec.expiry && deadletters.find(t => t.spec.address === addr.spec.expiry) === undefined) {
+      var deadletterNames  = deadletters.map(t => t.spec.address);
+      throw `Unrecognised expiry address '${addr.spec.expiry}', known ones are : '${deadletterNames}'`;
+    }
+} else {
+    if (addr.spec.expiry) {
+      throw `spec.expiry is not allowed for the address type '${addr.spec.type}'.`;
+    }
+}
 
   if (addresses.find(existing => addr.metadata.name === existing.metadata.name && addr.metadata.namespace === existing.metadata.namespace) !== undefined) {
     throw `Address with name  '${addr.metadata.name} already exists in address space ${addressSpaceName}`;
