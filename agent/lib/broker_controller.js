@@ -773,13 +773,8 @@ BrokerController.prototype.generate_address_settings = function (address, global
             }
         }
 
-        if (address.expiry && (address.type === 'queue' || address.type === 'deadletter' || 'topic')) {
-            addressSettings.expiryAddress = address.expiry;
-            upd++;
-        }
-
-        var notTopic = address.type === 'subscription' || address.type === 'queue' || address.type === 'deadletter';
-        if (notTopic) {
+        var notSubscription = address.type === 'topic' || address.type === 'queue' || address.type === 'deadletter';
+        if (notSubscription) {
             if (address.deadletter) {
                 addressSettings.DLA = address.deadletter;
                 // Specify default redelivery settings by default when using a DLQ. These are based
@@ -789,6 +784,10 @@ BrokerController.prototype.generate_address_settings = function (address, global
                 addressSettings.redeliveryMultiplier = 1.0;
                 addressSettings.maxRedeliveryDelay = 0;
 
+                upd++;
+            }
+            if (address.expiry) {
+                addressSettings.expiryAddress = address.expiry;
                 upd++;
             }
             if (address.status.messageRedelivery) {

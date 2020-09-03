@@ -340,7 +340,7 @@ public class AddressController implements Watcher<Address> {
 
             String deadletter = address.getSpec().getDeadletter();
             if (deadletter != null) {
-                if (!Set.of("queue", "subscription").contains(address.getSpec().getType())) {
+                if (!Set.of("queue", "topic").contains(address.getSpec().getType())) {
                     String errorMessage = String.format(
                             "Address '%s' (resource name '%s') of type '%s' cannot reference a dead letter address.",
                             address.getSpec().getAddress(),
@@ -861,12 +861,8 @@ public class AddressController implements Watcher<Address> {
                         Set<String> addressNames = clusterAddresses.get(brokerStatus.getClusterId());
                         Set<String> queueNames = clusterQueues.get(brokerStatus.getClusterId());
                         ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getTopic(), queueNames, address.getSpec().getAddress());
-                        if (address.getSpec().getDeadletter() != null) {
-                            ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getDeadletter(), queueNames, address.getSpec().getDeadletter());
-                        }
                     }
                     ok += RouterStatus.checkForwarderLinks(address, routerStatusList);
-                    updateMessageRedeliveryStatus(addressPlan, address);
                     break;
                 case "topic":
                     ok += checkBrokerStatus(brokerStatusCollector, address, clusterOk, clusterAddresses, clusterQueues);
@@ -888,6 +884,7 @@ public class AddressController implements Watcher<Address> {
                         ok += RouterStatus.checkConnection(address, routerStatusList);
                     }
                     updateMessageTtlStatus(addressPlan, address);
+                    updateMessageRedeliveryStatus(addressPlan, address);
                     break;
                 case "anycast":
                 case "multicast":
