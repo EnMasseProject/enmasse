@@ -286,7 +286,7 @@ export default function ProjectPage() {
       setMsgCount(count);
     }
   };
-  console.log(setCount);
+
   return (
     <>
       <Page>
