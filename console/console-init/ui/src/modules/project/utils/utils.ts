@@ -287,13 +287,11 @@ const getQueryVariableForCreateMessagingProject = (
             privateKey &&
             privateKey.trim() !== ""
           ) {
-            try {
-              endpoint.certificate = {
-                ...endpoint.certificate,
-                tlsKey: btoa(privateKey?.trim()),
-                tlsCert: btoa(certValue?.trim())
-              };
-            } catch (err) {}
+            endpoint.certificate = {
+              ...endpoint.certificate,
+              tlsKey: btoa(privateKey?.trim()),
+              tlsCert: btoa(certValue?.trim())
+            };
           }
         }
         if (addRoutes) {
