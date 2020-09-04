@@ -93,7 +93,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
     pollInterval: POLL_INTERVAL
   });
 
-  const totalProjects = (project_count && project_count.data) || {
+  const projectsData = (project_count && project_count.data) || {
     allProjects: { total: 0, objects: [] }
   };
 
@@ -306,7 +306,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   const projectList: IProject[] = getProjects(projects);
 
   const projectInfo =
-    totalProjects && getProjects(totalProjects.allProjects.objects || []);
+    projectsData && getProjects(projectsData.allProjects.objects || []);
 
   const ioTCount: IProjectCount = {
     total: getFilteredProjectsCount(ProjectTypes.IOT, projectInfo),
