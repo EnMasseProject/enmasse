@@ -27,7 +27,7 @@ import { IProjectCount, ProjectHeaderCard, IProject } from "./components";
 import { useMutationQuery, useSearchParamsPageChange } from "hooks";
 import {
   initialiseFilterForProject,
-  setInitialProjcetCount,
+  setInitialProjectCount,
   ProjectType,
   getDetailForDeleteDialog,
   getHeaderForDeleteDialog,
@@ -67,9 +67,9 @@ export default function ProjectPage() {
   ]);
   const [totalProjects, setTotalProjects] = useState<number>(0);
   const [msgCount, setMsgCount] = useState<IProjectCount>(
-    setInitialProjcetCount()
+    setInitialProjectCount()
   );
-  const [ioTCount, setIoTCount] = useState(setInitialProjcetCount());
+  const [ioTCount, setIoTCount] = useState(setInitialProjectCount());
   const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);

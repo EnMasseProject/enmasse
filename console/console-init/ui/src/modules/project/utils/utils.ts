@@ -75,7 +75,7 @@ const initialiseFilterForProject = () => {
   return filter;
 };
 
-const setInitialProjcetCount = () => {
+const setInitialProjectCount = () => {
   const count: IProjectCount = {
     total: 0,
     active: 0,
@@ -287,11 +287,13 @@ const getQueryVariableForCreateMessagingProject = (
             privateKey &&
             privateKey.trim() !== ""
           ) {
-            endpoint.certificate = {
-              ...endpoint.certificate,
-              tlsKey: btoa(privateKey?.trim()),
-              tlsCert: btoa(certValue?.trim())
-            };
+            try {
+              endpoint.certificate = {
+                ...endpoint.certificate,
+                tlsKey: btoa(privateKey?.trim()),
+                tlsCert: btoa(certValue?.trim())
+              };
+            } catch (err) {}
           }
         }
         if (addRoutes) {
@@ -328,7 +330,7 @@ export {
   typeOptions,
   filterMenuItems,
   ProjectType,
-  setInitialProjcetCount,
+  setInitialProjectCount,
   getFilteredProjectsCount,
   getDetailForDeleteDialog,
   getHeaderForDeleteDialog,

@@ -305,53 +305,53 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
 
   const projectList: IProject[] = getProjects(projects);
 
-  const project_info =
+  const projectInfo =
     totalProjects && getProjects(totalProjects.allProjects.objects || []);
 
   const ioTCount: IProjectCount = {
-    total: getFilteredProjectsCount(ProjectTypes.IOT, project_info),
+    total: getFilteredProjectsCount(ProjectTypes.IOT, projectInfo),
     failed: getFilteredProjectsCount(
       ProjectTypes.IOT,
-      project_info,
+      projectInfo,
       StatusTypes.FAILED
     ),
     active: getFilteredProjectsCount(
       ProjectTypes.IOT,
-      project_info,
+      projectInfo,
       StatusTypes.ACTIVE
     ),
     pending: getFilteredProjectsCount(
       ProjectTypes.IOT,
-      project_info,
+      projectInfo,
       StatusTypes.PENDING
     ),
     configuring: getFilteredProjectsCount(
       ProjectTypes.IOT,
-      project_info,
+      projectInfo,
       StatusTypes.CONFIGURING
     )
   };
 
   const msgCount: IProjectCount = {
-    total: getFilteredProjectsCount(ProjectTypes.MESSAGING, project_info),
+    total: getFilteredProjectsCount(ProjectTypes.MESSAGING, projectInfo),
     failed: getFilteredProjectsCount(
       ProjectTypes.MESSAGING,
-      project_info,
+      projectInfo,
       StatusTypes.FAILED
     ),
     active: getFilteredProjectsCount(
       ProjectTypes.MESSAGING,
-      project_info,
+      projectInfo,
       StatusTypes.ACTIVE
     ),
     pending: getFilteredProjectsCount(
       ProjectTypes.MESSAGING,
-      project_info,
+      projectInfo,
       StatusTypes.PENDING
     ),
     configuring: getFilteredProjectsCount(
       ProjectTypes.MESSAGING,
-      project_info,
+      projectInfo,
       StatusTypes.CONFIGURING
     )
   };
