@@ -2,7 +2,7 @@
  * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router";
 import { useQuery } from "@apollo/react-hooks";
 import { Flex, FlexItem, Button, ButtonVariant } from "@patternfly/react-core";
@@ -15,6 +15,9 @@ export const EditGatewayGroupMembershipContainer: React.FC<{
   onCancel: () => void;
 }> = ({ onCancel }) => {
   const { projectname, deviceid, namespace } = useParams();
+  const [groupMembers, setGroupMembers] = useState<string[]>([]);
+  const [isSaveDisabled, setIsSaveDisabled] = useState<boolean>(true);
+
   const queryResolver = `
     devices{
       registration{      
@@ -40,12 +43,20 @@ export const EditGatewayGroupMembershipContainer: React.FC<{
      */
   };
 
+  const setGatewayGroups = (groups: string[]) => {
+    if (isSaveDisabled && groupMembers?.length > 0) {
+      setIsSaveDisabled(false);
+    }
+    setGroupMembers(groups);
+  };
+
   return (
     <>
       <AddGatewayGroupMembership
         id="edit-gateway-group-membership"
         gatewayGroups={registration?.memberOf}
         placeholderText="Input new or existing gateway group name"
+        returnGatewayGroups={setGatewayGroups}
       />
       <Flex>
         <FlexItem>
@@ -53,6 +64,7 @@ export const EditGatewayGroupMembershipContainer: React.FC<{
             id="connected-directly-next-button"
             variant={ButtonVariant.primary}
             onClick={onSave}
+            isDisabled={isSaveDisabled}
           >
             Save
           </Button>

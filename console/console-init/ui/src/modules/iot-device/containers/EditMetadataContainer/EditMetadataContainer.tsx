@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Grid,
   GridItem,
@@ -14,7 +14,7 @@ import {
   Title
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
-import { CreateMetadata } from "modules/iot-device/components";
+import { CreateMetadata, IMetadataProps } from "modules/iot-device/components";
 
 const styles = StyleSheet.create({
   title: {
@@ -33,6 +33,17 @@ export interface IEditMetadataContainerProps {
 export const EditMetadataContainer: React.FC<IEditMetadataContainerProps> = ({
   onCancel
 }) => {
+  const [metadata, setMetadata] = useState<IMetadataProps[]>([]);
+  /**
+   * Todo: add get metadata list query
+   */
+  const shouldDisabledSaveButton = () => {
+    if (metadata?.length > 0) {
+      return false;
+    }
+    return true;
+  };
+
   const onSave = () => {
     /**
      * TODO: implement save metadata query
@@ -49,7 +60,10 @@ export const EditMetadataContainer: React.FC<IEditMetadataContainerProps> = ({
         <br />
         <Grid hasGutter>
           <GridItem span={6}>
-            <CreateMetadata />
+            <CreateMetadata
+              metadataList={[]}
+              returnMetadataList={setMetadata}
+            />
           </GridItem>
         </Grid>
         <br />
@@ -59,6 +73,7 @@ export const EditMetadataContainer: React.FC<IEditMetadataContainerProps> = ({
               id="edit-metadata-save-button"
               variant={ButtonVariant.primary}
               onClick={onSave}
+              isDisabled={shouldDisabledSaveButton()}
             >
               Save
             </Button>

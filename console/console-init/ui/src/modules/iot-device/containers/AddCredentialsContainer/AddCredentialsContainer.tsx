@@ -50,6 +50,17 @@ export const AddCredentialsContainer: React.FC<{
     await setCredentialQueryVariable(variable);
   };
 
+  const shouldDisabledSaveButton = () => {
+    const credential = credentials?.[0];
+    if (
+      credential?.["auth-id"]?.trim() &&
+      credential?.secrets?.[0]?.["pwd-hash"]?.trim()
+    ) {
+      return false;
+    }
+    return true;
+  };
+
   return (
     <Grid hasGutter>
       <GridItem span={6}>
@@ -66,6 +77,7 @@ export const AddCredentialsContainer: React.FC<{
               id="add-credentials-container-save-button"
               variant={ButtonVariant.primary}
               onClick={onSave}
+              isDisabled={shouldDisabledSaveButton()}
             >
               Save
             </Button>

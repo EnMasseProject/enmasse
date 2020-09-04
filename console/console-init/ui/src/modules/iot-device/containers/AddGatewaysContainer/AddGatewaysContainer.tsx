@@ -11,8 +11,8 @@ import { StyleSheet, css } from "aphrodite";
 import { AddGateways } from "modules/iot-device/components";
 
 const styles = StyleSheet.create({
-  button_padding: {
-    paddingTop: 100
+  min_height: {
+    "min-height": "35rem"
   }
 });
 
@@ -23,14 +23,6 @@ export const AddGatewaysContainer: React.FC<{
   const [gatewayDevices, addGatewayDevices] = useState<string[]>([]);
   const [gatewayGroups, addGatewayGroups] = useState<string[]>([]);
 
-  const getGatewayDevices = (gateway: string[]) => {
-    addGatewayDevices(gateway);
-  };
-
-  const getGatewayGroups = (gateway: string[]) => {
-    addGatewayGroups(gateway);
-  };
-
   const onSave = () => {
     /**
      * TODO: implement save query
@@ -38,19 +30,29 @@ export const AddGatewaysContainer: React.FC<{
     onCancel();
   };
 
+  const shouldDisabledSaveBUtton = () => {
+    if (gatewayGroups?.length > 0 || gatewayDevices?.length > 0) {
+      return false;
+    }
+    return true;
+  };
+
   return (
     <>
-      <AddGateways
-        header={`Add gateways of device ${deviceid}`}
-        returnGatewayDevices={getGatewayDevices}
-        returnGatewayGroups={getGatewayGroups}
-      />
-      <Flex className={css(styles.button_padding)}>
+      <div className={css(styles.min_height)}>
+        <AddGateways
+          header={`Add gateways of device ${deviceid}`}
+          returnGatewayDevices={addGatewayDevices}
+          returnGatewayGroups={addGatewayGroups}
+        />
+      </div>
+      <Flex>
         <FlexItem>
           <Button
             id="add-gateways-container-save-button"
             variant={ButtonVariant.primary}
             onClick={onSave}
+            isDisabled={shouldDisabledSaveBUtton()}
           >
             Save
           </Button>
@@ -58,7 +60,7 @@ export const AddGatewaysContainer: React.FC<{
         <FlexItem>
           <Button
             id="add-gateways-container-cancel-button"
-            variant={ButtonVariant.link}
+            variant={ButtonVariant.secondary}
             onClick={onCancel}
           >
             Cancel
