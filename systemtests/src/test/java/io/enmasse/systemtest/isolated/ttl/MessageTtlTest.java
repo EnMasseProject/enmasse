@@ -219,7 +219,6 @@ class MessageTtlTest extends TestBase implements ITestBaseIsolated {
                         .endMetadata()
                         .withNewSpec()
                         .withType(AddressType.SUBSCRIPTION.toString())
-                        .withMessageTtl(addrTtl)
                         .withAddress("message-ttl-sub")
                         .withTopic(addr.getSpec().getAddress())
                         .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
