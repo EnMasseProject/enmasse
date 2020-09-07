@@ -17,11 +17,11 @@ const MetadataReviewRows: React.FC<IMetadataReviewRowProps> = ({
 }) => {
   return (
     <>
-      {metadataRows.map((val, index) => (
+      {metadataRows.map((metadataRow, index) => (
         <Fragment key={`fragment-index-${index}`}>
-          <MetadataReviewRow metadataRow={val} prevKey={prevkey} />
-          {val.type === DataType.ARRAY ||
-            (val.type === DataType.OBJECT && <br />)}
+          <MetadataReviewRow metadataRow={metadataRow} prevKey={prevkey} />
+          {metadataRow.type === DataType.ARRAY ||
+            (metadataRow.type === DataType.OBJECT && <br />)}
         </Fragment>
       ))}
     </>
