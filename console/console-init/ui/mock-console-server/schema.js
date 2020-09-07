@@ -663,6 +663,11 @@ const typeDefs = gql`
       iotproject: ObjectMeta_v1_Input!
       device: Device_iot_console_input!
     ): Device
+    patchIotDevice(
+      iotproject: ObjectMeta_v1_Input!
+      deviceIds: [String]!
+      patch: String!
+    ): String
 
     setCredentialsForDevice(
       iotproject: ObjectMeta_v1_Input!

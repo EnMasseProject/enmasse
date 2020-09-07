@@ -1167,6 +1167,33 @@ mutation {
 }
 ```
 
+## Patch iot device
+
+Note : the patch will be applied to the registration section of the device.
+Status and credentials cannot be updated through json patch
+
+Multiples devices can be patched ( the same patch is applied.)
+
+```
+mutation {
+  patchIotDevice (
+    iotproject: { name: "iotProjectFrance", namespace:"app1_ns" },
+    deviceIds: ["10", "aaa"],
+    patch: "[{\"op\": \"replace\", \"path\": \"/enabled\", \"value\": \"false\"}]"
+  )
+}
+```
+
+The response contains the result for each device :
+
+```
+{
+  "data": {
+    "patchIotDevice": "{\"10\":{\"status\":204,\"resource-version\":\"245750d0-f0f4-11ea-95e7-c76a5c933f9e\"},\"aaa\":{\"status\":404,\"error-message\":\"device 'aaa' cannot be retrieved\"}}"
+  }
+}
+```
+
 ## Set credentials for iot device
 
 ```

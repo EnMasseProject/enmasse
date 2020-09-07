@@ -154,6 +154,7 @@ type Mutation {
   createIotDevice(iotproject: ObjectMeta_v1_Input!, device: Device_iot_console_input!): Device
   deleteIotDevices(iotproject: ObjectMeta_v1_Input!, deviceIds: [String!]!): Boolean
   updateIotDevice(iotproject: ObjectMeta_v1_Input!, device: Device_iot_console_input!): Device
+  patchIotDevice(iotproject: ObjectMeta_v1_Input!, deviceIds: [String]!, patch: String!): String
 
   setCredentialsForDevice(iotproject: ObjectMeta_v1_Input!, deviceId: String!, jsonData: [String!]!): Boolean
   deleteCredentialsForDevice(iotproject: ObjectMeta_v1_Input!, deviceId: String!): Boolean

@@ -1967,7 +1967,7 @@ function createIotProject(pj) {
 
 function deleteIotProject(iotProject) {
   let pjIndex = getIotProjectIndex(iotProject.name);
-  let devIndex = getIotDevicesProjectIndex(iotProject.name);
+  let devIndex = getIotDevicesIndexForProject(iotProject.name);
 
   // delete iot devices for this project
   iotdevices.splice(devIndex, 1);
@@ -2012,9 +2012,7 @@ function getMockIotDownstreamMessagingAddresses() {
 }
 
 function patchIotProject(metadata, jsonPatch, patchType) {
-  var index = getIotDevicesProjectIndex(metadata.name);
-
-  verifyPatchType(patchType);
+  var index = getIotDevicesIndexForProject(metadata.name);
 
   var patch = JSON.parse(jsonPatch);
   var current = JSON.parse(JSON.stringify(iotProjects[index]));
@@ -2091,7 +2089,7 @@ function getIotProjectIndex(projectName) {
   return index;
 }
 
-function getIotDevicesProjectIndex(projectName) {
+function getIotDevicesIndexForProject(projectName) {
   let devIndex = iotdevices.findIndex(
     existing => projectName === existing.project
   );
@@ -2102,7 +2100,7 @@ function getIotDevicesProjectIndex(projectName) {
 }
 
 function createIotDevice(iotProject, newDevice) {
-  let devIndex = getIotDevicesProjectIndex(iotProject);
+  let devIndex = getIotDevicesIndexForProject(iotProject);
 
   if (
     iotdevices[devIndex].devices.find(
@@ -2119,7 +2117,7 @@ function createIotDevice(iotProject, newDevice) {
 }
 
 function updateIotDevice(iotProject, device) {
-  let pjIndex = getIotDevicesProjectIndex(iotProject);
+  let pjIndex = getIotDevicesIndexForProject(iotProject);
 
   let devIndex = iotdevices[pjIndex].devices.findIndex(
     d => d.deviceId === device.deviceId
@@ -2135,8 +2133,34 @@ function updateIotDevice(iotProject, device) {
   return iotdevices[pjIndex].devices[devIndex];
 }
 
+function patchIotDevice(iotProject, id, jsonPatch) {
+  let pjIndex = getIotDevicesIndexForProject(iotProject);
+  let devIndex = iotdevices[pjIndex].devices.findIndex(d => d.deviceId === id);
+
+  if (devIndex < 0) {
+    return {
+      status: 404,
+      "error-message": "device '" + id + "' cannot be retrieved"
+    };
+  }
+
+  var current = JSON.parse(
+    JSON.stringify(iotdevices[pjIndex].devices[devIndex].registration)
+  );
+  var patch = JSON.parse(jsonPatch);
+  var patched = applyPatch(current, patch);
+  if (patched.newDocument) {
+    iotdevices[pjIndex].devices[devIndex].registration = current;
+  } else {
+    return { status: 500, "error-message": "could not patch device" };
+  }
+
+  console.log(getIotDevice(iotProject, id));
+  return { status: 204, "resource-version": uuidv1() };
+}
+
 function deleteIotDevice(iotProject, deviceId) {
-  let pjIndex = getIotDevicesProjectIndex(iotProject);
+  let pjIndex = getIotDevicesIndexForProject(iotProject);
 
   let devIndex = iotdevices[pjIndex].devices.findIndex(
     d => d.deviceId === deviceId
@@ -2159,8 +2183,8 @@ function getIotDeviceStatusSection() {
 
 createIotDevice("iotProjectFrance", {
   deviceId: "10",
-  enabled: true,
   registration: {
+    enabled: true,
     via: [],
     viaGroups: [],
     memberOf: [],
@@ -2196,8 +2220,8 @@ createIotDevice("iotProjectFrance", {
 
 createIotDevice("iotProjectFrance", {
   deviceId: "12",
-  enabled: true,
   registration: {
+    enabled: true,
     via: ["device-1", "device-2"],
     viaGroups: ["Group 1", "Group 2", "Group 3", "Group 4", "Group 5"],
     memberOf: ["Group XI", "Group XII"],
@@ -2585,6 +2609,14 @@ const resolvers = {
     },
     updateIotDevice: (parent, args) => {
       return updateIotDevice(args.iotproject.name, args.device);
+    },
+    patchIotDevice: (parent, args) => {
+      let response = {};
+      args.deviceIds.forEach(id => {
+        let res = patchIotDevice(args.iotproject.name, id, args.patch);
+        response[id] = res;
+      });
+      return JSON.stringify(response);
     },
     setCredentialsForDevice: (parent, args) => {
       setCredentials(args.iotproject.name, args.deviceId, args.jsonData);
