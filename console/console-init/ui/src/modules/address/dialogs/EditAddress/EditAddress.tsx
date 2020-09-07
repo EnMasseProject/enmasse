@@ -23,7 +23,7 @@ import {
   RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE
 } from "graphql-module/queries";
 import { IAddressResponse } from "schema/ResponseTypes";
-import { FetchPolicy } from "constant";
+import { FetchPolicy, AddressTypes } from "constant";
 import { IDropdownOption } from "components";
 interface IAddressPlans {
   addressPlans: Array<{
@@ -274,7 +274,7 @@ export const EditAddress: React.FunctionComponent = () => {
             <FormSelectOption value={address.type} label={address.type} />
           </FormSelect>
         </FormGroup>
-        {address.type?.trim() === "subscription" && (
+        {address.type?.trim() === AddressTypes.SUBSCRIPTION && (
           <FormGroup label="Topic" fieldId="edit-address-topic-form-select">
             <FormSelect
               isDisabled
@@ -302,8 +302,8 @@ export const EditAddress: React.FunctionComponent = () => {
             ))}
           </FormSelect>
         </FormGroup>
-        {(address.type?.trim() === "subscription" ||
-          address.type?.trim() === "queue") && (
+        {(address.type?.trim() === AddressTypes.SUBSCRIPTION ||
+          address.type?.trim() === AddressTypes.QUEUE) && (
           <>
             <FormGroup
               label="Deadletter Address"
@@ -330,8 +330,8 @@ export const EditAddress: React.FunctionComponent = () => {
             </FormGroup>
           </>
         )}
-        {(address.type?.trim() === "topic" ||
-          address.type?.trim() === "queue") && (
+        {(address.type?.trim() === AddressTypes.TOPIC ||
+          address.type?.trim() === AddressTypes.QUEUE) && (
           <>
             <FormGroup
               label="Expiry Address"

@@ -7,6 +7,7 @@ import gql from "graphql-tag";
 import { ISortBy } from "@patternfly/react-table";
 import { removeForbiddenChars } from "utils";
 import { generateFilterPattern } from "./query";
+import { AddressTypes } from "constant";
 
 const DELETE_ADDRESS = gql`
   mutation delete_addr($a: [ObjectMeta_v1_Input!]!) {
@@ -507,9 +508,9 @@ const RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE = (
     filter += "`$.metadata.namespace` = '" + namespace + "'";
   }
   if (
-    type.trim().toLowerCase() === "subscription" ||
-    type.trim().toLowerCase() === "queue" ||
-    type.trim().toLowerCase() === "topic"
+    type.trim().toLowerCase() === AddressTypes.SUBSCRIPTION ||
+    type.trim().toLowerCase() === AddressTypes.QUEUE ||
+    type.trim().toLowerCase() === AddressTypes.TOPIC
   ) {
     filter += " AND `$.spec.type` = 'deadletter'";
   }
@@ -551,7 +552,7 @@ const RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION = (
   if (namespace && namespace.trim() !== "") {
     filter += "`$.metadata.namespace` = '" + namespace + "'";
   }
-  if (type.trim().toLowerCase() === "subscription") {
+  if (type.trim().toLowerCase() === AddressTypes.SUBSCRIPTION) {
     filter += " AND `$.spec.type` = 'topic'";
   }
   const ALL_TOPICS_FOR_ADDRESS_SPACE = gql`

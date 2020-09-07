@@ -16,7 +16,7 @@ import {
 import { IDropdownOption } from "components";
 import { useStoreContext, types } from "context-state-reducer";
 import { IAddressSpacesResponse } from "schema/ResponseTypes";
-import { FetchPolicy } from "constant";
+import { FetchPolicy, AddressTypes } from "constant";
 import { messagingAddressNameRegexp } from "types/Configs";
 
 export const CreateAddress: React.FunctionComponent = () => {
@@ -92,7 +92,8 @@ export const CreateAddress: React.FunctionComponent = () => {
       isNameValid &&
       plan.trim() !== "" &&
       addressType.trim() !== "" &&
-      (addressType.toLowerCase() === "subscription") === (topic.trim() !== "")
+      (addressType.toLowerCase() === AddressTypes.SUBSCRIPTION) ===
+        (topic.trim() !== "")
     ) {
       return true;
     }
@@ -104,7 +105,7 @@ export const CreateAddress: React.FunctionComponent = () => {
       addressName.trim() !== "" &&
       plan.trim() !== "" &&
       addressType.trim() !== "" &&
-      (addressType.toLowerCase() === "subscription") ===
+      (addressType.toLowerCase() === AddressTypes.SUBSCRIPTION) ===
         (topic.trim() !== "") &&
       isNameValid
     ) {
@@ -128,25 +129,27 @@ export const CreateAddress: React.FunctionComponent = () => {
         };
         if (
           addressType &&
-          addressType.trim().toLowerCase() === "subscription"
+          addressType.trim().toLowerCase() === AddressTypes.SUBSCRIPTION
         ) {
           variable.spec.topic = topic;
         }
         if (
-          (addressType && addressType.trim().toLowerCase() === "queue") ||
-          addressType.trim().toLowerCase() === "subscription"
+          deadletterAddress &&
+          deadletterAddress.trim() !== "" &&
+          ((addressType &&
+            addressType.trim().toLowerCase() === AddressTypes.QUEUE) ||
+            addressType.trim().toLowerCase() === AddressTypes.SUBSCRIPTION)
         ) {
-          if (deadletterAddress && deadletterAddress.trim() !== "") {
-            variable.spec.deadletter = deadletterAddress.trim();
-          }
+          variable.spec.deadletter = deadletterAddress.trim();
         }
         if (
-          (addressType && addressType.trim().toLowerCase() === "queue") ||
-          addressType.trim().toLowerCase() === "topic"
+          expiryAddress &&
+          expiryAddress.trim() !== "" &&
+          addressType &&
+          (addressType.trim().toLowerCase() === AddressTypes.QUEUE ||
+            addressType.trim().toLowerCase() === AddressTypes.TOPIC)
         ) {
-          if (expiryAddress && expiryAddress.trim() !== "") {
-            variable.spec.expiry = expiryAddress.trim();
-          }
+          variable.spec.expiry = expiryAddress.trim();
         }
         return variable;
       };

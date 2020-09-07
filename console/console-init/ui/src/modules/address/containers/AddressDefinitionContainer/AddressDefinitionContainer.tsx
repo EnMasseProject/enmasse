@@ -18,7 +18,7 @@ import {
   AddressConfiguration,
   IAddressConfigurationProps
 } from "modules/address/components";
-import { FetchPolicy } from "constant";
+import { FetchPolicy, AddressTypes } from "constant";
 
 export interface IAddressDefinition extends IAddressConfigurationProps {
   addressspaceName: string;
@@ -123,7 +123,7 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
         setPlanOptions(planOptions);
       }
 
-      if (type.toLowerCase() === "subscription") {
+      if (type.toLowerCase() === AddressTypes.SUBSCRIPTION) {
         const topicsAddresses = await client.query<IAddressResponse>({
           query: RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION(
             addressspaceName,
@@ -150,9 +150,9 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
         }
       }
       if (
-        type?.toLowerCase() === "subscription" ||
-        type?.toLowerCase() === "queue" ||
-        type?.toLowerCase() === "topic"
+        type?.toLowerCase() === AddressTypes.SUBSCRIPTION ||
+        type?.toLowerCase() === AddressTypes.QUEUE ||
+        type?.toLowerCase() === AddressTypes.TOPIC
       ) {
         const deadletterAddresses = await client.query<IAddressResponse>({
           query: RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE(
