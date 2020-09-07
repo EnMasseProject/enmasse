@@ -12,11 +12,11 @@ import { MetadataReviewRows } from "./MetadataReviewRows";
 const styles = StyleSheet.create({
   text_center_align: { textAlign: "center" }
 });
-interface IViewMetadataProrps {
+interface IViewMetadataProps {
   defaults?: any[];
   ext?: any[];
 }
-const ViewMetadata: React.FunctionComponent<IViewMetadataProrps> = ({
+const ViewMetadata: React.FunctionComponent<IViewMetadataProps> = ({
   defaults,
   ext
 }) => {
@@ -30,7 +30,7 @@ const ViewMetadata: React.FunctionComponent<IViewMetadataProrps> = ({
   if (convertedDefaultsData.length === 0 && convertedExtData.length === 0) {
     return <>--</>;
   }
-  const renderGrid = (values: any[], label: string) => {
+  const renderGrid = (metadataRows: any[], label: string) => {
     return (
       <>
         <Grid>
@@ -45,7 +45,7 @@ const ViewMetadata: React.FunctionComponent<IViewMetadataProrps> = ({
             <b>Value</b>
           </GridItem>
         </Grid>
-        <MetadataReviewRows values={values} />
+        <MetadataReviewRows metadataRows={metadataRows} />
       </>
     );
   };

@@ -53,7 +53,7 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
   id,
   deviceList,
   gatewayGroups,
-  metadataList: metadetaJson,
+  metadataList: metadataJson,
   credentials,
   errorState,
   deleteGateways,
@@ -68,7 +68,7 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
       via: deviceList,
       memberOf,
       viaGroups: gatewayGroups,
-      ...metadetaJson
+      ...metadataJson
     },
     credentials
   };
@@ -78,7 +78,7 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
   };
 
   const shouldRenderMetadata = () => {
-    return metadetaJson && (metadetaJson.default || metadetaJson.ext);
+    return metadataJson && (metadataJson.default || metadataJson.ext);
   };
 
   return (
@@ -145,8 +145,8 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
                   </CardTitle>
                   <CardBody className={css(styles.card_body)}>
                     <ViewMetadata
-                      ext={metadetaJson.ext}
-                      defaults={metadetaJson.default}
+                      ext={metadataJson.ext}
+                      defaults={metadataJson.default}
                     />
                   </CardBody>
                 </Card>

@@ -6,9 +6,14 @@
 import React, { useState } from "react";
 import { StyleSheet, css } from "aphrodite";
 import { AngleRightIcon, AngleDownIcon } from "@patternfly/react-icons";
-import { GridItem, TextInput, Grid, Button } from "@patternfly/react-core";
+import {
+  GridItem,
+  TextInput,
+  Grid,
+  Button,
+  getUniqueId
+} from "@patternfly/react-core";
 import { MetadataReviewRows } from "./MetadataReviewRows";
-import { uniqueId } from "utils";
 import { DataType } from "constant";
 
 const styles = StyleSheet.create({
@@ -25,13 +30,13 @@ const styles = StyleSheet.create({
 });
 
 interface IMetadataReviewRowProps {
-  value: any;
+  metadataRow: any;
   prevKey?: string;
   viewAll?: boolean;
 }
 
 const MetadataReviewRow: React.FunctionComponent<IMetadataReviewRowProps> = ({
-  value,
+  metadataRow,
   prevKey,
   viewAll = true
 }) => {
@@ -44,8 +49,8 @@ const MetadataReviewRow: React.FunctionComponent<IMetadataReviewRowProps> = ({
     return (
       <GridItem span={3} className={css(styles.grid_align)}>
         <TextInput
-          key={uniqueId()}
-          id={uniqueId()}
+          key={getUniqueId()}
+          id={getUniqueId()}
           type="text"
           value={value}
           isReadOnly={true}
@@ -55,12 +60,12 @@ const MetadataReviewRow: React.FunctionComponent<IMetadataReviewRowProps> = ({
   };
 
   const hasObjectValue: boolean =
-    value.type === DataType.ARRAY || value.type === DataType.OBJECT;
+    metadataRow.type === DataType.ARRAY || metadataRow.type === DataType.OBJECT;
   const key: string = prevKey
-    ? value.key !== ""
-      ? prevKey + "/" + value.key
+    ? metadataRow.key !== ""
+      ? prevKey + "/" + metadataRow.key
       : prevKey
-    : value.key;
+    : metadataRow.key;
   return (
     <>
       <Grid>
@@ -77,11 +82,14 @@ const MetadataReviewRow: React.FunctionComponent<IMetadataReviewRowProps> = ({
           )}
         </GridItem>
         {renderGridItem(key)}
-        {renderGridItem(value.typeLabel)}
-        {renderGridItem(hasObjectValue ? "" : value.value)}
+        {renderGridItem(metadataRow.typeLabel)}
+        {renderGridItem(hasObjectValue ? "" : metadataRow.value)}
         {hasObjectValue && isVisible && (
           <>
-            <MetadataReviewRows values={value.value} prevkey={key} />
+            <MetadataReviewRows
+              metadataRows={metadataRow.value}
+              prevkey={key}
+            />
           </>
         )}
       </Grid>

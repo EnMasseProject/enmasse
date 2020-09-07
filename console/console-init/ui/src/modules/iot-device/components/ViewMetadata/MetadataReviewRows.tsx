@@ -3,26 +3,26 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { Fragment } from "react";
 import { MetadataReviewRow } from "./MetadataReviewRow";
 import { DataType } from "constant";
 interface IMetadataReviewRowProps {
-  values: any[];
+  metadataRows: any[];
   prevkey?: string;
 }
 
 const MetadataReviewRows: React.FC<IMetadataReviewRowProps> = ({
-  values,
+  metadataRows,
   prevkey
 }) => {
   return (
     <>
-      {values.map((val, index) => (
-        <>
-          <MetadataReviewRow value={val} prevKey={prevkey} />
+      {metadataRows.map((val, index) => (
+        <Fragment key={`fragment-index-${index}`}>
+          <MetadataReviewRow metadataRow={val} prevKey={prevkey} />
           {val.type === DataType.ARRAY ||
             (val.type === DataType.OBJECT && <br />)}
-        </>
+        </Fragment>
       ))}
     </>
   );
