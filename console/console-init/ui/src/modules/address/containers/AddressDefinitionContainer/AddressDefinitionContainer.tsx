@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React from "react";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { Loading } from "use-patternfly";
 import { IDropdownOption } from "components";
@@ -11,7 +11,7 @@ import {
   RETURN_ADDRESS_PLANS,
   RETURN_ADDRESS_TYPES,
   RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION,
-  RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE
+  RETURN_DLQ_ADDRESSES_FOR_TOPIC_AND_QUEUE
 } from "graphql-module/queries";
 import { IAddressResponse } from "schema/ResponseTypes";
 import {
@@ -150,12 +150,11 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
         }
       }
       if (
-        type?.toLowerCase() === AddressTypes.SUBSCRIPTION ||
         type?.toLowerCase() === AddressTypes.QUEUE ||
         type?.toLowerCase() === AddressTypes.TOPIC
       ) {
         const deadletterAddresses = await client.query<IAddressResponse>({
-          query: RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE(
+          query: RETURN_DLQ_ADDRESSES_FOR_TOPIC_AND_QUEUE(
             addressspaceName,
             namespace,
             type

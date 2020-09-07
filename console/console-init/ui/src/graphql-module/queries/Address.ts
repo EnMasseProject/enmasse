@@ -495,7 +495,7 @@ const RETURN_ADDRESS_SPACE_PLANS = gql`
   }
 `;
 
-const RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE = (
+const RETURN_DLQ_ADDRESSES_FOR_TOPIC_AND_QUEUE = (
   addressSpaceName: string,
   namespace: string,
   type: string
@@ -508,7 +508,6 @@ const RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE = (
     filter += "`$.metadata.namespace` = '" + namespace + "'";
   }
   if (
-    type.trim().toLowerCase() === AddressTypes.SUBSCRIPTION ||
     type.trim().toLowerCase() === AddressTypes.QUEUE ||
     type.trim().toLowerCase() === AddressTypes.TOPIC
   ) {
@@ -679,7 +678,7 @@ const RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH = (
 export {
   DELETE_ADDRESS,
   PURGE_ADDRESS,
-  RETURN_DLQ_ADDRESSES_FOR_SUBSCRIPTION_AND_QUEUE,
+  RETURN_DLQ_ADDRESSES_FOR_TOPIC_AND_QUEUE,
   RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE,
   CURRENT_ADDRESS_SPACE_PLAN,
   RETURN_ADDRESS_DETAIL,

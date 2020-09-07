@@ -134,23 +134,18 @@ export const CreateAddress: React.FunctionComponent = () => {
           variable.spec.topic = topic;
         }
         if (
-          deadletterAddress &&
-          deadletterAddress.trim() !== "" &&
-          ((addressType &&
-            addressType.trim().toLowerCase() === AddressTypes.QUEUE) ||
-            addressType.trim().toLowerCase() === AddressTypes.SUBSCRIPTION)
-        ) {
-          variable.spec.deadletter = deadletterAddress.trim();
-        }
-        if (
-          expiryAddress &&
-          expiryAddress.trim() !== "" &&
           addressType &&
           (addressType.trim().toLowerCase() === AddressTypes.QUEUE ||
             addressType.trim().toLowerCase() === AddressTypes.TOPIC)
         ) {
-          variable.spec.expiry = expiryAddress.trim();
+          if (deadletterAddress && deadletterAddress.trim() !== "") {
+            variable.spec.deadletter = deadletterAddress.trim();
+          }
+          if (expiryAddress && expiryAddress.trim() !== "") {
+            variable.spec.expiry = expiryAddress.trim();
+          }
         }
+
         return variable;
       };
       const variables = {
