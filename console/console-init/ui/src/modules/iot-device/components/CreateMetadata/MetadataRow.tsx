@@ -30,22 +30,19 @@ export const MetadataRow: React.FC<IMetaDataRowProps> = ({
 
   const updateMetadataList = (property: string, value: string) => {
     let updatedMetadataList = [...metadataList];
-    const index = searchMetadataById(rowId);
+    const index = findMetadataIndexById(rowId);
     updatedMetadataList[index][property] = value;
     if (property === "type" && isObjectOrArray(value as any))
       updatedMetadataList[0].value = [];
     setMetadataList(updatedMetadataList);
   };
 
-  const searchMetadataById = (id: string) => {
+  const findMetadataIndexById = (id: string) => {
     let updatedMetadataList = [...metadataList];
-    let index = -1;
-    updatedMetadataList.forEach((metadataRowItem, rowIndex) => {
-      if (metadataRowItem.id === id) {
-        index = rowIndex;
-      }
-    });
-    return index;
+    let metadataIndex = updatedMetadataList.findIndex(
+      metadataRowItem => metadataRowItem.id === id
+    );
+    return metadataIndex;
   };
 
   const getValidationStatus = (type: string, value: string) => {
@@ -90,7 +87,7 @@ export const MetadataRow: React.FC<IMetaDataRowProps> = ({
             setMetadataList={setMetadataList}
             updateMetadataList={updateMetadataList}
             rowId={rowId}
-            searchMetadataById={searchMetadataById}
+            findMetadataIndexById={findMetadataIndexById}
           />
         </GridItem>
         <GridItem span={2}>

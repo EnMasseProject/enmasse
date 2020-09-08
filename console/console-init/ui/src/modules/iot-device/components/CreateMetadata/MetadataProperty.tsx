@@ -15,7 +15,7 @@ interface IMetadataPropertyProps {
   setMetadataList: (metadataRow: any) => void;
   updateMetadataList: (property: string, value: string) => void;
   rowId: string;
-  searchMetadataById: (id: string) => number;
+  findMetadataIndexById: (id: string) => number;
 }
 
 export const MetadataProperty: React.FC<IMetadataPropertyProps> = ({
@@ -23,7 +23,7 @@ export const MetadataProperty: React.FC<IMetadataPropertyProps> = ({
   setMetadataList,
   updateMetadataList,
   rowId,
-  searchMetadataById
+  findMetadataIndexById
 }) => {
   const currentRow = metadataRow;
 
@@ -33,7 +33,7 @@ export const MetadataProperty: React.FC<IMetadataPropertyProps> = ({
 
   const handleAddChildRow = () => {
     let updatedValueMetadata = [...metadataRow];
-    const index = searchMetadataById(rowId);
+    const index = findMetadataIndexById(rowId);
     let newRow: IMetadataProps[] = getInitialMetadataState;
     updatedValueMetadata[index].value = newRow;
     setMetadataList(updatedValueMetadata);
