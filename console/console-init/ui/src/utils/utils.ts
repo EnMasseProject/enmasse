@@ -16,7 +16,7 @@ import {
   forbiddenDoubleQuoteRegexp
 } from "types/Configs";
 import { ICredential } from "modules/iot-device/components";
-
+import { uniqueId as lodashUniqueId } from "lodash";
 export interface ISelectOption {
   value: string;
   isDisabled?: boolean;
@@ -131,9 +131,10 @@ const kFormatter = (num: number) => {
 };
 
 const uniqueId = () => {
-  return Math.random()
-    .toString(16)
-    .slice(-4);
+  return lodashUniqueId();
+  // return Math.random()
+  //   .toString(16)
+  //   .slice(-4);
 };
 
 const findIndexByProperty = (
