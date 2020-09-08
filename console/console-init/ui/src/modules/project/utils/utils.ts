@@ -75,7 +75,7 @@ const initialiseFilterForProject = () => {
   return filter;
 };
 
-const setInitialProjcetCount = () => {
+const setInitialProjectCount = () => {
   const count: IProjectCount = {
     total: 0,
     active: 0,
@@ -328,7 +328,7 @@ export {
   typeOptions,
   filterMenuItems,
   ProjectType,
-  setInitialProjcetCount,
+  setInitialProjectCount,
   getFilteredProjectsCount,
   getDetailForDeleteDialog,
   getHeaderForDeleteDialog,
