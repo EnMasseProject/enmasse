@@ -21,20 +21,18 @@ import {
   GridItem,
   Grid
 } from "@patternfly/react-core";
-import { DeviceInformation } from "/home/suyash/Project/enmasse/console/console-init/ui/src/modules/iot-device/dialogs/CreateDevice/DeviceInformation";
+import { DeviceInformation } from "modules/iot-device/dialogs/CreateDevice/DeviceInformation";
 import { ConnectionType } from "modules/iot-device/components/ConnectionTypeStep";
 import { useQuery } from "@apollo/react-hooks";
-import { IDeviceDetailResponse, ICreateDeviceResponse } from "schema";
-import { RETURN_IOT_DEVICE_DETAIL } from "graphql-module";
-import { FetchPolicy } from "constant";
-
+import { IDeviceDetailResponse } from "schema";
+import { RETURN_IOT_DEVICE_DETAIL, CREATE_IOT_DEVICE } from "graphql-module";
+import { FetchPolicy, OperationType } from "constant";
 import {
   AddGateways,
   AddCredential,
   AddGatewayGroupMembership,
   ICredential,
-  IMetadataProps,
-  getInitialMetadataState
+  IMetadataProps
 } from "modules/iot-device/components";
 import { useHistory, useParams } from "react-router";
 import { Link } from "react-router-dom";
@@ -46,21 +44,23 @@ import {
 } from "modules/iot-device/containers";
 import { StyleSheet, css } from "aphrodite";
 import { useMutationQuery } from "hooks";
-import { CREATE_IOT_DEVICE } from "graphql-module";
-import { OperationType } from "constant";
 import {
   getCredentialsFieldsInitialState,
   serializeCredentials
 } from "modules/iot-device/utils";
 import {
   convertMetadataOptionsToJson,
-  convertObjectIntoJson,
   convertJsonToMetadataOptions
 } from "utils";
 
 const getInitalMetaData = () => {
   return [{ key: "", value: "", type: "string" }];
 };
+const styles = StyleSheet.create({
+  lighter_text: {
+    fontWeight: "lighter"
+  }
+});
 
 export default function CloneDevicePage() {
   const history = useHistory();
@@ -78,12 +78,6 @@ export default function CloneDevicePage() {
   ]);
   const [viewInJson, setViewInJson] = useState<boolean>(false);
   const { projectname, namespace, deviceid } = useParams();
-
-  const styles = StyleSheet.create({
-    lighter_text: {
-      fontWeight: "lighter"
-    }
-  });
 
   const deviceListRouteLink = `/iot-projects/${namespace}/${projectname}/devices`;
   const breadcrumb = useMemo(
@@ -120,19 +114,19 @@ export default function CloneDevicePage() {
   );
   useBreadcrumb(breadcrumb);
   const queryResolver = `
-devices{
-registration{
-enabled
-via
-memberOf
-viaGroups
-ext
-defaults
-}
-}
-`;
+   devices{
+       registration{
+           enabled
+           via
+           memberOf
+           viaGroups
+           ext
+           defaults
+         }
+      }
+   `;
 
-  const { loading, data } = useQuery<IDeviceDetailResponse>(
+  const { data } = useQuery<IDeviceDetailResponse>(
     RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid, queryResolver),
     { fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
@@ -143,19 +137,18 @@ defaults
         devices: { total: 0, devices: [] }
       };
       const device = devices.devices[0];
-      var metadata = convertJsonToMetadataOptions(
+      const metadata = convertJsonToMetadataOptions(
         JSON.parse(device?.registration?.ext || "") || []
       );
       setGatewayDevices(device.registration.via || []);
       setGatewayGroups(device.registration.viaGroups || []);
       setMemberOf(device.registration.memberOf || []);
-      if (device.registration.via || device.registration.viaGroups)
-        setConnectionType("via-device");
-      else setConnectionType("directly");
+      device.registration.via || device.registration.viaGroups
+        ? setConnectionType("via-device")
+        : setConnectionType("directly");
       metadata &&
         setMetadataList(Array.isArray(metadata) ? metadata : [metadata]);
-      if (device?.registration?.enabled === true) setIsEnabled(true);
-      else setIsEnabled(false);
+      device?.registration?.enabled ? setIsEnabled(true) : setIsEnabled(false);
     }
   }, [data]);
 
@@ -230,19 +223,6 @@ defaults
     )
   };
 
-  const jsonEditor = () => {
-    return (
-      <JsonEditor
-        value={JSON.stringify(getDevice(), undefined, 2)}
-        style={{
-          minHeight: "45rem"
-        }}
-        readOnly={true}
-        name={"editor-add-device"}
-      />
-    );
-  };
-
   const credentialsToCredentialView = (credential: any[]) => {
     return credential
       .filter(c => c["auth-id"] && c["auth-id"].trim() != "" && c.type)
@@ -263,7 +243,6 @@ defaults
       registration: {
         status: isEnabled,
         ext: convertMetadataOptionsToJson(metadataList),
-        //TODO: replace [] with defaults
         defaults: convertMetadataOptionsToJson([])
       },
       connectionType
@@ -311,7 +290,7 @@ defaults
 
   const handleSave = async () => {
     // Add query to add device
-    const variable = {
+    const deviceDetail = {
       iotproject: { name: projectname, namespace },
       device: {
         registration: {
@@ -332,7 +311,7 @@ defaults
         })
       }
     };
-    setCreateDeviceQueryVariables(variable);
+    setCreateDeviceQueryVariables(deviceDetail);
   };
 
   const steps = [
@@ -385,7 +364,7 @@ defaults
             return (
               <>
                 <Button
-                  id="create-device-page-next-button"
+                  id="clone-device-page-next-button"
                   variant="primary"
                   type="submit"
                   onClick={onNext}
@@ -398,7 +377,7 @@ defaults
                   Next
                 </Button>
                 <Button
-                  id="create-device-page-back-button"
+                  id="clone-device-page-back-button"
                   variant="secondary"
                   onClick={onBack}
                   className={
@@ -410,7 +389,7 @@ defaults
                   Back
                 </Button>
                 <Button
-                  id="create-device-page-cancel-button"
+                  id="clone-device-page-cancel-button"
                   variant="link"
                   onClick={onClose}
                 >
@@ -423,7 +402,7 @@ defaults
             return (
               <>
                 <Button
-                  id="create-device-page-next-button"
+                  id="clone-device-page-next-button"
                   variant="primary"
                   type="submit"
                   onClick={onNext}
@@ -432,14 +411,14 @@ defaults
                   Next
                 </Button>
                 <Button
-                  id="create-device-page-back-button"
+                  id="clone-device-page-back-button"
                   variant="secondary"
                   onClick={onBack}
                 >
                   Back
                 </Button>
                 <Button
-                  id="create-device-page-cancel-button"
+                  id="clone-device-page-cancel-button"
                   variant="link"
                   onClick={onClose}
                 >
@@ -452,7 +431,7 @@ defaults
           return (
             <>
               <Button
-                id="create-device-page-finish-button"
+                id="clone-device-page-finish-button"
                 variant="primary"
                 onClick={handleSave}
                 type="submit"
@@ -460,14 +439,14 @@ defaults
                 Finish
               </Button>
               <Button
-                id="create-device-page-back-button"
+                id="clone-device-page-back-button"
                 onClick={onBack}
                 variant="secondary"
               >
                 Back
               </Button>
               <Button
-                id="create-device-page-cancel-button"
+                id="clone-device-page-cancel-button"
                 variant="link"
                 onClick={onClose}
               >
@@ -491,7 +470,7 @@ defaults
           </FlexItem>
           <FlexItem align={{ default: "alignRight" }}>
             <SwitchWithToggle
-              id={"create-device-page-view-json-switchtoggle"}
+              id={"clone-device-page-view-json-switchtoggle"}
               labelOff={"View JSON Format"}
               onChange={onToggleSwitch}
               label={"View Form Format"}
@@ -503,7 +482,7 @@ defaults
       </PageSection>
       {!viewInJson && (
         <Wizard
-          id="create-device-page-wizard"
+          id="clone-device-page-wizard"
           onClose={onCloseDialog}
           onSave={handleSave}
           footer={CustomFooter}
@@ -512,7 +491,14 @@ defaults
       )}
       {viewInJson && (
         <PageSection variant={PageSectionVariants.light}>
-          {jsonEditor()}
+          <JsonEditor
+            value={JSON.stringify(getDevice(), undefined, 2)}
+            style={{
+              minHeight: "45rem"
+            }}
+            readOnly={true}
+            name={"editor-add-device"}
+          />
         </PageSection>
       )}
     </Page>
