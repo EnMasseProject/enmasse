@@ -7,11 +7,11 @@ import React from "react";
 import { Grid, GridItem, Title, Tooltip } from "@patternfly/react-core";
 import { OutlinedQuestionCircleIcon } from "@patternfly/react-icons";
 
-export interface IMetaDataHeader {
+export interface IMetadataHeader {
   sectionName: string;
 }
 
-export const MetaDataHeader: React.FC<IMetaDataHeader> = ({ sectionName }) => {
+export const MetadataHeader: React.FC<IMetadataHeader> = ({ sectionName }) => {
   return (
     <Grid hasGutter>
       <GridItem span={5}>

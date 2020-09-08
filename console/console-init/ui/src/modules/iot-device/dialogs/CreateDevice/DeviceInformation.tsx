@@ -18,7 +18,7 @@ import {
 } from "@patternfly/react-core";
 import { CreateMetadata, IMetadataProps } from "modules/iot-device/components";
 import { StyleSheet, css } from "aphrodite";
-import { MetaDataHeader } from "modules/iot-device/components/CreateMetadata/MetaDataHeader";
+import { MetadataHeader } from "modules/iot-device/components/CreateMetadata/MetadataHeader";
 
 export interface IDeviceInfo {
   deviceId?: string;
@@ -113,12 +113,12 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
           <br />
           <Divider />
           Metadata
-          <MetaDataHeader sectionName="Default properties parameter" />
+          <MetadataHeader sectionName="Default properties parameter" />
           <CreateMetadata
             metadataList={metadataList}
             returnMetadataList={returnMetadataList}
           />
-          <MetaDataHeader sectionName="Extensions parameter" />
+          <MetadataHeader sectionName="Extensions parameter" />
           <CreateMetadata
             metadataList={metadataList}
             returnMetadataList={returnMetadataList}

@@ -10,8 +10,6 @@ import {
   TextInput,
   Button,
   ButtonVariant,
-  ChipGroup,
-  Chip,
   DropdownPosition
 } from "@patternfly/react-core";
 import { DropdownWithToggle } from "components";

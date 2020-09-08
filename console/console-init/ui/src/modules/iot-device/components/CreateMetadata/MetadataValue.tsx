@@ -9,7 +9,7 @@ import { isObjectOrArray } from "utils";
 import { MinusCircleIcon } from "@patternfly/react-icons";
 import { ValidationStatusType } from "modules/iot-device";
 
-interface IMetaDataValueProps {
+interface IMetadataValueProps {
   metadataRow: any;
   updateMetadataList: (property: string, value: string) => void;
   getValidationStatus: (type: string, value: string) => ValidationStatusType;
@@ -18,7 +18,7 @@ interface IMetaDataValueProps {
   validationStatus: ValidationStatusType;
 }
 
-export const MetaDataValue: React.FC<IMetaDataValueProps> = ({
+export const MetadataValue: React.FC<IMetadataValueProps> = ({
   metadataRow,
   updateMetadataList,
   getValidationStatus,

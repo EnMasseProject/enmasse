@@ -5,7 +5,6 @@
 
 import React from "react";
 import {
-  DropdownWithBulkSelect,
   DropdownWithKebabToggle,
   IDropdownWithBulkSelectProps
 } from "components";

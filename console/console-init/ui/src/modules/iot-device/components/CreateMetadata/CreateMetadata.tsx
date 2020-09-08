@@ -6,9 +6,10 @@
 import React, { useState, useEffect } from "react";
 import { Button, GridItem, Grid } from "@patternfly/react-core";
 import { PlusCircleIcon } from "@patternfly/react-icons";
-import { MetaDataRow } from "./MetaDataRow";
+import { MetadataRow } from "./MetadataRow";
 import { deviceRegistrationTypeOptions } from "modules/iot-device/utils";
 import { uniqueId } from "lodash";
+import { DataType } from "constant";
 
 export interface IMetadataProps {
   id: string;
@@ -44,15 +45,7 @@ export const CreateMetadata: React.FC<ICreateMetadataProps> = ({
   }, [metadataList]);
 
   const handleAddParentRow = () => {
-    setMetadataList([
-      ...metadataList,
-      {
-        id: uniqueId(),
-        key: "",
-        value: "",
-        type: deviceRegistrationTypeOptions[0].value
-      }
-    ]);
+    setMetadataList([...metadataList, getInitialMetadataState[0]]);
   };
   let metadataArr: IMetadataProps[] = [];
 
@@ -61,8 +54,8 @@ export const CreateMetadata: React.FC<ICreateMetadataProps> = ({
       metadataArr.push(metadataRow);
 
       if (
-        metadataRow.type === "object" &&
-        typeof metadataRow.value == "object" &&
+        metadataRow.type === DataType.OBJECT &&
+        typeof metadataRow.value == DataType.OBJECT &&
         metadataRow.value.length > 0
       ) {
         getMetadataRows(metadataRow.value);
@@ -70,7 +63,7 @@ export const CreateMetadata: React.FC<ICreateMetadataProps> = ({
     });
     return metadataArr.map((metadata, index: number) => {
       return (
-        <MetaDataRow
+        <MetadataRow
           key={index}
           metadataRow={metadata}
           metadataList={metadataList}

@@ -8,6 +8,7 @@ import { StyleSheet, css } from "aphrodite";
 import { AngleRightIcon, AngleDownIcon } from "@patternfly/react-icons";
 import { GridItem, TextInput, Grid, Button } from "@patternfly/react-core";
 import { MetaDataReviewRows } from "./MetaDataReviewRows";
+import { DataType } from "constant";
 
 const styles = StyleSheet.create({
   grid_align: {
@@ -55,7 +56,7 @@ const MetaDataReviewRow: React.FunctionComponent<IMetaDataReviewRowProps> = ({
   };
 
   const hasObjectValue: boolean =
-    value.type === "array" || value.type === "object";
+    value.type === DataType.ARRAY || value.type === DataType.OBJECT;
   const key: string = prevKey
     ? value.key !== ""
       ? prevKey + "/" + value.key

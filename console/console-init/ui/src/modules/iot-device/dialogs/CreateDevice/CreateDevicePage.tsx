@@ -47,11 +47,7 @@ import {
   getCredentialsFieldsInitialState,
   serializeCredentials
 } from "modules/iot-device/utils";
-import { convertMetadataOptionsToJson, convertObjectIntoJson } from "utils";
-
-const getInitalMetaData = () => {
-  return [{ key: "", value: "", type: "string" }];
-};
+import { convertMetadataOptionsToJson } from "utils";
 
 export default function CreateDevicePage() {
   const history = useHistory();
@@ -59,7 +55,7 @@ export default function CreateDevicePage() {
   const [deviceIdInput, setDeviceIdInput] = useState<string>("");
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const [metadataList, setMetadataList] = useState<IMetadataProps[]>(
-    getInitalMetaData()
+    getInitialMetadataState
   );
   const [gatewayDevices, setGatewayDevices] = useState<string[]>([]);
   const [gatewayGroups, setGatewayGroups] = useState<string[]>([]);
@@ -103,7 +99,7 @@ export default function CreateDevicePage() {
     setGatewayGroups([]);
     setMemberOf([]);
     setCredentials([getCredentialsFieldsInitialState()]);
-    setMetadataList(getInitalMetaData());
+    setMetadataList(getInitialMetadataState);
   };
 
   const [setCreateDeviceQueryVariables] = useMutationQuery(
@@ -201,7 +197,7 @@ export default function CreateDevicePage() {
 
   const credentialsToCredentialView = (credential: any[]) => {
     return credential
-      .filter(c => c["auth-id"] && c["auth-id"].trim() != "" && c.type)
+      .filter(c => c["auth-id"] && c["auth-id"].trim() !== "" && c.type)
       .map(({ type, ext, enabled, secrets, "auth-id": authId }) => {
         return {
           type,

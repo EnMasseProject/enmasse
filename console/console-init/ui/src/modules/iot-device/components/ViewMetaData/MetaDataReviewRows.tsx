@@ -5,6 +5,7 @@
 
 import React from "react";
 import { MetaDataReviewRow } from "./MetaDataReviewRow";
+import { DataType } from "constant";
 interface IMetaDataReviewRowProps {
   values: any[];
   prevkey?: string;
@@ -19,7 +20,7 @@ const MetaDataReviewRows: React.FC<IMetaDataReviewRowProps> = ({
       {values.map((val, index) => (
         <>
           <MetaDataReviewRow value={val} prevKey={prevkey} index={index} />
-          {val.type === "array" || (val.type === "object" && <br />)}
+          {val.type === "array" || (val.type === DataType.OBJECT && <br />)}
         </>
       ))}
     </>

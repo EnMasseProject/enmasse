@@ -8,10 +8,9 @@ import { InputGroup, TextInput, Button } from "@patternfly/react-core";
 import { isObjectOrArray } from "utils";
 import { PlusIcon } from "@patternfly/react-icons";
 import { IMetadataProps } from "./CreateMetadata";
-import { deviceRegistrationTypeOptions } from "modules/iot-device";
-import { uniqueId } from "lodash";
+import { getInitialMetadataState } from "modules/iot-device";
 
-interface IMetaDataPropertyProps {
+interface IMetadataPropertyProps {
   metadataRow: any;
   setMetadataList: (metadataRow: any) => void;
   updateMetadataList: (property: string, value: string) => void;
@@ -19,7 +18,7 @@ interface IMetaDataPropertyProps {
   searchMetadataById: (id: string) => number;
 }
 
-export const MetaDataProperty: React.FC<IMetaDataPropertyProps> = ({
+export const MetadataProperty: React.FC<IMetadataPropertyProps> = ({
   metadataRow,
   setMetadataList,
   updateMetadataList,
@@ -35,15 +34,7 @@ export const MetaDataProperty: React.FC<IMetaDataPropertyProps> = ({
   const handleAddChildRow = () => {
     let updatedValueMetadata = [...metadataRow];
     const index = searchMetadataById(rowId);
-    let parentKey: string = currentRow.key;
-    let newRow: IMetadataProps[] = [
-      {
-        id: uniqueId(),
-        key: parentKey + "/",
-        value: "",
-        type: deviceRegistrationTypeOptions[0].value
-      }
-    ];
+    let newRow: IMetadataProps[] = getInitialMetadataState;
     updatedValueMetadata[index].value = newRow;
     setMetadataList(updatedValueMetadata);
   };

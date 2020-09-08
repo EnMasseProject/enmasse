@@ -7,9 +7,9 @@ import React, { useState } from "react";
 import { Grid, GridItem } from "@patternfly/react-core";
 import { ValidationStatusType } from "modules/iot-device/utils";
 import { isObjectOrArray } from "utils";
-import { MetaDataProperty } from "./MetaDataProperty";
-import { MetaDataType } from "./MetaDataType";
-import { MetaDataValue } from "./MetaDataValue";
+import { MetadataProperty } from "./MetadataProperty";
+import { MetadataType } from "./MetadataType";
+import { MetadataValue } from "./MetadataValue";
 
 export interface IMetaDataRowProps {
   metadataRow: any;
@@ -18,7 +18,7 @@ export interface IMetaDataRowProps {
   rowId: string;
 }
 
-export const MetaDataRow: React.FC<IMetaDataRowProps> = ({
+export const MetadataRow: React.FC<IMetaDataRowProps> = ({
   metadataRow,
   metadataList,
   setMetadataList,
@@ -85,7 +85,7 @@ export const MetaDataRow: React.FC<IMetaDataRowProps> = ({
     <>
       <Grid hasGutter>
         <GridItem span={5}>
-          <MetaDataProperty
+          <MetadataProperty
             metadataRow={metadataRow}
             setMetadataList={setMetadataList}
             updateMetadataList={updateMetadataList}
@@ -94,7 +94,7 @@ export const MetaDataRow: React.FC<IMetaDataRowProps> = ({
           />
         </GridItem>
         <GridItem span={2}>
-          <MetaDataType
+          <MetadataType
             metadataRow={metadataRow}
             getValidationStatus={getValidationStatus}
             setValidationStatus={setValidationStatus}
@@ -102,7 +102,7 @@ export const MetaDataRow: React.FC<IMetaDataRowProps> = ({
           />
         </GridItem>
         <GridItem span={5}>
-          <MetaDataValue
+          <MetadataValue
             metadataRow={metadataRow}
             getValidationStatus={getValidationStatus}
             setValidationStatus={setValidationStatus}

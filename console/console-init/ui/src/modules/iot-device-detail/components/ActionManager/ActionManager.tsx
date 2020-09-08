@@ -16,10 +16,7 @@ import {
 } from "modules/iot-device/containers";
 import { DeviceActionType } from "modules/iot-device-detail/utils";
 import { ConnectedDirectlyContainer } from "modules/iot-device-detail/containers";
-import {
-  AddGateways,
-  EditGatewayGroupMembershipContainer
-} from "modules/iot-device";
+import { EditGatewayGroupMembershipContainer } from "modules/iot-device";
 import { PageJourney } from "constant";
 import { useStoreContext, types } from "context-state-reducer";
 import { StyleSheet, css } from "aphrodite";

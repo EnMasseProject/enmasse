@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React from "react";
 import { useQuery } from "@apollo/react-hooks";
 import { POLL_INTERVAL, FetchPolicy } from "constant";
 import { IIoTDevicesResponse } from "schema/iot_device";
@@ -26,7 +26,6 @@ import {
   IRowData,
   SortByDirection,
   ISortBy,
-  IExtraData,
   IExtraColumnData
 } from "@patternfly/react-table";
 import { compareObject } from "utils";

@@ -143,5 +143,4 @@ export const ServerMessageAlert: React.FC = () => {
       })}
     </AlertGroup>
   );
-  return null;
 };

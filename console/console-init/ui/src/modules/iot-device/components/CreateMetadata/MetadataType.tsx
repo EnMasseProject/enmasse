@@ -16,14 +16,14 @@ const styles = StyleSheet.create({
   dropdown_toggle_align: { flex: "1" }
 });
 
-interface IMetaDataTypeProps {
+interface IMetadataTypeProps {
   metadataRow: any;
   updateMetadataList: (property: string, value: string) => void;
   getValidationStatus: (type: string, value: string) => ValidationStatusType;
   setValidationStatus: (value: ValidationStatusType) => void;
 }
 
-export const MetaDataType: React.FC<IMetaDataTypeProps> = ({
+export const MetadataType: React.FC<IMetadataTypeProps> = ({
   metadataRow,
   updateMetadataList,
   getValidationStatus,
