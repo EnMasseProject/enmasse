@@ -270,7 +270,7 @@ const getQueryVariableForCreateMessagingProject = (
     const endpoints: IExposeEndPoint[] = [];
     if (protocols && protocols.length > 0) {
       try {
-        protocols.map((protocol: string) => {
+        protocols.forEach((protocol: string) => {
           const endpoint: IExposeEndPoint = { service: "messaging" };
           if (protocol === EndPointProtocol.AMQPS) {
             endpoint.name = "messaging";
