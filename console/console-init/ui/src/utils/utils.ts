@@ -174,6 +174,7 @@ const getLabelForTypeOfObject = (value: any) => {
     case "boolean":
       return "Boolean";
   }
+  return "";
 };
 
 /**
