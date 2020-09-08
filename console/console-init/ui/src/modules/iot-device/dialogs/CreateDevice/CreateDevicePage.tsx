@@ -252,7 +252,7 @@ export default function CreateDevicePage() {
 
   const handleSave = async () => {
     // Add query to add device
-    const variable = {
+    const deviceDetail = {
       iotproject: { name: projectname, namespace },
       device: {
         registration: {
@@ -273,7 +273,7 @@ export default function CreateDevicePage() {
         })
       }
     };
-    setCreateDeviceQueryVariables(variable);
+    setCreateDeviceQueryVariables(deviceDetail);
   };
 
   const steps = [
