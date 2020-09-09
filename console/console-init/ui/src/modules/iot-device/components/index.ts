@@ -20,4 +20,4 @@ export * from "./AddDeviceWithJson";
 export * from "./ReviewDevice";
 export * from "./MangeColumnModal";
 export * from "./AddGatewayGroupMembership";
-export * from "./ViewMetaData";
+export * from "./ViewMetadata";

@@ -6,8 +6,15 @@
 import React, { useState } from "react";
 import { StyleSheet, css } from "aphrodite";
 import { AngleRightIcon, AngleDownIcon } from "@patternfly/react-icons";
-import { GridItem, TextInput, Grid, Button } from "@patternfly/react-core";
-import { MetaDataReviewRows } from "./MetaDataReviewRows";
+import {
+  GridItem,
+  TextInput,
+  Grid,
+  Button,
+  getUniqueId
+} from "@patternfly/react-core";
+import { MetadataReviewRows } from "./MetadataReviewRows";
+import { DataType } from "constant";
 
 const styles = StyleSheet.create({
   grid_align: {
@@ -22,17 +29,15 @@ const styles = StyleSheet.create({
   }
 });
 
-interface IMetaDataReviewRowProps {
-  value: any;
+interface IMetadataReviewRowProps {
+  metadataRow: any;
   prevKey?: string;
-  index?: number;
   viewAll?: boolean;
 }
 
-const MetaDataReviewRow: React.FunctionComponent<IMetaDataReviewRowProps> = ({
-  value,
+const MetadataReviewRow: React.FunctionComponent<IMetadataReviewRowProps> = ({
+  metadataRow,
   prevKey,
-  index,
   viewAll = true
 }) => {
   const [isVisible, setIsVisible] = useState<boolean>(viewAll);
@@ -44,8 +49,8 @@ const MetaDataReviewRow: React.FunctionComponent<IMetaDataReviewRowProps> = ({
     return (
       <GridItem span={3} className={css(styles.grid_align)}>
         <TextInput
-          key={value + index}
-          id={value + index}
+          key={getUniqueId()}
+          id={getUniqueId()}
           type="text"
           value={value}
           isReadOnly={true}
@@ -55,12 +60,12 @@ const MetaDataReviewRow: React.FunctionComponent<IMetaDataReviewRowProps> = ({
   };
 
   const hasObjectValue: boolean =
-    value.type === "array" || value.type === "object";
+    metadataRow.type === DataType.ARRAY || metadataRow.type === DataType.OBJECT;
   const key: string = prevKey
-    ? value.key !== ""
-      ? prevKey + "/" + value.key
+    ? metadataRow.key !== ""
+      ? prevKey + "/" + metadataRow.key
       : prevKey
-    : value.key;
+    : metadataRow.key;
   return (
     <>
       <Grid>
@@ -77,15 +82,18 @@ const MetaDataReviewRow: React.FunctionComponent<IMetaDataReviewRowProps> = ({
           )}
         </GridItem>
         {renderGridItem(key)}
-        {renderGridItem(value.typeLabel)}
-        {renderGridItem(hasObjectValue ? "" : value.value)}
+        {renderGridItem(metadataRow.typeLabel)}
+        {renderGridItem(hasObjectValue ? "" : metadataRow.value)}
         {hasObjectValue && isVisible && (
           <>
-            <MetaDataReviewRows values={value.value} prevkey={key} />
+            <MetadataReviewRows
+              metadataRows={metadataRow.value}
+              prevkey={key}
+            />
           </>
         )}
       </Grid>
     </>
   );
 };
-export { MetaDataReviewRow };
+export { MetadataReviewRow };

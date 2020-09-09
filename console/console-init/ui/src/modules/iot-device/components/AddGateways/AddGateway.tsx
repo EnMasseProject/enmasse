@@ -154,6 +154,7 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
               </SplitItem>
               <SplitItem isFilled>
                 <TypeAheadSelect
+                  threshold={1}
                   id="add-gateway-typeahead"
                   aria-label="Input gateway"
                   aria-describedby="Input gateway"

@@ -83,7 +83,7 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
 
   const viaGateway = via && via?.length > 0;
 
-  const metadetaJson = {
+  const metadataJson = {
     default: defaultObject,
     ext
   };
@@ -173,7 +173,7 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
       deviceList={via}
       gatewayGroups={viaGroups}
       memberOf={memberOf}
-      metadataList={metadetaJson}
+      metadataList={metadataJson}
       credentials={parsecredentials}
       errorState={getErrorState()}
       deleteGateways={openPreConfirmRemoveGatewayDialog}

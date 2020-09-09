@@ -29,6 +29,7 @@ export const GatewayGroupTypeAheadSelect: React.FC<ITypeAheadSelectProps> = ({
   return (
     <TypeAheadSelect
       id={id}
+      threshold={1}
       aria-label={ariaLabel}
       aria-describedby="typeahead for gateway groups"
       onSelect={onSelect}
