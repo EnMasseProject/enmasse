@@ -53,7 +53,7 @@ import {
   convertJsonToMetadataOptions
 } from "utils";
 
-const getInitalMetaData = () => {
+const getInitialMetaData = () => {
   return [{ key: "", value: "", type: "string" }];
 };
 const styles = StyleSheet.create({
@@ -68,7 +68,7 @@ export default function CloneDevicePage() {
   const [deviceIdInput, setDeviceIdInput] = useState<string>("");
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const [metadataList, setMetadataList] = useState<IMetadataProps[]>(
-    getInitalMetaData()
+    getInitialMetaData()
   );
   const [gatewayDevices, setGatewayDevices] = useState<string[]>([]);
   const [gatewayGroups, setGatewayGroups] = useState<string[]>([]);
@@ -104,7 +104,7 @@ export default function CloneDevicePage() {
     setGatewayGroups([]);
     setMemberOf([]);
     setCredentials([getCredentialsFieldsInitialState()]);
-    setMetadataList(getInitalMetaData());
+    setMetadataList(getInitialMetaData());
   };
   const [setCreateDeviceQueryVariables] = useMutationQuery(
     CREATE_IOT_DEVICE,
@@ -190,7 +190,7 @@ export default function CloneDevicePage() {
       </Title>
       <br />
       <AddGatewayGroupMembership
-        id="create-device-add-gateway-group"
+        id="clone-device-add-gateway-group"
         gatewayGroups={memberOf}
         returnGatewayGroups={setMemberOf}
       />
