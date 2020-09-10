@@ -22,7 +22,6 @@ import {
   Grid
 } from "@patternfly/react-core";
 import { DeviceInformation } from "modules/iot-device/dialogs/CreateDevice/DeviceInformation";
-import { ConnectionType } from "modules/iot-device/components/ConnectionTypeStep";
 import { useQuery } from "@apollo/react-hooks";
 import { IDeviceDetailResponse } from "schema";
 import { RETURN_IOT_DEVICE_DETAIL, CREATE_IOT_DEVICE } from "graphql-module";
@@ -30,6 +29,7 @@ import { FetchPolicy, OperationType } from "constant";
 import {
   AddGateways,
   AddCredential,
+  ConnectionType,
   AddGatewayGroupMembership,
   ICredential,
   IMetadataProps
@@ -115,16 +115,16 @@ export default function CloneDevicePage() {
   useBreadcrumb(breadcrumb);
   const queryResolver = `
    devices{
-       registration{
-           enabled
-           via
-           memberOf
-           viaGroups
-           ext
-           defaults
-         }
-      }
-   `;
+     registration{
+       enabled
+       via
+       memberOf
+       viaGroups
+       ext
+       defaults
+     } 
+   }
+ `;
 
   const { data } = useQuery<IDeviceDetailResponse>(
     RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid, queryResolver),
