@@ -114,17 +114,17 @@ export default function CloneDevicePage() {
   );
   useBreadcrumb(breadcrumb);
   const queryResolver = `
-   devices{
-     registration{
-       enabled
-       via
-       memberOf
-       viaGroups
-       ext
-       defaults
-     } 
-   }
- `;
+    devices{
+      registration{
+        enabled
+        via
+        memberOf
+        viaGroups
+        ext
+        defaults
+      } 
+    }
+  `;
 
   const { data } = useQuery<IDeviceDetailResponse>(
     RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid, queryResolver),
