@@ -1,0 +1,14 @@
+apiVersion: enmasse.io/v1beta1
+kind: Address
+metadata:
+    name: myspace.myqueue
+spec:
+    address: myqueue
+    type: queue
+    plan: standard-small-queue
+    deadletter: mydeadletter <1>
+    messageRedelivery: <2>
+        maximumDeliveryAttempts: 3 <3>
+        redeliveryDelay: 5000 <4>
+        redeliveryDelayMultiplier: 1.5 <5>
+        maximumDeliveryDelay: 30000 <6>

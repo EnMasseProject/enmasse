@@ -34,11 +34,17 @@ spec:
   messageTtl: <4>
     minimim: 30000
     maximum: 300000
+  messageRedelivery: <5>
+    maximumDeliveryAttempts: 3
+    redeliveryDelay: 5000
+    redeliveryDelayMultiplier: 1.5
+    maximumDeliveryDelay: 30000
 ----
 <1> The address type to which this plan applies.
 <2> The resources consumed by addresses using this plan. The `router` field is optional for address plans referenced by a `brokered` address space plan.
 <3> The number of partitions that should be created for queues using this plan. Only available in the `standard` address space.
 <4> (Optional) Restricts message time-to-live (TTL). Applies to address types `queue` and `topic` only.
+<5> (Optional) Provides message redelivery settings. Applies to address types `queue` and `subscription` only.
 
 The other fields are used by the {ConsoleName} UI.
 
@@ -47,7 +53,9 @@ A single router can support five instances of addresses and broker can support t
 In the `standard` address space, address plans for the `queue` address type may contain a field
 `partitions`, which allows a queue to be sharded across multiple brokers for HA and improved performance. Specifying an amount of `broker` resource above 1 will automatically cause a queue to be partitioned.
 
-include::ref-ttl.adoc[]
+include::ref-message-ttl.adoc[]
+
+include::ref-message-redelivery.adoc[]
 
 NOTE: A sharded queue no longer guarantees message ordering.
 
