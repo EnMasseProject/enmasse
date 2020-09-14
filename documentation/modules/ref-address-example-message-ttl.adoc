@@ -2,7 +2,7 @@
 //
 // assembly-managing-addresses.adoc
 
-[id='ref-address-example-message-ttl{context}']
+[id='ref-address-example-message-ttl-{context}']
 = Address TTL restriction example
 
 [source,yaml,options="nowrap"]
