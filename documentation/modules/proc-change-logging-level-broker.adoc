@@ -13,7 +13,7 @@ the broker.  The broker automatically reloads this file and immediately applies 
 interrupting established messaging connections.
 
 The changes made to `logging.properties` are transient. The system reverts the logging level to default levels
-next time the broker pod restarts.
+the next time the broker pod restarts.
 
 WARNING: Increasing the logging verbosity increases the CPU overhead of the broker(s) and may decrease
 messaging performance. It may also increase the disk space requirements associated with any log retention system.
