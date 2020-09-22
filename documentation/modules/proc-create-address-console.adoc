@@ -12,7 +12,7 @@ For more information see the {ProductName} link:{BookUrlBase}{BaseProductVersion
 endif::Supported[]
 
 .Prerequisites
-* You must have created an address space. For more information see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-space-cli-messaging[Creating an address space].
+* You must have created an address space. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-space-cli-messaging[Creating an address space].
 
 .Procedure
 
@@ -29,4 +29,3 @@ endif::Supported[]
 . Select a plan and click *Next*.
 
 . Click *Create*. Your address is displayed in the {ConsoleName}.
-
