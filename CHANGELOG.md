@@ -3,7 +3,7 @@
 
 ## 0.33.0
 
-* #5183: Fix expiry-address & TTL for durable subscriptions
+* #5183: Fix expiry-address & dead-letter for durable subscriptions
 * Remove IoT and shared infra preview
 * Remove MQTT Gateway and MQTT LwT
 

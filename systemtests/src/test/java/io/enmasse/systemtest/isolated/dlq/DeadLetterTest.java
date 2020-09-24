@@ -203,9 +203,9 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
                 .endMetadata()
                 .withNewSpec()
                 .withType(addressType.toString())
-                .withMessageRedelivery(addressType == AddressType.TOPIC ? null : addrRedelivery)
+                .withMessageRedelivery(addrRedelivery)
                 .withAddress("message-redelivery")
-                .withDeadletter(addressType == AddressType.TOPIC ? null : deadletter.getSpec().getAddress())
+                .withDeadletter(deadletter.getSpec().getAddress())
                 .withPlan(addrPlan.getMetadata().getName())
                 .endSpec()
                 .build();
@@ -221,9 +221,7 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
                         .endMetadata()
                         .withNewSpec()
                         .withType(AddressType.SUBSCRIPTION.toString())
-                        .withMessageRedelivery(addrRedelivery)
                         .withAddress("message-redelivery-sub")
-                        .withDeadletter(deadletter.getSpec().getAddress())
                         .withTopic(addr.getSpec().getAddress())
                         .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
                         .endSpec()
@@ -233,7 +231,7 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
             recvAddr = addr;
         }
 
-        assertRedeliveryStatus(recvAddr, expectedRedelivery);
+        assertRedeliveryStatus(addressType == AddressType.TOPIC ? addr : recvAddr, expectedRedelivery);
         awaitAddressSettingsSync(addressSpace, recvAddr);
 
         UserCredentials user = new UserCredentials("user", "passwd");

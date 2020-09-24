@@ -874,7 +874,9 @@ public class AddressController implements Watcher<Address> {
                             Set<String> addressNames = clusterAddresses.get(brokerStatus.getClusterId());
                             Set<String> queueNames = clusterQueues.get(brokerStatus.getClusterId());
                             ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getAddress(), null, null);
-
+                            if (address.getSpec().getDeadletter() != null) {
+                                ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getDeadletter(), queueNames, address.getSpec().getDeadletter());
+                            }
                             if (address.getSpec().getExpiry() != null) {
                                 ok += checkAddressAndQueue(address, brokerStatus, addressNames, address.getSpec().getExpiry(), queueNames, address.getSpec().getExpiry());
                             }
