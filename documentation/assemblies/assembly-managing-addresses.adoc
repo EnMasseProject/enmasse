@@ -32,3 +32,4 @@ include::../modules/proc-create-address-console.adoc[leveloffset=+1]
 
 include::../modules/proc-replace-address-cli.adoc[leveloffset=+1]
 
+include::../modules/proc-delete-address-console.adoc[leveloffset=+1]
