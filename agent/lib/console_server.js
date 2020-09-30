@@ -154,24 +154,19 @@ function ConsoleServer(env, openshift) {
             reject(context, 'amqp:unauthorized-access', 'not authorized');
         } else if (context.message.subject === 'purge_address') {
             accept();
-            var name = context.message.body.address;
-            log.info('[%s] purging address %s', user, name);
+            var addr = context.message.body.address;
+            log.info('[%s] purging address %s', user, addr);
 
-            var a = name.split(".", 2);
-            if (a.length !== 2) {
-                sendResponse(responseSender, context.message, false, "unexpected address name : " + name);
+            var addr = self.addresses.get(addr);
+            if (addr) {
+                queue(addr).purge().then(purged => {
+                    log.info("[%s] Purged %d message(s) from address %s", user, purged, context.message.body.address);
+                    sendResponse(responseSender, context.message, true);
+                }).catch((e) => {
+                    sendResponse(responseSender, context.message, false, extractServerResponse(e));
+                });
             } else {
-                var addr = self.addresses.get(a[1]);
-                if (addr) {
-                    queue(addr).purge().then(purged => {
-                        log.info("[%s] Purged %d message(s) from address %s", user, purged, context.message.body.address);
-                        sendResponse(responseSender, context.message, true);
-                    }).catch((e) => {
-                        sendResponse(responseSender, context.message, false, extractServerResponse(e));
-                    });
-                } else {
-                    sendResponse(responseSender, context.message, false, "could not find address with name : " + name);
-                }
+                sendResponse(responseSender, context.message, false, "could not find address " + addr);
             }
         } else if (context.message.subject === 'close_connection') {
             accept();

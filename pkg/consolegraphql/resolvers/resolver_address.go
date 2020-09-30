@@ -268,7 +268,7 @@ func (r *mutationResolver) PurgeAddresses(ctx context.Context, inputs []*metav1.
 			continue
 		}
 
-		e = commandDelegate.PurgeAddress(*input)
+		e = commandDelegate.PurgeAddress(address.Spec.Address)
 		if e != nil {
 			graphql.AddErrorf(ctx, "failed to purge address: '%s' in namespace '%s', %+v", input.Name, input.Namespace, e)
 		}
