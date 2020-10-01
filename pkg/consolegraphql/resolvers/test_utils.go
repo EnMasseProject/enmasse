@@ -144,11 +144,11 @@ type mockCollector struct {
 }
 
 type mockCommandDelegate struct {
-	purged []metav1.ObjectMeta
+	purged []string
 	closed []metav1.ObjectMeta
 }
 
-func (mcd *mockCommandDelegate) PurgeAddress(a metav1.ObjectMeta) error {
+func (mcd *mockCommandDelegate) PurgeAddress(a string) error {
 	mcd.purged = append(mcd.purged, a)
 	return nil
 }

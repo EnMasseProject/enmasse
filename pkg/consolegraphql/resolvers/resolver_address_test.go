@@ -436,7 +436,7 @@ func TestPurgeQueue(t *testing.T) {
 	infraUuid := "abcd1234"
 	as := createAddressSpace(addressspace, namespace, withAddressSpaceAnnotation("enmasse.io/infra-uuid", infraUuid))
 
-	addr := createAddress(namespace, addressspace+".myaddr", withAddressType("queue"))
+	addr := createAddress(namespace, addressspace+".myaddr", withAddressType("queue"), withAddress("myaddr"))
 
 	err := r.Cache.Add(as, addr)
 	assert.NoError(t, err)
@@ -449,7 +449,7 @@ func TestPurgeQueue(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(graphql.GetErrors(ctx)))
 
-	assert.ElementsMatch(t, []metav1.ObjectMeta{addr.ObjectMeta}, delegate.(*mockCommandDelegate).purged)
+	assert.ElementsMatch(t, []string{"myaddr"}, delegate.(*mockCommandDelegate).purged)
 }
 
 func TestPurgeQueues(t *testing.T) {
@@ -463,8 +463,8 @@ func TestPurgeQueues(t *testing.T) {
 	infraUuid := "abcd1235"
 	as := createAddressSpace(addressspace, namespace, withAddressSpaceAnnotation("enmasse.io/infra-uuid", infraUuid))
 
-	addr1 := createAddress(namespace, addressspace+".myaddr", withAddressType("queue"))
-	addr2 := createAddress(namespace, addressspace+".myaddr", withAddressType("queue"))
+	addr1 := createAddress(namespace, addressspace+".myaddr1", withAddressType("queue"), withAddress("myaddr1"))
+	addr2 := createAddress(namespace, addressspace+".myaddr2", withAddressType("queue"), withAddress("my_addr2"))
 
 	err := r.Cache.Add(as, addr1, addr2)
 	assert.NoError(t, err)
@@ -477,7 +477,7 @@ func TestPurgeQueues(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(graphql.GetErrors(ctx)))
 
-	assert.ElementsMatch(t, []metav1.ObjectMeta{addr1.ObjectMeta, addr2.ObjectMeta}, delegate.(*mockCommandDelegate).purged)
+	assert.ElementsMatch(t, []string{"myaddr1", "my_addr2"}, delegate.(*mockCommandDelegate).purged)
 }
 
 func TestPurgeQueuesSomeFail(t *testing.T) {
@@ -491,10 +491,10 @@ func TestPurgeQueuesSomeFail(t *testing.T) {
 	infraUuid := "abcd1236"
 	as := createAddressSpace(addressspace, namespace, withAddressSpaceAnnotation("enmasse.io/infra-uuid", infraUuid))
 
-	addr1 := createAddress(namespace, addressspace+".myaddr1", withAddressType("queue"))
-	addr2 := createAddress(namespace, addressspace+".myaddr2", withAddressType("queue"))
-	absent := createAddress(namespace, addressspace+".absent", withAddressType("queue"))
-	wrongType := createAddress(namespace, addressspace+".wrongType", withAddressType("anycast"))
+	addr1 := createAddress(namespace, addressspace+".myaddr1", withAddressType("queue"), withAddress("myaddr1"))
+	addr2 := createAddress(namespace, addressspace+".myaddr2", withAddressType("queue"), withAddress("myaddr2"))
+	absent := createAddress(namespace, addressspace+".absent", withAddressType("queue"), withAddress("absent"))
+	wrongType := createAddress(namespace, addressspace+".wrongType", withAddressType("anycast"), withAddress("wrongType"))
 
 	err := r.Cache.Add(as, addr1, addr2, wrongType)
 	assert.NoError(t, err)
@@ -511,7 +511,7 @@ func TestPurgeQueuesSomeFail(t *testing.T) {
 	assert.Contains(t, graphql.GetErrors(ctx)[1].Message,
 		"failed to purge address: 'myaddrspace.absent' in namespace: 'mynamespace' - address not found")
 
-	assert.ElementsMatch(t, []metav1.ObjectMeta{addr1.ObjectMeta, addr2.ObjectMeta}, delegate.(*mockCommandDelegate).purged)
+	assert.ElementsMatch(t, []string{"myaddr1", "myaddr2"}, delegate.(*mockCommandDelegate).purged)
 }
 
 func createAddressLink(namespace string, addressspace string, addr string, role string) *consolegraphql.Link {

@@ -1068,7 +1068,7 @@ public abstract class ConsoleTest extends TestBase {
         Address queue3 = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(addressSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue3"))
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue-3"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
