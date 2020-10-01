@@ -32,7 +32,7 @@ type Delegate interface {
 }
 
 type CommandDelegate interface {
-	PurgeAddress(address v1.ObjectMeta) error
+	PurgeAddress(address string) error
 	CloseConnection(address v1.ObjectMeta) error
 	Shutdown()
 }
@@ -380,19 +380,19 @@ func (aad *amqpAgentDelegate) newAgentDelegate(token string, impersonateUser str
 	return a
 }
 
-func (ad *amqpAgentCommandDelegate) PurgeAddress(address v1.ObjectMeta) error {
+func (ad *amqpAgentCommandDelegate) PurgeAddress(address string) error {
 	request := &amqp.Message{
 		Properties: &amqp.MessageProperties{
 			Subject: "purge_address",
 		},
 		Value: map[interface{}]interface{}{
-			"address": address.Name,
+			"address": address,
 		},
 	}
 
 	response, err := ad.commandClient.Request(request)
 	if err != nil {
-		return fmt.Errorf("failed to purge address %s : %s", address.Name, err)
+		return fmt.Errorf("failed to purge address %s : %s", address, err)
 	}
 
 	if outcome, present := response.ApplicationProperties["outcome"]; present {
@@ -400,11 +400,11 @@ func (ad *amqpAgentCommandDelegate) PurgeAddress(address v1.ObjectMeta) error {
 			return nil
 		} else {
 			if e, present := response.ApplicationProperties["error"]; present && e != nil {
-				return fmt.Errorf("failed to purge address %s : %s", address.Name, e)
+				return fmt.Errorf("failed to purge address %s : %s", address, e)
 			}
 		}
 	}
-	return fmt.Errorf("failed to purge address %s : command %+v failed for unknown reason", address.Name, request)
+	return fmt.Errorf("failed to purge address %s : command %+v failed for unknown reason", address, request)
 }
 
 func (ad *amqpAgentCommandDelegate) CloseConnection(connection v1.ObjectMeta) error {
