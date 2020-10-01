@@ -67,7 +67,8 @@ under the License.
 
       <critical-analyzer-policy>HALT</critical-analyzer-policy>
 
-      <global-max-size>${GLOBAL_MAX_SIZE}</global-max-size>
+      <!-- @GLOBAL_MAX_SIZE@ is replace by launch-broker.sh -->
+      <global-max-size>@GLOBAL_MAX_SIZE@</global-max-size>
 
       <metrics-plugin class-name="org.apache.activemq.artemis.core.server.metrics.plugins.ArtemisPrometheusMetricsPlugin" />
 

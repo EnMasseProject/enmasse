@@ -379,6 +379,11 @@ MockBroker.prototype.list_addresses = function () {
     return this.get('address');
 };
 
+MockBroker.prototype.getGlobalMaxSize = function () {
+    var self = this;
+    return Promise.resolve(self.global_max_size);
+}
+
 MockBroker.prototype.get_pod_descriptor = function () {
     return {
         ready : (this.port === undefined ? 'False' : 'True'),
