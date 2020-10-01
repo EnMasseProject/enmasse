@@ -181,7 +181,7 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     }
 
     @ParameterizedTest(name = "testAddressSpecified-{0}-UI")
-    @ValueSource(strings = {"standard", "brokered"})
+    @ValueSource(strings = {"standard"/*, "brokered"*/})
     void testAddressSpecified(String type) throws Exception {
         doTestMessageRedelivery(AddressSpaceType.getEnum(type), AddressType.QUEUE, false);
     }

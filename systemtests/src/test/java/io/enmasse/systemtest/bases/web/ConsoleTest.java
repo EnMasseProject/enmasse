@@ -2048,14 +2048,14 @@ public abstract class ConsoleTest extends TestBase {
                 messages.add(msg);
             });
             LOGGER.info("Sending messages with TLL expired");
-            sendTtlAndCheckInUI(addressSpace, addr, recvAddr, deadletter, user, messages, Duration.ofSeconds(15).toMillis());
+            sendTtlAndCheckInUI(addressSpace, addr, recvAddr, deadletter, user, messages, Duration.ofSeconds(30).toMillis());
 
         } else {
             MessageRedelivery expectedRedelivery = new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(10)
                     .withRedeliveryDelayMultiplier(1.0).withRedeliveryDelay(0L).withMaximumDeliveryDelay(0L).build();
             // Cannot check now because defaults are not yet visible for users in address status section
             //AddressUtils.assertRedeliveryStatus(recvAddr, expectedRedelivery);
-            AddressUtils.awaitAddressSettingsSync(addressSpace, recvAddr, expectedRedelivery);
+            AddressUtils.awaitAddressSettingsSync(addressSpace, addr, expectedRedelivery);
             LOGGER.info("Sending to DLQ");
             sendAndReceiveFailingDeliveries(addressSpace, addr, recvAddr, deadletter, user, List.of(createMessage(addr)), expectedRedelivery);
 
