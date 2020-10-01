@@ -13,7 +13,7 @@ NOTE: The operator processes are running on either a JVM or a Node.JS VM. Sizing
 
 == Operator component configuration example
 
-Each address adds about 20 kB overhead to the operator process. With 1500 addresses, an additional `1500 * 2 kB = 30 MB` is needed for the operator process.
+Each address adds about 20 kB overhead to the operator process. With 1500 addresses, an additional `1500 * 20 kB = 30 MB` is needed for the operator process.
 
 In addition, these processes have a base memory requirement of 256 MB.  So, the total operator memory needed is `256 MB + 30 MB = 286 MB`. This value can be configured in both the `StandardInfraConfig` and `BrokeredInfraConfig` resources:
 [source,yaml,options="nowrap",subs="+quotes,attributes"]
