@@ -15,6 +15,7 @@ import {
 import { StyleSheet } from "@patternfly/react-styles";
 import { IDropdownOption, DropdownWithToggle } from "components";
 import { ExpiryAddress, DeadLetterAddress } from "modules/address/components";
+import { AddressTypes } from "constant";
 
 const styles = StyleSheet.create({
   dropdownItem: {
@@ -133,7 +134,7 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                 isDisabled={type.trim() === ""}
               />
             </FormGroup>
-            {type && type.toLowerCase() === "subscription" && (
+            {type && type.toLowerCase() === AddressTypes.SUBSCRIPTION && (
               <FormGroup
                 label="Topic"
                 isRequired={true}
@@ -150,13 +151,13 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                   value={topic}
                   dropdownItems={topicsForSubscription}
                   dropdownItemId="address-definition-topic-dropdown-item"
-                  isDisabled={type.trim() !== "subscription"}
+                  isDisabled={type.trim() !== AddressTypes.SUBSCRIPTION}
                   isDisplayLabelAndValue={true}
                 />
               </FormGroup>
             )}
-            {(type?.toLowerCase() === "subscription" ||
-              type?.toLowerCase() === "queue") && (
+            {(type?.toLocaleLowerCase() === AddressTypes.TOPIC ||
+              type?.toLocaleLowerCase() === AddressTypes.QUEUE) && (
               <>
                 <ExpiryAddress
                   expiryAddress={expiryAddress}
