@@ -772,9 +772,9 @@ BrokerController.prototype.generate_address_settings = function (address, global
                 upd++;
             }
         }
-        var notTopic = address.type === 'subscription' || address.type === 'queue' || address.type === 'deadletter';
 
-        if (notTopic) {
+        var notSubscription = address.type === 'topic' || address.type === 'queue' || address.type === 'deadletter';
+        if (notSubscription) {
             if (address.deadletter) {
                 addressSettings.DLA = address.deadletter;
                 // Specify default redelivery settings by default when using a DLQ. These are based
