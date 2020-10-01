@@ -190,6 +190,16 @@ describe('broker controller', function() {
         });
     });
 
+    it('get address settings async - returns ttl settings for topics', function(done) {
+        this.timeout(15000);
+        var brokerAddressSettings =  new broker_controller.BrokerController(undefined, config);
+        brokerAddressSettings.get_address_settings_async({address:'mytopic',type:'topic', plan: 'small-topic', status: {messageTtl: {minimum: 1000, maximum: 2000}}}, Promise.resolve(undefined)).then(function (result) {
+            assert.equal(1000, result.minExpiryDelay);
+            assert.equal(2000, result.maxExpiryDelay);
+            done();
+        });
+    });
+
     it('initializeGlobalMaxSizeFromBrokerIfUnset- sets global_max_size from broker', function(done) {
         config.BROKER_GLOBAL_MAX_SIZE='10MB';
         var brokerController =  new broker_controller.BrokerController(undefined, config);
@@ -203,15 +213,6 @@ describe('broker controller', function() {
         brokerController.initializeGlobalMaxSizeFromBrokerIfUnset();
         assert.equal(44, brokerController.broker.global_max_size);
         done();
-
-    it('get address settings async - returns ttl settings for topics', function(done) {
-        this.timeout(15000);
-        var brokerAddressSettings =  new broker_controller.BrokerController(undefined, config);
-        brokerAddressSettings.get_address_settings_async({address:'mytopic',type:'topic', plan: 'small-topic', status: {messageTtl: {minimum: 1000, maximum: 2000}}}, Promise.resolve(undefined)).then(function (result) {
-            assert.equal(1000, result.minExpiryDelay);
-            assert.equal(2000, result.maxExpiryDelay);
-            done();
-        });
     });
 
 });
