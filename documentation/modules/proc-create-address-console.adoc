@@ -12,7 +12,7 @@ For more information see the {ProductName} link:{BookUrlBase}{BaseProductVersion
 endif::Supported[]
 
 .Prerequisites
-* You must have created an address space. For more information see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-space-cli-messaging[Creating an address space].
+* You must have created an address space. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-space-cli-messaging[Creating an address space].
 
 .Procedure
 
@@ -20,13 +20,8 @@ endif::Supported[]
 
 . Click the address space link for the address space where you want to create a new address.
 
-. Click *Create*. The Create new address window opens.
+. Click *Create Address*. The Create new address wizard opens.
 
-. Type a name and select the address type. If selecting *subscription*, from the *Topic* list select the topic name to which you want to create a subscription.
+. Complete the required fields and when you are finished, click *Finish* to create the new address. Your address is displayed in the {ConsoleName}.
 
-. Click *Next*.
-
-. Select a plan and click *Next*.
-
-. Click *Create*. Your address is displayed in the {ConsoleName}.
-
+NOTE: If you select the *subscription* address type, from the *Topic* list, select the topic name to which you want to create a subscription.

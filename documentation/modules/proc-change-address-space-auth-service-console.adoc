@@ -8,7 +8,7 @@
 You can change the authentication service that is associated with an address space using the {ConsoleName}.
 
 .Prerequisites
-* You must have already created an address space. For more information see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-create-address-space-console-messaging[Creating an address space using the {ConsoleName}].
+* You must have already created an address space. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-create-address-space-console-messaging[Creating an address space using the {ConsoleName}].
 
 .Procedure
 

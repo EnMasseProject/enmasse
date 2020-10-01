@@ -1,0 +1,23 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-addresses.adoc
+
+[id='ref-address-example-message-ttl-{context}']
+= Address TTL restriction example
+
+[source,yaml,options="nowrap"]
+----
+include::../common/address-example-message-ttl.yaml[]
+----
+<1> (Optional) Destination for expired messages.  This address must be of type `deadletter`.
+<2> (Optional) Restricts message time-to-live (TTL). Applies to address types `queue` and `topic` only.
+
+include::ref-message-ttl.adoc[]
+
+TTL restrictions may also be imposed by the address plan.  If a TTL restriction is imposed at both the plan and the address,
+the address TTL restriction can only further narrow the TTL restriction.  The address `status` section shows the
+TTL values that are in force.
+
+If the address has an `expiry` address assigned, expired messages are automatically moved to it.  If the address has no `expiry` address assigned or
+if the address is a temporary topic subscription, expired messages are removed.  These messages are lost.
+Message expiration occurs periodically at an interval of 30 seconds.

@@ -105,6 +105,10 @@ export const getTypeColor = (type: string) => {
       iconColor = "#F4C145";
       break;
     }
+    case "D": {
+      iconColor = "#592222";
+      break;
+    }
   }
   return iconColor;
 };

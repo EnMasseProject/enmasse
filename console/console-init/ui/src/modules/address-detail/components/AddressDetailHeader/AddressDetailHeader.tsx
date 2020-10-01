@@ -25,6 +25,8 @@ export interface IAddressDetailHeaderProps {
   topic?: string | null;
   name: string;
   plan: string;
+  deadletter?: string | null;
+  expiryQueue?: string | null;
   storedMessages: number | string;
   onEdit: (name: string) => void;
   onDelete: (name: string) => void;
@@ -61,6 +63,8 @@ const styles = StyleSheet.create({
 export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderProps> = ({
   type,
   topic,
+  deadletter,
+  expiryQueue,
   name,
   plan,
   storedMessages,
@@ -77,7 +81,6 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
       </SplitItem>
     </Split>
   );
-
   const AddressDetailInFlex = () => (
     <Flex className={css(styles.namespace_info_margin)}>
       <FlexItem id="adheader-plans">
@@ -89,6 +92,22 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
           className={css(styles.flex_left_border)}
         >
           Topic : <b>{topic}</b>
+        </FlexItem>
+      )}
+      {deadletter && deadletter !== null && (
+        <FlexItem
+          id="addr-detail-header-deadletter-flexitem"
+          className={css(styles.flex_left_border)}
+        >
+          Deadletter Address : <b>{deadletter}</b>
+        </FlexItem>
+      )}
+      {expiryQueue && expiryQueue !== null && (
+        <FlexItem
+          id="addr-detail-header-expiry-address-flexitem"
+          className={css(styles.flex_left_border)}
+        >
+          Expiry Address : <b>{expiryQueue}</b>
         </FlexItem>
       )}
       {type && (type === "anycast" || type === "multicast") ? (
@@ -139,7 +158,8 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
     if (
       type &&
       (type.toLowerCase() === AddressTypes.QUEUE ||
-        type.toLowerCase() === AddressTypes.SUBSCRIPTION)
+        type.toLowerCase() === AddressTypes.SUBSCRIPTION ||
+        type.toLowerCase() === AddressTypes.DEADLETTER)
     ) {
       dropdownItems.push(
         <DropdownItem

@@ -18,7 +18,9 @@ include::../modules/ref-address-example.adoc[leveloffset=+1]
 
 include::../modules/ref-address-example-topic-and-sub.adoc[leveloffset=+2]
 
-include::../modules/ref-address-example-ttl.adoc[leveloffset=+2]
+include::../modules/ref-address-example-message-ttl.adoc[leveloffset=+2]
+
+include::../modules/ref-address-example-message-redelivery.adoc[leveloffset=+2]
 
 include::../modules/ref-address-example-forwarders.adoc[leveloffset=+2]
 
@@ -30,3 +32,4 @@ include::../modules/proc-create-address-console.adoc[leveloffset=+1]
 
 include::../modules/proc-replace-address-cli.adoc[leveloffset=+1]
 
+include::../modules/proc-delete-address-console.adoc[leveloffset=+1]

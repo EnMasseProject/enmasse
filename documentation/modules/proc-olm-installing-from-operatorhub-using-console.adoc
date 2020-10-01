@@ -35,7 +35,7 @@ The *{ProductBundleName}* page is displayed, where you can monitor the installat
 
 . After the subscription upgrade status is shown as *Up to date*, click *Operators > Installed Operators* to verify that the *{ProductName}* ClusterServiceVersion (CSV) is displayed and its *Status* ultimately resolves to *InstallSucceeded* in the *{ProductNamespace}* namespace.
 +
-For troubleshooting information, see the link:https://access.redhat.com/documentation/en-us/openshift_container_platform/4.1/html/applications/operators#olm-installing-operators-from-operatorhub_olm-adding-operators-to-a-cluster[{KubePlatform} documentation].
+For troubleshooting information, see the link:https://access.redhat.com/documentation/en-us/openshift_container_platform/4.5/html-single/operators/index#olm-installing-operators-from-operatorhub_olm-adding-operators-to-a-cluster[{KubePlatform} documentation].
 
 .Next steps
 

@@ -172,7 +172,7 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
 
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
-                .withName("message-ttl-space")
+                .withName("message-dl-space")
                 .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
@@ -203,9 +203,9 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
                 .endMetadata()
                 .withNewSpec()
                 .withType(addressType.toString())
-                .withMessageRedelivery(addressType == AddressType.TOPIC ? null : addrRedelivery)
+                .withMessageRedelivery(addrRedelivery)
                 .withAddress("message-redelivery")
-                .withDeadletter(addressType == AddressType.TOPIC ? null : deadletter.getSpec().getAddress())
+                .withDeadletter(deadletter.getSpec().getAddress())
                 .withPlan(addrPlan.getMetadata().getName())
                 .endSpec()
                 .build();
@@ -221,9 +221,7 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
                         .endMetadata()
                         .withNewSpec()
                         .withType(AddressType.SUBSCRIPTION.toString())
-                        .withMessageRedelivery(addrRedelivery)
                         .withAddress("message-redelivery-sub")
-                        .withDeadletter(deadletter.getSpec().getAddress())
                         .withTopic(addr.getSpec().getAddress())
                         .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
                         .endSpec()
@@ -233,7 +231,7 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
             recvAddr = addr;
         }
 
-        assertRedeliveryStatus(recvAddr, expectedRedelivery);
+        assertRedeliveryStatus(addressType == AddressType.TOPIC ? addr : recvAddr, expectedRedelivery);
         awaitAddressSettingsSync(addressSpace, recvAddr);
 
         UserCredentials user = new UserCredentials("user", "passwd");
@@ -297,9 +295,9 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
                     delivery -> delivery.disposition(DELIVERY_FAILED, true)).getResult().get(1, TimeUnit.MINUTES).size(), is(expected));
 
             if (redelivery.getMaximumDeliveryAttempts() != null && redelivery.getMaximumDeliveryAttempts() >= 0) {
-                if (sendAddr.getSpec().getDeadletter() != null) {
+                if (recvAddr.getSpec().getDeadletter() != null) {
                     // Messages should have been routed to the dead letter address
-                    assertThat("all messages should have been routed to the dead letter address", client.recvMessages(sendAddr.getSpec().getDeadletter(), 1).get(1, TimeUnit.MINUTES).size(), is(messages.size()));
+                    assertThat("all messages should have been routed to the dead letter address", client.recvMessages(recvAddr.getSpec().getDeadletter(), 1).get(1, TimeUnit.MINUTES).size(), is(messages.size()));
                 }
             } else {
                 // Infinite delivery attempts configured - consume normally
@@ -338,6 +336,104 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
             } else {
                 assertThat(reread.getStatus().getMessageRedelivery().getMaximumDeliveryDelay(), nullValue());
             }
+        }
+    }
+
+    @ParameterizedTest(name = "testDanglingDeadLetterReference-{0}-space")
+    @ValueSource(strings = {"standard", "brokered"})
+    void testDanglingDeadLetterReference(String type) throws Exception {
+        AddressSpaceType addressSpaceType = AddressSpaceType.getEnum(type);
+        AddressType addressType = AddressType.QUEUE;
+        final String baseSpacePlan;
+        final String baseAddressPlan;
+        final String deadLetterAddressPlan;
+
+        if (AddressSpaceType.STANDARD == addressSpaceType) {
+            baseSpacePlan =  AddressSpacePlans.STANDARD_SMALL;
+            baseAddressPlan = DestinationPlan.STANDARD_MEDIUM_QUEUE;
+            deadLetterAddressPlan = DestinationPlan.STANDARD_DEADLETTER;
+        } else {
+            baseSpacePlan = AddressSpacePlans.BROKERED;
+            baseAddressPlan = DestinationPlan.BROKERED_QUEUE;
+            deadLetterAddressPlan = DestinationPlan.BROKERED_DEADLETTER;
+        }
+
+        AddressSpacePlan spacePlan = kubernetes.getAddressSpacePlanClient().withName(baseSpacePlan).get();
+        AddressPlan addrPlan = kubernetes.getAddressPlanClient().withName(baseAddressPlan).get();
+        AddressPlan deadletterPlan = kubernetes.getAddressPlanClient().withName(deadLetterAddressPlan).get();
+
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("message-dl-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(spacePlan.getAddressSpaceType())
+                .withPlan(spacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        Address deadletter = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(kubernetes.getInfraNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "deadletter"))
+                .endMetadata()
+                .withNewSpec()
+                .withType(deadletterPlan.getAddressType())
+                .withPlan(deadletterPlan.getMetadata().getName())
+                .withAddress("deadletter")
+                .endSpec()
+                .build();
+
+        Address addr = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(kubernetes.getInfraNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "message-redelivery"))
+                .endMetadata()
+                .withNewSpec()
+                .withType(addressType.toString())
+                .withAddress("message-redelivery")
+                .withDeadletter(deadletter.getSpec().getAddress())
+                .withPlan(addrPlan.getMetadata().getName())
+                .endSpec()
+                .build();
+        isolatedResourcesManager.createAddressSpace(addressSpace);
+        isolatedResourcesManager.setAddresses(deadletter, addr);
+
+        UserCredentials user = new UserCredentials("user", "passwd");
+        isolatedResourcesManager.createOrUpdateUser(addressSpace, user);
+
+        List<Message> messages = List.of(createMessage(addr), createMessage(addr));
+
+        try(AmqpClient client = getAmqpClientFactory().createQueueClient(addressSpace)) {
+            client.getConnectOptions().setCredentials(user);
+
+            AtomicInteger count = new AtomicInteger();
+            CompletableFuture<Integer> sent = client.sendMessages(addr.getSpec().getAddress(), messages, (message -> count.getAndIncrement() == messages.size()));
+            assertThat("all messages should have been sent", sent.get(20, TimeUnit.SECONDS), is(messages.size()));
+
+            List<Message> received = client.recvMessages(addr.getSpec().getAddress(), 1).get(20, TimeUnit.SECONDS);
+            assertThat("unexpected number of messages received before", received.size(), is(1));
+
+            isolatedResourcesManager.deleteAddresses(deadletter);
+
+            TestUtils.waitUntilCondition(() -> {
+                try {
+                    Address reread = resourcesManager.getAddress(addr.getMetadata().getNamespace(), addr);
+                    Optional<String> found = reread.getStatus().getMessages().stream().filter(m -> m.contains("references a dead letter address 'deadletter' that does not exist")).findFirst();
+                    return found.isPresent();
+                } catch (Exception | AssertionError e) {
+                    return false;
+                }
+            }, Duration.ofMinutes(2), Duration.ofSeconds(15));
+
+            log.info("Dead letter ref now dangling, ensuring existing messages exist for consumption");
+
+            received = client.recvMessages(addr.getSpec().getAddress(), 1).get(20, TimeUnit.SECONDS);
+            assertThat("unexpected number of messages received after", received.size(), is(1));
         }
     }
 

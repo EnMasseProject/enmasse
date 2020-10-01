@@ -1,0 +1,22 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-addresses.adoc
+
+[id='proc-delete-address-console-{context}']
+= Deleting addresses using the {ConsoleName}
+
+You can delete existing addresses using the {ConsoleName}.
+
+.Procedure
+
+. Log in to the {ConsoleName}.
++
+For more information about how to access the {ConsoleName}, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#logging-into-console-messaging[Accessing the {ConsoleName}].
+
+. Click the address space link for the address space where you want to delete an existing address.
+
+. Locate the address that you want to delete.
+
+. In the far right column, click the vertical ellipsis icon and select *Delete*. The delete confirmation window opens.
+
+. Confirm your selection by clicking *Delete*. The address is deleted.

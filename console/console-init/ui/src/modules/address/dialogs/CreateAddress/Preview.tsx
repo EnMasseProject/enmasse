@@ -31,6 +31,8 @@ export interface IAddressPreview {
   topic?: string;
   namespace: string;
   addressspace: string;
+  deadletter: string;
+  expiry: string;
 }
 const Style = StyleSheet.create({
   left_padding: {
@@ -47,7 +49,9 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
   plan,
   topic,
   namespace,
-  addressspace
+  addressspace,
+  deadletter,
+  expiry
 }) => {
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const { data, loading } = useQuery(ADDRESS_COMMAND_PREVIEW_DETAIL, {
@@ -60,6 +64,14 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
           plan: plan ? plan.toLowerCase() : "",
           type: type ? type.toLowerCase() : "",
           ...(topic && topic.trim() !== "" && { topic: topic }),
+          ...(deadletter &&
+            deadletter.trim() !== "" && {
+              deadletter: deadletter
+            }),
+          ...(expiry &&
+            expiry.trim() !== "" && {
+              expiry: expiry
+            }),
           address: name
         }
       },
@@ -126,6 +138,22 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                 <GridItem id="preview-addr-topic" span={8}>
                   {topic}
                 </GridItem>
+              </>
+            )}
+            {deadletter && deadletter.trim() !== "" && (
+              <>
+                <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
+                  Deadletter Address
+                </GridItem>
+                <GridItem span={8}>{deadletter}</GridItem>
+              </>
+            )}
+            {expiry && expiry.trim() !== "" && (
+              <>
+                <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
+                  Expiry Address
+                </GridItem>
+                <GridItem span={8}>{expiry}</GridItem>
               </>
             )}
           </Grid>

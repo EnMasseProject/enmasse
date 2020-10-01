@@ -99,6 +99,7 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
       addresses &&
       addresses.addresses.map(address => ({
         name: address.metadata.name,
+        addressSpaceName: name,
         displayName: address.spec.address,
         namespace: address.metadata.namespace,
         type: address.spec.type,
@@ -113,6 +114,9 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
         ),
         senders: getFilteredValue(address.metrics, "enmasse_senders"),
         receivers: getFilteredValue(address.metrics, "enmasse_receivers"),
+        topic: address.spec.topic,
+        deadletter: address.spec.deadletter,
+        expiry: address.spec.expiry,
         partitions:
           address.status && address.status.planStatus
             ? address.status.planStatus.partitions

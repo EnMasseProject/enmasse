@@ -105,9 +105,9 @@ export default function AddressDetailPage() {
   }
 
   const addressDetail = addresses && addresses.addresses[0];
-
   const getAddress = () => {
     const address: IAddress = {
+      addressSpaceName: name,
       name: addressDetail.metadata.name,
       displayName: addressDetail.spec.address,
       namespace: addressDetail.metadata.namespace,
@@ -117,6 +117,8 @@ export default function AddressDetailPage() {
         addressDetail.spec.plan.metadata.name,
       planValue: addressDetail.spec.plan.metadata.name,
       topic: addressDetail.spec.topic,
+      deadletter: addressDetail.spec.deadletter,
+      expiry: addressDetail.spec.expiry,
       messageIn: getFilteredValue(addressDetail.metrics, "enmasse_messages_in"),
       messageOut: getFilteredValue(
         addressDetail.metrics,
@@ -196,7 +198,9 @@ export default function AddressDetailPage() {
       addressDetail.spec.plan.spec.addressType.toLowerCase() ===
         AddressTypes.QUEUE ||
       addressDetail.spec.plan.spec.addressType.toLowerCase() ===
-        AddressTypes.SUBSCRIPTION
+        AddressTypes.SUBSCRIPTION ||
+      addressDetail.spec.plan.spec.addressType.toLowerCase() ===
+        AddressTypes.DEADLETTER
     ) {
       await purgeAddress({
         name: addressDetail.metadata.name,
@@ -228,6 +232,8 @@ export default function AddressDetailPage() {
           name={address.name}
           plan={address.planLabel}
           topic={address.topic}
+          deadletter={address.deadletter}
+          expiryQueue={address.expiry}
           storedMessages={address.storedMessages}
           onEdit={onChangeEdit}
           onDelete={onChangeDelete}

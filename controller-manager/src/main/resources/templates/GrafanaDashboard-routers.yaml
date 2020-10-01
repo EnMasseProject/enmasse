@@ -26,8 +26,8 @@ spec:
       "editable": true,
       "gnetId": null,
       "graphTooltip": 0,
-      "id": 2,
-      "iteration": 1554463529150,
+      "id": 8,
+      "iteration": 1598369593707,
       "links": [],
       "panels": [
         {
@@ -55,6 +55,7 @@ spec:
           },
           "id": 2,
           "links": [],
+          "options": {},
           "pageSize": null,
           "scroll": true,
           "showHeader": true,
@@ -134,7 +135,7 @@ spec:
           "datasource": "Prometheus",
           "fill": 1,
           "gridPos": {
-            "h": 7,
+            "h": 8,
             "w": 8,
             "x": 0,
             "y": 7
@@ -145,35 +146,47 @@ spec:
             "current": false,
             "max": false,
             "min": false,
-            "show": false,
+            "show": true,
             "total": false,
             "values": false
           },
           "lines": true,
           "linewidth": 1,
           "links": [],
+          "maxPerRow": 3,
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
-          "pointradius": 5,
+          "pointradius": 2,
           "points": false,
           "renderer": "flot",
+          "repeat": "router_metrics",
+          "repeatDirection": "h",
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_accepted_deliveries_total",
+              "value": "enmasse_qdr_accepted_deliveries_total"
+            }
+          },
           "seriesOverrides": [],
           "spaceLength": 10,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "enmasse_connections{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
-              "instant": false,
               "intervalFactor": 1,
+              "legendFormat": "",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
-          "title": "Connections",
+          "title": "$router_metrics",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -218,93 +231,9 @@ spec:
           "datasource": "Prometheus",
           "fill": 1,
           "gridPos": {
-            "h": 7,
+            "h": 8,
             "w": 8,
             "x": 8,
-            "y": 7
-          },
-          "id": 10,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": false,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "enmasse_links{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
-              "format": "time_series",
-              "instant": false,
-              "intervalFactor": 1,
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Links",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "Prometheus",
-          "fill": 1,
-          "gridPos": {
-            "h": 7,
-            "w": 8,
-            "x": 16,
             "y": 7
           },
           "id": 9,
@@ -313,35 +242,49 @@ spec:
             "current": false,
             "max": false,
             "min": false,
-            "show": false,
+            "show": true,
             "total": false,
             "values": false
           },
           "lines": true,
           "linewidth": 1,
           "links": [],
+          "maxPerRow": 3,
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
-          "pointradius": 5,
+          "pointradius": 2,
           "points": false,
           "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_addresses_total",
+              "value": "enmasse_qdr_addresses_total"
+            }
+          },
           "seriesOverrides": [],
           "spaceLength": 10,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "enmasse_addresses{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
-              "instant": false,
               "intervalFactor": 1,
+              "legendFormat": "",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
-          "title": "Addresses",
+          "title": "$router_metrics",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -386,46 +329,60 @@ spec:
           "datasource": "Prometheus",
           "fill": 1,
           "gridPos": {
-            "h": 7,
-            "w": 12,
-            "x": 0,
-            "y": 14
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 7
           },
-          "id": 12,
+          "id": 10,
           "legend": {
             "avg": false,
             "current": false,
             "max": false,
             "min": false,
-            "show": false,
+            "show": true,
             "total": false,
             "values": false
           },
           "lines": true,
           "linewidth": 1,
           "links": [],
+          "maxPerRow": 3,
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
-          "pointradius": 5,
+          "pointradius": 2,
           "points": false,
           "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_auto_links_total",
+              "value": "enmasse_qdr_auto_links_total"
+            }
+          },
           "seriesOverrides": [],
           "spaceLength": 10,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "enmasse_auto_links{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
-              "instant": false,
               "intervalFactor": 1,
+              "legendFormat": "",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
-          "title": "Auto Links",
+          "title": "$router_metrics",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -470,10 +427,10 @@ spec:
           "datasource": "Prometheus",
           "fill": 1,
           "gridPos": {
-            "h": 7,
-            "w": 12,
-            "x": 12,
-            "y": 14
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 15
           },
           "id": 11,
           "legend": {
@@ -481,35 +438,49 @@ spec:
             "current": false,
             "max": false,
             "min": false,
-            "show": false,
+            "show": true,
             "total": false,
             "values": false
           },
           "lines": true,
           "linewidth": 1,
           "links": [],
+          "maxPerRow": 3,
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
-          "pointradius": 5,
+          "pointradius": 2,
           "points": false,
           "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_connections_total",
+              "value": "enmasse_qdr_connections_total"
+            }
+          },
           "seriesOverrides": [],
           "spaceLength": 10,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "enmasse_link_routes{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
-              "instant": false,
               "intervalFactor": 1,
+              "legendFormat": "",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
-          "title": "Link Routes",
+          "title": "$router_metrics",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -554,10 +525,108 @@ spec:
           "datasource": "Prometheus",
           "fill": 1,
           "gridPos": {
-            "h": 7,
-            "w": 6,
-            "x": 0,
-            "y": 21
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 15
+          },
+          "id": 12,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "maxPerRow": 3,
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_deliveries_delayed_10sec_total",
+              "value": "enmasse_qdr_deliveries_delayed_10sec_total"
+            }
+          },
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "$router_metrics",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 15
           },
           "id": 13,
           "legend": {
@@ -565,35 +634,49 @@ spec:
             "current": false,
             "max": false,
             "min": false,
-            "show": false,
+            "show": true,
             "total": false,
             "values": false
           },
           "lines": true,
           "linewidth": 1,
           "links": [],
+          "maxPerRow": 3,
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
-          "pointradius": 5,
+          "pointradius": 2,
           "points": false,
           "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_deliveries_delayed_1sec_total",
+              "value": "enmasse_qdr_deliveries_delayed_1sec_total"
+            }
+          },
           "seriesOverrides": [],
           "spaceLength": 10,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "enmasse_presettled_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
-              "instant": false,
               "intervalFactor": 1,
+              "legendFormat": "",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
-          "title": "Presettled Deliveries",
+          "title": "$router_metrics",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -638,10 +721,10 @@ spec:
           "datasource": "Prometheus",
           "fill": 1,
           "gridPos": {
-            "h": 7,
-            "w": 6,
-            "x": 6,
-            "y": 21
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 23
           },
           "id": 14,
           "legend": {
@@ -649,35 +732,49 @@ spec:
             "current": false,
             "max": false,
             "min": false,
-            "show": false,
+            "show": true,
             "total": false,
             "values": false
           },
           "lines": true,
           "linewidth": 1,
           "links": [],
+          "maxPerRow": 3,
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
-          "pointradius": 5,
+          "pointradius": 2,
           "points": false,
           "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_deliveries_egress_route_container_total",
+              "value": "enmasse_qdr_deliveries_egress_route_container_total"
+            }
+          },
           "seriesOverrides": [],
           "spaceLength": 10,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "enmasse_dropped_presettled_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
-              "instant": false,
               "intervalFactor": 1,
+              "legendFormat": "",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
-          "title": "Dropped Presettled Deliveries",
+          "title": "$router_metrics",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -722,178 +819,10 @@ spec:
           "datasource": "Prometheus",
           "fill": 1,
           "gridPos": {
-            "h": 7,
-            "w": 6,
-            "x": 12,
-            "y": 21
-          },
-          "id": 17,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": false,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "enmasse_accepted_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
-              "format": "time_series",
-              "instant": false,
-              "intervalFactor": 1,
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Accepted Deliveries",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "Prometheus",
-          "fill": 1,
-          "gridPos": {
-            "h": 7,
-            "w": 6,
-            "x": 18,
-            "y": 21
-          },
-          "id": 18,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": false,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "enmasse_released_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
-              "format": "time_series",
-              "instant": false,
-              "intervalFactor": 1,
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Released Deliveries",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "Prometheus",
-          "fill": 1,
-          "gridPos": {
-            "h": 7,
-            "w": 6,
-            "x": 0,
-            "y": 28
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 23
           },
           "id": 15,
           "legend": {
@@ -901,35 +830,49 @@ spec:
             "current": false,
             "max": false,
             "min": false,
-            "show": false,
+            "show": true,
             "total": false,
             "values": false
           },
           "lines": true,
           "linewidth": 1,
           "links": [],
+          "maxPerRow": 3,
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
-          "pointradius": 5,
+          "pointradius": 2,
           "points": false,
           "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_deliveries_egress_total",
+              "value": "enmasse_qdr_deliveries_egress_total"
+            }
+          },
           "seriesOverrides": [],
           "spaceLength": 10,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "enmasse_rejected_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
-              "instant": false,
               "intervalFactor": 1,
+              "legendFormat": "",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
-          "title": "Rejected Deliveries",
+          "title": "$router_metrics",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -974,178 +917,10 @@ spec:
           "datasource": "Prometheus",
           "fill": 1,
           "gridPos": {
-            "h": 7,
-            "w": 6,
-            "x": 6,
-            "y": 28
-          },
-          "id": 21,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": false,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "enmasse_modified_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
-              "format": "time_series",
-              "instant": false,
-              "intervalFactor": 1,
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Modified Deliveries",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "Prometheus",
-          "fill": 1,
-          "gridPos": {
-            "h": 7,
-            "w": 6,
-            "x": 12,
-            "y": 28
-          },
-          "id": 19,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": false,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "enmasse_deliveries_ingress{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
-              "format": "time_series",
-              "instant": false,
-              "intervalFactor": 1,
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Deliveries Ingress",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "Prometheus",
-          "fill": 1,
-          "gridPos": {
-            "h": 7,
-            "w": 6,
-            "x": 18,
-            "y": 28
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 23
           },
           "id": 16,
           "legend": {
@@ -1153,35 +928,49 @@ spec:
             "current": false,
             "max": false,
             "min": false,
-            "show": false,
+            "show": true,
             "total": false,
             "values": false
           },
           "lines": true,
           "linewidth": 1,
           "links": [],
+          "maxPerRow": 3,
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
-          "pointradius": 5,
+          "pointradius": 2,
           "points": false,
           "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_deliveries_ingress_route_container_total",
+              "value": "enmasse_qdr_deliveries_ingress_route_container_total"
+            }
+          },
           "seriesOverrides": [],
           "spaceLength": 10,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "enmasse_deliveries_egress{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
-              "instant": false,
               "intervalFactor": 1,
+              "legendFormat": "",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
-          "title": "Deliveries Egress",
+          "title": "$router_metrics",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -1226,10 +1015,304 @@ spec:
           "datasource": "Prometheus",
           "fill": 1,
           "gridPos": {
-            "h": 7,
-            "w": 6,
+            "h": 8,
+            "w": 8,
             "x": 0,
-            "y": 35
+            "y": 31
+          },
+          "id": 17,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "maxPerRow": 3,
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_deliveries_ingress_total",
+              "value": "enmasse_qdr_deliveries_ingress_total"
+            }
+          },
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "$router_metrics",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 31
+          },
+          "id": 18,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "maxPerRow": 3,
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_deliveries_redirected_to_fallback_total",
+              "value": "enmasse_qdr_deliveries_redirected_to_fallback_total"
+            }
+          },
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "$router_metrics",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 31
+          },
+          "id": 19,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "maxPerRow": 3,
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_deliveries_stuck_total",
+              "value": "enmasse_qdr_deliveries_stuck_total"
+            }
+          },
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "$router_metrics",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 39
           },
           "id": 20,
           "legend": {
@@ -1237,35 +1320,49 @@ spec:
             "current": false,
             "max": false,
             "min": false,
-            "show": false,
+            "show": true,
             "total": false,
             "values": false
           },
           "lines": true,
           "linewidth": 1,
           "links": [],
+          "maxPerRow": 3,
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
-          "pointradius": 5,
+          "pointradius": 2,
           "points": false,
           "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_deliveries_transit_total",
+              "value": "enmasse_qdr_deliveries_transit_total"
+            }
+          },
           "seriesOverrides": [],
           "spaceLength": 10,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "enmasse_deliveries_transit{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
-              "instant": false,
               "intervalFactor": 1,
+              "legendFormat": "",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
-          "title": "Deliveries Transit",
+          "title": "$router_metrics",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -1310,46 +1407,60 @@ spec:
           "datasource": "Prometheus",
           "fill": 1,
           "gridPos": {
-            "h": 7,
-            "w": 6,
-            "x": 6,
-            "y": 35
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 39
           },
-          "id": 23,
+          "id": 21,
           "legend": {
             "avg": false,
             "current": false,
             "max": false,
             "min": false,
-            "show": false,
+            "show": true,
             "total": false,
             "values": false
           },
           "lines": true,
           "linewidth": 1,
           "links": [],
+          "maxPerRow": 3,
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
-          "pointradius": 5,
+          "pointradius": 2,
           "points": false,
           "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_dropped_presettled_deliveries_total",
+              "value": "enmasse_qdr_dropped_presettled_deliveries_total"
+            }
+          },
           "seriesOverrides": [],
           "spaceLength": 10,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "enmasse_deliveries_ingress_route_container{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
-              "instant": false,
               "intervalFactor": 1,
+              "legendFormat": "",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
-          "title": "Deliveries Ingress Route Container",
+          "title": "$router_metrics",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -1394,10 +1505,10 @@ spec:
           "datasource": "Prometheus",
           "fill": 1,
           "gridPos": {
-            "h": 7,
-            "w": 6,
-            "x": 12,
-            "y": 35
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 39
           },
           "id": 22,
           "legend": {
@@ -1405,35 +1516,735 @@ spec:
             "current": false,
             "max": false,
             "min": false,
-            "show": false,
+            "show": true,
             "total": false,
             "values": false
           },
           "lines": true,
           "linewidth": 1,
           "links": [],
+          "maxPerRow": 3,
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
-          "pointradius": 5,
+          "pointradius": 2,
           "points": false,
           "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_link_routes_total",
+              "value": "enmasse_qdr_link_routes_total"
+            }
+          },
           "seriesOverrides": [],
           "spaceLength": 10,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "enmasse_deliveries_egress_route_container{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
-              "instant": false,
               "intervalFactor": 1,
+              "legendFormat": "",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
-          "title": "Deliveries Egress Route Container",
+          "title": "$router_metrics",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 47
+          },
+          "id": 23,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "maxPerRow": 3,
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_links_blocked_total",
+              "value": "enmasse_qdr_links_blocked_total"
+            }
+          },
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "$router_metrics",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 47
+          },
+          "id": 24,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "maxPerRow": 3,
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_links_total",
+              "value": "enmasse_qdr_links_total"
+            }
+          },
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "$router_metrics",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 47
+          },
+          "id": 25,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "maxPerRow": 3,
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_modified_deliveries_total",
+              "value": "enmasse_qdr_modified_deliveries_total"
+            }
+          },
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "$router_metrics",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 55
+          },
+          "id": 26,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "maxPerRow": 3,
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_presettled_deliveries_total",
+              "value": "enmasse_qdr_presettled_deliveries_total"
+            }
+          },
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "$router_metrics",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 55
+          },
+          "id": 27,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "maxPerRow": 3,
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_rejected_deliveries_total",
+              "value": "enmasse_qdr_rejected_deliveries_total"
+            }
+          },
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "$router_metrics",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 55
+          },
+          "id": 28,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "maxPerRow": 3,
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_released_deliveries_total",
+              "value": "enmasse_qdr_released_deliveries_total"
+            }
+          },
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "$router_metrics",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 63
+          },
+          "id": 29,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "maxPerRow": 3,
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1598369593707,
+          "repeatPanelId": 8,
+          "scopedVars": {
+            "router_metrics": {
+              "selected": false,
+              "text": "enmasse_qdr_routers_total",
+              "value": "enmasse_qdr_routers_total"
+            }
+          },
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "$router_metrics{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "$router_metrics",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -1471,8 +2282,8 @@ spec:
           }
         }
       ],
-      "refresh": false,
-      "schemaVersion": 16,
+      "refresh": "1m",
+      "schemaVersion": 18,
       "style": "dark",
       "tags": [],
       "templating": {
@@ -1480,10 +2291,12 @@ spec:
           {
             "allValue": null,
             "current": {
+              "selected": true,
               "text": "All",
               "value": "$__all"
             },
             "datasource": "Prometheus",
+            "definition": "",
             "hide": 0,
             "includeAll": true,
             "label": "router_set",
@@ -1504,10 +2317,15 @@ spec:
           {
             "allValue": null,
             "current": {
+              "selected": false,
+              "tags": [],
               "text": "All",
-              "value": "$__all"
+              "value": [
+                "$__all"
+              ]
             },
             "datasource": "Prometheus",
+            "definition": "",
             "hide": 0,
             "includeAll": true,
             "label": "router",
@@ -1517,6 +2335,33 @@ spec:
             "query": "label_values(pod)",
             "refresh": 2,
             "regex": "qdrouterd.+",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {
+              "selected": true,
+              "tags": [],
+              "text": "All",
+              "value": "$__all"
+            },
+            "datasource": "Prometheus",
+            "definition": "metrics(enmasse_qdr.*)",
+            "hide": 0,
+            "includeAll": true,
+            "label": "router_metrics",
+            "multi": false,
+            "name": "router_metrics",
+            "options": [],
+            "query": "metrics(enmasse_qdr.*)",
+            "refresh": 1,
+            "regex": "",
             "skipUrlSync": false,
             "sort": 0,
             "tagValuesQuery": "",
@@ -1558,6 +2403,7 @@ spec:
       },
       "timezone": "",
       "title": "EnMasse Routers",
-      "uid": "ThjTOL6ik",
-      "version": 2
+      "uid": "ThjTOL6ij",
+      "version": 5
     }
+    

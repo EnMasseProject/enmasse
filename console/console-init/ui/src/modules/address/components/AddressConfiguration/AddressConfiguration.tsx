@@ -14,6 +14,7 @@ import {
 } from "@patternfly/react-core";
 import { StyleSheet } from "@patternfly/react-styles";
 import { IDropdownOption, DropdownWithToggle } from "components";
+import { ExpiryAddress, DeadLetterAddress } from "modules/address/components";
 
 const styles = StyleSheet.create({
   dropdownItem: {
@@ -35,12 +36,17 @@ export interface IAddressConfigurationProps {
   type: string;
   plan: string;
   topic: string;
+  deadletter: string;
+  expiryAddress: string;
   onTypeSelect?: (value: string) => void;
   onPlanSelect?: (value: string) => void;
   onTopicSelect?: (value: string) => void;
+  onDeadletterSelect?: (value: string) => void;
+  onExpiryAddressSelect?: (value: string) => void;
   typeOptions: IDropdownOption[];
   planOptions: IDropdownOption[];
-  topicsForSubscription: IDropdownOption[];
+  topicsForSubscription?: IDropdownOption[];
+  deadletterOptions?: IDropdownOption[];
 }
 
 const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> = ({
@@ -50,11 +56,16 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
   type,
   plan,
   topic,
+  deadletter,
+  expiryAddress,
   onTypeSelect,
   onPlanSelect,
   onTopicSelect,
+  onDeadletterSelect,
+  onExpiryAddressSelect,
   typeOptions,
   planOptions,
+  deadletterOptions,
   topicsForSubscription
 }) => {
   const getHelperText = () => {
@@ -143,6 +154,21 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                   isDisplayLabelAndValue={true}
                 />
               </FormGroup>
+            )}
+            {(type?.toLowerCase() === "subscription" ||
+              type?.toLowerCase() === "queue") && (
+              <>
+                <ExpiryAddress
+                  expiryAddress={expiryAddress}
+                  onExpiryAddressSelect={onExpiryAddressSelect}
+                  deadletterOptions={deadletterOptions}
+                />
+                <DeadLetterAddress
+                  deadletterAddress={deadletter}
+                  onDeadletterSelect={onDeadletterSelect}
+                  deadletterOptions={deadletterOptions}
+                />
+              </>
             )}
           </Form>
         </GridItem>

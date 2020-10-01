@@ -13,7 +13,7 @@
 |Anycast |No |Yes
 |Subscription |No |Yes
 .5+|Messaging protocol | AMQP |Yes |Yes
-|MQTT |Yes |Technology preview only
+|MQTT |Yes |No
 |CORE |Yes |No
 |OpenWire |Yes |No
 |STOMP |Yes |No

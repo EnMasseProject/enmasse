@@ -31,6 +31,8 @@ export interface IAddress {
   name: string;
   displayName: string;
   namespace: string;
+  deadletter?: string | null;
+  expiry?: string | null;
   type: string;
   planLabel: string;
   planValue: string;
@@ -46,6 +48,7 @@ export interface IAddress {
   status?: string;
   selected?: boolean;
   topic?: string | null;
+  addressSpaceName?: string;
 }
 
 interface IAddressListProps {
@@ -74,7 +77,8 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     const originalData = rowData.originalData as IAddress;
     if (
       originalData.type.trim() === AddressTypes.QUEUE ||
-      originalData.type.trim() === AddressTypes.SUBSCRIPTION
+      originalData.type.trim() === AddressTypes.SUBSCRIPTION ||
+      originalData.type.trim() === AddressTypes.DEADLETTER
     ) {
       return [
         {

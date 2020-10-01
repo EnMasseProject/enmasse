@@ -72,7 +72,8 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
     { key: "multicast", value: "Multicast", isDisabled: false },
     { key: "queue", value: "Queue", isDisabled: false },
     { key: "subscription", value: "Subscription", isDisabled: false },
-    { key: "topic", value: "Topic", isDisabled: false }
+    { key: "topic", value: "Topic", isDisabled: false },
+    { key: "deadletter", value: "Deadletter", isDisabled: false }
   ];
 
   const statusOptions: ISelectOption[] = [

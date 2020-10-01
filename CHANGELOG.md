@@ -3,6 +3,7 @@
 
 ## 0.33.0
 
+* #5183: Fix expiry-address & dead-letter for durable subscriptions
 * Remove IoT and shared infra preview
 * Remove MQTT Gateway and MQTT LwT
 * #5130: Addresses fail to become ready if globalMaxSize is omitted from the infraconfig

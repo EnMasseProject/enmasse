@@ -40,9 +40,9 @@ describe('broker controller', function() {
     });
 
     afterEach(function(done) {
-        Promise.all([controller.close, new Promise(function (resolve) {
+        Promise.all([broker.close, new Promise(function (resolve) {
             setTimeout(resolve, 1000);
-        }), broker.close]).then(() => done());
+        }), controller.close]).then(() => done());
     });
 
     it('creates a queue', function(done) {
@@ -209,6 +209,15 @@ describe('broker controller', function() {
         brokerController.initializeGlobalMaxSizeFromBrokerIfUnset();
         assert.equal(44, brokerController.broker.global_max_size);
         done();
+
+    it('get address settings async - returns ttl settings for topics', function(done) {
+        this.timeout(15000);
+        var brokerAddressSettings =  new broker_controller.BrokerController(undefined, config);
+        brokerAddressSettings.get_address_settings_async({address:'mytopic',type:'topic', plan: 'small-topic', status: {messageTtl: {minimum: 1000, maximum: 2000}}}, Promise.resolve(undefined)).then(function (result) {
+            assert.equal(1000, result.minExpiryDelay);
+            assert.equal(2000, result.maxExpiryDelay);
+            done();
+        });
     });
 
 });
