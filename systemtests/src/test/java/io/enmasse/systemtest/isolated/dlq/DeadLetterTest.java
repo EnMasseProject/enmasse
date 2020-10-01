@@ -232,7 +232,7 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
         }
 
         AddressUtils.assertRedeliveryStatus(addressType == AddressType.TOPIC ? addr : recvAddr, expectedRedelivery);
-        AddressUtils.awaitAddressSettingsSync(addressSpace, recvAddr);
+        AddressUtils.awaitAddressSettingsSync(addressSpace, recvAddr, null);
 
         UserCredentials user = new UserCredentials("user", "passwd");
         isolatedResourcesManager.createOrUpdateUser(addressSpace, user);
@@ -260,7 +260,7 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
 
         TestUtils.waitUntilCondition(() -> {
             try {
-                assertRedeliveryStatus(recvAddr, null);
+                AddressUtils.assertRedeliveryStatus(recvAddr, null);
                 return true;
             } catch (Exception | AssertionError e) {
                 return false;
@@ -268,7 +268,7 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
         }, Duration.ofMinutes(2), Duration.ofSeconds(15));
 
         log.info("Successfully removed redelivery/DLQ settings");
-        AddressUtils.awaitAddressSettingsSync(addressSpace, recvAddr);
+        AddressUtils.awaitAddressSettingsSync(addressSpace, recvAddr, null);
 
         sendAndReceiveFailingDeliveries(addressSpace, addr, recvAddr, user, List.of(createMessage(addr)));
     }

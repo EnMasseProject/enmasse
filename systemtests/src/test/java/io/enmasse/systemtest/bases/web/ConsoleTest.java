@@ -2000,8 +2000,8 @@ public abstract class ConsoleTest extends TestBase {
                 .withNewSpec()
                 .withType(addressType.toString())
                 .withAddress("message-redelivery")
-                .withDeadletter(addressType == AddressType.TOPIC ? null : deadletter.getSpec().getAddress())
-                .withExpiry(addressType == AddressType.TOPIC ? null : deadletter.getSpec().getAddress())
+                .withDeadletter(deadletter.getSpec().getAddress())
+                .withExpiry(deadletter.getSpec().getAddress())
                 .withPlan(smallPlan.getMetadata().getName())
                 .endSpec()
                 .build();
@@ -2021,8 +2021,6 @@ public abstract class ConsoleTest extends TestBase {
                     .withNewSpec()
                     .withType(AddressType.SUBSCRIPTION.toString())
                     .withAddress("message-redelivery-sub")
-                    .withDeadletter(deadletter.getSpec().getAddress())
-                    .withExpiry(deadletter.getSpec().getAddress())
                     .withTopic(addr.getSpec().getAddress())
                     .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
                     .endSpec()
@@ -2053,8 +2051,6 @@ public abstract class ConsoleTest extends TestBase {
             sendTtlAndCheckInUI(addressSpace, addr, recvAddr, deadletter, user, messages, Duration.ofSeconds(15).toMillis());
 
         } else {
-
-
             MessageRedelivery expectedRedelivery = new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(10)
                     .withRedeliveryDelayMultiplier(1.0).withRedeliveryDelay(0L).withMaximumDeliveryDelay(0L).build();
             // Cannot check now because defaults are not yet visible for users in address status section
