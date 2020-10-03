@@ -1,12 +1,19 @@
 import React, { useState } from "react";
 import { Editor } from "components";
 import { Switch } from "@patternfly/react-core";
+import { StyleSheet, css } from "aphrodite";
 interface IFormAndJsonProps {
   detail?: string;
   detailInJson?: any;
   setDetail: (value: string) => void;
   setDetailInJson: (value: any) => void;
 }
+
+const style = StyleSheet.create({
+  invalidColor: {
+    color: "red"
+  }
+});
 const FormAndJson: React.FunctionComponent<IFormAndJsonProps> = ({
   detail,
   detailInJson,
@@ -40,7 +47,7 @@ const FormAndJson: React.FunctionComponent<IFormAndJsonProps> = ({
 
   return (
     <>
-      {!isValid && <h1 style={{ color: "red" }}>inValid</h1>}
+      {!isValid && <h1 className={css(style.invalidColor)}>inValid</h1>}
       <Switch
         id="form-json-switch-button"
         isChecked={showJson}

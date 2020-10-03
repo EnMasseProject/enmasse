@@ -30,6 +30,9 @@ const StyleForTable = StyleSheet.create({
   scroll_overflow: {
     overflowY: "auto",
     paddingBottom: 100
+  },
+  flex_display: {
+    display: "inline-flex"
   }
 });
 
@@ -203,7 +206,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     {
       title:
         width > 769 ? (
-          <span style={{ display: "inline-flex" }}>
+          <span className={css(StyleForTable.flex_display)}>
             Message In/sec
             <br />
             {`(over last 5 min)`}
@@ -217,7 +220,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     {
       title:
         width > 769 ? (
-          <span style={{ display: "inline-flex" }}>
+          <span className={css(StyleForTable.flex_display)}>
             Message Out/sec
             <br />
             {`(over last 5 min)`}
