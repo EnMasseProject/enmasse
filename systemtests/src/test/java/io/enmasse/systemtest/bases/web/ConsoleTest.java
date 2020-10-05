@@ -2006,11 +2006,11 @@ public abstract class ConsoleTest extends TestBase {
                 .endSpec()
                 .build();
         consolePage.createAddressSpace(addressSpace);
+        resourcesManager.addToAddressSpaces(addressSpace);
         consolePage.openAddressList(addressSpace);
 
         consolePage.createAddress(deadletter, false);
         consolePage.createAddress(addr);
-
         Address recvAddr;
         if (addressType == AddressType.TOPIC && AddressSpaceType.STANDARD == addressSpaceType) {
             recvAddr = new AddressBuilder()

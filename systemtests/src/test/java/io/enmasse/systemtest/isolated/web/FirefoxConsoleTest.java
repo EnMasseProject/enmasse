@@ -187,7 +187,7 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     }
 
     @Test
-    void testSubscriptionAddressSpecifiedUI() throws Exception {
+    void testTopicAddressSpecifiedUI() throws Exception {
         doTestMessageRedelivery(AddressSpaceType.STANDARD, AddressType.TOPIC, false);
     }
 
