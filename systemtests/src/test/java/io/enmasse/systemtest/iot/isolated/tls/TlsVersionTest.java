@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.iot.isolated.tls;
 
 import static io.enmasse.systemtest.TestTag.ISOLATED;
+import static io.enmasse.systemtest.TestTag.ISOLATED_IOT;
 import static java.util.Collections.singleton;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -23,7 +24,7 @@ import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 
-@Tag(ISOLATED)
+@Tag(ISOLATED_IOT)
 public class TlsVersionTest {
 
     @OpenShift(version = OpenShiftVersion.OCP4)

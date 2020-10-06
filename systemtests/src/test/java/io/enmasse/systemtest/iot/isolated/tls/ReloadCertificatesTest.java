@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.iot.isolated.tls;
 
 import static io.enmasse.systemtest.TestTag.ISOLATED;
+import static io.enmasse.systemtest.TestTag.ISOLATED_IOT;
 import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
@@ -34,7 +35,7 @@ import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
-@Tag(ISOLATED)
+@Tag(ISOLATED_IOT)
 public class ReloadCertificatesTest extends TestBase implements ITestIoTIsolated {
 
     private static final String NAMESPACE = Kubernetes.getInstance().getInfraNamespace();
