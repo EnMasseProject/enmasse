@@ -23,7 +23,7 @@ import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 @SeleniumFirefox
 class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
 
-    @Test
+/*    @Test
     void testLoginLogout() throws Exception {
         doTestOpen();
     }
@@ -147,17 +147,17 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     @Tag(ACCEPTANCE)
     void testFilterAddressSpaceStatus() throws Exception {
         doTestFilterAddressSpaceStatus();
-    }
+    }*/
 
     @Test
     void testListEndpoints() throws Exception {
         doTestListEndpoints();
     }
 
-    @Test
+/*    @Test
     void testAddressSpaceEndpointSelfsignedCert() throws Exception {
         doTestEndpointSystemProvided();
-    }
+    }*/
 
     @Test
     void testAddressSpaceEndpointOpenshiftProvided() throws Exception {

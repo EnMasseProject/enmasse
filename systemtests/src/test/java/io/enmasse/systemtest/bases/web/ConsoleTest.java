@@ -2048,7 +2048,7 @@ public abstract class ConsoleTest extends TestBase {
                 messages.add(msg);
             });
             LOGGER.info("Sending messages with TLL expired");
-            sendTtlAndCheckInUI(addressSpace, addr, recvAddr, deadletter, user, messages, Duration.ofSeconds(30).toMillis());
+            sendTtlAndCheckInUI(addressSpace, addr, recvAddr, deadletter, user, messages, 40);
 
         } else {
             MessageRedelivery expectedRedelivery = new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(10)
@@ -2074,7 +2074,7 @@ public abstract class ConsoleTest extends TestBase {
         }
     }
 
-    private void sendTtlAndCheckInUI(AddressSpace addressSpace, Address addr, Address recvAdd, Address expiryAddress, UserCredentials user, List<Message> messages, long waitTime) throws Exception {
+    private void sendTtlAndCheckInUI(AddressSpace addressSpace, Address addr, Address recvAdd, Address expiryAddress, UserCredentials user, List<Message> messages, int waitTime) throws Exception {
         AddressType addressType = AddressType.getEnum(addr.getSpec().getType());
         try(AmqpClient client = addressType == AddressType.TOPIC ? IsolatedResourcesManager.getInstance().getAmqpClientFactory().createTopicClient(addressSpace) : IsolatedResourcesManager.getInstance().getAmqpClientFactory().createQueueClient(addressSpace)) {
             client.getConnectOptions().setCredentials(user);
@@ -2082,9 +2082,7 @@ public abstract class ConsoleTest extends TestBase {
             AtomicInteger count = new AtomicInteger();
             CompletableFuture<Integer> sent = client.sendMessages(addr.getSpec().getAddress(), messages, (message -> count.getAndIncrement()  == messages.size()));
             assertThat("all messages should have been sent", sent.get(20, TimeUnit.SECONDS), is(messages.size()));
-            Thread.sleep(waitTime);  // Give sufficient time for an expiration
-            selenium.refreshPage();
-            assertThat("Non expired message should be still stored in queue", consolePage.getAddressItem(recvAdd).getMessagesStored(), is(1));
+            selenium.waitUntilPropertyPresent(waitTime, 1, () -> consolePage.getAddressItem(recvAdd).getMessagesStored());
             assertThat("Expired messages should be stored in dlq", consolePage.getAddressItem(expiryAddress).getMessagesStored(), is(2));
         }
     }
