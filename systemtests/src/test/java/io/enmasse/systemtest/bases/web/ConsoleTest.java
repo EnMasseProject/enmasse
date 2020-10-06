@@ -2083,6 +2083,7 @@ public abstract class ConsoleTest extends TestBase {
             CompletableFuture<Integer> sent = client.sendMessages(addr.getSpec().getAddress(), messages, (message -> count.getAndIncrement()  == messages.size()));
             assertThat("all messages should have been sent", sent.get(20, TimeUnit.SECONDS), is(messages.size()));
             Thread.sleep(waitTime);  // Give sufficient time for an expiration
+            selenium.refreshPage();
             assertThat("Non expired message should be still stored in queue", consolePage.getAddressItem(recvAdd).getMessagesStored(), is(1));
             assertThat("Expired messages should be stored in dlq", consolePage.getAddressItem(expiryAddress).getMessagesStored(), is(2));
         }
