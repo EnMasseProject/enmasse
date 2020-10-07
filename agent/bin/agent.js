@@ -31,71 +31,67 @@ function bind_event(source, event, target, method) {
 
 function start(env) {
     kubernetes.is_openshift().then((openshift) => {
-        kubernetes.get_messaging_route_hostname(env).then(function (result) {
-            if (result !== undefined) env.MESSAGING_ROUTE_HOSTNAME = result;
-            env.ADDRESS_SPACE_PREFIX = env.ADDRESS_SPACE + ".";
-            var address_space_plan_source = new AddressSpacePlanSource(env);
-            var address_plans_source = new AddressPlansSource(env);
-            var address_source = new AddressSource(env);
+        env.ADDRESS_SPACE_PREFIX = env.ADDRESS_SPACE + ".";
+        var address_space_plan_source = new AddressSpacePlanSource(env);
+        var address_plans_source = new AddressPlansSource(env);
+        var address_source = new AddressSource(env);
 
-            var console_server = new ConsoleServer(env, openshift);
-            bind_event(address_source, 'addresses_defined', console_server.addresses);
+        var console_server = new ConsoleServer(env, openshift);
+        bind_event(address_source, 'addresses_defined', console_server.addresses);
 
-            var server_promise = console_server.listen(env);
-            server_promise.then(() => {
-                if (env.ADDRESS_SPACE_TYPE === 'brokered') {
-                    bind_event(address_source, 'addresses_defined', console_server.metrics);
-                    console_server.listen_health(env);
-                    var event_logger = env.ENABLE_EVENT_LOGGER === 'true' ? kubernetes.post_event : undefined;
-                    var bc = require('../lib/broker_controller.js').create_agent(event_logger);
-                    bind_event(bc, 'address_stats_retrieved', console_server.addresses, 'update_existing');
-                    bind_event(bc, 'connection_stats_retrieved', console_server.connections, 'set');
-                    bind_event(bc, 'address_stats_retrieved', address_source, 'check_status');
-                    bind_event(address_source, 'addresses_defined', bc);
-                    bind_event(address_plans_source, 'addressplans_defined', address_source, 'check_address_plans');
-                    bind_event(address_space_plan_source, 'addressspaceplan_defined', address_source, 'check_address_plans');
-                    bc.connect(tls_options.get_client_options({
-                        host: env.BROKER_SERVICE_HOST, port: env.BROKER_SERVICE_PORT, username: 'console',
-                        idle_time_out: 'AMQP_IDLE_TIMEOUT' in process.env ? process.env.AMQP_IDLE_TIMEOUT : 300000
-                    }));
+        var server_promise = console_server.listen(env);
+        server_promise.then(() => {
+            if (env.ADDRESS_SPACE_TYPE === 'brokered') {
+                bind_event(address_source, 'addresses_defined', console_server.metrics);
+                console_server.listen_health(env);
+                var event_logger = env.ENABLE_EVENT_LOGGER === 'true' ? kubernetes.post_event : undefined;
+                var bc = require('../lib/broker_controller.js').create_agent(event_logger);
+                bind_event(bc, 'address_stats_retrieved', console_server.addresses, 'update_existing');
+                bind_event(bc, 'connection_stats_retrieved', console_server.connections, 'set');
+                bind_event(bc, 'address_stats_retrieved', address_source, 'check_status');
+                bind_event(address_source, 'addresses_defined', bc);
+                bind_event(address_plans_source, 'addressplans_defined', address_source, 'check_address_plans');
+                bind_event(address_space_plan_source, 'addressspaceplan_defined', address_source, 'check_address_plans');
+                bc.connect(tls_options.get_client_options({
+                    host: env.BROKER_SERVICE_HOST, port: env.BROKER_SERVICE_PORT, username: 'console',
+                    idle_time_out: 'AMQP_IDLE_TIMEOUT' in process.env ? process.env.AMQP_IDLE_TIMEOUT : 300000
+                }));
 
-                    address_space_plan_source.start();
-                    address_plans_source.start(address_space_plan_source);
-                } else {
-                    //assume standard address space for now
-                    var StandardStats = require('../lib/standard_stats.js');
-                    var stats = new StandardStats();
-                    stats.init(console_server);
+                address_space_plan_source.start();
+                address_plans_source.start(address_space_plan_source);
+            } else {
+                //assume standard address space for now
+                var StandardStats = require('../lib/standard_stats.js');
+                var stats = new StandardStats();
+                stats.init(console_server);
 
-                    var ragent = new Ragent();
-                    ragent.disable_connectivity = true;
-                    bind_event(address_source, 'addresses_ready', ragent, 'sync_addresses');
-                    ragent.start_listening(env);
-                    ragent.listen_health({HEALTH_PORT:8888});
-                }
+                var ragent = new Ragent();
+                ragent.disable_connectivity = true;
+                bind_event(address_source, 'addresses_ready', ragent, 'sync_addresses');
+                ragent.start_listening(env);
+                ragent.listen_health({HEALTH_PORT:8888});
+            }
 
-                address_source.start(address_plans_source);
+            address_source.start(address_plans_source);
 
-                process.on('SIGTERM', function () {
-                    log.info('Shutdown started');
-                    var exitHandler = function () {
-                        process.exit(0);
-                    };
-                    var timeout = setTimeout(exitHandler, 2000);
+            process.on('SIGTERM', function () {
+                log.info('Shutdown started');
+                var exitHandler = function () {
+                    process.exit(0);
+                };
+                var timeout = setTimeout(exitHandler, 2000);
 
-                    console_server.close(function() {
-                        log.info("Console server closed");
-                        clearTimeout(timeout);
-                        exitHandler();
-                    });
+                console_server.close(function() {
+                    log.info("Console server closed");
+                    clearTimeout(timeout);
+                    exitHandler();
                 });
+            });
 
-                setInterval(() => {
-                    log.info("Heap statistics : %j", v8.getHeapStatistics());
-                }, 60000);
-            }).catch((e) => {log.error("Failed to listen ", e)})
-
-        });
+            setInterval(() => {
+                log.info("Heap statistics : %j", v8.getHeapStatistics());
+            }, 60000);
+        }).catch((e) => {log.error("Failed to listen ", e)})
     }).catch((e) => {log.error("Failed to check for openshift", e)});
 }
 
