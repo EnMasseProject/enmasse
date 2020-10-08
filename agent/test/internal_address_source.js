@@ -111,9 +111,7 @@ describe('address source', function() {
                     assert.equal(addresses[0].type, 'topic');
                     assert.equal(addresses[1].address, 'foo');
                     assert.equal(addresses[1].type, 'queue');
-                    source.watcher.close().then(function () {
-                        done();
-                    });
+                    source.watcher.close().then(done);
                 }, 200);
             }, 200);
         });
@@ -130,9 +128,7 @@ describe('address source', function() {
                     assert.equal(updates[0].address, 'foo');
                     assert.equal(updates[0].type, 'queue');
                     assert.equal(updates[0].plan, 'myplan2');
-                    source.watcher.close().then(() => {
-                        done();
-                    });
+                    source.watcher.close().then(done);
                 });
                 address_server.update_address_definition({address:'foo', type:'queue', plan: 'myplan2' }, undefined, '1234');
             });
@@ -165,9 +161,7 @@ describe('address source', function() {
                     assert.equal(addresses[0].type, 'topic');
                     assert.equal(addresses[1].address, 'foo');
                     assert.equal(addresses[1].type, 'queue');
-                    source.watcher.close().then(function () {
-                        done();
-                    });
+                    source.watcher.close().then(done);
                 }, 200);
             }, 200);
         });
@@ -236,7 +230,7 @@ describe('address source', function() {
                 assert.equal(address.status.isReady, false);
                 assert.equal(address.status.messages.length, 1);
                 assert.equal(address.status.messages[0], "Unknown address plan 'not found'");
-                done();
+                source.watcher.close().then(done);
             });
         });
     });
@@ -256,7 +250,7 @@ describe('address source', function() {
                 assert.equal(address.status.isReady, false);
                 assert.equal(address.status.messages.length, 1);
                 assert.equal(address.status.messages[0], "Address 'foo' (resource name 'foo') references a deadletter address 'mydla' (resource name 'mydla') that is not of expected type 'deadletter' (found type 'queue' instead).");
-                done();
+                source.watcher.close().then(done);
             });
         });
     });
@@ -276,7 +270,7 @@ describe('address source', function() {
                 assert.equal(address.status.isReady, false);
                 assert.equal(address.status.messages.length, 1);
                 assert.equal(address.status.messages[0], "Address 'foo' (resource name 'foo') references an expiry address 'notfound' that does not exist.");
-                done();
+                source.watcher.close().then(done);
             });
         });
     });
@@ -306,7 +300,7 @@ describe('address source', function() {
                 resources: {
                     broker: 0.01
                 }});
-                done();
+                source.watcher.close().then(done);
             });
         });
     });
@@ -332,7 +326,7 @@ describe('address source', function() {
                 assert.equal(address.status.isReady, true);
                 assert.equal(address.status.messageTtl.minimum, 1000);
                 assert.equal(address.status.messageTtl.maximum, 2000);
-                done();
+                source.watcher.close().then(done);
             });
         });
     });
@@ -354,7 +348,7 @@ describe('address source', function() {
                 assert.equal(address.status.isReady, true);
                 assert.equal(address.status.messageTtl.minimum, 1000);
                 assert.equal(address.status.messageTtl.maximum, 2000);
-                done();
+                source.watcher.close().then(done);
             });
         });
     });
@@ -380,7 +374,7 @@ describe('address source', function() {
                 assert.equal(address.status.isReady, true);
                 assert.equal(address.status.messageTtl.minimum, 600);
                 assert.equal(address.status.messageTtl.maximum, 750);
-                done();
+                source.watcher.close().then(done);
             });
         });
     });
@@ -404,7 +398,7 @@ describe('address source', function() {
                 var address = address_server.find_resource('addresses', 'foo');
                 assert.equal(address.status.isReady, true);
                 assert.equal(address.status.messageRedelivery.maximumDeliveryAttempts, 2);
-                done();
+                source.watcher.close().then(done);
             });
         });
     });
@@ -430,7 +424,7 @@ describe('address source', function() {
                 assert.equal(address.status.isReady, true);
                 assert.equal(address.status.messageRedelivery.maximumDeliveryAttempts, 3);
                 assert.equal(address.status.messageRedelivery.redeliveryDelay, 1000);
-                done();
+                source.watcher.close().then(done);
             });
         });
     });

@@ -362,9 +362,8 @@ describe('basic router configuration', function() {
     });
 
     afterEach(function(done) {
-        routers.close().then(function () {
-            ragent.server.close();
-            done();
+        routers.close().finally(() => {
+            ragent.server.close(done);
         });
     });
 
@@ -385,6 +384,7 @@ describe('basic router configuration', function() {
                 done();
             }).catch(function (error) {
                 console.error('Failed: %s', error);
+                done(error);
             });
         };
     }
@@ -529,7 +529,10 @@ describe('basic router configuration', function() {
             verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
             verify_full_mesh(routers);
             done();
-        }).catch(done);
+        }).catch(done)
+        .finally(() => {
+            client.close()
+        });
     });
     it('handles address query error', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
        function (router) {
@@ -656,9 +659,9 @@ describe('configuration from configmaps', function() {
     afterEach(function(done) {
         watcher.close().then(function () {
             routers.close().then(function () {
-                ragent.server.close();
-                address_source.close();
-                done();
+                ragent.server.close(() => {
+                    address_source.close(done);
+                });
             });
         });
     });
@@ -803,8 +806,7 @@ describe('cooperating ragent group', function() {
 
     afterEach(function(done) {
         Promise.all(groups.map(function (g) {return g.close()})).then(function () {
-            podserver.close();
-            done();
+            podserver.close(done);
         });
     });
 
@@ -875,8 +877,7 @@ describe('health support', function() {
     });
 
     afterEach(function(done) {
-        server.close();
-        done();
+        server.close(done);
     });
 
     it('responds to health request', function (done) {
@@ -929,8 +930,7 @@ describe('forked process', function() {
 
     afterEach(function(done) {
         ragent.kill();
-        address_source.close();
-        done();
+        address_source.close(done);
     });
 
     it('subscribes to configuration service', function (done) {
@@ -964,10 +964,11 @@ describe('run method', function() {
     });
 
     afterEach(function(done) {
-        watcher.close();
-        ragent.server.close();
-        address_source.close();
-        done();
+        watcher.close().finally(() => {
+            ragent.server.close(() => {
+                address_source.close(done);
+            });
+        });
     });
 
     it('subscribes to configuration service', function (done) {
@@ -1005,9 +1006,8 @@ describe('changing router configuration', function() {
     });
 
     afterEach(function(done) {
-        routers.close().then(function () {
-            ragent.server.close();
-            done();
+        routers.close().then(() => {
+            ragent.server.close(done);
         });
     });
 
@@ -1081,14 +1081,15 @@ describe('broker configuration', function() {
         watcher.close().then(function () {
             setTimeout(function () {
                 Promise.all(connections.map(close)).then(function () {
-                    routers.close().then(function () {
+                    routers.close().then(() => {
                         try {
-                            ragent.server.close();
-                            address_source.close();
+                            ragent.server.close(() => {
+                                address_source.close(done);
+                            });
                         } catch (error) {
                             console.error(error);
+                            done(error);
                         }
-                        done();
                     }).catch(done);
                 }).catch(done);
             }, 500);

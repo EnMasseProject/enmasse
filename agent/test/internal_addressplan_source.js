@@ -66,7 +66,7 @@ describe('addressplan source', function() {
         var source = new AddressPlanSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE_PLAN: 'space', ADDRESS_SPACE_PREFIX: 's1.'});
         source.start(address_space_plan_source);
         address_space_plan_source.emit("addressspaceplan_defined", {
-            kind: 'AddressPlan',
+            kind: 'AddressSpacePlan',
             metadata: {name: 'spaceplan'},
             spec: {
                 addressPlans: ['small', 'large'],
@@ -77,7 +77,7 @@ describe('addressplan source', function() {
             process.nextTick(() => {
                 address_server.add_address_plan({plan_name:'medium', address_type:'queue'});
                 address_space_plan_source.emit("addressspaceplan_defined", {
-                    kind: 'AddressPlan',
+                    kind: 'AddressSpacePlan',
                     metadata: {name: 'spaceplan'},
                     spec: {
                         addressPlans: ['small', 'medium', 'large'],

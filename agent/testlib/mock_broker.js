@@ -160,16 +160,11 @@ function MockBroker (name) {
             }
         },
         addAddressSettings : function () {
-            if (self.objects.some(function (o) { return o.type === 'address_settings' && o.name === arguments[0]; })) {
-                throw new Error('address settings for ' + o.match + ' already exists!');
-            } else {
-                self.add_address_settings(arguments[0], get_address_settings(Array.prototype.slice.call(arguments, 1)));
-            }
+            myutils.remove(self.objects, function (o) { return o.type === 'address_settings' && o.name === arguments[0]; });
+            self.add_address_settings(arguments[0], get_address_settings(Array.prototype.slice.call(arguments, 1)));
         },
         removeAddressSettings : function (match) {
-            if (myutils.remove(self.objects, function (o) { return o.type === 'address_settings' && o.name === match; }) !== 1) {
-                throw new Error('error deleting address settings ' + match);
-            }
+            myutils.remove(self.objects, function (o) { return o.type === 'address_settings' && o.name === match; });
         },
         getAddressSettingsAsJSON : function (match) {
             var items = self.get('address_settings');
