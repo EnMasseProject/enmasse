@@ -22,7 +22,6 @@ import io.enmasse.admin.model.v1.StandardInfraConfigSpecBroker;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouter;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
-import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
@@ -34,7 +33,6 @@ import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceive
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.shared.standard.QueueTest;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
