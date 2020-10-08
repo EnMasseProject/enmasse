@@ -9,11 +9,14 @@ import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.annotations.SeleniumFirefox;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.bases.web.ConsoleTest;
+import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 
@@ -165,5 +168,28 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     void testEndpointCustomCertsProvided() throws Exception {
         doTestEndpointCustomCertsProvided();
     }
+
+    @ParameterizedTest(name = "testAddressExpiry-{0}")
+    @ValueSource(strings = {"standard", "brokered"})
+    void testAddressExpiry(String type) throws Exception {
+        doTestMessageRedelivery(AddressSpaceType.getEnum(type), AddressType.QUEUE, true);
+    }
+
+    @Test
+    void testAddressExpiryTopic() throws Exception {
+        doTestMessageRedelivery(AddressSpaceType.STANDARD, AddressType.TOPIC, true);
+    }
+
+    @ParameterizedTest(name = "testAddressSpecified-{0}-UI")
+    @ValueSource(strings = {"standard", "brokered"})
+    void testAddressSpecified(String type) throws Exception {
+        doTestMessageRedelivery(AddressSpaceType.getEnum(type), AddressType.QUEUE, false);
+    }
+
+    @Test
+    void testTopicAddressSpecifiedUI() throws Exception {
+        doTestMessageRedelivery(AddressSpaceType.STANDARD, AddressType.TOPIC, false);
+    }
+
 }
 

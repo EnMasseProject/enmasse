@@ -11,11 +11,17 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.address.model.CertSpecBuilder;
+import io.enmasse.address.model.MessageRedelivery;
+import io.enmasse.address.model.MessageRedeliveryBuilder;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.admin.model.v1.BrokeredInfraConfig;
+import io.enmasse.admin.model.v1.BrokeredInfraConfigBuilder;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.systemtest.Strings;
 import io.enmasse.systemtest.UserCredentials;
@@ -34,6 +40,7 @@ import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
+import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
@@ -60,9 +67,15 @@ import io.enmasse.systemtest.utils.Count;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.openshift.api.model.Route;
+import org.apache.qpid.proton.amqp.messaging.Modified;
+import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -80,9 +93,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -91,19 +107,17 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.either;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class ConsoleTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     SeleniumProvider selenium = SeleniumProvider.getInstance();
     private List<ExternalMessagingClient> clientsList;
     private ConsoleWebPage consolePage;
+    private static final Modified DELIVERY_FAILED = new Modified();
+    {
+        DELIVERY_FAILED.setDeliveryFailed(true);
+    }
 
 
     @AfterEach
@@ -1891,6 +1905,236 @@ public abstract class ConsoleTest extends TestBase {
             awaitCertChange(originalOauthCert, oauth.get(), oauthRoute.get());
             awaitEnMasseConsoleAvailable("Ensuring console functional after certificate rollback");
         }
+    }
+
+    //DLQ
+    protected void doTestMessageRedelivery(AddressSpaceType addressSpaceType, AddressType addressType, Boolean ttl) throws Exception {
+        final String infraConfigName = "redelivery-infra";
+
+        final String baseSpacePlan;
+        final String baseAddressPlan;
+        final String deadLetterAddressPlan;
+        final long messageExpiryScanPeriod = 1000L;
+
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+
+        PodTemplateSpec brokerInfraTtlOverride = new PodTemplateSpecBuilder()
+                .withNewSpec()
+                .withInitContainers(new ContainerBuilder()
+                        .withName("broker-plugin")
+                        .withEnv(new EnvVar("MESSAGE_EXPIRY_SCAN_PERIOD", String.format("%d", messageExpiryScanPeriod), null)).build()).endSpec().build();
+
+        if (AddressSpaceType.STANDARD == addressSpaceType) {
+
+            baseSpacePlan =  AddressSpacePlans.STANDARD_SMALL;
+            baseAddressPlan = addressType == AddressType.QUEUE ? DestinationPlan.STANDARD_MEDIUM_QUEUE : DestinationPlan.STANDARD_SMALL_TOPIC;
+            deadLetterAddressPlan = DestinationPlan.STANDARD_DEADLETTER;
+            StandardInfraConfig infraConfig = resourcesManager.getStandardInfraConfig("default");
+            StandardInfraConfig ttlInfra = new StandardInfraConfigBuilder()
+                    .withNewMetadata()
+                    .withName(infraConfigName)
+                    .endMetadata()
+                    .withNewSpecLike(infraConfig.getSpec())
+                    .withNewBrokerLike(infraConfig.getSpec().getBroker())
+                    .withPodTemplate(brokerInfraTtlOverride)
+                    .endBroker()
+                    .endSpec()
+                    .build();
+            resourcesManager.createInfraConfig(ttlInfra);
+
+        } else {
+            baseSpacePlan =  AddressSpacePlans.BROKERED;
+            baseAddressPlan = addressType == AddressType.QUEUE ? DestinationPlan.BROKERED_QUEUE : DestinationPlan.BROKERED_TOPIC;
+            deadLetterAddressPlan = DestinationPlan.BROKERED_DEADLETTER;
+            BrokeredInfraConfig infraConfig = resourcesManager.getBrokeredInfraConfig("default");
+            BrokeredInfraConfig ttlInfra = new BrokeredInfraConfigBuilder()
+                    .withNewMetadata()
+                    .withName(infraConfigName)
+                    .endMetadata()
+                    .withNewSpecLike(infraConfig.getSpec())
+                    .withNewBrokerLike(infraConfig.getSpec().getBroker())
+                    .withPodTemplate(brokerInfraTtlOverride)
+                    .endBroker()
+                    .endSpec()
+                    .build();
+            resourcesManager.createInfraConfig(ttlInfra);
+        }
+
+        AddressSpacePlan smallSpacePlan = kubernetes.getAddressSpacePlanClient().withName(baseSpacePlan).get();
+        AddressPlan smallPlan = kubernetes.getAddressPlanClient().withName(baseAddressPlan).get();
+        AddressPlan deadletterPlan = kubernetes.getAddressPlanClient().withName(deadLetterAddressPlan).get();
+
+
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("message-ttl-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(smallSpacePlan.getAddressSpaceType())
+                .withPlan(smallSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        Address deadletter = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(kubernetes.getInfraNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "deadletter"))
+                .endMetadata()
+                .withNewSpec()
+                .withType(deadletterPlan.getAddressType())
+                .withPlan(deadletterPlan.getMetadata().getName())
+                .withAddress("deadletter")
+                .endSpec()
+                .build();
+
+        Address addr = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(kubernetes.getInfraNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "message-redelivery"))
+                .endMetadata()
+                .withNewSpec()
+                .withType(addressType.toString())
+                .withAddress("message-redelivery")
+                .withDeadletter(deadletter.getSpec().getAddress())
+                .withExpiry(deadletter.getSpec().getAddress())
+                .withPlan(smallPlan.getMetadata().getName())
+                .endSpec()
+                .build();
+        consolePage.createAddressSpace(addressSpace);
+        resourcesManager.addToAddressSpaces(addressSpace);
+        consolePage.openAddressList(addressSpace);
+
+        consolePage.createAddress(deadletter, false);
+        consolePage.createAddress(addr);
+        Address recvAddr;
+        if (addressType == AddressType.TOPIC && AddressSpaceType.STANDARD == addressSpaceType) {
+            recvAddr = new AddressBuilder()
+                    .withNewMetadata()
+                    .withNamespace(kubernetes.getInfraNamespace())
+                    .withName(AddressUtils.generateAddressMetadataName(addressSpace, "message-redelivery-sub"))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType(AddressType.SUBSCRIPTION.toString())
+                    .withAddress("message-redelivery-sub")
+                    .withTopic(addr.getSpec().getAddress())
+                    .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
+                    .endSpec()
+                    .build();
+            consolePage.createAddress(recvAddr);
+        } else {
+            recvAddr = addr;
+        }
+
+        UserCredentials user = new UserCredentials("user", "passwd");
+        resourcesManager.createOrUpdateUser(addressSpace, user);
+
+        if (ttl) {
+            List<Message> messages = new ArrayList<>();
+
+            List.of(0L,
+                    Duration.ofSeconds(10).toMillis(),
+                    Duration.ofDays(1).toMillis()).forEach(expiry -> {
+                Message msg = Message.Factory.create();
+                msg.setAddress(addr.getSpec().getAddress());
+                msg.setDurable(true);
+                if (expiry > 0) {
+                    msg.setExpiryTime(expiry);
+                }
+                messages.add(msg);
+            });
+            LOGGER.info("Sending messages with TLL expired");
+            sendTtlAndCheckInUI(addressSpace, addr, recvAddr, deadletter, user, messages, 40);
+
+        } else {
+            MessageRedelivery expectedRedelivery = new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(10)
+                    .withRedeliveryDelayMultiplier(1.0).withRedeliveryDelay(0L).withMaximumDeliveryDelay(0L).build();
+            // Cannot check now because defaults are not yet visible for users in address status section
+            //AddressUtils.assertRedeliveryStatus(recvAddr, expectedRedelivery);
+            AddressUtils.awaitAddressSettingsSync(addressSpace, addr, expectedRedelivery);
+            LOGGER.info("Sending to DLQ");
+            sendAndReceiveFailingDeliveries(addressSpace, addr, recvAddr, deadletter, user, List.of(createMessage(addr)), expectedRedelivery);
+
+
+            LOGGER.info("Deleting message redelivery settings");
+            resourcesManager.replaceAddress(new AddressBuilder()
+                    .withMetadata(recvAddr.getMetadata())
+                    .withNewSpecLike(recvAddr.getSpec())
+                    .withMessageRedelivery(new MessageRedelivery())
+                    .withDeadletter(null)
+                    .endSpec()
+                    .build());
+            AddressUtils.awaitAddressSettingsSync(addressSpace, recvAddr, null);
+            LOGGER.info("Redelivery settings swapped swapped and sync. Sending to standard address");
+            sendAndReceiveFailingDeliveries(addressSpace, addr, recvAddr, deadletter, user, List.of(createMessage(addr)), new MessageRedelivery());
+        }
+    }
+
+    private void sendTtlAndCheckInUI(AddressSpace addressSpace, Address addr, Address recvAdd, Address expiryAddress, UserCredentials user, List<Message> messages, int waitTime) throws Exception {
+        AddressType addressType = AddressType.getEnum(addr.getSpec().getType());
+        try(AmqpClient client = addressType == AddressType.TOPIC ? IsolatedResourcesManager.getInstance().getAmqpClientFactory().createTopicClient(addressSpace) : IsolatedResourcesManager.getInstance().getAmqpClientFactory().createQueueClient(addressSpace)) {
+            client.getConnectOptions().setCredentials(user);
+
+            AtomicInteger count = new AtomicInteger();
+            CompletableFuture<Integer> sent = client.sendMessages(addr.getSpec().getAddress(), messages, (message -> count.getAndIncrement()  == messages.size()));
+            assertThat("all messages should have been sent", sent.get(20, TimeUnit.SECONDS), is(messages.size()));
+            selenium.waitUntilPropertyPresent(waitTime, 1, () -> consolePage.getAddressItem(recvAdd).getMessagesStored());
+            assertThat("Expired messages should be stored in dlq", consolePage.getAddressItem(expiryAddress).getMessagesStored(), is(2));
+        }
+    }
+
+    private void sendAndReceiveFailingDeliveries(AddressSpace addressSpace, Address sendAddr, Address recvAddr, Address deadletter, UserCredentials user, List<Message> messages, MessageRedelivery redelivery) throws Exception {
+        sendAddr = resourcesManager.getAddress(sendAddr.getMetadata().getNamespace(), sendAddr);
+
+        AddressType addressType = AddressType.getEnum(sendAddr.getSpec().getType());
+        try(AmqpClient client = addressType == AddressType.TOPIC ? IsolatedResourcesManager.getInstance().getAmqpClientFactory().createTopicClient(addressSpace) : IsolatedResourcesManager.getInstance().getAmqpClientFactory().createQueueClient(addressSpace)) {
+            client.getConnectOptions().setCredentials(user);
+
+            AtomicInteger count = new AtomicInteger();
+            CompletableFuture<Integer> sent = client.sendMessages(sendAddr.getSpec().getAddress(), messages, (message -> count.getAndIncrement() == messages.size()));
+            assertThat("all messages should have been sent", sent.get(20, TimeUnit.SECONDS), is(messages.size()));
+
+            AtomicInteger totalDeliveries = new AtomicInteger();
+            String recvAddress = AddressType.getEnum(recvAddr.getSpec().getType()) == AddressType.SUBSCRIPTION ?  sendAddr.getSpec().getAddress() + "::" + recvAddr.getSpec().getAddress() : recvAddr.getSpec().getAddress();
+            Source source = createSource(recvAddress);
+            int expected = messages.size() * Math.max(redelivery.getMaximumDeliveryAttempts() == null ? 0 : redelivery.getMaximumDeliveryAttempts(), 1);
+            assertThat("unexpected number of failed deliveries", client.recvMessages(source, message -> {
+                        log.info("message: {}, delivery count: {}", message.getMessageId(), message.getHeader().getDeliveryCount());
+                        return totalDeliveries.incrementAndGet() >= expected;}, Optional.empty(),
+                    delivery -> delivery.disposition(DELIVERY_FAILED, true)).getResult().get(1, TimeUnit.MINUTES).size(), is(expected));
+
+            if (redelivery.getMaximumDeliveryAttempts() != null && redelivery.getMaximumDeliveryAttempts() >= 0) {
+                if (sendAddr.getSpec().getType().equals(AddressType.TOPIC.toString()) && recvAddr.getSpec().getDeadletter() != null) {
+                    // Messages should have been routed to the dead letter address
+                    TestUtils.waitUntilCondition("Messages to be stored",
+                            phase -> consolePage.getAddressItem(deadletter).getMessagesStored() == messages.size(), new TimeoutBudget(1, TimeUnit.MINUTES));
+                    assertThat("all messages should have been routed to the dead letter address", consolePage.getAddressItem(deadletter).getMessagesStored(), is(messages.size()));
+                }
+            } else {
+                // Infinite delivery attempts configured - consume normally
+                TestUtils.waitUntilCondition("Messages to be stored",
+                        phase -> consolePage.getAddressItem(recvAddr).getMessagesStored() == messages.size(), new TimeoutBudget(1, TimeUnit.MINUTES));
+                assertThat("all messages should have been eligible for consumption", consolePage.getAddressItem(recvAddr).getMessagesStored(), is(messages.size()));
+            }
+        }
+    }
+
+    private Source createSource(String recvAddress) {
+        Source source = new Source();
+        source.setAddress(recvAddress);
+        return source;
+    }
+
+    private Message createMessage(Address addr) {
+        Message msg = Message.Factory.create();
+        msg.setMessageId(UUID.randomUUID());
+        msg.setAddress(addr.getSpec().getAddress());
+        msg.setDurable(true);
+        return msg;
     }
 
     private void awaitEnMasseConsoleAvailable(String forWhat) {

@@ -231,8 +231,8 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
             recvAddr = addr;
         }
 
-        assertRedeliveryStatus(addressType == AddressType.TOPIC ? addr : recvAddr, expectedRedelivery);
-        awaitAddressSettingsSync(addressSpace, recvAddr);
+        AddressUtils.assertRedeliveryStatus(addressType == AddressType.TOPIC ? addr : recvAddr, expectedRedelivery);
+        AddressUtils.awaitAddressSettingsSync(addressSpace, recvAddr, null);
 
         UserCredentials user = new UserCredentials("user", "passwd");
         isolatedResourcesManager.createOrUpdateUser(addressSpace, user);
@@ -260,7 +260,7 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
 
         TestUtils.waitUntilCondition(() -> {
             try {
-                assertRedeliveryStatus(recvAddr, null);
+                AddressUtils.assertRedeliveryStatus(recvAddr, null);
                 return true;
             } catch (Exception | AssertionError e) {
                 return false;
@@ -268,7 +268,7 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
         }, Duration.ofMinutes(2), Duration.ofSeconds(15));
 
         log.info("Successfully removed redelivery/DLQ settings");
-        awaitAddressSettingsSync(addressSpace, recvAddr);
+        AddressUtils.awaitAddressSettingsSync(addressSpace, recvAddr, null);
 
         sendAndReceiveFailingDeliveries(addressSpace, addr, recvAddr, user, List.of(createMessage(addr)));
     }
@@ -302,39 +302,6 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
             } else {
                 // Infinite delivery attempts configured - consume normally
                 assertThat("all messages should have been eligible for consumption", client.recvMessages(recvAddress, 1).get(1, TimeUnit.MINUTES).size(), is(messages.size()));
-            }
-        }
-    }
-
-    private void assertRedeliveryStatus(Address addr, MessageRedelivery expectedRedelivery) {
-        Address reread = resourcesManager.getAddress(addr.getMetadata().getNamespace(), addr);
-        if (expectedRedelivery == null) {
-            assertThat(reread.getStatus().getMessageTtl(), nullValue());
-        } else {
-            assertThat(reread.getStatus().getMessageRedelivery(), notNullValue());
-
-            if (expectedRedelivery.getMaximumDeliveryAttempts() != null) {
-                assertThat(reread.getStatus().getMessageRedelivery().getMaximumDeliveryAttempts(), is(expectedRedelivery.getMaximumDeliveryAttempts()));
-            } else {
-                assertThat(reread.getStatus().getMessageRedelivery().getMaximumDeliveryAttempts(), nullValue());
-            }
-
-            if (expectedRedelivery.getRedeliveryDelayMultiplier() != null) {
-                assertThat(reread.getStatus().getMessageRedelivery().getRedeliveryDelayMultiplier(), is(expectedRedelivery.getRedeliveryDelayMultiplier()));
-            } else {
-                assertThat(reread.getStatus().getMessageRedelivery().getRedeliveryDelayMultiplier(), nullValue());
-            }
-
-            if (expectedRedelivery.getRedeliveryDelay() != null) {
-                assertThat(reread.getStatus().getMessageRedelivery().getRedeliveryDelay(), is(expectedRedelivery.getRedeliveryDelay()));
-            } else {
-                assertThat(reread.getStatus().getMessageRedelivery().getRedeliveryDelay(), nullValue());
-            }
-
-            if (expectedRedelivery.getMaximumDeliveryDelay() != null) {
-                assertThat(reread.getStatus().getMessageRedelivery().getMaximumDeliveryDelay(), is(expectedRedelivery.getMaximumDeliveryDelay()));
-            } else {
-                assertThat(reread.getStatus().getMessageRedelivery().getMaximumDeliveryDelay(), nullValue());
             }
         }
     }

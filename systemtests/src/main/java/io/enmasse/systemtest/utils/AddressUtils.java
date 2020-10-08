@@ -4,22 +4,9 @@
  */
 package io.enmasse.systemtest.utils;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.slf4j.Logger;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressList;
@@ -27,23 +14,49 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressStatusForwarder;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
+import io.enmasse.address.model.MessageRedelivery;
+import io.enmasse.config.LabelKeys;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.broker.ArtemisUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientReceiver;
 import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientSender;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.time.WaitPhase;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListMultiDeletable;
 import io.vertx.core.json.JsonObject;
+import org.slf4j.Logger;
+
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class AddressUtils {
     private static Logger log = CustomLogger.getLogger();
@@ -415,5 +428,84 @@ public class AddressUtils {
                         .withPlan(DestinationPlan.BROKERED_TOPIC)
                         .endSpec()
                         .build());
+    }
+
+    public static void assertRedeliveryStatus(Address addr, MessageRedelivery expectedRedelivery) {
+        Address reread = IsolatedResourcesManager.getInstance().getAddress(addr.getMetadata().getNamespace(), addr);
+        if (expectedRedelivery == null) {
+            assertThat(reread.getStatus().getMessageTtl(), nullValue());
+        } else {
+            assertThat(reread.getStatus().getMessageRedelivery(), notNullValue());
+
+            if (expectedRedelivery.getMaximumDeliveryAttempts() != null) {
+                assertThat(reread.getStatus().getMessageRedelivery().getMaximumDeliveryAttempts(), is(expectedRedelivery.getMaximumDeliveryAttempts()));
+            } else {
+                assertThat(reread.getStatus().getMessageRedelivery().getMaximumDeliveryAttempts(), nullValue());
+            }
+
+            if (expectedRedelivery.getRedeliveryDelayMultiplier() != null) {
+                assertThat(reread.getStatus().getMessageRedelivery().getRedeliveryDelayMultiplier(), is(expectedRedelivery.getRedeliveryDelayMultiplier()));
+            } else {
+                assertThat(reread.getStatus().getMessageRedelivery().getRedeliveryDelayMultiplier(), nullValue());
+            }
+
+            if (expectedRedelivery.getRedeliveryDelay() != null) {
+                assertThat(reread.getStatus().getMessageRedelivery().getRedeliveryDelay(), is(expectedRedelivery.getRedeliveryDelay()));
+            } else {
+                assertThat(reread.getStatus().getMessageRedelivery().getRedeliveryDelay(), nullValue());
+            }
+
+            if (expectedRedelivery.getMaximumDeliveryDelay() != null) {
+                assertThat(reread.getStatus().getMessageRedelivery().getMaximumDeliveryDelay(), is(expectedRedelivery.getMaximumDeliveryDelay()));
+            } else {
+                assertThat(reread.getStatus().getMessageRedelivery().getMaximumDeliveryDelay(), nullValue());
+            }
+        }
+    }
+
+
+
+    // It'd be better if the address's status reflected when the expiry/address settings spaces were applied
+    // but with our current architecture, agent (for the standard case) doesn't write the address status.
+    // For now peep at the broker(s)
+    public static void awaitAddressSettingsSync(AddressSpace addressSpace, Address addr, MessageRedelivery messageRedelivery) {
+        Address reread = IsolatedResourcesManager.getInstance().getAddress(addr.getMetadata().getNamespace(), addr);
+        MessageRedelivery expectedRedelivery =(messageRedelivery == null ? (reread.getStatus().getMessageRedelivery() == null ? new MessageRedelivery() : reread.getStatus().getMessageRedelivery()) : messageRedelivery);
+
+        UserCredentials supportCredentials = ArtemisUtils.getSupportCredentials(addressSpace);
+        List<String> brokers = new ArrayList<>();
+        if (addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
+            brokers.addAll(reread.getStatus().getBrokerStatuses().stream().map(BrokerStatus::getContainerId).collect(Collectors.toSet()));
+            assertThat(brokers.size(), greaterThanOrEqualTo(1));
+        } else {
+            Map<String, String> brokerLabels = new HashMap<>();
+            brokerLabels.put(LabelKeys.INFRA_UUID, AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+            brokerLabels.put(LabelKeys.ROLE, "broker");
+
+            List<Pod> brokerPods = Kubernetes.getInstance().listPods(brokerLabels);
+            assertThat(brokerPods.size(), equalTo(1));
+            brokers.add(brokerPods.get(0).getMetadata().getName());
+        }
+
+        brokers.forEach(name -> TestUtils.waitUntilCondition(() -> {
+                    Map<String, Object> actualSettings = ArtemisUtils.getAddressSettings(Kubernetes.getInstance(), name, supportCredentials, reread.getSpec().getAddress());
+                    int maxDeliveryAttempts = ((Number) actualSettings.get("maxDeliveryAttempts")).intValue();
+                    String deadletter = String.valueOf(actualSettings.get("DLA"));
+                    String expiry = String.valueOf(actualSettings.get("expiryAddress"));
+                    boolean b = maxDeliveryAttemptsEquals(maxDeliveryAttempts, expectedRedelivery.getMaximumDeliveryAttempts());
+                    if (!b) {
+                        log.info("Address {} on broker {} does not have expected redelivery values: {}, dead letter: {}, expiry: {}." +
+                                        " Actual maxDeliveryAttempts: {}, dead letter: {} expiry: {}",
+                                reread.getMetadata().getName(), name,
+                                expectedRedelivery, reread.getSpec().getDeadletter(), reread.getSpec().getExpiry(),
+                                maxDeliveryAttempts, deadletter, expiry);
+                    }
+                    return b;
+                }, Duration.ofMinutes(2), Duration.ofSeconds(5),
+                () -> fail("Failed to await address settings to sync")));
+    }
+
+    private static boolean maxDeliveryAttemptsEquals(int artemisMaxDeliveryAttempts, Integer maximumDeliveryAttempts) {
+        return Objects.equals(maximumDeliveryAttempts == null ? -1 : maximumDeliveryAttempts, artemisMaxDeliveryAttempts);
     }
 }

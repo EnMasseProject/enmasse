@@ -417,6 +417,13 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getDriver().findElement(By.id("address-definition-topic-dropdown"));
     }
 
+    private WebElement getExpirySelectDropDown() {
+        return selenium.getDriver().findElement(By.id("addr-configuration-expiryAddress-dropdown"));
+    }
+    private WebElement getDeadLetterSelectDropDown() {
+        return selenium.getDriver().findElement(By.id("addr-configuration-deadletter-dropdown"));
+    }
+
     //Filter selectors
     private WebElement getToolBarMenu() throws Exception {
         return selenium.getWebElement(() -> getContentElem().findElement(By.id("data-toolbar-with-filter")));
@@ -817,6 +824,14 @@ public class ConsoleWebPage implements IWebPage {
         if (address.getSpec().getType().equals(AddressType.SUBSCRIPTION.toString())) {
             selenium.clickOnItem(getTopicSelectDropDown(), "topic dropdown");
             selenium.clickOnItem(getTopicSelectDropDown().findElement(By.id("address-definition-topic-dropdown-item" + address.getSpec().getTopic())));
+        }
+        if (address.getSpec().getExpiry() != null) {
+            selenium.clickOnItem(getExpirySelectDropDown(), "Expiry dropdown");
+            selenium.clickOnItem(getExpirySelectDropDown().findElement(By.id("address-definition-topic-dropdown-item" + address.getSpec().getExpiry())));
+        }
+        if (address.getSpec().getDeadletter() != null) {
+            selenium.clickOnItem(getDeadLetterSelectDropDown(), "Deadletter dropdown");
+            selenium.clickOnItem(getDeadLetterSelectDropDown().findElement(By.id("address-definition-topic-dropdown-item" + address.getSpec().getDeadletter())));
         }
         selenium.clickOnItem(getNextButton());
     }

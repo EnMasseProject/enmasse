@@ -144,7 +144,7 @@ public class Environment {
                 this.kubernetesDomain = "apps-crc.testing";
             } else if (url.startsWith("https://api")) { //is api url for openshift4
                 try {
-                    this.kubernetesDomain = new URL(url).getHost().replace("api", "apps");
+                    this.kubernetesDomain = new URL(url).getHost().replaceFirst("api", "apps");
                 } catch (Exception ex) {
                     throw new RuntimeException(ex);
                 }
