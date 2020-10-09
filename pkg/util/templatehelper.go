@@ -11,7 +11,6 @@ import (
 	"github.com/ghodss/yaml"
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 	"os"
 	"text/template"
 )
@@ -92,7 +91,7 @@ func (h *TemplateHelper) loadTemplate(name string) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func (h *TemplateHelper) CreateResource(template string) (runtime.Object, error) {
+func (h *TemplateHelper) CreateResource(template string) (*unstructured.Unstructured, error) {
 	tpl, err := h.loadTemplate(template)
 	if err != nil {
 		return nil, err

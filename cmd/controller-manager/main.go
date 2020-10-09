@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/monitoring"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"os"
 	"runtime"
@@ -44,8 +45,8 @@ import (
 	"github.com/openshift/api"
 
 	enmassescheme "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/scheme"
-
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // Change below variables to serve metrics on different host or port.
@@ -316,23 +317,75 @@ func addMonitoringKeyLabelToOperatorService(ctx context.Context, cfg *rest.Confi
 }
 
 func installMonitoring(ctx context.Context, client client.Client) error {
-	log.Info("Installing monitoring resources")
 	params := map[string]string{"Namespace": os.Getenv("NAMESPACE")}
-
 	templateHelper := util.NewTemplateHelper(params)
 
 	for _, template := range templateHelper.TemplateList {
 		resource, err := templateHelper.CreateResource(template)
 		if err != nil {
-			return fmt.Errorf("createResource failed: %s", err)
+			return fmt.Errorf("DEBUG createResource failed: %s", err)
 		}
 		err = client.Create(ctx, resource)
 		if err != nil {
+
+			if kerrors.IsAlreadyExists(err) {
+
+				if resource.GetKind() == "PrometheusRule" || resource.GetKind() == "ServiceMonitor" {
+					updateMonitoringResource(ctx, client, resource)
+				}
+			}
 			if !kerrors.IsAlreadyExists(err) {
 				return fmt.Errorf("error creating resource: %s", err)
 			}
 		}
 	}
+	return nil
+}
+
+func updateMonitoringResource(ctx context.Context, client client.Client, resource *unstructured.Unstructured) error {
+
+	var kind string
+	var er error
+
+	if resource.GetKind() == "PrometheusRule" {
+		kind, er = getPrometheusRuleResourceVersion(ctx, client, resource)
+	} else if resource.GetKind() == "ServiceMonitor" {
+		kind, er = getServiceMonitorResourceVersion(ctx, client, resource)
+	}
+
+	resource.SetResourceVersion(kind)
+
+	if er != nil {
+		log.Error(er, "Failed to get resource version")
+	}
+
+	log.Info("Updating resource: " + resource.GetName())
+	er = client.Update(ctx, resource)
+	if er != nil {
+		log.Error(er, "Failed to update resource")
+	}
 
 	return nil
+}
+
+func getPrometheusRuleResourceVersion(ctx context.Context, client client.Client, resource *unstructured.Unstructured) (string, error) {
+	promRule := &monitoringv1.PrometheusRule{}
+	promRuleName := types.NamespacedName{Name: resource.GetName(), Namespace: os.Getenv("NAMESPACE")}
+	err := client.Get(ctx, promRuleName, promRule)
+	if err != nil {
+		return "", err
+	}
+
+	return promRule.ObjectMeta.ResourceVersion, nil
+}
+
+func getServiceMonitorResourceVersion(ctx context.Context, client client.Client, resource *unstructured.Unstructured) (string, error) {
+	serviceMonitor := &monitoringv1.ServiceMonitor{}
+	serviceMonitorName := types.NamespacedName{Name: resource.GetName(), Namespace: os.Getenv("NAMESPACE")}
+	err := client.Get(ctx, serviceMonitorName, serviceMonitor)
+	if err != nil {
+		return "", err
+	}
+
+	return serviceMonitor.ObjectMeta.ResourceVersion, nil
 }
