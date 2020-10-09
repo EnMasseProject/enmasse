@@ -87,7 +87,6 @@ function get_address_settings (args) {
 function MockBroker (name) {
     this.name = name;
     this.objects = [];
-    this.clients = [];
     this.container = rhea.create_container({id:this.name});
     this.container.on('message', this.on_message.bind(this));
     var self = this;
@@ -160,16 +159,11 @@ function MockBroker (name) {
             }
         },
         addAddressSettings : function () {
-            if (self.objects.some(function (o) { return o.type === 'address_settings' && o.name === arguments[0]; })) {
-                throw new Error('address settings for ' + o.match + ' already exists!');
-            } else {
-                self.add_address_settings(arguments[0], get_address_settings(Array.prototype.slice.call(arguments, 1)));
-            }
+            myutils.remove(self.objects, function (o) { return o.type === 'address_settings' && o.name === arguments[0]; });
+            self.add_address_settings(arguments[0], get_address_settings(Array.prototype.slice.call(arguments, 1)));
         },
         removeAddressSettings : function (match) {
-            if (myutils.remove(self.objects, function (o) { return o.type === 'address_settings' && o.name === match; }) !== 1) {
-                throw new Error('error deleting address settings ' + match);
-            }
+            myutils.remove(self.objects, function (o) { return o.type === 'address_settings' && o.name === match; });
         },
         getAddressSettingsAsJSON : function (match) {
             var items = self.get('address_settings');
@@ -218,9 +212,6 @@ util.inherits(MockBroker, events.EventEmitter);
 MockBroker.prototype.listen = function (port) {
     this.server = this.container.listen({port:port || 0});
     var self = this;
-    this.server.on('connection', function (socket) {
-        self.clients.push(socket);
-    });
     this.server.on('listening', function () {
         self.port = self.server.address().port;
     });
@@ -232,15 +223,10 @@ MockBroker.prototype.connect = function (port) {
 };
 
 MockBroker.prototype.close = function () {
-    for (var i in this.clients) {
-        this.clients[i].destroy();
-    }
     if (this.server) {
-        var connection = this.server;
+        var server = this.server;
         return new Promise(function (resolve) {
-            connection.on('connection_close', resolve);
-            connection.on('connection_error', resolve);
-            connection.close();
+            server.close(resolve);
         });
     } else {
         return Promise.resolve();

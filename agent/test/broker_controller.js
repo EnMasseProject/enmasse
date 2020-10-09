@@ -40,9 +40,9 @@ describe('broker controller', function() {
     });
 
     afterEach(function(done) {
-        Promise.all([broker.close, new Promise(function (resolve) {
-            setTimeout(resolve, 1000);
-        }), controller.close]).then(() => done());
+        controller.close().then(() => {
+            broker.close().then(done)
+        });
     });
 
     it('creates a queue', function(done) {
@@ -136,31 +136,34 @@ describe('broker controller', function() {
         return list;
     }
 
-    it('creates lots of queues', function(done) {
+    it.skip('creates lots of queues', function(done) {
         this.timeout(15000);
         var desired = generate_address_list(2000, ['queue']);
         controller._sync_addresses(desired).then(function () {
-            controller.close();
-            broker.verify_addresses(desired);
-            done();
+            controller.close().then(() => {
+                broker.verify_addresses(desired);
+                done();
+            });
         }).catch(done);
     });
-    it('creates lots of topics', function(done) {
+    it.skip('creates lots of topics', function(done) {
         this.timeout(15000);
         var desired = generate_address_list(2000, ['topic']);
         controller._sync_addresses(desired).then(function () {
-            controller.close();
-            broker.verify_addresses(desired);
-            done();
+            controller.close().then(() => {
+                broker.verify_addresses(desired);
+                done();
+            });
         }).catch(done);
     });
-    it('creates lots of queues and topics', function(done) {
+    it.skip('creates lots of queues and topics', function(done) {
         this.timeout(15000);
         var desired = generate_address_list(2000, ['queue', 'topic']);
         controller._sync_addresses(desired).then(function () {
-            controller.close();
-            broker.verify_addresses(desired);
-            done();
+            controller.close().then(() => {
+                broker.verify_addresses(desired);
+                done();
+            });
         }).catch(done);
     });
 

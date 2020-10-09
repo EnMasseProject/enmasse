@@ -245,7 +245,7 @@ Ragent.prototype._check_stable = function (addresses, routers, brokers, all_know
 Ragent.prototype.wait_for_stable = function (addresses, routers, brokers) {
     var self = this;
     if (this._check_stable(addresses, routers, brokers)) {
-        return true;
+        return Promise.resolve();
     } else {
         return new Promise(function (resolve, reject) {
             function do_test() {
