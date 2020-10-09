@@ -87,7 +87,6 @@ function get_address_settings (args) {
 function MockBroker (name) {
     this.name = name;
     this.objects = [];
-    this.clients = [];
     this.container = rhea.create_container({id:this.name});
     this.container.on('message', this.on_message.bind(this));
     var self = this;
@@ -213,9 +212,6 @@ util.inherits(MockBroker, events.EventEmitter);
 MockBroker.prototype.listen = function (port) {
     this.server = this.container.listen({port:port || 0});
     var self = this;
-    this.server.on('connection', function (socket) {
-        self.clients.push(socket);
-    });
     this.server.on('listening', function () {
         self.port = self.server.address().port;
     });
@@ -227,15 +223,10 @@ MockBroker.prototype.connect = function (port) {
 };
 
 MockBroker.prototype.close = function () {
-    for (var i in this.clients) {
-        this.clients[i].destroy();
-    }
     if (this.server) {
-        var connection = this.server;
+        var server = this.server;
         return new Promise(function (resolve) {
-            connection.on('connection_close', resolve);
-            connection.on('connection_error', resolve);
-            connection.close();
+            server.close(resolve);
         });
     } else {
         return Promise.resolve();
