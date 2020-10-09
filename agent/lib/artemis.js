@@ -736,13 +736,15 @@ Artemis.prototype.findConnectorService = function (name) {
 };
 
 Artemis.prototype.close = function () {
-    if (this.connection) {
-        var connection = this.connection;
-        return new Promise(function (resolve) {
-            connection.on('connection_close', resolve);
-            connection.on('connection_error', resolve);
-            connection.close();
+    if (this.closePromise) {
+        return this.closePromise;
+    } else if (this.connection) {
+        this.closePromise = new Promise(resolve => {
+            this.connection.on('connection_close', resolve);
+            this.connection.on('connection_error', resolve);
+            this.connection.close();
         });
+        return this.closePromise;
     } else {
         return Promise.resolve();
     }

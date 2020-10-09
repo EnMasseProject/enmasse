@@ -140,27 +140,30 @@ describe('broker controller', function() {
         this.timeout(15000);
         var desired = generate_address_list(2000, ['queue']);
         controller._sync_addresses(desired).then(function () {
-            controller.close();
-            broker.verify_addresses(desired);
-            done();
+            controller.close().then(() => {
+                broker.verify_addresses(desired);
+                done();
+            });
         }).catch(done);
     });
     it('creates lots of topics', function(done) {
         this.timeout(15000);
         var desired = generate_address_list(2000, ['topic']);
         controller._sync_addresses(desired).then(function () {
-            controller.close();
-            broker.verify_addresses(desired);
-            done();
+            controller.close().then(() => {
+                broker.verify_addresses(desired);
+                done();
+            });
         }).catch(done);
     });
     it('creates lots of queues and topics', function(done) {
         this.timeout(15000);
         var desired = generate_address_list(2000, ['queue', 'topic']);
         controller._sync_addresses(desired).then(function () {
-            controller.close();
-            broker.verify_addresses(desired);
-            done();
+            controller.close().then(() => {
+                broker.verify_addresses(desired);
+                done();
+            });
         }).catch(done);
     });
 
