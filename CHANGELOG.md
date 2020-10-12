@@ -7,6 +7,8 @@
 * Remove IoT and shared infra preview
 * Remove MQTT Gateway and MQTT LwT
 * #5130: Addresses fail to become ready if globalMaxSize is omitted from the infraconfig
+* #5203: Remove redundant call to oapi endpoint (#5204)
+* #5205: Address agent unit test suite instability
 
 ## 0.32.2
 * #4914: Bump react from 16.12.0 -> 16.13.1 and typescript from 3.7.2 -> 3.8.3
