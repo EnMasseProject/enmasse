@@ -372,22 +372,6 @@ module.exports.post_event = function (event) {
     });
 };
 
-
-module.exports.get_messaging_route_hostname = function (options) {
-    if (options.MESSAGING_ROUTE_HOSTNAME === undefined && options.KUBERNETES_SERVICE_HOST !== undefined) {
-        var messaging_route_name = options.MESSAGING_ROUTE_NAME || 'messaging-' + options.INFRA_UUID;
-        var opts = get_options(options, get_path('/oapi/v1/namespaces/', 'routes/' + messaging_route_name, options));
-        return do_get_with_options(opts).then(function (definition) {
-            return definition.spec.host;
-        }).catch(function () {
-            log.info('could not retrieve messaging route hostname');
-            return undefined;
-        });
-    } else {
-        return Promise.resolve(options.MESSAGING_ROUTE_HOSTNAME);
-    }
-};
-
 module.exports.self_subject_access_review = function (options, namespace, verb, group, resource) {
 
     var opts = get_options(options, "/apis/authorization.k8s.io/v1/selfsubjectaccessreviews");
