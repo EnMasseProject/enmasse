@@ -15,7 +15,7 @@ Metrics from brokers and routers can be exposed to tenants without exposing syst
 
 .Procedure
 
-* Creata a `servicemonitor` resource with a the selector configured to match labels of `monitoring-key: enmasse-tenants` and the `{ProductNamespace}` as the namespace selector. An example service monitor is shown below:
+* Create a `servicemonitor` resource with a the selector configured to match labels of `monitoring-key: enmasse-tenants` and the `{ProductNamespace}` as the namespace selector. An example service monitor is shown below:
 
 +
 [options="nowrap",subs="+quotes,attributes"]

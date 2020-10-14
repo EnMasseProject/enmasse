@@ -24,7 +24,7 @@ endif::[]
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-sed -i 's/{ProductMonitoringNamespace}/_my-namespace_/' install/bundles/{ProductBundleName}/*.yaml
+sed -i 's/{ProductMonitoringNamespace}/_my-namespace_/' install/components/monitoring-operator/{ProductBundleName}/*.yaml
 ----
 
 ifeval::["{cmdcli}" == "oc"]

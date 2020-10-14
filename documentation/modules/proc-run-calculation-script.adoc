@@ -42,7 +42,7 @@ echo "Pods: ${total_pods}. Memory: ${total_memory_mb} MB. Storage: ${total_stora
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-bash calculate-memory.sh _standard-small_
+bash check-memory.sh _standard-small_
 ----
 
 +
