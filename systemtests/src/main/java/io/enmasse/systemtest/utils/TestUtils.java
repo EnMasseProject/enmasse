@@ -654,7 +654,7 @@ public class TestUtils {
                 }
             }
             log.info("All current ReplicaSets are ready");
-            List<Pod> pods = Kubernetes.getInstance().listPods(namespace, Collections.singletonMap("app", "enmasse"));
+            List<Pod> pods = Kubernetes.getInstance().listPods(namespace);
             for (String expectedPod : expectedPods) {
                 if (pods.stream().noneMatch(pod -> pod.getMetadata().getName().contains(expectedPod))) {
                     log.info("Pod {} is still not deployed", expectedPod);
