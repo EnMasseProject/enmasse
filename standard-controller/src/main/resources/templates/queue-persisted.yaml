@@ -114,6 +114,12 @@ objects:
             value: ${BROKER_CONNECTOR_IDLE_TIMEOUT_MS}
           - name: CONNECTOR_OUT_IDLE_TIMEOUT_MS
             value: ${BROKER_CONNECTOR_IDLE_TIMEOUT_MS}
+          - name: TREAT_REJECT_AS_UNMODIFIED_DELIVERY_FAILED
+            value: ${BROKER_TREAT_REJECT_AS_UNMODIFIED_DELIVERY_FAILED}
+          - name: USE_MODIFIED_FOR_TRANSIENT_DELIVERY_ERRORS
+            value: ${BROKER_USE_MODIFIED_FOR_TRANSIENT_DELIVERY_ERRORS}
+          - name: MIN_LARGE_MESSAGE_SIZE
+            value: ${BROKER_MIN_LARGE_MESSAGE_SIZE}
           - name: ADDRESS_FULL_POLICY
             value: ${BROKER_ADDRESS_FULL_POLICY}
           - name: JAVA_OPTS
@@ -308,3 +314,12 @@ parameters:
 - name: BROKER_PLUGIN_IMAGE
   description: Broker Plugin Image
   value: ${env.BROKER_PLUGIN_IMAGE}
+- name: BROKER_TREAT_REJECT_AS_UNMODIFIED_DELIVERY_FAILED
+  description: Treat reject as unmodified delivery failed
+  value: "true"
+- name: BROKER_USE_MODIFIED_FOR_TRANSIENT_DELIVERY_ERRORS
+  description: Use modified for transient delivery errors
+  value: "true"
+- name: BROKER_MIN_LARGE_MESSAGE_SIZE
+  description: Min large message size
+  value: "-1"

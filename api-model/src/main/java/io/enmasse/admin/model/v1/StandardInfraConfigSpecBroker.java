@@ -34,6 +34,9 @@ public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalPropert
     private PodTemplateSpec podTemplate;
     private Integer connectorIdleTimeout;
     private Integer connectorWorkerThreads;
+    private Boolean treatRejectAsUnmodifiedDeliveryFailed;
+    private Boolean useModifiedForTransientDeliveryErrors;
+    private Integer minLargeMessageSize;
     private IntOrString minAvailable;
     private IntOrString maxUnavailable;
     private String javaOpts;
@@ -135,6 +138,30 @@ public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalPropert
         return javaOpts;
     }
 
+    public Boolean getTreatRejectAsUnmodifiedDeliveryFailed() {
+        return treatRejectAsUnmodifiedDeliveryFailed;
+    }
+
+    public void setTreatRejectAsUnmodifiedDeliveryFailed(Boolean treatRejectAsUnmodifiedDeliveryFailed) {
+        this.treatRejectAsUnmodifiedDeliveryFailed = treatRejectAsUnmodifiedDeliveryFailed;
+    }
+
+    public Boolean getUseModifiedForTransientDeliveryErrors() {
+        return useModifiedForTransientDeliveryErrors;
+    }
+
+    public void setUseModifiedForTransientDeliveryErrors(Boolean useModifiedForTransientDeliveryErrors) {
+        this.useModifiedForTransientDeliveryErrors = useModifiedForTransientDeliveryErrors;
+    }
+
+    public Integer getMinLargeMessageSize() {
+        return minLargeMessageSize;
+    }
+
+    public void setMinLargeMessageSize(Integer minLargeMessageSize) {
+        this.minLargeMessageSize = minLargeMessageSize;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -148,6 +175,9 @@ public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalPropert
                 Objects.equals(podTemplate, that.podTemplate) &&
                 Objects.equals(connectorIdleTimeout, that.connectorIdleTimeout) &&
                 Objects.equals(connectorWorkerThreads, that.connectorWorkerThreads) &&
+                Objects.equals(treatRejectAsUnmodifiedDeliveryFailed, that.treatRejectAsUnmodifiedDeliveryFailed) &&
+                Objects.equals(useModifiedForTransientDeliveryErrors, that.useModifiedForTransientDeliveryErrors) &&
+                Objects.equals(minLargeMessageSize, that.minLargeMessageSize) &&
                 Objects.equals(minAvailable, that.minAvailable) &&
                 Objects.equals(maxUnavailable, that.maxUnavailable) &&
                 Objects.equals(javaOpts, that.javaOpts);
@@ -155,7 +185,7 @@ public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalPropert
 
     @Override
     public int hashCode() {
-        return Objects.hash(resources, addressFullPolicy, globalMaxSize, storageClassName, updatePersistentVolumeClaim, podTemplate, connectorIdleTimeout, connectorWorkerThreads, minAvailable, maxUnavailable, javaOpts);
+        return Objects.hash(resources, addressFullPolicy, globalMaxSize, storageClassName, updatePersistentVolumeClaim, podTemplate, connectorIdleTimeout, connectorWorkerThreads, treatRejectAsUnmodifiedDeliveryFailed, useModifiedForTransientDeliveryErrors, minLargeMessageSize, minAvailable, maxUnavailable, javaOpts);
     }
 
     @Override
@@ -169,10 +199,12 @@ public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalPropert
                 ", podTemplate=" + podTemplate +
                 ", connectorIdleTimeout=" + connectorIdleTimeout +
                 ", connectorWorkerThreads=" + connectorWorkerThreads +
+                ", treatRejectAsUnmodifiedDeliveryFailed=" + treatRejectAsUnmodifiedDeliveryFailed +
+                ", useModifiedForTransientDeliveryErrors=" + useModifiedForTransientDeliveryErrors +
+                ", minLargeMessageSize=" + minLargeMessageSize +
                 ", minAvailable=" + minAvailable +
                 ", maxUnavailable=" + maxUnavailable +
                 ", javaOpts=" + javaOpts +
                 '}';
     }
-
 }
