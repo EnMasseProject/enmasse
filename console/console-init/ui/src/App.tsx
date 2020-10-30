@@ -10,7 +10,7 @@ import "./App.css";
 import { StoreProvider, useStore, rootReducer } from "context-state-reducer";
 import AppLayout from "AppLayout";
 
-const App: React.FC<{}> = () => {
+const App: React.FC = () => {
   const [store] = useStore(rootReducer);
 
   return (
