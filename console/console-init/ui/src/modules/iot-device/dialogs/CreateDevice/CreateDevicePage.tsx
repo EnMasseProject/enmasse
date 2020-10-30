@@ -28,8 +28,7 @@ import {
   AddCredential,
   AddGatewayGroupMembership,
   ICredential,
-  IMetadataProps,
-  getInitialMetadataState
+  IMetadataProps
 } from "modules/iot-device/components";
 import { useHistory, useParams } from "react-router";
 import { Link } from "react-router-dom";
@@ -47,11 +46,17 @@ import {
   getCredentialsFieldsInitialState,
   serializeCredentials
 } from "modules/iot-device/utils";
-import { convertMetadataOptionsToJson, convertObjectIntoJson } from "utils";
+import { convertMetadataOptionsToJson } from "utils";
 
-const getInitalMetaData = () => {
+const getInitialMetaData = () => {
   return [{ key: "", value: "", type: "string" }];
 };
+
+const styles = StyleSheet.create({
+  lighter_text: {
+    fontWeight: "lighter"
+  }
+});
 
 export default function CreateDevicePage() {
   const history = useHistory();
@@ -59,7 +64,7 @@ export default function CreateDevicePage() {
   const [deviceIdInput, setDeviceIdInput] = useState<string>("");
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const [metadataList, setMetadataList] = useState<IMetadataProps[]>(
-    getInitalMetaData()
+    getInitialMetaData()
   );
   const [gatewayDevices, setGatewayDevices] = useState<string[]>([]);
   const [gatewayGroups, setGatewayGroups] = useState<string[]>([]);
@@ -69,13 +74,6 @@ export default function CreateDevicePage() {
   ]);
   const [viewInJson, setViewInJson] = useState<boolean>(false);
   const { projectname, namespace } = useParams();
-
-  const styles = StyleSheet.create({
-    lighter_text: {
-      fontWeight: "lighter"
-    }
-  });
-
   const deviceListRouteLink = `/iot-projects/${namespace}/${projectname}/devices`;
   const breadcrumb = useMemo(
     () => (
@@ -103,7 +101,7 @@ export default function CreateDevicePage() {
     setGatewayGroups([]);
     setMemberOf([]);
     setCredentials([getCredentialsFieldsInitialState()]);
-    setMetadataList(getInitalMetaData());
+    setMetadataList(getInitialMetaData());
   };
 
   const [setCreateDeviceQueryVariables] = useMutationQuery(
@@ -186,19 +184,6 @@ export default function CreateDevicePage() {
     )
   };
 
-  const jsonEditor = () => {
-    return (
-      <JsonEditor
-        value={JSON.stringify(getDevice(), undefined, 2)}
-        style={{
-          minHeight: "45rem"
-        }}
-        readOnly={true}
-        name={"editor-add-device"}
-      />
-    );
-  };
-
   const credentialsToCredentialView = (credential: any[]) => {
     return credential
       .filter(c => c["auth-id"] && c["auth-id"].trim() != "" && c.type)
@@ -267,7 +252,7 @@ export default function CreateDevicePage() {
 
   const handleSave = async () => {
     // Add query to add device
-    const variable = {
+    const deviceDetail = {
       iotproject: { name: projectname, namespace },
       device: {
         registration: {
@@ -288,7 +273,7 @@ export default function CreateDevicePage() {
         })
       }
     };
-    setCreateDeviceQueryVariables(variable);
+    setCreateDeviceQueryVariables(deviceDetail);
   };
 
   const steps = [
@@ -317,11 +302,9 @@ export default function CreateDevicePage() {
   ];
 
   if (connectionType) {
-    if (connectionType === "directly") {
-      steps.push(addCredentials);
-    } else {
-      steps.push(addGateway);
-    }
+    connectionType === "directly"
+      ? steps.push(addCredentials)
+      : steps.push(addGateway);
     steps.push(assignGroups);
     steps.push(reviewForm);
   }
@@ -468,7 +451,14 @@ export default function CreateDevicePage() {
       )}
       {viewInJson && (
         <PageSection variant={PageSectionVariants.light}>
-          {jsonEditor()}
+          <JsonEditor
+            value={JSON.stringify(getDevice(), undefined, 2)}
+            style={{
+              minHeight: "45rem"
+            }}
+            readOnly={true}
+            name={"editor-add-device"}
+          />
         </PageSection>
       )}
     </Page>
