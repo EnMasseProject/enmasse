@@ -1,0 +1,21 @@
+:parent-context: {context}
+
+:context: assembly-key-features-{parent-context}
+
+[id='{context}']
+= Key features
+
+* Built-in console and cloud-native tooling for management and monitoring.
+* Monitor messaging infrastructure with built-in metrics and alerts.
+* Built-in multitenancy to share messaging infrastructure among multiple applications.
+* Scale from small to large messaging deployments.
+* Hides complexities of messaging infrastructure from development teams.
+* Support for AMQP 1.0 and JMS.
+* Support for IoT using HTTP, MQTT, Sigfox or LoRaWAN protocols.
+* Supports federation of messaging addresses and forwarding messages to and from any AMQP 1.0 provider.
+* Built-in device management for IoT.
+
+include::../modules/con-why-messaging.adoc[leveloffset=+1]
+
+:context: {parent-context}
+

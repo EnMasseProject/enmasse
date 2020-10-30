@@ -1,0 +1,12 @@
+:context: con-why-messaging-{parent-context}
+
+[id='{context}']
+= Why messaging?
+
+Messaging systems allow you to loosely couple heterogeneous systems together, whilst typically providing reliability, transactions and many other features.
+
+Designing systems to be asynchronous from end-to-end allows you to really take advantage of your hardware resources, minimizing the amount of threads blocking on IO operations, and to use your network bandwidth to its full capacity. With an RPC approach you have to wait for a response for each request you make so are limited by the network round trip time, or latency of your network. With an asynchronous system you can pipeline flows of messages in different directions, so are limited by the network bandwidth not the latency. This typically allows you to create much higher performance applications.
+
+Messaging systems decouple the senders of messages from the consumers of messages. The senders and consumers of messages can be completely independent and know nothing of each other. This allows you to create flexible, loosely coupled systems. {ProductName} supports both the coupled and decoupled model of writing applications.
+
+:context: {parent-context}

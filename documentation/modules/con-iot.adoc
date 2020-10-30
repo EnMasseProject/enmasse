@@ -1,0 +1,14 @@
+:context: con-iot-{parent-context}
+
+[id='{context}']
+= IoT
+
+{ProductName} has first class support for being used as an IoT platform using Eclipse Hono™, which provides a remote service interfaces for connecting large numbers of IoT devices to a back end and interacting with them in a uniform way regardless of the device communication protocol. 
+
+image::enmasse_iot_architecture_1.0.png[IoT]
+
+Device management:: Device management provides the ability to enable and configure access for IoT devices using a REST API or using the {ProductName} console.
+
+Protocol adapters:: {ProductName} can run different protocol adapters to support different protocol commonly used by IoT devices.
+
+:context: {parent-context}

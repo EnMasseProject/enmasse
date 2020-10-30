@@ -1,0 +1,23 @@
+:context: con-operator-{parent-context}
+
+[id='{context}']
+= Operator
+
+{ProductName} is a Kubernetes Operator, managing the lifecycle of the routers, brokers and access control server of the messaging system. The operator may manage multiple independent messaging infrastructures, ensuring that the routers and brokers contain the desired configuration based on custom resources. {ProductName} uses {KubePlatform} namespaces as a way to group messaging applications sharing the same set of addresses and endpoints.
+
+image::enmasse_operator_architecture_1.0.png[Operator architecture]
+
+Namespace:: {KubePlatform} supports multiple virtual clusters backed by the same physical cluster. These virtual clusters are called namespaces. {ProductName} is built for, but does not require, using separate namespaces for the messaging infrastructure and for the messaging tenants.
+
+
+Custom resources:: {ProductName} provides a set of custom resources that can be grouped into `admin` resources and `tenant` resources. In a larger organization, the `admin` resources are owned by the operations team, whereas the `tenant` resources are owned by the development teams. This makes it easy to create large-scale messaging installations in a scalable manner.
+
+`MessagingInfrastructure`:: An "admin" resource for deploying and managing a set of routers, brokers and access control servers.
+`IoTInfrastructure`:: An "admin" resource for deployng and managing the IoT connectivity layer, including protocol adapters and device registries.
+`ConsoleService`:: An "admin" resource for deploying the {ProductName} console to easily manage and configure the messaging system.
+`MessagingProject`:: A "tenant" resource that enables messaging for a {KubePlatform} namespace and binds it to a `MessagingInfrastructure`.
+`MessagingAddress`:: A "tenant" resource that configures the messaging infrastructures bound to the tenant with addresses.
+`MessagingEndpoint`:: A "tenant" resource that exposes endpoints on the router for access by messaging applications.
+`IoTProject`:: A "tenant" resource that configures a project entity on the IoT infrastructure.
+
+:context: {parent-context}

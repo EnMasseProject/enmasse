@@ -1,0 +1,25 @@
+:parent-context: {context}
+
+:context: assembly-concepts-{parent-context}
+
+[id='{context}']
+= Concepts
+
+Knowing some concepts around messaging and {KubePlatform} is important to understand how {ProductName} works.
+
+Personas:: In {ProductName}, the persona responsible for managing the messaging infrastructure is named the "service admin" (or just "admin"), and the persona requesting messaging resources is named the "messaging tenant" (or just "tenant").
+
+include::../modules/con-messaging.adoc[leveloffset=+1]
+
+include::../modules/con-operator.adoc[leveloffset=+1]
+
+include::../modules/con-monitoring.adoc[leveloffset=+1]
+
+include::../modules/con-multitenancy.adoc[leveloffset=+1]
+
+include::../modules/con-authn-authz.adoc[leveloffset=+1]
+
+include::../modules/con-iot.adoc[leveloffset=+1]
+
+:context: {parent-context}
+

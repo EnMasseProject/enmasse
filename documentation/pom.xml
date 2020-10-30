@@ -35,11 +35,11 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>kubernetes-guide</id>
+                        <id>overview-guide</id>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <sourceDocumentName>kubernetes/master.adoc</sourceDocumentName>
-                            <outputFile>html/kubernetes-guide.html</outputFile>
+                            <sourceDocumentName>overview/master.adoc</sourceDocumentName>
+                            <outputFile>html/overview-guide.html</outputFile>
                             <headerFooter>true</headerFooter>
                             <resources>
                                 <resource>
@@ -57,11 +57,11 @@
                         </goals>
                     </execution>
                     <execution>
-                        <id>openshift-guide</id>
+                        <id>getting-started-guide</id>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <sourceDocumentName>openshift/master.adoc</sourceDocumentName>
-                            <outputFile>html/openshift-guide.html</outputFile>
+                            <sourceDocumentName>getting_started/master.adoc</sourceDocumentName>
+                            <outputFile>html/getting-started-guide.html</outputFile>
                             <headerFooter>true</headerFooter>
                             <resources>
                                 <resource>
@@ -102,11 +102,11 @@
                         </goals>
                     </execution>
                     <execution>
-                        <id>kubernetes-guide-noheader</id>
+                        <id>overview-guide-noheader</id>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <sourceDocumentName>kubernetes/master.adoc</sourceDocumentName>
-                            <outputFile>htmlnoheader/kubernetes-guide.html</outputFile>
+                            <sourceDocumentName>overview/master.adoc</sourceDocumentName>
+                            <outputFile>htmlnoheader/overview-guide.html</outputFile>
                             <headerFooter>false</headerFooter>
                             <resources>
                                 <resource>
@@ -120,11 +120,11 @@
                         </goals>
                     </execution>
                     <execution>
-                        <id>openshift-guide-noheader</id>
+                        <id>getting-started-guide-noheader</id>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <sourceDocumentName>openshift/master.adoc</sourceDocumentName>
-                            <outputFile>htmlnoheader/openshift-guide.html</outputFile>
+                            <sourceDocumentName>getting_started/master.adoc</sourceDocumentName>
+                            <outputFile>htmlnoheader/getting-started-guide.html</outputFile>
                             <headerFooter>false</headerFooter>
                             <resources>
                                 <resource>

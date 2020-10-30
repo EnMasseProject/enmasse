@@ -1,0 +1,17 @@
+include::common/attributes.adoc[]
+
+:Title: {ProductName} overview
+:context: enmasse-overview-{parent-context}
+
+[id='{context}']
+= {ProductName} overview
+
+This guide is intended as a starting point for understanding {ProductName}. The guide introduces some key concepts to {ProductName} and messaging systems in general, and how {ProductName} works at a high level. 
+
+include::assemblies/assembly-key-features.adoc[leveloffset=+1]
+
+include::assemblies/assembly-concepts.adoc[leveloffset=+1]
+
+include::assemblies/assembly-slos.adoc[leveloffset=+1]
+
+:context: {parent-context}

@@ -1,0 +1,4 @@
+[id='con-slo-iot-{context}']
+= IoT service level objectives
+
+* A single instance of the IoTInfrastructure with sufficient memory and CPU can support up to NN devices connected.
