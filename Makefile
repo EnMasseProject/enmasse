@@ -157,7 +157,7 @@ $(CONTROLLER_GEN):
 	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
 	cd $$CONTROLLER_GEN_TMP_DIR ;\
 	$(GO) mod init tmp ;\
-	GOPATH=$(abspath $(LOCALBIN)/../) $(GO) get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0 ;\
+	GOPATH=$(abspath $(LOCALBIN)/../) $(GO) get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.0 ;\
 	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
 	}
 
