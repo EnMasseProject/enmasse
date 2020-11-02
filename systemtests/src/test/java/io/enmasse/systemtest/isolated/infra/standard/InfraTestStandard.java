@@ -510,7 +510,10 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
 
         resourcesManager.setAddresses(exampleAddress);
 
+        resourcesManager.createOrUpdateUser(exampleAddressSpace, exampleUser);
+
         AmqpClient client = getAmqpClientFactory().createQueueClient(exampleAddressSpace);
+
 
         assertEquals(1, client.sendMessages(exampleAddress.getSpec().getAddress(), 1).get(1, TimeUnit.MINUTES));
 
