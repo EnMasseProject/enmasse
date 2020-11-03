@@ -591,8 +591,8 @@ func TestQueryMessagingEndpointTlsExternal(t *testing.T) {
 		Service: v1beta1.EndpointServiceTypeMessaging,
 		Certificate: &v1beta1.CertificateSpec{
 			Provider: v1beta1.CertificateProviderTypeCertBundle,
-			TlsKey:   []byte("base64PEM"),
-			TlsCert:  []byte("base64PEM"),
+			TlsKey:   "base64PEM",
+			TlsCert:  "base64PEM",
 		},
 	}
 	endpointStatus := v1beta1.EndpointStatus{
