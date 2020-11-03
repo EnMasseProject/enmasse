@@ -59,13 +59,19 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
    private final ProtonClientConnectionManager lifecycleHandler;
    private volatile boolean started = false;
    private final Map<String, Object> connectorConfig;
+   private final boolean treatRejectAsUnmodifiedDeliveryFailed;
+   private final boolean useModifiedForTransientDeliveryErrors;
+   private final int minLargeMessageSize;
 
-   public AMQPConnectorService(String connectorName, Map<String, Object> connectorConfig, String containerId, String groupId, Optional<LinkInfo> linkInfo, ActiveMQServer server, ScheduledExecutorService scheduledExecutorService, ExecutorService nettyThreadPool, int idleTimeout) {
+   public AMQPConnectorService(String connectorName, Map<String, Object> connectorConfig, String containerId, String groupId, Optional<LinkInfo> linkInfo, ActiveMQServer server, ScheduledExecutorService scheduledExecutorService, ExecutorService nettyThreadPool, int idleTimeout, boolean treatRejectAsUnmodifiedDeliveryFailed, boolean useModifiedForTransientDeliveryErrors, int minLargeMessageSize) {
       this.name = connectorName;
       this.connectorConfig = connectorConfig;
       this.server = server;
       this.scheduledExecutorService = scheduledExecutorService;
       this.nettyThreadPool = nettyThreadPool;
+      this.treatRejectAsUnmodifiedDeliveryFailed = treatRejectAsUnmodifiedDeliveryFailed;
+      this.useModifiedForTransientDeliveryErrors = useModifiedForTransientDeliveryErrors;
+      this.minLargeMessageSize = minLargeMessageSize;
       AMQPClientConnectionFactory factory = new AMQPClientConnectionFactory(server, containerId, Collections.singletonMap(groupSymbol, groupId), idleTimeout);
       boolean sslEnabled = ConfigurationHelper.getBooleanProperty(TransportConstants.SSL_ENABLED_PROP_NAME, TransportConstants.DEFAULT_SSL_ENABLED, connectorConfig);
 
@@ -111,9 +117,9 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
 
             // These settings have the desired semantics when working in a cloud environment and for the built-in message
             // forwarding.
-            protocolManager.setAmqpTreatRejectAsUnmodifiedDeliveryFailed(true);
-            protocolManager.setAmqpUseModifiedForTransientDeliveryErrors(true);
-            protocolManager.setAmqpMinLargeMessageSize(-1);
+            protocolManager.setAmqpTreatRejectAsUnmodifiedDeliveryFailed(treatRejectAsUnmodifiedDeliveryFailed);
+            protocolManager.setAmqpUseModifiedForTransientDeliveryErrors(useModifiedForTransientDeliveryErrors);
+            protocolManager.setAmqpMinLargeMessageSize(minLargeMessageSize);
 
             NettyConnector connector = new NettyConnector(connectorConfig, lifecycleHandler, AMQPConnectorService.this, closeExecutor, nettyThreadPool, server.getScheduledPool(), protocolManager);
             connector.start();

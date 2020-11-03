@@ -48,6 +48,9 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
    private static final String NETTY_THREADS = "nettyThreads";
    private static final String IDLE_TIMEOUT = "idleTimeoutMs";
    private static final String LINK_CAPABILITIES = "linkCapabilities";
+   private static final String TREAT_REJECT_AS_UNMODIFIED_DELIVERY_FAILED = "treatRejectAsUnmodifiedDeliveryFailed";
+   private static final String USE_MODIFIED_FOR_TRANSIENT_DELIVERY_ERRORS = "useModifiedForTransientDeliveryErrors";
+   private static final String MIN_LARGE_MESSAGE_SIZE = "minLargeMessageSize";
 
    private static final Set<String> requiredProperties = initializeRequiredProperties();
    private static final Set<String> allowedProperties = initializeAllowedProperties();
@@ -74,6 +77,9 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
       properties.add(TransportConstants.NETTY_CONNECT_TIMEOUT);
       properties.add(IDLE_TIMEOUT);
       properties.add(NETTY_THREADS);
+      properties.add(TREAT_REJECT_AS_UNMODIFIED_DELIVERY_FAILED);
+      properties.add(USE_MODIFIED_FOR_TRANSIENT_DELIVERY_ERRORS);
+      properties.add(MIN_LARGE_MESSAGE_SIZE);
       return properties;
    }
 
@@ -127,6 +133,10 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
       int idleTimeout = Optional.ofNullable((String)configuration.get(IDLE_TIMEOUT)).map(Integer::parseInt).orElse(16_000);
       Integer consumerPriority = Optional.ofNullable((String)configuration.get(CONSUMER_PRIORITY)).map(Integer::parseInt).orElse(null);
 
+      boolean treatRejectAsUnmodifiedDeliveryFailed = Optional.ofNullable((String)configuration.get(TREAT_REJECT_AS_UNMODIFIED_DELIVERY_FAILED)).map(Boolean::parseBoolean).orElse(true);
+      boolean useModifiedForTransientDeliveryErrors = Optional.ofNullable((String)configuration.get(USE_MODIFIED_FOR_TRANSIENT_DELIVERY_ERRORS)).map(Boolean::parseBoolean).orElse(true);
+      int minLargeMessageSize = Optional.ofNullable((String)configuration.get(MIN_LARGE_MESSAGE_SIZE)).map(Integer::parseInt).orElse(-1);
+
       Optional<LinkInfo> linkInfo = sourceAddress.flatMap(s ->
               targetAddress.flatMap(t ->
                       direction.map(d -> new LinkInfo(linkName, s, t, d, capabilities, consumerPriority))));
@@ -146,7 +156,10 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
               ((PostOfficeImpl)postOffice).getServer(),
               scheduledExecutorService,
               nettyThreadPool,
-              idleTimeout);
+              idleTimeout,
+              treatRejectAsUnmodifiedDeliveryFailed,
+              useModifiedForTransientDeliveryErrors,
+              minLargeMessageSize);
    }
 
    @Override
