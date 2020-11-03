@@ -60,12 +60,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
@@ -465,7 +467,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
 
     }
 
-    @ParameterizedTest(name = "testTreatRejectedAsModifiedOvveride-{0}")
+    @ParameterizedTest(name = "testTreatRejectedAsModifiedOverride-{0}")
     @ValueSource(booleans = {true, false})
     void testTreatRejectedAsModifiedOverride(boolean treatRejectedAsModified) throws Exception {
         String name = String.format("treat-rejected-modified-%b", treatRejectedAsModified);
@@ -513,6 +515,9 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
         resourcesManager.createOrUpdateUser(exampleAddressSpace, exampleUser);
 
         AmqpClient client = getAmqpClientFactory().createQueueClient(exampleAddressSpace);
+        client.getConnectOptions()
+                .setUsername(exampleUser.getUsername())
+                .setPassword(exampleUser.getPassword());
 
 
         assertEquals(1, client.sendMessages(exampleAddress.getSpec().getAddress(), 1).get(1, TimeUnit.MINUTES));
@@ -523,7 +528,14 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
         assertEquals(1, status.getResult().get(1, TimeUnit.MINUTES).size());
 
         // Depending on the behavior, it should either be received again (retried), or removed.
-        assertEquals(treatRejectedAsModified ? 1 : 0, client.recvMessages(source, 1, Optional.empty()).get(1, TimeUnit.MINUTES).size());
+        if (treatRejectedAsModified) {
+            assertEquals(1, client.recvMessages(source, 1, Optional.empty()).get(1, TimeUnit.MINUTES).size());
+        } else {
+            assertThrows(TimeoutException.class, () -> client.recvMessages(source, 1, Optional.empty()).get(1, TimeUnit.MINUTES));
+            Source dlqSource = new Source();
+            dlqSource.setAddress("!!GLOBAL_DLQ");
+            assertEquals(1, client.recvMessages(dlqSource, 1, Optional.empty()).get(1, TimeUnit.MINUTES).size());
+        }
     }
 
     private void testCreatePdb() throws Exception {
