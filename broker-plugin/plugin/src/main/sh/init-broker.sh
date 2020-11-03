@@ -81,6 +81,10 @@ function pre_configuration() {
 
     echo "export GLOBAL_MAX_SIZE=\"${GLOBAL_MAX_SIZE}\"" >> $BROKER_CUSTOM/bin/env.sh
 
+    echo "export TREAT_REJECT_AS_UNMODIFIED_DELIVERY_FAILED=\"${TREAT_REJECT_AS_UNMODIFIED_DELIVERY_FAILED}\"" >> $BROKER_CUSTOM/bin/env.sh
+    echo "export USE_MODIFIED_FOR_TRANSIENT_DELIVERY_ERRORS=\"${USE_MODIFIED_FOR_TRANSIENT_DELIVERY_ERRORS}\"" >> $BROKER_CUSTOM/bin/env.sh
+    echo "export MIN_LARGE_MESSAGE_SIZE=\"${MIN_LARGE_MESSAGE_SIZE}\"" >> $BROKER_CUSTOM/bin/env.sh
+
     TRUSTSTORE_PASS=enmasse
     KEYSTORE_PASS=enmasse
     source $BROKER_CUSTOM/bin/env.sh

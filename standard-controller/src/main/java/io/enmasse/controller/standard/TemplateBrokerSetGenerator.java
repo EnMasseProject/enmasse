@@ -143,6 +143,17 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
                 paramMap.put(TemplateParameter.BROKER_JAVA_OPTS, standardInfraConfig.getSpec().getBroker().getJavaOpts());
             }
 
+            if (standardInfraConfig.getSpec().getBroker().getTreatRejectAsUnmodifiedDeliveryFailed() != null) {
+                paramMap.put(TemplateParameter.BROKER_TREAT_REJECT_AS_UNMODIFIED_DELIVERY_FAILED, String.valueOf(standardInfraConfig.getSpec().getBroker().getTreatRejectAsUnmodifiedDeliveryFailed()));
+            }
+
+            if (standardInfraConfig.getSpec().getBroker().getUseModifiedForTransientDeliveryErrors() != null) {
+                paramMap.put(TemplateParameter.BROKER_USE_MODIFIED_FOR_TRANSIENT_DELIVERY_ERRORS, String.valueOf(standardInfraConfig.getSpec().getBroker().getUseModifiedForTransientDeliveryErrors()));
+            }
+
+            if (standardInfraConfig.getSpec().getBroker().getMinLargeMessageSize() != null) {
+                paramMap.put(TemplateParameter.BROKER_MIN_LARGE_MESSAGE_SIZE, String.valueOf(standardInfraConfig.getSpec().getBroker().getMinLargeMessageSize()));
+            }
         }
 
         KubernetesList items = kubernetes.processTemplate(templateName, paramMap);

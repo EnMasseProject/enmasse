@@ -1,4 +1,4 @@
-FROM quay.io/enmasse/fedora-minimal:31
+FROM quay.io/enmasse/fedora-minimal:33
 RUN microdnf install gettext python findutils coreutils tar && microdnf clean all
 
 ARG version
