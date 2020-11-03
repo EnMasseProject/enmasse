@@ -173,6 +173,9 @@ under the License.
           <param key="clusterId" value="$TOPIC_NAME" />
           <param key="idleTimeoutMs" value="$CONNECTOR_IN_IDLE_TIMEOUT_MS" />
           <param key="nettyThreads" value="$CONNECTOR_IN_NETTY_THREADS" />
+          <param key="treatRejectAsUnmodifiedDeliveryFailed" value="$TREAT_REJECT_AS_UNMODIFIED_DELIVERY_FAILED" />
+          <param key="useModifiedForTransientDeliveryErrors" value="$USE_MODIFIED_FOR_TRANSIENT_DELIVERY_ERRORS" />
+          <param key="minLargeMessageSize" value="$MIN_LARGE_MESSAGE_SIZE" />
         </connector-service>
         <connector-service name="$${dummy}override-address-connector-out">
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
@@ -182,6 +185,9 @@ under the License.
           <param key="clusterId" value="$TOPIC_NAME" />
           <param key="idleTimeoutMs" value="$CONNECTOR_OUT_IDLE_TIMEOUT_MS" />
           <param key="nettyThreads" value="$CONNECTOR_OUT_NETTY_THREADS" />
+          <param key="treatRejectAsUnmodifiedDeliveryFailed" value="$TREAT_REJECT_AS_UNMODIFIED_DELIVERY_FAILED" />
+          <param key="useModifiedForTransientDeliveryErrors" value="$USE_MODIFIED_FOR_TRANSIENT_DELIVERY_ERRORS" />
+          <param key="minLargeMessageSize" value="$MIN_LARGE_MESSAGE_SIZE" />
         </connector-service>
 
         <!-- For the global DLQ -->

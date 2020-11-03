@@ -500,7 +500,9 @@ public class AddressController implements Watcher<Address> {
             final StandardInfraConfig currentConfig = cluster.getInfraConfig();
             if (!desiredConfig.equals(currentConfig)) {
                 if (options.getVersion().equals(desiredConfig.getSpec().getVersion())) {
-                    if (!desiredConfig.getUpdatePersistentVolumeClaim() && currentConfig != null && !currentConfig.getSpec().getBroker().getResources().getStorage().equals(desiredConfig.getSpec().getBroker().getResources().getStorage())) {
+                    if (!desiredConfig.getUpdatePersistentVolumeClaim() && currentConfig != null && desiredConfig.getSpec().getBroker().getResources() != null && currentConfig.getSpec().getBroker().getResources() != null &&
+                            currentConfig.getSpec().getBroker().getResources().getStorage() != null &&
+                            !currentConfig.getSpec().getBroker().getResources().getStorage().equals(desiredConfig.getSpec().getBroker().getResources().getStorage())) {
                         desiredConfig = new StandardInfraConfigBuilder(desiredConfig)
                                 .editSpec()
                                 .editBroker()

@@ -21,6 +21,7 @@ import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouter;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.amqp.ReceiverStatus;
 import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
@@ -32,7 +33,6 @@ import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceive
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.shared.standard.QueueTest;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -44,21 +44,29 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.policy.PodDisruptionBudget;
+import org.apache.qpid.proton.amqp.messaging.Rejected;
+import org.apache.qpid.proton.amqp.messaging.Source;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
@@ -403,6 +411,92 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
             }
         }
 
+    }
+
+    @ParameterizedTest(name = "testTreatRejectedAsModifiedOverride-{0}")
+    @ValueSource(booleans = {true, false})
+    void testTreatRejectedAsModifiedOverride(boolean treatRejectedAsModified) throws Exception {
+        String name = String.format("treat-rejected-modified-%b", treatRejectedAsModified);
+        StandardInfraConfig testInfra = new StandardInfraConfigBuilder()
+                .withNewMetadata()
+                .withName(name)
+                .endMetadata()
+                .withNewSpec()
+                .withVersion(environment.enmasseVersion())
+                .withBroker(new StandardInfraConfigSpecBrokerBuilder()
+                        .withTreatRejectAsUnmodifiedDeliveryFailed(treatRejectedAsModified)
+                        .build())
+                .endSpec()
+                .build();
+
+        resourcesManager.createInfraConfig(testInfra);
+
+        exampleAddressPlan = PlanUtils.createAddressPlanObject(name, AddressType.QUEUE,
+                Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 1.0)));
+
+        resourcesManager.createAddressPlan(exampleAddressPlan);
+
+        AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
+            .editOrNewMetadata()
+                .withName(name)
+                .endMetadata()
+                .editOrNewSpec()
+                .withAddressSpaceType("standard")
+                .withAddressPlans(Collections.singletonList(exampleAddressPlan.getMetadata().getName()))
+                .withInfraConfigRef(testInfra.getMetadata().getName())
+                .withResourceLimits(Map.of("aggregate", 10.0, "broker", 5.0,  "router",  5.0))
+                .endSpec()
+                .build();
+        resourcesManager.createAddressSpacePlan(exampleSpacePlan);
+
+        exampleAddressSpace = new  AddressSpaceBuilder(exampleAddressSpace)
+                .editMetadata()
+                .withName(name)
+                .endMetadata()
+                .editSpec()
+                .withPlan(exampleSpacePlan.getMetadata().getName())
+                .endSpec().build();
+
+        resourcesManager.createAddressSpace(exampleAddressSpace);
+
+        Address exampleAddress = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(exampleSpacePlan.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(exampleAddressSpace, "testqueue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressType.QUEUE.toString())
+                .withAddress("testqueue")
+                .withPlan(exampleAddressPlan.getMetadata().getName())
+                .endSpec()
+                .build();
+
+        resourcesManager.setAddresses(exampleAddress);
+
+        resourcesManager.createOrUpdateUser(exampleAddressSpace, exampleUser);
+
+        AmqpClient client = getAmqpClientFactory().createQueueClient(exampleAddressSpace);
+        client.getConnectOptions()
+                .setUsername(exampleUser.getUsername())
+                .setPassword(exampleUser.getPassword());
+
+
+        assertEquals(1, client.sendMessages(exampleAddress.getSpec().getAddress(), 1).get(1, TimeUnit.MINUTES));
+
+        Source source = new Source();
+        source.setAddress(exampleAddress.getSpec().getAddress());
+        ReceiverStatus status = client.recvMessages(source, message -> true, Optional.empty(), protonDelivery -> protonDelivery.disposition(new Rejected(), true));
+        assertEquals(1, status.getResult().get(1, TimeUnit.MINUTES).size());
+
+        // Depending on the behavior, it should either be received again (retried), or removed.
+        if (treatRejectedAsModified) {
+            assertEquals(1, client.recvMessages(source, 1, Optional.empty()).get(1, TimeUnit.MINUTES).size());
+        } else {
+            assertThrows(TimeoutException.class, () -> client.recvMessages(source, 1, Optional.empty()).get(1, TimeUnit.MINUTES));
+            Source dlqSource = new Source();
+            dlqSource.setAddress("!!GLOBAL_DLQ");
+            assertEquals(1, client.recvMessages(dlqSource, 1, Optional.empty()).get(1, TimeUnit.MINUTES).size());
+        }
     }
 
     private void testCreatePdb() throws Exception {
