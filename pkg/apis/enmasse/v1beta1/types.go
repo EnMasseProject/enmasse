@@ -148,8 +148,8 @@ const (
 type CertificateSpec struct {
 	Provider   CertificateProviderType `json:"provider"`
 	SecretName string                  `json:"secretName,omitempty"`
-	TlsKey     []byte                  `json:"tlsKey,omitempty"`
-	TlsCert    []byte                  `json:"tlsCert,omitempty"`
+	TlsKey     string                  `json:"tlsKey,omitempty"`
+	TlsCert    string                  `json:"tlsCert,omitempty"`
 }
 
 type ExposeType string
