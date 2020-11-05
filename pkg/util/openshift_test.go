@@ -7,6 +7,7 @@ package util
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/version"
 	"os"
 	"testing"
 )
@@ -61,6 +62,32 @@ func TestHasApiWithEnvFalse(t *testing.T) {
 	if err := os.Unsetenv(name); err != nil {
 		t.Error(err)
 		return
+	}
+
+}
+
+func TestIsOpenShift4(t *testing.T) {
+
+	var data = []struct {
+		major  string
+		minor  string
+		isFour bool
+	}{
+		{"1", "9+", false},
+		{"1", "9", false},
+		{"1", "18+", true},
+		{"1", "19", true},
+	}
+
+	for _, d := range data {
+		v := version.Info{
+			Major: d.major,
+			Minor: d.minor,
+		}
+		r := evalIsOpenShift4(&v)
+		if r != d.isFour {
+			t.Errorf("Failed result - version: %v, expectedResult: %v (was: %v)", v, d.isFour, r)
+		}
 	}
 
 }

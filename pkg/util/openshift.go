@@ -209,9 +209,13 @@ func detectOpenshift4() bool {
 		return false
 	}
 
+	return evalIsOpenShift4(v)
+}
+
+func evalIsOpenShift4(v *version.Info) bool {
 	log.Info("Version Info", "version", v, "major", v.Major, "minor", v.Minor)
 
-	m, err := regexp.MatchString(`^\d+\+$`, v.Minor)
+	m, err := regexp.MatchString(`^\d+\+?$`, v.Minor)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to compile regexp for version check: %v", err))
 	}
