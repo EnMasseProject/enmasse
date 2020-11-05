@@ -2404,13 +2404,13 @@ type Port_enmasse_io_v1beta1 {
 }
 
 type AddressSpec_enmasse_io_v1beta1 {
-  address:           String!
-  addressSpace:      String!
-  type:              AddressType!
-  plan:              AddressPlan_admin_enmasse_io_v1beta2!
-  topic:             String
-  deadletter: String
-  expiry:     String
+  address:      String!
+  addressSpace: String!
+  type:         AddressType!
+  plan:         AddressPlan_admin_enmasse_io_v1beta2!
+  topic:        String
+  deadletter:   String
+  expiry:       String
 }
 
 type AddressStatus_enmasse_io_v1beta1 {
@@ -2674,13 +2674,13 @@ input AddressSpace_enmasse_io_v1beta1_Input {
 }
 
 input AddressSpec_enmasse_io_v1beta1_Input {
-  address:           String!
-  addressSpace:      String
-  type:              String!
-  plan:              String!
-  topic:             String
-  deadletter: String
-  expiry:     String
+  address:      String!
+  addressSpace: String
+  type:         String!
+  plan:         String!
+  topic:        String
+  deadletter:   String
+  expiry:       String
 }
 
 input Address_enmasse_io_v1beta1_Input {
@@ -4575,9 +4575,9 @@ func (ec *executionContext) _AddressSpaceStatus_enmasse_io_v1beta1_caCertificate
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]byte)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOCertBytes2ᚕbyte(ctx, field.Selections, res)
+	return ec.marshalOCertBytes2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceStatus_enmasse_io_v1beta1_endpointStatus(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceStatus) (ret graphql.Marshaler) {
@@ -6297,9 +6297,9 @@ func (ec *executionContext) _CertificateSpec_enmasse_io_v1beta1_tlsCert(ctx cont
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]byte)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOCertBytes2ᚕbyte(ctx, field.Selections, res)
+	return ec.marshalOCertBytes2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CertificateSpec_enmasse_io_v1beta1_tlsKey(ctx context.Context, field graphql.CollectedField, obj *v1beta1.CertificateSpec) (ret graphql.Marshaler) {
@@ -6328,9 +6328,9 @@ func (ec *executionContext) _CertificateSpec_enmasse_io_v1beta1_tlsKey(ctx conte
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]byte)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOCertBytes2ᚕbyte(ctx, field.Selections, res)
+	return ec.marshalOCertBytes2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ConnectionQueryResult_consoleapi_enmasse_io_v1beta1_total(ctx context.Context, field graphql.CollectedField, obj *ConnectionQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
@@ -7074,9 +7074,9 @@ func (ec *executionContext) _EndpointStatus_enmasse_io_v1beta1_certificate(ctx c
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]byte)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOCertBytes2ᚕbyte(ctx, field.Selections, res)
+	return ec.marshalOCertBytes2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _EndpointStatus_enmasse_io_v1beta1_serviceHost(ctx context.Context, field graphql.CollectedField, obj *v1beta1.EndpointStatus) (ret graphql.Marshaler) {
@@ -11592,13 +11592,13 @@ func (ec *executionContext) unmarshalInputCertificateSpec_enmasse_io_v1beta1_Inp
 			}
 		case "tlsCert":
 			var err error
-			it.TlsCert, err = ec.unmarshalOCertBytes2ᚕbyte(ctx, v)
+			it.TlsCert, err = ec.unmarshalOCertBytes2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "tlsKey":
 			var err error
-			it.TlsKey, err = ec.unmarshalOCertBytes2ᚕbyte(ctx, v)
+			it.TlsKey, err = ec.unmarshalOCertBytes2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -16368,12 +16368,27 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
 }
 
-func (ec *executionContext) unmarshalOCertBytes2ᚕbyte(ctx context.Context, v interface{}) ([]byte, error) {
+func (ec *executionContext) unmarshalOCertBytes2string(ctx context.Context, v interface{}) (string, error) {
 	return UnmarshalCertBytes(v)
 }
 
-func (ec *executionContext) marshalOCertBytes2ᚕbyte(ctx context.Context, sel ast.SelectionSet, v []byte) graphql.Marshaler {
+func (ec *executionContext) marshalOCertBytes2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	return MarshalCertBytes(v)
+}
+
+func (ec *executionContext) unmarshalOCertBytes2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOCertBytes2string(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOCertBytes2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec.marshalOCertBytes2string(ctx, sel, *v)
 }
 
 func (ec *executionContext) marshalOCertificateSpec_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐCertificateSpec(ctx context.Context, sel ast.SelectionSet, v v1beta1.CertificateSpec) graphql.Marshaler {
