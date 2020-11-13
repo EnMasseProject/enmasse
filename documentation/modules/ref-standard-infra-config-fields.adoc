@@ -40,6 +40,9 @@ This table shows the fields available for the standard infrastructure configurat
 |`broker.connectorWorkerThreads` |Specifies the number of worker threads of the connection to the router.
 |`broker.storageClassName` |Specifies what storage class to use for the persistent volume for the broker.
 |`broker.updatePersistentVolumeClaim` |If the persistent volume supports resizing, setting this value to `true` allows the broker storage to be resized.
+|`broker.treatRejectAsUnmodifiedDeliveryFailed` | Treat rejected delivery outcome as modified delivery failed. This causes the message to be re-sent to the consumer by default. Default is true.
+|`broker.useModifiedForTransientDeliveryErrors` | Respond with modified for transient delivery errors to allow sender to retry. Default is true.
+|`broker.minLargeMessageSize` | Specify the minimum size of a message for it to be treated as a large message. A large message is always paged to disk with a reference in the journal. Default is -1 (never page).
 |`router.resources.memory` |Specifies the amount of memory allocated to the router.
 |`router.linkCapacity` |Specifies the default number of credits issued on AMQP links for the router.
 |`router.handshakeTimeout` |Specifies the amount of time in seconds to wait for the secure handshake to be initiated.
