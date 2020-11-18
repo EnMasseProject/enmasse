@@ -30,9 +30,9 @@ jobs:
       - name: Set version and tag
         id: version
         run: |
-          echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
+          echo "name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)" >> $GITHUB_ENV
           echo "::set-output name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
-          echo "::set-env name=TAG::$(grep "maven.version" pom.properties| cut -d'=' -f2)"
+          echo "name=TAG::$(grep "maven.version" pom.properties| cut -d'=' -f2)" >> $GITHUB_ENV
           echo "::set-output name=TAG::$(grep "maven.version" pom.properties| cut -d'=' -f2)"
 
       - name: Install dependencies
