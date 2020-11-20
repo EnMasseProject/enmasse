@@ -449,13 +449,19 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .build();
         resourcesManager.createAddressSpacePlan(exampleSpacePlan);
 
-        exampleAddressSpace = new  AddressSpaceBuilder(exampleAddressSpace)
-                .editMetadata()
+        exampleAddressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
                 .withName(name)
+                .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
-                .editSpec()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
                 .withPlan(exampleSpacePlan.getMetadata().getName())
-                .endSpec().build();
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
 
         resourcesManager.createAddressSpace(exampleAddressSpace);
 
