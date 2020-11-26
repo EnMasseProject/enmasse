@@ -31,7 +31,7 @@ jobs:
         id: version
         run: |
           echo "VERSION=$(grep "release.version" pom.properties| cut -d'=' -f2)" >> $GITHUB_ENV
-          echo "::set-output name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
+          echo "DOCKER_REGISTRY=localhost:32000" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: ./.github/scripts/install_dep.sh
@@ -44,8 +44,14 @@ jobs:
       - name: setup-docker
         run: ./.github/scripts/setup_docker.sh
 
-      - name: Minikube setup with registry
-        uses: EnMasseProject/minikube-setup@V1.0.4
+      - uses: balchua/microk8s-actions@v0.2.1
+        with:
+          channel: '1.19/stable'
+          addons: '["dns", "rbac", "storage", "registry", "ingress"]'
+
+      - name: Enable ssl passthrough
+        run : |
+          kubectl patch ds nginx-ingress-microk8s-controller -n ingress --type=json -p '[{"op" : "add", "path" : "/spec/template/spec/containers/0/args/-", "value" : "--enable-ssl-passthrough"}]'
 
       - name: Set up JDK 11
         uses: actions/setup-java@v1
