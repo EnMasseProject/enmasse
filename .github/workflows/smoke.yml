@@ -22,6 +22,7 @@ jobs:
       - name: Set version
         run: |
           echo "VERSION=$(grep "release.version" pom.properties| cut -d'=' -f2)" >> $GITHUB_ENV
+          echo "DOCKER_REGISTRY=localhost:32000" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: ./.github/scripts/install_dep.sh
