@@ -35,9 +35,9 @@ jobs:
         run: ./.github/scripts/setup_docker.sh
 
       - uses: balchua/microk8s-actions@v0.2.1
-          with:
-            channel: '1.19/stable'
-            addons: '["dns", "rbac", "storage", "registry", "ingress"]'
+        with:
+          channel: '1.19/stable'
+          addons: '["dns", "rbac", "storage", "registry", "ingress"]'
 
       - name: Enable ssl passthrough
         run : |
