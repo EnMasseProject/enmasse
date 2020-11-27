@@ -2,7 +2,7 @@
 set -e
 
 echo "${VERSION}"
-
+export SKIP_TESTS=true
 echo "Make"
 make
 
