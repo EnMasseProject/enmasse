@@ -21,6 +21,9 @@ import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MicroK8s extends Kubernetes {
     private static Logger log = CustomLogger.getLogger();
@@ -87,9 +90,17 @@ public class MicroK8s extends Kubernetes {
         if (!name.endsWith("-external")) {
             externalName += "-external";
         }
-        Endpoint endpoint = new Endpoint("localhost", Integer.parseInt(getPort(namespace, externalName)));
-        log.info("MicroK8s external endpoint - " + endpoint.toString());
-        return endpoint;
+        Endpoint endpoint;
+        List<Service> services = Kubernetes.getInstance().listServices(Map.of("app", "enmasse"));
+        for (Service service : services) {
+            if (service.getMetadata().getName().equals(externalName)) {
+                endpoint = new Endpoint("localhost", service.getSpec().getPorts().get(1).getPort());
+                log.info("MicroK8s external endpoint - " + endpoint.toString());
+                return endpoint;
+            }
+        }
+        log.error("Could not find MicroK8s external endpoint " + externalName);
+        throw new NullPointerException();
     }
 
     @Override
@@ -103,7 +114,7 @@ public class MicroK8s extends Kubernetes {
                 .withNamespace(namespace)
                 .endMetadata()
                 .editOrNewSpec()
-                .withType("LoadBalancer")
+                .withType("NodePort")
                 .addToPorts(targetPort)
                 .withSelector(service.getSpec().getSelector())
                 .endSpec();

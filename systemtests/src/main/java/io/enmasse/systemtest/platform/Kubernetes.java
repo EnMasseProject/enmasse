@@ -37,6 +37,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import io.enmasse.systemtest.platform.cluster.KubernetesCluster;
+import io.enmasse.systemtest.platform.cluster.MicroK8sCluster;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.Container;
@@ -153,12 +154,19 @@ public abstract class Kubernetes {
                 throw new RuntimeException(ex);
             }
             Environment env = Environment.getInstance();
-            if (cluster.toString().equals(MinikubeCluster.IDENTIFIER)) {
-                instance = new Minikube(env);
-            } else if (cluster.toString().equals(KubernetesCluster.IDENTIFIER)) {
-                instance = new GenericKubernetes(env);
-            } else {
-                instance = new OpenShift(env);
+            switch (cluster.toString()) {
+                case MinikubeCluster.IDENTIFIER:
+                    instance = new Minikube(env);
+                    break;
+                case MicroK8sCluster.IDENTIFIER:
+                    instance = new MicroK8s(env);
+                    break;
+                case KubernetesCluster.IDENTIFIER:
+                    instance = new GenericKubernetes(env);
+                    break;
+                default:
+                    instance = new OpenShift(env);
+                    break;
             }
             try {
                 instance.olmAvailable = instance.getCRD("clusterserviceversions.operators.coreos.com") != null
