@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 # Try twice, since order matters
-kubectl apply -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/0.11.0/crds.yaml
-kubectl apply -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/0.11.0/olm.yaml
+microk8s kubectl apply -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/0.11.0/crds.yaml
+microk8s kubectl apply -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/0.11.0/olm.yaml
 
 # Delete "operatorhubio-catalog"
-kubectl delete catalogsource operatorhubio-catalog -n olm
+microk8s kubectl delete catalogsource operatorhubio-catalog -n olm
 
 
 # Install OPM tool
