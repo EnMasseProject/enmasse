@@ -23,7 +23,7 @@ public class MicroK8sCluster implements KubeCluster {
 
     @Override
     public String getKubeCmd() {
-        return "kubectl";
+        return "microk8s kubectl";
     }
 
     @Override

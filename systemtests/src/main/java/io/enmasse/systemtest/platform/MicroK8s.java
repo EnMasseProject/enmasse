@@ -59,11 +59,6 @@ public class MicroK8s extends Kubernetes {
         }
     }
 
-    private String getPort(String namespace, String serviceName) {
-        String [] output = runCommand("minikube", "service", "-n", namespace, "--format", "{{.Port}}", serviceName, "--url=true").split(" ");
-        return output[output.length - 1];
-    }
-
     @Override
     public Endpoint getMasterEndpoint() {
         return new Endpoint(client.getMasterUrl());
