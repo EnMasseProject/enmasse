@@ -117,7 +117,7 @@ public class ProtonClientConnectionManager implements BaseConnectionLifeCycleLis
 
    public void checkIdleConnections(long ttl) {
       Collection<ActiveMQProtonRemotingConnection> values = connectionMap.values();
-      log.infof("Checking %d connection(s)", values.size());
+      log.debugf("Checking %d connection(s)", values.size());
       for (ActiveMQProtonRemotingConnection conn : values) {
          boolean dataReceived = conn.checkDataReceived();
          if (!dataReceived) {

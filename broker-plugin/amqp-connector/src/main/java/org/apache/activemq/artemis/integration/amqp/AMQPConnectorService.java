@@ -137,7 +137,10 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
             started = true;
             if (idleTimeout > 0 && connectionCheckFuture == null) {
                long connCheckTimeout = idleTimeout * 2;
-               connectionCheckFuture = scheduledExecutorService.scheduleAtFixedRate(() -> lifecycleHandler.checkIdleConnections(connCheckTimeout),
+               connectionCheckFuture = scheduledExecutorService.scheduleAtFixedRate(() -> {
+                          ActiveMQAMQPLogger.LOGGER.infov("Checking connections on connector {0}", name);
+                          lifecycleHandler.checkIdleConnections(connCheckTimeout);
+                       },
                        connCheckTimeout,
                        connCheckTimeout,
                        TimeUnit.MILLISECONDS);
