@@ -60,13 +60,17 @@ Registry.prototype.update = function (id, latest) {
     var current = this.objects[id];
     if (current === undefined) {
         this.objects[id] = latest;
-        log.debug('setting ' + id + ' to ' + JSON.stringify(latest));
+        if (log.isDebugEnabled()) {
+            log.debug('setting ' + id + ' to ' + JSON.stringify(latest));
+        }
         this.emit('updated', latest);
     } else {
         var changed = false;
         for (var s in latest) {
             if (!equals(current[s], latest[s])) {
-                log.debug('changing ' + s + ' on ' + id + ' from ' + JSON.stringify(current[s]) + ' to ' + JSON.stringify(latest[s]));
+                if (log.isDebugEnabled()) {
+                    log.debug('changing ' + s + ' on ' + id + ' from ' + JSON.stringify(current[s]) + ' to ' + JSON.stringify(latest[s]));
+                }
                 current[s] = latest[s];
                 changed = true;
             }
@@ -83,7 +87,9 @@ Registry.prototype.update_if_exists = function (id, latest) {
         var changed = false;
         for (var s in latest) {
             if (!equals(current[s], latest[s])) {
-                log.debug('changing ' + s + ' on ' + id + ' from ' + JSON.stringify(current[s]) + ' to ' + JSON.stringify(latest[s]));
+                if (log.isDebugEnabled()) {
+                    log.debug('changing ' + s + ' on ' + id + ' from ' + JSON.stringify(current[s]) + ' to ' + JSON.stringify(latest[s]));
+                }
                 current[s] = latest[s];
                 changed = true;
             }

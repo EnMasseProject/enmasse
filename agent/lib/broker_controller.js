@@ -631,8 +631,10 @@ BrokerController.prototype._sync_broker_addresses = function (retry) {
 
         var stale = values(difference(actual, self.addresses, same_address));
         var missing = values(difference(self.addresses, actual, same_address));
-        log.debug('[%s] checking addresses, desired=%j, actual=%j => delete %j and create %j', self.id, values(self.addresses).map(address_and_type), values(actual),
-            stale.map(address_and_type), missing.map(address_and_type));
+        if (log.isDebugEnabled()) {
+            log.debug('[%s] checking addresses, desired=%j, actual=%j => delete %j and create %j', self.id, values(self.addresses).map(address_and_type), values(actual),
+                stale.map(address_and_type), missing.map(address_and_type));
+        }
         self._set_sync_status(stale.length, missing.length);
         return addrSettings.then(() => {
                 return self.delete_addresses(stale).then(
