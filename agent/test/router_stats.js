@@ -449,14 +449,16 @@ describe('router stats', function() {
         //retrieve stats:
         var connections = new Registry();
         var addresses = new AddressList();
-        addresses.set({foo:{address:'foo'}});
-        router_stats.retrieve(addresses, connections).then(function() {
-            assert.equal(addresses.get('foo').senders, 2);
-            assert.equal(addresses.get('foo').receivers, 2);
-            assert.equal(addresses.get('foo').messages_in, 64);
-            assert.equal(addresses.get('foo').messages_out, 46);
-            done();
-        }).catch(done);
+        addresses.setAsync({foo:{address:'foo'}})
+            .then(() => {
+                router_stats.retrieve(addresses, connections).then(() => {
+                    assert.equal(addresses.get('foo').senders, 2);
+                    assert.equal(addresses.get('foo').receivers, 2);
+                    assert.equal(addresses.get('foo').messages_in, 64);
+                    assert.equal(addresses.get('foo').messages_out, 46);
+                    done();
+                }).catch(done);
+            });
     });
     it('retrieves stats for a queue from a changing set of routers', function(done) {
         //populate router:

@@ -17,11 +17,10 @@
 
 var log = require("./log.js").logger();
 var rhea = require('rhea');
-var path = require('path');
-var fs = require('fs');
 var Router = require('./qdr.js').Router;
 var crypto = require('crypto');
 var uuidv5 = require('uuid/v5');
+var myutils = require('./utils.js');
 
 
 
@@ -303,21 +302,32 @@ RouterStats.prototype.close = function () {
 }
 
 RouterStats.prototype.retrieve = function (addresses, connection_registry) {
-    return this._retrieve().then(function (results) {
-        if (results) {
-            connection_registry.set(results.connections);
-            for (var a in results.addresses) {
-                var i = a.indexOf('::');
-                if (i > 0) {
-                    var s = a.substring(i+2);
-                    addresses.update_stats(s, results.addresses[a]);
-                } else {
-                    addresses.update_stats(a, results.addresses[a]);
-                }
+    return new Promise((resolve) => {
+        this._retrieve().then(results => {
+            if (results) {
+                connection_registry.setAsync(results.connections)
+                    .then(() => {
+                        myutils.applyAsync(Object.keys(results.addresses), (subset) => {
+                            subset.forEach((a) => {
+                                var i = a.indexOf('::');
+                                if (i > 0) {
+                                    var s = a.substring(i + 2);
+                                    addresses.update_stats(s, results.addresses[a]);
+                                } else {
+                                    addresses.update_stats(a, results.addresses[a]);
+                                }
+                            });
+                        }).catch(error => log.error('Failed to process router address stats: %s', error)).finally(resolve);
+                    }).catch(error => {
+                      log.error('Failed to process router connection stats: %s', error);
+                      resolve();});
+            } else {
+                resolve();
             }
-        }
-    }).catch(function (error) {
-        console.error('Failed to retrieve router stats: %s', error);
+        }).catch(error => {
+            log.error('Failed to retrieve router stats: %s', error);
+            resolve();
+        });
     });
 };
 

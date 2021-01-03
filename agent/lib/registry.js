@@ -18,6 +18,7 @@
 var log = require("./log.js").logger();
 var util = require('util');
 var events = require('events');
+var myutils = require('./utils.js');
 
 function Registry() {
     events.EventEmitter.call(this);
@@ -37,19 +38,44 @@ Registry.prototype.get = function (key) {
 };
 
 Registry.prototype.set = function (known) {
-    for (var key in known) {
-        if (this.objects[key] === undefined) {
-            this.objects[key] = known[key];
-            this.emit('updated', known[key]);
-        } else {
-            this.update(key, known[key]);
-        }
-    }
-    for (var key in this.objects) {
-        if (known[key] === undefined) {
-            this.deleted(key);
-        }
-    }
+    throw 'unsupported operation';
+}
+
+Registry.prototype.setAsync = function (known, chunkSize = 500) {
+    var updated = 0;
+    var deleted = 0;
+    var knownKeys = Object.keys(known);
+    var oldPop = Object.keys(this.objects).length;
+
+    return new Promise((resolve, reject) => {
+        myutils.applyAsync(knownKeys, (subset) => {
+            subset.forEach(key => {
+                if (this.objects[key] === undefined) {
+                    this.objects[key] = known[key];
+                    this.emit('updated', known[key]);
+                    updated++;
+                } else {
+                    if (this.update(key, known[key])) {
+                        updated++;
+                    }
+                }
+            });
+        }, chunkSize).then(() => {
+            var keys = Object.keys(this.objects);
+            myutils.applyAsync(keys, (subset) => {
+                subset.forEach(key => {
+                    if (known[key] === undefined) {
+                        this.deleted(key);
+                        deleted++;
+                    }
+                });
+            }, chunkSize).then(() => {
+                let newPop = Object.keys(this.objects).length;
+                log.info("%s setAsync updated: %d deleted: %d population: %d => %d", this.constructor.name, updated, deleted, oldPop, newPop);
+                resolve();
+            }).catch(reject);
+        }).catch(reject);
+    });
 };
 
 function equals(a, b) {
@@ -64,6 +90,7 @@ Registry.prototype.update = function (id, latest) {
             log.debug('setting ' + id + ' to ' + JSON.stringify(latest));
         }
         this.emit('updated', latest);
+        return true;
     } else {
         var changed = false;
         for (var s in latest) {
@@ -77,8 +104,10 @@ Registry.prototype.update = function (id, latest) {
         }
         if (changed) {
             this.emit('updated', current);
+            return true;
         }
     }
+    return false;
 };
 
 Registry.prototype.update_if_exists = function (id, latest) {

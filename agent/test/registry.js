@@ -74,23 +74,24 @@ describe('registry', function() {
     });
 
     it('for_each', function(done) {
-        registry.set({
-            'a': {foo:'bar',baz:10},
-            'b': {colour:'red',age:99},
-            'c': {name:'bob',type:'kangaroo'}
+        registry.setAsync({
+            'a': {foo: 'bar', baz: 10},
+            'b': {colour: 'red', age: 99},
+            'c': {name: 'bob', type: 'kangaroo'}
+        }, 500).then(() => {
+            var collected = {};
+            registry.for_each(function (o) {
+                for (var f in o) {
+                    collected[f] = o[f];
+                }
+            });
+            var expected = {
+                foo:'bar',baz:10,
+                colour:'red',age:99,
+                name:'bob',type:'kangaroo'
+            };
+            assert.equal(JSON.stringify(expected), JSON.stringify(collected));
+            done();
         });
-        var collected = {};
-        registry.for_each(function (o) {
-            for (var f in o) {
-                collected[f] = o[f];
-            }
-        });
-        var expected = {
-            foo:'bar',baz:10,
-            colour:'red',age:99,
-            name:'bob',type:'kangaroo'
-        };
-        assert.equal(JSON.stringify(expected), JSON.stringify(collected));
-        done();
     });
 });

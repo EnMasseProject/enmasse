@@ -29,7 +29,7 @@ Addresses.prototype.update_stats = function (name, stats) {
 };
 
 Addresses.prototype.addresses_defined = function (addresses) {
-    this.set(addresses.reduce(function (map, a) { map[a.address] = a; return map; }, {}));
+    return this.setAsync(addresses.reduce((map, a) => { map[a.address] = a; return map; }, {}));
 };
 
 module.exports = Addresses;

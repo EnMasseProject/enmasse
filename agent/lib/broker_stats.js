@@ -17,6 +17,7 @@
 
 var create_podgroup = require('./podgroup.js');
 var pod_watcher = require('./pod_watcher.js');
+var myutils = require('./utils.js');
 
 function is_pod_ready(pod) {
     return pod.ready === 'True' && pod.phase === 'Running';
@@ -57,12 +58,14 @@ BrokerStats.prototype.on_updated = function(pods) {
 };
 
 BrokerStats.prototype.retrieve = function(addresses) {
-    return this._retrieve().then(function (stats) {
-        for (var s in stats) {
-            addresses.update_stats(s, stats[s]);
-        }
-    }).catch(function (error) {
-        console.error('Failed to retrieve broker stats: %s', error);
+    return this._retrieve().then(stats => {
+        myutils.applyAsync(stats, (subset) => {
+            subset.forEach(s => {
+                addresses.update_stats(s, stats[s]);
+            });
+        });
+    }).catch(error => {
+        log.error('Failed to retrieve broker stats: %s', error);
     });
 };
 

@@ -279,6 +279,25 @@ module.exports.coalesce = function (f, delay, max_delay) {
     }
 };
 
+module.exports.applyAsync = function (array, f, chunkSize = 500) {
+    var index = 0;
+    var promises = [];
+    while (index < array.length) {
+        let slice = array.slice(index, chunkSize + index);
+        promises.push(new Promise((resolve, reject) => {
+            setImmediate(() => {
+                try {
+                    resolve(f(slice));
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }));
+        index += chunkSize;
+    }
+    return Promise.all(promises);
+}
+
 module.exports.get = function (object, fields, default_value) {
     var o = object;
     for (var i = 0; o && i < fields.length; i++) {

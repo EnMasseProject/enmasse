@@ -381,3 +381,59 @@ describe('parseToBytes', function () {
        done();
     });
 });
+
+describe('applyAsync', function () {
+    var sumMembers = function (array) {
+        var sum = 0;
+        array.forEach((e) => {
+            sum += e;
+        })
+        return sum;
+    };
+    it('chunkSize1', function (done) {
+        var foo = [1, 2, 3, 4];
+        myutils.applyAsync(foo, sumMembers, 1).then((result) => {
+            assert.deepStrictEqual( result, [1, 2, 3, 4]);
+            done();
+        });
+    });
+    it('chunkSize2', function (done) {
+        var foo = [1, 2, 3, 4];
+        myutils.applyAsync(foo, sumMembers, 2).then((result) => {
+            assert.deepStrictEqual( result, [3, 7]);
+            done();
+        });
+    });
+    it('incompleteChunk', function (done) {
+        var foo = [1, 2, 3, 4];
+        myutils.applyAsync(foo, sumMembers, 3).then((result) => {
+            assert.deepStrictEqual( result, [6, 4]);
+            done();
+        });
+    });
+    it('chunkSizeLargerThanArrayLength', function (done) {
+        var foo = [1, 2, 3, 4];
+        myutils.applyAsync(foo, sumMembers, 5).then((result) => {
+            assert.deepStrictEqual( result, [10]);
+            done();
+        });
+    });
+    it('emptyArray', function (done) {
+        var foo = [];
+        myutils.applyAsync(foo, sumMembers, 5).then((result) => {
+            assert.deepStrictEqual( result, []);
+            done();
+        });
+    });
+    it('handlesExceptions', function (done) {
+        var foo = [1, 2, 3, 4];
+        myutils.applyAsync(foo, function (array) {
+            throw 'urgh';
+        }, 5).then((result) => {
+            fail("unexpected");
+        }).catch(reason => {
+            assert.deepStrictEqual( reason, "urgh");
+            done();
+        });
+    });
+});
