@@ -36,8 +36,8 @@ jobs:
       - name: setup-docker
         run: ./.github/scripts/setup_docker.sh
 
-      - name: Minikube setup with registry
-        uses: EnMasseProject/minikube-setup@V1.0.2
+      - name: Minikube setup with registry V1.0.2-1
+        uses: EnMasseProject/minikube-setup@V1.0.2-1
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: true
 
