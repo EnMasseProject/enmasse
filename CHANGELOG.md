@@ -1,6 +1,10 @@
 
 ## 1.0.0
 
+## 0.34.0
+
+* #5232: Use quay.io rather than docker.io for prometheus, grafana and oauth-proxy (openshift3) 
+
 ## 0.33.0
 
 * #5183: Fix expiry-address & dead-letter for durable subscriptions
