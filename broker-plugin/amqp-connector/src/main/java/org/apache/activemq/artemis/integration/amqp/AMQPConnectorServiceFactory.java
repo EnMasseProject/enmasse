@@ -172,5 +172,4 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
       return requiredProperties;
    }
 
-
 }
