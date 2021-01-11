@@ -48,9 +48,13 @@ function formatLevel(level, spaces) {
 
 Logger.prototype.log = function (level, str) {
     var args = Array.prototype.slice.call(arguments, 2);
-    if (levels[level] !== undefined && levels[level] <= this.level) {
+    if (this.isEnabled(level)) {
         this.logger.apply(this.logger, [formatLevel(level, 5) + " " + str].concat(args));
     }
+}
+
+Logger.prototype.isEnabled = function (level) {
+    return (levels[level] !== undefined && levels[level] <= this.level);
 }
 
 module.exports.logger = function() {
@@ -63,5 +67,9 @@ module.exports.logger = function() {
     logger.info  = logger.log.bind(logger, "info");
     logger.warn  = logger.log.bind(logger, "warn");
     logger.error = logger.log.bind(logger, "error");
+    logger.isDebugEnabled = logger.isEnabled.bind(logger, "debug");
+    logger.isInfoEnabled = logger.isEnabled.bind(logger, "info");
+    logger.isWarnEnabled = logger.isEnabled.bind(logger, "warn");
+    logger.isErrorEnabled = logger.isEnabled.bind(logger, "error");
     return logger;
 }

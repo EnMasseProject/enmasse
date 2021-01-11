@@ -276,7 +276,9 @@ function get_address (a) { return a.address; }
 
 Ragent.prototype.sync_broker = function (broker) {
     var allocated = this.addresses.filter(if_allocated_to(broker.id));
-    log.debug('syncing broker %s with %j', broker.id, allocated.map(get_address));
+    if (log.isDebugEnabled()) {
+        log.debug('syncing broker %s with %j', broker.id, allocated.map(get_address));
+    }
     broker.sync_addresses(allocated);
 }
 
