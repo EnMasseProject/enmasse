@@ -7,6 +7,14 @@
 
 You can install the {ProductName} Operator on an {KubePlatform} 4.x cluster by using OperatorHub in the {KubePlatform} console.
 
+ifdef::LtsStatement[]
+[IMPORTANT]
+
+* {ProductName} {ProductVersion} has been designated as a Long Term Support (LTS) release version. Bug fixes and security advisories will be made available for {ProductName} {ProductVersion} in a series of micro releases (1.7.1, 1.7.2, 1.7.3, and so on) until the product’s end of life.
+
+* You need to install the latest LTS version of the Operator for {ProductName} {ProductVersion}. To install the latest LTS version for {ProductName} {ProductVersion}, select the operator channel labeled `stable`.
+endif::LtsStatement[]
+
 .Prerequisites
 
 * Access to an {KubePlatform} 4.x cluster and an account with `cluster-admin` permissions.
@@ -25,16 +33,18 @@ You can install the {ProductName} Operator on an {KubePlatform} 4.x cluster by u
 
 . Click the {ProductName} Operator.  Information about the Operator is displayed.
 
-. Read the information about the Operator and click *Install*. The Create Operator Subscription page opens.
+. Read the information about the Operator and click *Install*.
 
-. On the *Create Operator Subscription* page, for *Installation Mode*, click *A specific namespace on the cluster*, and then select the *{ProductNamespace}* namespace from the drop-down list.
+. On the *Install Operator* page:
 
-. Accept all of the remaining default selections and click *Subscribe*.
-+
-The *{ProductBundleName}* page is displayed, where you can monitor the installation progress of the {ProductName} Operator subscription.
+.. Under *Installation Mode*, click *A specific namespace on the cluster*.
 
-. After the subscription upgrade status is shown as *Up to date*, click *Operators > Installed Operators* to verify that the *{ProductName}* ClusterServiceVersion (CSV) is displayed and its *Status* ultimately resolves to *InstallSucceeded* in the *{ProductNamespace}* namespace.
-+
+.. From the *Installed Namespace* drop-down list, select the `{ProductNamespace}` namespace.
+
+.. Accept all of the remaining default selections and click *Install*.
+
+When the Operator installation is complete, the *Installed Operators* page opens. You should see that the {ProductName} Operator is installed in the project namespace that you specified.
+
 For troubleshooting information, see the link:https://access.redhat.com/documentation/en-us/openshift_container_platform/4.5/html-single/operators/index#olm-installing-operators-from-operatorhub_olm-adding-operators-to-a-cluster[{KubePlatform} documentation].
 
 .Next steps
