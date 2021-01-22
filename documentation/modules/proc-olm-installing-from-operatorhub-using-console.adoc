@@ -9,11 +9,13 @@ You can install the {ProductName} Operator on an {KubePlatform} 4.x cluster by u
 
 ifdef::LtsStatement[]
 [IMPORTANT]
-
+====
 * {ProductName} {ProductVersion} has been designated as a Long Term Support (LTS) release version. Bug fixes and security advisories will be made available for {ProductName} {ProductVersion} in a series of micro releases (1.7.1, 1.7.2, 1.7.3, and so on) until the product’s end of life.
 
 * You need to install the latest LTS version of the Operator for {ProductName} {ProductVersion}. To install the latest LTS version for {ProductName} {ProductVersion}, select the operator channel labeled `stable`.
+====
 endif::LtsStatement[]
+
 
 .Prerequisites
 
