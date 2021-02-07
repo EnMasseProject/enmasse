@@ -64,6 +64,7 @@ public class Environment {
     private static final String OCP4_EXTERNAL_IMAGE_REGISTRY = "OCP4_EXTERNAL_IMAGE_REGISTRY";
     private static final String OCP4_INTERNAL_IMAGE_REGISTRY = "OCP4_INTERNAL_IMAGE_REGISTRY";
     private static final String OVERRIDE_CLUSTER_TYPE = "OVERRIDE_CLUSTER_TYPE";
+    private static final String DOWNSTREAM = "DOWNSTREAM";
 
     //Config paths
     private static final String scaleConfig = System.getenv().getOrDefault(SCALE_CONFIG, Paths.get(System.getProperty("user.dir"), "scale-config.json").toAbsolutePath().toString());
@@ -99,7 +100,7 @@ public class Environment {
     private final String templatesPath = getOrDefault(jsonEnv, TEMPLATES_PATH, Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     private final String clusterExternalImageRegistry = getOrDefault(jsonEnv, OCP4_EXTERNAL_IMAGE_REGISTRY, "");
     private final String clusterInternalImageRegistry = getOrDefault(jsonEnv, OCP4_INTERNAL_IMAGE_REGISTRY, "");
-
+    private final String isTestDownstream = getOrDefault(jsonEnv, DOWNSTREAM, System.getenv("DOWNSTREAM"));
     //Default values
     private final UserCredentials managementCredentials = new UserCredentials(null, null);
     private final UserCredentials defaultCredentials = new UserCredentials(null, null);
@@ -327,6 +328,10 @@ public class Environment {
 
     public String getOverrideClusterType() {
         return overrideClusterType;
+    }
+
+    public String isTestDownstream() {
+        return isTestDownstream;
     }
 
     private String getOrDefault(JsonNode jsonConfig, String varName, String defaultValue) {
