@@ -8,4 +8,4 @@ spec:
   name: amq-online
   source: enmasse-catalog
   sourceNamespace: openshift-marketplace
-  startingCSV: amq-online.0.33.9999
+  startingCSV: amq-online.${PRODUCT_VERSION}

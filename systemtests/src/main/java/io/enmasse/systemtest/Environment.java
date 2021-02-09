@@ -65,6 +65,7 @@ public class Environment {
     private static final String OCP4_INTERNAL_IMAGE_REGISTRY = "OCP4_INTERNAL_IMAGE_REGISTRY";
     private static final String OVERRIDE_CLUSTER_TYPE = "OVERRIDE_CLUSTER_TYPE";
     private static final String DOWNSTREAM = "DOWNSTREAM";
+    private static final String PRODUCT_VERSION = "PRODUCT_VERSION";
 
     //Config paths
     private static final String scaleConfig = System.getenv().getOrDefault(SCALE_CONFIG, Paths.get(System.getProperty("user.dir"), "scale-config.json").toAbsolutePath().toString());
@@ -101,6 +102,8 @@ public class Environment {
     private final String clusterExternalImageRegistry = getOrDefault(jsonEnv, OCP4_EXTERNAL_IMAGE_REGISTRY, "");
     private final String clusterInternalImageRegistry = getOrDefault(jsonEnv, OCP4_INTERNAL_IMAGE_REGISTRY, "");
     private final String isTestDownstream = getOrDefault(jsonEnv, DOWNSTREAM, System.getenv("DOWNSTREAM"));
+    private final String productVersion = getOrDefault(jsonEnv, PRODUCT_VERSION, System.getenv("PRODUCT_VERSION"));
+
     //Default values
     private final UserCredentials managementCredentials = new UserCredentials(null, null);
     private final UserCredentials defaultCredentials = new UserCredentials(null, null);
@@ -333,6 +336,8 @@ public class Environment {
     public String isTestDownstream() {
         return isTestDownstream;
     }
+
+    public String getProductVersion(){ return productVersion; }
 
     private String getOrDefault(JsonNode jsonConfig, String varName, String defaultValue) {
         return getOrDefault(jsonConfig, varName, String::toString, defaultValue);

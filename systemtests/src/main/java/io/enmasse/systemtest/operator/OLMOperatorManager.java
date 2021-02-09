@@ -104,7 +104,8 @@ public class OLMOperatorManager {
         String subscription = Files.readString(Paths.get(System.getProperty("user.dir"), "..","systemtests","olm", "subscription.yaml"));
         Files.writeString(subscriptionFile,
                 subscription
-                        .replaceAll("\\$\\{OPERATOR_NAMESPACE}", installationNamespace));
+                        .replaceAll("\\$\\{OPERATOR_NAMESPACE}", installationNamespace)
+                        .replaceAll("\\$\\{PRODUCT_VERSION}", Environment.getInstance().getProductVersion()));
         KubeCMDClient.applyFromFile(installationNamespace, subscriptionFile);
     }
 
