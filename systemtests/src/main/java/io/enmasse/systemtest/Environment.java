@@ -101,7 +101,7 @@ public class Environment {
     private final String templatesPath = getOrDefault(jsonEnv, TEMPLATES_PATH, Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     private final String clusterExternalImageRegistry = getOrDefault(jsonEnv, OCP4_EXTERNAL_IMAGE_REGISTRY, "");
     private final String clusterInternalImageRegistry = getOrDefault(jsonEnv, OCP4_INTERNAL_IMAGE_REGISTRY, "");
-    private final String isTestDownstream = getOrDefault(jsonEnv, DOWNSTREAM, System.getenv("DOWNSTREAM"));
+    private final String isTestDownstream = getOrDefault(jsonEnv, DOWNSTREAM, value -> System.getenv("DOWNSTREAM"),"false");
     private final String productVersion = getOrDefault(jsonEnv, PRODUCT_VERSION, System.getenv("PRODUCT_VERSION"));
 
     //Default values
