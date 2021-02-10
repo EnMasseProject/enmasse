@@ -63,7 +63,9 @@ public class OLMOperatorManager {
             kube.createNamespace(namespace, Collections.singletonMap("allowed", "true"));
         }
 
-        deployCatalogSource(namespace);
+        if(!Environment.getInstance().isTestDownstream().equals("true")){
+            deployCatalogSource(namespace);
+        }
 
         if (installation == OLMInstallationType.SPECIFIC) {
             Path operatorGroupFile = Files.createTempFile("operatorgroup", ".yaml");
@@ -72,10 +74,14 @@ public class OLMOperatorManager {
             KubeCMDClient.applyFromFile(namespace, operatorGroupFile);
         }
 
-        applySubscription(namespace, namespace, csvName, Environment.getInstance().getOperatorName(), Environment.getInstance().getOperatorChannel());
+        if(Environment.getInstance().isTestDownstream().equals("true")){
+            applyDownstreamSubscription(namespace);
+        }
+        else{
+            applySubscription(namespace, namespace, csvName, Environment.getInstance().getOperatorName(), Environment.getInstance().getOperatorChannel());
+        }
 
         TestUtils.waitForPodReady("enmasse-operator", namespace);
-
     }
 
     public void clean() throws Exception {
@@ -88,8 +94,18 @@ public class OLMOperatorManager {
         String subscription = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "subscription.yaml"));
         Files.writeString(subscriptionFile,
                 subscription
-                    .replaceAll("\\$\\{OPERATOR_NAMESPACE}", installationNamespace)
-                    .replaceAll("\\$\\{CSV}", csvName));
+                        .replaceAll("\\$\\{OPERATOR_NAMESPACE}", installationNamespace)
+                        .replaceAll("\\$\\{CSV}", csvName));
+        KubeCMDClient.applyFromFile(installationNamespace, subscriptionFile);
+    }
+
+    public void applyDownstreamSubscription (String installationNamespace) throws IOException {
+        Path subscriptionFile = Files.createTempFile("subscription", ".yaml");
+        String subscription = Files.readString(Paths.get(System.getProperty("user.dir"), "..","systemtests","olm", "subscription.yaml"));
+        Files.writeString(subscriptionFile,
+                subscription
+                        .replaceAll("\\$\\{OPERATOR_NAMESPACE}", installationNamespace)
+                        .replaceAll("\\$\\{PRODUCT_VERSION}", Environment.getInstance().getProductVersion()));
         KubeCMDClient.applyFromFile(installationNamespace, subscriptionFile);
     }
 
@@ -98,7 +114,7 @@ public class OLMOperatorManager {
         String catalogSource = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "catalog-source.yaml"));
         Files.writeString(catalogSourceFile,
                 catalogSource
-                    .replaceAll("\\$\\{OPERATOR_NAMESPACE}", catalogNamespace));
+                        .replaceAll("\\$\\{OPERATOR_NAMESPACE}", catalogNamespace));
         KubeCMDClient.applyFromFile(catalogNamespace, catalogSourceFile);
     }
 
@@ -121,5 +137,4 @@ public class OLMOperatorManager {
     public String getNamespaceByOlmInstallationType(OLMInstallationType installation) {
         return installation == OLMInstallationType.DEFAULT ? kube.getOlmNamespace() : kube.getInfraNamespace();
     }
-
 }

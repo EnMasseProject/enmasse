@@ -1,0 +1,11 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: amq-online
+  namespace: ${OPERATOR_NAMESPACE}
+spec:
+  channel: stable
+  name: amq-online
+  source: enmasse-catalog
+  sourceNamespace: openshift-marketplace
+  startingCSV: amq-online.${PRODUCT_VERSION}
