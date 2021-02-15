@@ -20,9 +20,9 @@ import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.ActiveMQRemoteDisconnectException;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
+import org.apache.activemq.artemis.core.server.ActiveMQMessageBundle;
 import org.apache.activemq.artemis.protocol.amqp.broker.ActiveMQProtonRemotingConnection;
 import org.apache.activemq.artemis.protocol.amqp.broker.ProtonProtocolManager;
-import org.apache.activemq.artemis.protocol.amqp.proton.handler.EventHandler;
 import org.apache.activemq.artemis.protocol.amqp.sasl.ClientSASLFactory;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 import org.apache.activemq.artemis.spi.core.remoting.BaseConnectionLifeCycleListener;
@@ -30,6 +30,7 @@ import org.apache.activemq.artemis.spi.core.remoting.BufferHandler;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.jboss.logging.Logger;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -112,5 +113,16 @@ public class ProtonClientConnectionManager implements BaseConnectionLifeCycleLis
 
    public RemotingConnection getConnection(Object connectionId) {
       return connectionMap.get(connectionId);
+   }
+
+   public void checkIdleConnections(long ttl) {
+      Collection<ActiveMQProtonRemotingConnection> values = connectionMap.values();
+      log.debugf("Checking %d connection(s)", values.size());
+      for (ActiveMQProtonRemotingConnection conn : values) {
+         boolean dataReceived = conn.checkDataReceived();
+         if (!dataReceived) {
+            conn.asyncFail(ActiveMQMessageBundle.BUNDLE.clientExited(conn.getLocalAddress(), ttl));
+         }
+      }
    }
 }

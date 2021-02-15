@@ -58,7 +58,9 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
    private final ScheduledExecutorService scheduledExecutorService;
    private final ProtonClientConnectionManager lifecycleHandler;
    private volatile boolean started = false;
+   private volatile ScheduledFuture<?> connectionCheckFuture;
    private final Map<String, Object> connectorConfig;
+   private final int idleTimeout;
    private final boolean treatRejectAsUnmodifiedDeliveryFailed;
    private final boolean useModifiedForTransientDeliveryErrors;
    private final int minLargeMessageSize;
@@ -69,6 +71,7 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
       this.server = server;
       this.scheduledExecutorService = scheduledExecutorService;
       this.nettyThreadPool = nettyThreadPool;
+      this.idleTimeout = idleTimeout;
       this.treatRejectAsUnmodifiedDeliveryFailed = treatRejectAsUnmodifiedDeliveryFailed;
       this.useModifiedForTransientDeliveryErrors = useModifiedForTransientDeliveryErrors;
       this.minLargeMessageSize = minLargeMessageSize;
@@ -132,6 +135,16 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
 
          if (connection != null) {
             started = true;
+            if (idleTimeout > 0 && connectionCheckFuture == null) {
+               long connCheckTimeout = idleTimeout * 2;
+               connectionCheckFuture = scheduledExecutorService.scheduleAtFixedRate(() -> {
+                          ActiveMQAMQPLogger.LOGGER.infov("Checking connections on connector {0}", name);
+                          lifecycleHandler.checkIdleConnections(connCheckTimeout);
+                       },
+                       connCheckTimeout,
+                       connCheckTimeout,
+                       TimeUnit.MILLISECONDS);
+            }
          } else {
             ActiveMQAMQPLogger.LOGGER.infov("Error starting connector {0}, retrying in 5 seconds", name);
             scheduledExecutorService.schedule(() -> {
@@ -154,6 +167,11 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
             closeExecutor.shutdown();
             nettyThreadPool.shutdown();
             ActiveMQAMQPLogger.LOGGER.infov("Stopped connector {0}", name);
+
+            if (connectionCheckFuture != null) {
+               connectionCheckFuture.cancel(false);
+               connectionCheckFuture = null;
+            }
          } catch (Throwable t) {
             // Note - the scheduledExecutorService supplied by Artemis ignores exceptions.  Ensure the cause of the failure is logged..
             ActiveMQAMQPLogger.LOGGER.errorv(t, "Error stopping connector {0}", name);
