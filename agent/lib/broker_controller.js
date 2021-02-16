@@ -206,7 +206,7 @@ BrokerController.prototype.transform_connection_stats = function(raw) {
     var addressSpaceNamespace = process.env.ADDRESS_SPACE_NAMESPACE;
     var addressSpaceType = process.env.ADDRESS_SPACE_TYPE;
 
-    var uuid = generateStableUuid(addressSpaceNamespace, addressSpace, raw.connectionID, raw.clientAddress);
+    var uuid = myutils.generate_stable_uuid(addressSpaceNamespace, addressSpace, raw.connectionID, raw.clientAddress);
 
     return {
         id: raw.connectionID,
@@ -225,24 +225,9 @@ BrokerController.prototype.transform_connection_stats = function(raw) {
     };
 }
 
-function generateStableUuid() {
-    var hash = crypto.createHash('sha256');
-    for (var i = 0, j = arguments.length; i < j; i++){
-        var argument = arguments[i];
-        if (argument) {
-            hash.update(argument);
-        }
-    }
-    var ba = [];
-    ba.push(...hash.digest().slice(0, 16));
-    const ns = "3751f842-240e-48b9-89b5-5b47f04e931b";
-    return uuidv5(ns, ba);
-}
-
-
 function transform_producer_stats(raw) {
     return {
-        uuid: generateStableUuid(raw.connectionID, raw.sessionID, raw.destination),
+        uuid: myutils.generate_stable_uuid(raw.connectionID, raw.sessionID, raw.destination),
         name: undefined,
         connection_id: raw.connectionID,
         address: raw.destination,
@@ -254,7 +239,7 @@ function transform_producer_stats(raw) {
 
 function transform_consumer_stats(raw) {
     return {
-        uuid: generateStableUuid(raw.connectionID, raw.sessionID, raw.consumerID),
+        uuid: myutils.generate_stable_uuid(raw.connectionID, raw.sessionID, raw.consumerID),
         name: raw.consumerID,
         connection_id: raw.connectionID,
         address: raw.queueName,//mapped to address in later step

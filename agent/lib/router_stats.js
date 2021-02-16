@@ -18,8 +18,6 @@
 var log = require("./log.js").logger();
 var rhea = require('rhea');
 var Router = require('./qdr.js').Router;
-var crypto = require('crypto');
-var uuidv5 = require('uuid/v5');
 var myutils = require('./utils.js');
 
 
@@ -227,10 +225,20 @@ function is_role_normal (c) {
     return c.role === 'normal';
 }
 
-var internal_identifiers = ['address-space-controller', 'standard-controller', 'agent', 'ragent', 'qdconfigd', 'subserv', 'lwt-service', 'standard-controller-healthcheck'];
+const internal_identifiers = {
+    'address-space-controller': true,
+    'standard-controller': true,
+    'agent': true,
+    'ragent': true,
+    'qdconfigd': true,
+    'subserv': true,
+    'lwt-service': true,
+    'standard-controller-healthcheck': true
+};
+
 
 function is_internal_identifier (s) {
-    return internal_identifiers.indexOf(s) >= 0;
+    return s in internal_identifiers;
 }
 
 function is_internal (c) {
@@ -241,60 +249,49 @@ function is_application_connection (c) {
     return is_role_normal(c) && !is_internal(c);
 }
 
-
-function generateStableUuid() {
-    var hash = crypto.createHash('sha256');
-    for (var i = 0, j = arguments.length; i < j; i++){
-        var argument = arguments[i];
-        if (argument) {
-            hash.update(argument);
-        }
-    }
-    var ba = [];
-    ba.push(...hash.digest().slice(0, 16));
-    const ns = "3751f842-240e-48b9-89b5-5b47f04e931b";
-    return uuidv5(ns, ba);
-}
-
-function get_normal_connections (results) {
+function build_app_connection_map (results) {
     var connections = {};
     results.forEach(function (stats, i) {
-        stats.filter(is_application_connection).forEach(function (c) {
-            var qualified_id = c.identity + '-' + i;
+        stats.forEach(c => {
+            var qualified_id = c.id + '-' + i;
             if (connections[qualified_id]) {
                 log.warn('overwriting connection details for %s', qualified_id);
             }
-            var addressSpace = process.env.ADDRESS_SPACE;
-            var addressSpaceNamespace = process.env.ADDRESS_SPACE_NAMESPACE;
-            var addressSpaceType = process.env.ADDRESS_SPACE_TYPE;
-            var uuid = generateStableUuid(addressSpaceNamespace, addressSpace, c.container, c.host);
-            connections[qualified_id] = {
-                id: c.identity,
-                addressSpace: addressSpace,
-                addressSpaceNamespace: addressSpaceNamespace,
-                addressSpaceType: addressSpaceType,
-                uuid: uuid,
-                host: c.host,
-                container: c.container,
-                properties: c.properties,
-                encrypted: c.isEncrypted,
-                sasl_mechanism: c.isAuthenticated ? c.sasl : 'none',
-                user: c.user,
-                messages_in: 0,
-                messages_out: 0,
-                outcomes: {
-                    ingress: init_outcomes({}),
-                    egress: init_outcomes({})
-                },
-                senders: [],
-                receivers: [],
-                creationTimestamp:  Math.floor(Date.now() / 1000) - c.uptimeSeconds,
-
-                close: c.close
-            };
+            connections[qualified_id] = c;
         });
     });
     return connections;
+}
+
+function make_app_connection(c, closer) {
+    var addressSpace = process.env.ADDRESS_SPACE;
+    var addressSpaceNamespace = process.env.ADDRESS_SPACE_NAMESPACE;
+    var addressSpaceType = process.env.ADDRESS_SPACE_TYPE;
+    var uuid = myutils.generate_stable_uuid(addressSpaceNamespace, addressSpace, c.container, c.host);
+    return {
+        id: c.identity,
+        addressSpace: addressSpace,
+        addressSpaceNamespace: addressSpaceNamespace,
+        addressSpaceType: addressSpaceType,
+        uuid: uuid,
+        host: c.host,
+        container: c.container,
+        properties: c.properties,
+        encrypted: c.isEncrypted,
+        sasl_mechanism: c.isAuthenticated ? c.sasl : 'none',
+        user: c.user,
+        messages_in: 0,
+        messages_out: 0,
+        outcomes: {
+            ingress: init_outcomes({}),
+            egress: init_outcomes({})
+        },
+        senders: [],
+        receivers: [],
+        creationTimestamp:  Math.floor(Date.now() / 1000) - c.uptimeSeconds,
+
+        close: closer
+    };
 }
 
 RouterStats.prototype.close = function () {
@@ -305,6 +302,14 @@ RouterStats.prototype.retrieve = function (addresses, connection_registry) {
     return new Promise((resolve) => {
         this._retrieve().then(results => {
             if (results) {
+
+                // stabilise the creationTimestamp
+                connection_registry.for_each((id, c) => {
+                    if (results.connections[id] && c.creationTimestamp) {
+                        results.connections[id].creationTimestamp = c.creationTimestamp;
+                    }
+                });
+
                 connection_registry.setAsync(results.connections)
                     .then(() => {
                         myutils.applyAsync(Object.keys(results.addresses), (subset) => {
@@ -339,14 +344,12 @@ RouterStats.prototype._retrieve = function () {
     return this.update_routers().then(function (routers) {
         return Promise.all(routers.map(function (router) {
             return router.get_connections().then((routerConns) => {
-                routerConns.forEach((c) => {
-                    c.close = () =>  {return router.update_connection({identity: c.identity}, {adminStatus : 'deleted'})};
-                });
-                return Promise.resolve(routerConns);
+                return Promise.resolve(routerConns.filter(is_application_connection)
+                           .map(c => make_app_connection(c,  () => {return router.update_connection({identity: c.identity}, {adminStatus : 'deleted'})})));
             }).catch((e) => {
                 return Promise.reject(e);
             });})).then(function (connection_results) {
-            var connections = get_normal_connections(connection_results);
+            var connections = build_app_connection_map(connection_results);
             return Promise.all(routers.map(function (router) { return router.get_links(); })).then(function (results) {
                 var address_stats = {};
                 results.forEach(function (links, i) {
