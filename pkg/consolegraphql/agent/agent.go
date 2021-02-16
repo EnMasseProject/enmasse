@@ -168,6 +168,7 @@ func (aad *amqpAgentDelegate) doCollect() error {
 	// Create a receiver
 	receiver, err := session.NewReceiver(
 		amqp.LinkSourceAddress(agentDataAddress),
+		amqp.LinkCredit(500),
 	)
 	if err != nil {
 		return err
