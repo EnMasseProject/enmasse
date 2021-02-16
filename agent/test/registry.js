@@ -80,7 +80,7 @@ describe('registry', function() {
             'c': {name: 'bob', type: 'kangaroo'}
         }, 500).then(() => {
             var collected = {};
-            registry.for_each(function (o) {
+            registry.for_each(function (k, o) {
                 for (var f in o) {
                     collected[f] = o[f];
                 }

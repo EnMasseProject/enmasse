@@ -42,6 +42,7 @@ Registry.prototype.set = function (known) {
 }
 
 Registry.prototype.setAsync = function (known, chunkSize = 500) {
+    var created = 0;
     var updated = 0;
     var deleted = 0;
     var knownKeys = Object.keys(known);
@@ -53,7 +54,7 @@ Registry.prototype.setAsync = function (known, chunkSize = 500) {
                 if (this.objects[key] === undefined) {
                     this.objects[key] = known[key];
                     this.emit('updated', known[key]);
-                    updated++;
+                    created++;
                 } else {
                     if (this.update(key, known[key])) {
                         updated++;
@@ -71,7 +72,7 @@ Registry.prototype.setAsync = function (known, chunkSize = 500) {
                 });
             }, chunkSize).then(() => {
                 let newPop = Object.keys(this.objects).length;
-                log.info("%s setAsync updated: %d deleted: %d population: %d => %d", this.constructor.name, updated, deleted, oldPop, newPop);
+                log.info("%s setAsync created: %d updated: %d deleted: %d population: %d => %d", this.constructor.name, created, updated, deleted, oldPop, newPop);
                 resolve();
             }).catch(reject);
         }).catch(reject);
@@ -87,19 +88,21 @@ Registry.prototype.update = function (id, latest) {
     if (current === undefined) {
         this.objects[id] = latest;
         if (log.isDebugEnabled()) {
-            log.debug('setting ' + id + ' to ' + JSON.stringify(latest));
+            log.debug('setting %s  to %s', id, JSON.stringify(latest));
         }
         this.emit('updated', latest);
         return true;
     } else {
         var changed = false;
         for (var s in latest) {
-            if (!equals(current[s], latest[s])) {
-                if (log.isDebugEnabled()) {
-                    log.debug('changing ' + s + ' on ' + id + ' from ' + JSON.stringify(current[s]) + ' to ' + JSON.stringify(latest[s]));
+            if (latest.hasOwnProperty(s) && this.property_filter(s, latest[s])) {
+                if (!equals(current[s], latest[s])) {
+                    if (log.isDebugEnabled()) {
+                        log.debug('changing %s on %s from %s to %s', s, id, JSON.stringify(current[s]), JSON.stringify(latest[s]));
+                    }
+                    current[s] = latest[s];
+                    changed = true;
                 }
-                current[s] = latest[s];
-                changed = true;
             }
         }
         if (changed) {
@@ -113,20 +116,7 @@ Registry.prototype.update = function (id, latest) {
 Registry.prototype.update_if_exists = function (id, latest) {
     var current = this.objects[id];
     if (current) {
-        var changed = false;
-        for (var s in latest) {
-            if (!equals(current[s], latest[s])) {
-                if (log.isDebugEnabled()) {
-                    log.debug('changing ' + s + ' on ' + id + ' from ' + JSON.stringify(current[s]) + ' to ' + JSON.stringify(latest[s]));
-                }
-                current[s] = latest[s];
-                changed = true;
-            }
-        }
-        if (changed) {
-            this.emit('updated', current);
-        }
-        return true;
+        return this.update(id, latest);
     } else {
         return false;
     }
@@ -141,7 +131,7 @@ Registry.prototype.update_existing = function (updates) {
 Registry.prototype.for_each = function (action, filter) {
     for (var key in this.objects) {
         if (filter === undefined || filter(this.objects[key])) {
-            action(this.objects[key]);
+            action(key, this.objects[key]);
         }
     }
 };
@@ -152,6 +142,10 @@ Registry.prototype.first = function (action, filter) {
             action(this.objects[key]);
         }
     }
+};
+
+Registry.prototype.property_filter =  function (name, latest) {
+  return true;
 };
 
 module.exports = Registry;
