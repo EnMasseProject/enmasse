@@ -24,28 +24,28 @@ var myutils = require("./utils.js");
 function StandardStats () {
     this.router_stats = new RouterStats();
     this.broker_stats = new BrokerStats();
-    this.stats_interval = process.env.STATS_INTERVAL ? process.env.STATS_INTERVAL : 10000;
+    this.stats_interval = (process.env.STATS_INTERVAL ? process.env.STATS_INTERVAL : 10) * 1000;
 }
 
 StandardStats.prototype.init = function (console_server) {
     var router_stats = myutils.serialize(() => {
-        var hrstart = process.hrtime()
+        var sr_start = process.hrtime();
         log.debug('triggering router stats retrieval');
         return this.router_stats.retrieve(console_server.addresses, console_server.connections)
             .finally(() => {
-                var hrend = process.hrtime(hrstart);
-                log.info('router stats, took : %ds %dms', hrend[0], hrend[1] / 1000000);
+                var sr_end = process.hrtime(sr_start);
+                log.info('router stats, took : %ds %dms', sr_end[0], sr_end[1] / 1000000);
             });
     });
     setInterval(router_stats, this.stats_interval);
 
     var broker_stats = myutils.serialize(() => {
-        var hrstart = process.hrtime()
+        var sr_start = process.hrtime();
         log.debug('triggering broker stats retrieval');
         return this.broker_stats.retrieve(console_server.addresses)
             .finally(() => {
-                var hrend = process.hrtime(hrstart);
-                log.info('broker stats, took : %ds %dms', hrend[0], hrend[1] / 1000000);
+                var sr_end = process.hrtime(sr_start);
+                log.info('broker stats, took : %ds %dms', sr_end[0], sr_end[1] / 1000000);
             });
     });
     setInterval(broker_stats, this.stats_interval);
