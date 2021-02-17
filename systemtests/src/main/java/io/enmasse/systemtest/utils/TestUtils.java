@@ -17,6 +17,7 @@ import java.nio.file.Paths;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -33,6 +34,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import io.enmasse.systemtest.operator.OLMOperatorManager;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.function.ThrowingSupplier;
@@ -702,6 +704,17 @@ public class TestUtils {
             try {
                 Pod pod = Kubernetes.getInstance().listPods(namespace).stream().filter(p -> p.getMetadata().getName().contains(name)).findFirst().get();
                 return TestUtils.isPodReady(pod, true);
+            } catch (Exception ex) {
+                return false;
+            }
+        }, new TimeoutBudget(10, TimeUnit.MINUTES));
+    }
+
+    public static void waitForInstallPlanPresent(String namespace) {
+        TestUtils.waitUntilCondition("Wait for install plan to be present", waitPhase -> {
+            try {
+                ArrayList installPlans = OLMOperatorManager.getInstance().getInstallPlanName(namespace);
+                return (!installPlans.isEmpty());
             } catch (Exception ex) {
                 return false;
             }
