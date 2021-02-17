@@ -179,6 +179,7 @@ public class SystemtestsKubernetesApps {
     private static final String SELENIUM_STANDALONE_CHROME_IMAGE = "quay.io/enmasse/selenium-standalone-chrome";
     private static final String SELENIUM_STANDALONE_FIREFOX_IMAGE = "quay.io/enmasse/selenium-standalone-firefox";
     private static final String BUSYBOX_IMAGE = "quay.io/enmasse/busybox:latest";
+    private static final String ARTEMIS_BASE_IMAGE = "quay.io/enmasse/artemis-base:2.16.0";
 
     static {
 
@@ -1376,7 +1377,7 @@ public class SystemtestsKubernetesApps {
                 .withNewSpec()
                 .addToInitContainers(new ContainerBuilder()
                                 .withName("artemis-init")
-                                .withImage("quay.io/enmasse/artemis-base:2.11.0")
+                                .withImage(ARTEMIS_BASE_IMAGE)
                                 .withCommand("/bin/sh")
                                 .withArgs("-c",
                                         "/opt/apache-artemis/bin/artemis create /var/run/artemis --allow-anonymous --force --user " + user + " --password " + password + " --role admin")
@@ -1391,7 +1392,7 @@ public class SystemtestsKubernetesApps {
                                 .build(),
                         new ContainerBuilder()
                                 .withName("replace-broker-xml")
-                                .withImage("quay.io/enmasse/artemis-base:2.11.0")
+                                .withImage(ARTEMIS_BASE_IMAGE)
                                 .withCommand("/bin/sh")
                                 .withArgs("-c", "cp /etc/amq-secret-volume/broker.xml /var/run/artemis/etc/broker.xml")
                                 .withVolumeMounts(new VolumeMountBuilder()
@@ -1405,7 +1406,7 @@ public class SystemtestsKubernetesApps {
                                 .build())
                 .addNewContainer()
                 .withName(name)
-                .withImage("quay.io/enmasse/artemis-base:2.11.0")
+                .withImage(ARTEMIS_BASE_IMAGE)
                 .withImagePullPolicy("IfNotPresent")
                 .withCommand("/bin/sh")
                 .withArgs("-c", "/var/run/artemis/bin/artemis run")
