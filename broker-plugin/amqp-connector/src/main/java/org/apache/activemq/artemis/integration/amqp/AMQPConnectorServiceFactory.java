@@ -129,13 +129,13 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
 
       String containerId = Optional.ofNullable((String)configuration.get(CONTAINER_ID)).orElse(clusterId);
 
-      int nettyThreads = Optional.ofNullable((String)configuration.get(NETTY_THREADS)).map(Integer::parseInt).orElse(4);
-      int idleTimeout = Optional.ofNullable((String)configuration.get(IDLE_TIMEOUT)).map(Integer::parseInt).orElse(16_000);
-      Integer consumerPriority = Optional.ofNullable((String)configuration.get(CONSUMER_PRIORITY)).map(Integer::parseInt).orElse(null);
+      int nettyThreads = Optional.ofNullable((String)configuration.get(NETTY_THREADS)).map(Util::parseIntOrNull).orElse(4);
+      int idleTimeout = Optional.ofNullable((String)configuration.get(IDLE_TIMEOUT)).map(Util::parseIntOrNull).orElse(16_000);
+      Integer consumerPriority = Optional.ofNullable((String)configuration.get(CONSUMER_PRIORITY)).map(Util::parseIntOrNull).orElse(null);
 
       boolean treatRejectAsUnmodifiedDeliveryFailed = Optional.ofNullable((String)configuration.get(TREAT_REJECT_AS_UNMODIFIED_DELIVERY_FAILED)).map(Boolean::parseBoolean).orElse(true);
       boolean useModifiedForTransientDeliveryErrors = Optional.ofNullable((String)configuration.get(USE_MODIFIED_FOR_TRANSIENT_DELIVERY_ERRORS)).map(Boolean::parseBoolean).orElse(true);
-      int minLargeMessageSize = Optional.ofNullable((String)configuration.get(MIN_LARGE_MESSAGE_SIZE)).map(Integer::parseInt).orElse(-1);
+      int minLargeMessageSize = Optional.ofNullable((String)configuration.get(MIN_LARGE_MESSAGE_SIZE)).map(Util::parseIntOrNull).orElse(-1);
 
       Optional<LinkInfo> linkInfo = sourceAddress.flatMap(s ->
               targetAddress.flatMap(t ->
