@@ -350,9 +350,11 @@ public abstract class ConsoleTest extends TestBase {
         } finally {
             try {
                 if (!success) {
-                    GlobalLogCollector testDirLogCollector = new GlobalLogCollector(kubernetes, TestUtils.getFailedTestLogsPath(TestInfo.getInstance().getActualTest()), environment.namespace(), false);
-                    testDirLogCollector.collectLogsOfPodsByLabels(environment.namespace(), null,
-                            Collections.singletonMap(LabelKeys.INFRA_UUID, AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)));
+                    if (addressSpace != null) {
+                        GlobalLogCollector testDirLogCollector = new GlobalLogCollector(kubernetes, TestUtils.getFailedTestLogsPath(TestInfo.getInstance().getActualTest()), environment.namespace(), false);
+                        testDirLogCollector.collectLogsOfPodsByLabels(environment.namespace(), null,
+                                Collections.singletonMap(LabelKeys.INFRA_UUID, AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)));
+                    }
                 }
                 consolePage.deleteAddressSpace(addressSpace);
             } finally {
