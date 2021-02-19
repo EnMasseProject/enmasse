@@ -27,7 +27,7 @@
     <includeBaseDirectory>False</includeBaseDirectory>
     <fileSets>
         <fileSet>
-          <directory>${project.basedir}/../templates/crds</directory>
+          <directory>${project.basedir}/../templates/crds/v1</directory>
           <outputDirectory>/manifests</outputDirectory>
           <includes>
             <include>*</include>

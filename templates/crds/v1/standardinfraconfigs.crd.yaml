@@ -1,0 +1,617 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: enmasse
+  name: standardinfraconfigs.admin.enmasse.io
+spec:
+  conversion:
+    strategy: None
+  group: admin.enmasse.io
+  names:
+    categories:
+      - enmasse
+    kind: StandardInfraConfig
+    listKind: StandardInfraConfigList
+    plural: standardinfraconfigs
+    singular: standardinfraconfig
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+    - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          description: StandardInfraConfig defines configuration applied to routers and brokers for an instance of the standard address space type. This resource is created by the service administrator.
+          properties:
+            spec:
+              properties:
+                admin:
+                  properties:
+                    podTemplate:
+                      properties:
+                        metadata:
+                          properties:
+                            labels:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                          type: object
+                        spec:
+                          properties:
+                            affinity:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                            containers:
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                    pattern: (agent|standard-controller)
+                                  resources:
+                                    type: object
+                                    x-kubernetes-preserve-unknown-fields: true
+                                  env:
+                                    items:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          type: object
+                                          x-kubernetes-preserve-unknown-fields: true
+                                      required:
+                                        - name
+                                      type: object
+                                    type: array
+                                  livenessProbe:
+                                    properties:
+                                      initialDelaySeconds:
+                                        type: integer
+                                      timeoutSeconds:
+                                        type: integer
+                                      periodSeconds:
+                                        type: integer
+                                      successThreshold:
+                                        type: integer
+                                      failureThreshold:
+                                        type: integer
+                                    type: object
+                                  readinessProbe:
+                                    properties:
+                                      initialDelaySeconds:
+                                        type: integer
+                                      timeoutSeconds:
+                                        type: integer
+                                      periodSeconds:
+                                        type: integer
+                                      successThreshold:
+                                        type: integer
+                                      failureThreshold:
+                                        type: integer
+                                    type: object
+                                type: object
+                                required:
+                                  - name
+                              type: array
+                            priorityClassName:
+                              type: string
+                            securityContext:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                            tolerations:
+                              items:
+                                type: object
+                                x-kubernetes-preserve-unknown-fields: true
+                              type: array
+                          type: object
+                      type: object
+                    resources:
+                      properties:
+                        cpu:
+                          type: string
+                        memory:
+                          type: string
+                      type: object
+                  type: object
+                broker:
+                  properties:
+                    addressFullPolicy:
+                      enum:
+                        - PAGE
+                        - BLOCK
+                        - FAIL
+                        - DROP
+                      type: string
+                    connectorIdleTimeout:
+                      type: integer
+                    connectorWorkerThreads:
+                      type: integer
+                    globalMaxSize:
+                      description: Sets a global limit to the amount of memory the broker can use before it applies the rules determined by addressFullPolicy. Value in bytes or use a byte suffix ("B", "K", "MB", "GB")
+                      pattern: ^(?i)\d+\s*[kmg]?b?$
+                      type: string
+                    javaOpts:
+                      type: string
+                    maxUnavailable:
+                      anyOf:
+                        - type: integer
+                        - type: string
+                      x-kubernetes-int-or-string: true
+                    minAvailable:
+                      anyOf:
+                        - type: integer
+                        - type: string
+                      x-kubernetes-int-or-string: true
+                    minLargeMessageSize:
+                      description: Specify the minimum size of a message for it to be treated as a large message. A large message is always paged to disk with a reference in the journal. Default is -1 (never page).
+                      type: integer
+                    podTemplate:
+                      properties:
+                        metadata:
+                          properties:
+                            labels:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                          type: object
+                        spec:
+                          properties:
+                            affinity:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                            initContainers:
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                    pattern: (broker-plugin)
+                                  resources:
+                                    type: object
+                                    x-kubernetes-preserve-unknown-fields: true
+                                  env:
+                                    items:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          type: object
+                                          x-kubernetes-preserve-unknown-fields: true
+                                      required:
+                                        - name
+                                      type: object
+                                    type: array
+                                type: object
+                                required:
+                                  - name
+                              type: array
+                            containers:
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                    pattern: (broker)
+                                  resources:
+                                    type: object
+                                    x-kubernetes-preserve-unknown-fields: true
+                                  env:
+                                    items:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          type: object
+                                          x-kubernetes-preserve-unknown-fields: true
+                                      required:
+                                        - name
+                                      type: object
+                                    type: array
+                                  livenessProbe:
+                                    properties:
+                                      initialDelaySeconds:
+                                        type: integer
+                                      timeoutSeconds:
+                                        type: integer
+                                      periodSeconds:
+                                        type: integer
+                                      successThreshold:
+                                        type: integer
+                                      failureThreshold:
+                                        type: integer
+                                    type: object
+                                  readinessProbe:
+                                    properties:
+                                      initialDelaySeconds:
+                                        type: integer
+                                      timeoutSeconds:
+                                        type: integer
+                                      periodSeconds:
+                                        type: integer
+                                      successThreshold:
+                                        type: integer
+                                      failureThreshold:
+                                        type: integer
+                                    type: object
+                                type: object
+                                requird:
+                                  - name
+                              type: array
+                            priorityClassName:
+                              type: string
+                            securityContext:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                            tolerations:
+                              items:
+                                type: object
+                                x-kubernetes-preserve-unknown-fields: true
+                              type: array
+                          type: object
+                      type: object
+                    resources:
+                      properties:
+                        cpu:
+                          type: string
+                        memory:
+                          type: string
+                        storage:
+                          type: string
+                      type: object
+                    storageClassName:
+                      type: string
+                    treatRejectAsUnmodifiedDeliveryFailed:
+                      description: Treat rejected delivery outcome as modified delivery failed. This causes the message to be re-sent to the consumer by default. Default is true.
+                      type: boolean
+                    updatePersistentVolumeClaim:
+                      type: boolean
+                    useModifiedForTransientDeliveryErrors:
+                      description: Respond with modified for transient delivery errors to allow sender to retry. Default is true.
+                      type: boolean
+                  type: object
+                networkPolicy:
+                  properties:
+                    egress:
+                      items:
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                      type: array
+                    ingress:
+                      items:
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                      type: array
+                  type: object
+                router:
+                  properties:
+                    idleTimeout:
+                      type: integer
+                    handshakeTimeout:
+                      type: integer
+                    linkCapacity:
+                      type: integer
+                    maxUnavailable:
+                      anyOf:
+                        - type: integer
+                        - type: string
+                      x-kubernetes-int-or-string: true
+                    minAvailable:
+                      anyOf:
+                        - type: integer
+                        - type: string
+                      x-kubernetes-int-or-string: true
+                    minReplicas:
+                      type: integer
+                    podTemplate:
+                      properties:
+                        metadata:
+                          properties:
+                            labels:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                          type: object
+                        spec:
+                          properties:
+                            affinity:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                            containers:
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                    pattern: (router)
+                                  resources:
+                                    type: object
+                                    x-kubernetes-preserve-unknown-fields: true
+                                  env:
+                                    items:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          type: object
+                                          x-kubernetes-preserve-unknown-fields: true
+                                      required:
+                                        - name
+                                      type: object
+                                    type: array
+                                  livenessProbe:
+                                    properties:
+                                      initialDelaySeconds:
+                                        type: integer
+                                      timeoutSeconds:
+                                        type: integer
+                                      periodSeconds:
+                                        type: integer
+                                      successThreshold:
+                                        type: integer
+                                      failureThreshold:
+                                        type: integer
+                                    type: object
+                                  readinessProbe:
+                                    properties:
+                                      initialDelaySeconds:
+                                        type: integer
+                                      timeoutSeconds:
+                                        type: integer
+                                      periodSeconds:
+                                        type: integer
+                                      successThreshold:
+                                        type: integer
+                                      failureThreshold:
+                                        type: integer
+                                    type: object
+                                type: object
+                                required:
+                                  - name
+                              type: array
+                            priorityClassName:
+                              type: string
+                            securityContext:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                            tolerations:
+                              items:
+                                type: object
+                                x-kubernetes-preserve-unknown-fields: true
+                              type: array
+                          type: object
+                      type: object
+                    policy:
+                      properties:
+                        maxConnections:
+                          type: integer
+                        maxConnectionsPerHost:
+                          type: integer
+                        maxConnectionsPerUser:
+                          type: integer
+                        maxReceiversPerConnection:
+                          type: integer
+                        maxSendersPerConnection:
+                          type: integer
+                        maxSessionsPerConnection:
+                          type: integer
+                      type: object
+                    resources:
+                      properties:
+                        cpu:
+                          type: string
+                        memory:
+                          type: string
+                      type: object
+                    workerThreads:
+                      type: integer
+                  type: object
+                version:
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: StandardInfraConfig defines configuration applied to routers and brokers for an instance of the standard address space type. This resource is created by the service administrator.
+          properties:
+            spec:
+              properties:
+                admin:
+                  properties:
+                    podTemplate:
+                      properties:
+                        metadata:
+                          properties:
+                            labels:
+                              type: object
+                          type: object
+                        spec:
+                          properties:
+                            affinity:
+                              type: object
+                            containers:
+                              items:
+                                properties:
+                                  resources:
+                                    type: object
+                                type: object
+                              type: array
+                            priorityClassName:
+                              type: string
+                            securityContext:
+                              type: object
+                            tolerations:
+                              items:
+                                type: object
+                              type: array
+                          type: object
+                      type: object
+                    resources:
+                      properties:
+                        cpu:
+                          type: string
+                        memory:
+                          type: string
+                      type: object
+                  type: object
+                broker:
+                  properties:
+                    addressFullPolicy:
+                      enum:
+                        - PAGE
+                        - BLOCK
+                        - FAIL
+                        - DROP
+                      type: string
+                    connectorIdleTimeout:
+                      type: integer
+                    connectorWorkerThreads:
+                      type: integer
+                    globalMaxSize:
+                      description: Sets a global limit to the amount of memory the broker can use before it applies the rules determined by addressFullPolicy. Value in bytes or use a byte suffix ("B", "K", "MB", "GB")
+                      pattern: ^(?i)\d+\s*[kmg]?b?$
+                      type: string
+                    javaOpts:
+                      type: string
+                    maxUnavailable:
+                      anyOf:
+                        - type: integer
+                        - type: string
+                      x-kubernetes-int-or-string: true
+                    minAvailable:
+                      anyOf:
+                        - type: integer
+                        - type: string
+                      x-kubernetes-int-or-string: true
+                    minLargeMessageSize:
+                      description: Specify the minimum size of a message for it to be treated as a large message. A large message is always paged to disk with a reference in the journal. Default is -1 (never page).
+                      type: integer
+                    podTemplate:
+                      properties:
+                        metadata:
+                          properties:
+                            labels:
+                              type: object
+                          type: object
+                        spec:
+                          properties:
+                            affinity:
+                              type: object
+                            priorityClassName:
+                              type: string
+                            resources:
+                              type: object
+                            securityContext:
+                              type: object
+                            tolerations:
+                              items:
+                                type: object
+                              type: array
+                          type: object
+                      type: object
+                    resources:
+                      properties:
+                        cpu:
+                          type: string
+                        memory:
+                          type: string
+                        storage:
+                          type: string
+                      type: object
+                    storageClassName:
+                      type: string
+                    treatRejectAsUnmodifiedDeliveryFailed:
+                      description: Treat rejected delivery outcome as modified delivery failed. This causes the message to be re-sent to the consumer by default. Default is true.
+                      type: boolean
+                    updatePersistentVolumeClaim:
+                      type: boolean
+                    useModifiedForTransientDeliveryErrors:
+                      description: Respond with modified for transient delivery errors to allow sender to retry. Default is true.
+                      type: boolean
+                  type: object
+                networkPolicy:
+                  properties:
+                    egress:
+                      items:
+                        type: object
+                      type: array
+                    ingress:
+                      items:
+                        type: object
+                      type: array
+                  type: object
+                router:
+                  properties:
+                    idleTimeout:
+                      type: integer
+                    linkCapacity:
+                      type: integer
+                    maxUnavailable:
+                      anyOf:
+                        - type: integer
+                        - type: string
+                      x-kubernetes-int-or-string: true
+                    minAvailable:
+                      anyOf:
+                        - type: integer
+                        - type: string
+                      x-kubernetes-int-or-string: true
+                    minReplicas:
+                      type: integer
+                    podTemplate:
+                      properties:
+                        metadata:
+                          properties:
+                            labels:
+                              type: object
+                          type: object
+                        spec:
+                          properties:
+                            affinity:
+                              type: object
+                            priorityClassName:
+                              type: string
+                            resources:
+                              type: object
+                            securityContext:
+                              type: object
+                            tolerations:
+                              items:
+                                type: object
+                              type: array
+                          type: object
+                      type: object
+                    policy:
+                      properties:
+                        maxConnections:
+                          type: integer
+                        maxConnectionsPerHost:
+                          type: integer
+                        maxConnectionsPerUser:
+                          type: integer
+                        maxReceiversPerConnection:
+                          type: integer
+                        maxSendersPerConnection:
+                          type: integer
+                        maxSessionsPerConnection:
+                          type: integer
+                      type: object
+                    resources:
+                      properties:
+                        cpu:
+                          type: string
+                        memory:
+                          type: string
+                      type: object
+                    workerThreads:
+                      type: integer
+                  type: object
+                version:
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: false

@@ -1,0 +1,462 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: enmasse
+    enmasse-component: tenant-api
+  name: addressspaces.enmasse.io
+spec:
+  conversion:
+    strategy: None
+  group: enmasse.io
+  names:
+    categories:
+      - enmasse
+    kind: AddressSpace
+    listKind: AddressSpaceList
+    plural: addressspaces
+    singular: addressspace
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: The address space type
+          jsonPath: .spec.type
+          name: Type
+          priority: 1
+          type: string
+        - description: The address space plan
+          jsonPath: .spec.plan
+          name: Plan
+          priority: 1
+          type: string
+        - description: The readiness of the address space
+          jsonPath: .status.isReady
+          name: Ready
+          type: boolean
+        - description: The phase of the address space
+          jsonPath: .status.phase
+          name: Phase
+          type: string
+        - description: The status of the address space
+          jsonPath: .status.messages
+          name: Status
+          priority: 1
+          type: string
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      name: v1beta1
+      schema:
+        openAPIV3Schema:
+          description: AddressSpace is a group of addresses that can be accessed through a single connection (per protocol). An AddressSpace can support multiple protocols, as defined by the type. This resource is created by messaging tenants.
+          properties:
+            spec:
+              properties:
+                authenticationService:
+                  description: The authentication service to use for authenticating messaging clients.
+                  properties:
+                    name:
+                      description: The name of the authentication service.
+                      type: string
+                    overrides:
+                      properties:
+                        host:
+                          type: string
+                        port:
+                          type: integer
+                        realm:
+                          type: string
+                      type: object
+                    type:
+                      type: string
+                  type: object
+                connectors:
+                  description: External AMQP connections.
+                  items:
+                    properties:
+                      addresses:
+                        description: Addresses to make be accessible via this address space.
+                        items:
+                          properties:
+                            name:
+                              description: Identifier of address pattern. Used to uniquely identify a pattern.
+                              type: string
+                            pattern:
+                              description: 'Pattern used to match addresses. The pattern will be prefixed by the connector name and a forward slash (''myconnector/''). A pattern consists of one or more tokens separated by a forward slash /. A token can be one of the following: a * character, a # character, or a sequence of characters that do not include /, *, or #. The * token matches any single token. The # token matches zero or more tokens. * has higher precedence than #, and exact match has the highest precedence.'
+                              pattern: ([^/#*]+|\*|#)(/([^/#*]+|\*|#))*
+                              type: string
+                          required:
+                            - name
+                            - pattern
+                          type: object
+                        type: array
+                      credentials:
+                        description: Credentials used when connecting to endpoints.
+                        properties:
+                          password:
+                            anyOf:
+                              - required:
+                                  - value
+                              - required:
+                                  - valueFromSecret
+                            description: Password to use for connector.
+                            properties:
+                              value:
+                                description: Value of field
+                                type: string
+                              valueFromSecret:
+                                description: Secret containing value.
+                                properties:
+                                  key:
+                                    description: Key to use for looking up entry.
+                                    type: string
+                                  name:
+                                    description: Name of Secret containing value.
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                            type: object
+                          username:
+                            anyOf:
+                              - required:
+                                  - value
+                              - required:
+                                  - valueFromSecret
+                            description: Username to use for connector.
+                            properties:
+                              value:
+                                description: Value of field
+                                type: string
+                              valueFromSecret:
+                                description: Secret containing value.
+                                properties:
+                                  key:
+                                    description: Key to use for looking up entry.
+                                    type: string
+                                  name:
+                                    description: Name of Secret containing value.
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                            type: object
+                        required:
+                          - username
+                          - password
+                        type: object
+                      endpointHosts:
+                        description: Endpoints to connect to. First entry is used as primary, additional entries are considered failovers.
+                        items:
+                          properties:
+                            host:
+                              type: string
+                            port:
+                              type: integer
+                          required:
+                            - host
+                          type: object
+                        minItems: 1
+                        type: array
+                      idleTimeout:
+                        description: Idle timeout of AMQP connection (seconds). 0 disables the idle timeout.
+                        type: integer
+                      maxFrameSize:
+                        description: Max frame size of AMQP connection.
+                        type: integer
+                      name:
+                        description: Connector name. Used to uniquely identify a connector.
+                        pattern: '[a-zA-Z0-9]+'
+                        type: string
+                      role:
+                        description: Role of connector. Defaults to 'route-container'.
+                        enum:
+                          - normal
+                          - route-container
+                          - edge
+                        type: string
+                      tls:
+                        description: TLS configuration for the connector. If not specified, TLS will not be used.
+                        properties:
+                          caCert:
+                            anyOf:
+                              - required:
+                                  - value
+                              - required:
+                                  - valueFromSecret
+                            description: CA certificate to be used by the connector.
+                            properties:
+                              value:
+                                description: Value of field
+                                type: string
+                              valueFromSecret:
+                                description: Secret containing value.
+                                properties:
+                                  key:
+                                    description: Key to use for looking up entry.
+                                    type: string
+                                  name:
+                                    description: Name of Secret containing value.
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                            type: object
+                          clientCert:
+                            anyOf:
+                              - required:
+                                  - value
+                              - required:
+                                  - valueFromSecret
+                            description: Client certificate to be used by the connector.
+                            properties:
+                              value:
+                                description: Value of field
+                                type: string
+                              valueFromSecret:
+                                description: Secret containing value.
+                                properties:
+                                  key:
+                                    description: Key to use for looking up entry.
+                                    type: string
+                                  name:
+                                    description: Name of Secret containing value.
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                            type: object
+                          clientKey:
+                            anyOf:
+                              - required:
+                                  - value
+                              - required:
+                                  - valueFromSecret
+                            description: Client key to be used by the connector.
+                            properties:
+                              value:
+                                description: Value of field
+                                type: string
+                              valueFromSecret:
+                                description: Secret containing value.
+                                properties:
+                                  key:
+                                    description: Key to use for looking up entry.
+                                    type: string
+                                  name:
+                                    description: Name of Secret containing value.
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                            type: object
+                        type: object
+                    required:
+                      - name
+                      - endpointHosts
+                    type: object
+                  type: array
+                endpoints:
+                  description: Endpoints configured for this address space.
+                  items:
+                    properties:
+                      cert:
+                        description: Configure certificates to be used for this endpoint.
+                        properties:
+                          provider:
+                            description: Certificate provider to use for this endpoint.
+                            enum:
+                              - wildcard
+                              - certBundle
+                              - openshift
+                              - selfsigned
+                            type: string
+                          secretName:
+                            type: string
+                          tlsCert:
+                            description: TLS certificate to use for 'certBundle' provider.
+                            type: string
+                          tlsKey:
+                            description: TLS key to use for 'certBundle' provider.
+                            type: string
+                        type: object
+                      exports:
+                        description: Export address space information.
+                        items:
+                          properties:
+                            kind:
+                              description: Type of resource to export address space information into.
+                              enum:
+                                - ConfigMap
+                                - Secret
+                                - Service
+                              type: string
+                            name:
+                              description: Name of resource to export address space information into.
+                              type: string
+                          type: object
+                        type: array
+                      expose:
+                        anyOf:
+                          - properties:
+                              type:
+                                pattern: loadbalancer
+                            required:
+                              - type
+                              - loadBalancerPorts
+                          - properties:
+                              type:
+                                pattern: route
+                            required:
+                              - type
+                              - routeServicePort
+                              - routeTlsTermination
+                        description: Expose configuration of this endpoint.
+                        properties:
+                          type:
+                            enum:
+                              - loadbalancer
+                              - route
+                            type: string
+                          annotations:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          loadBalancerPorts:
+                            type: array
+                            items:
+                              type: string
+                          loadBalancerSourceRanges:
+                            type: array
+                            items:
+                              type: string
+                          routeHost:
+                            type: string
+                          routeServicePort:
+                            type: string
+                            description: "Service port. Valid values are 'amqps' for the messaging service, 'secure-mqtt' for the mqtt service, and 'https' for the console service."
+                            enum:
+                              - amqps
+                              - https
+                              - secure-mqtt
+                          routeTlsTermination:
+                            type: string
+                            enum:
+                              - passthrough
+                              - reencrypt
+                        type: object
+                      name:
+                        description: Endpoint name. Use to uniquely identify an endpoint.
+                        type: string
+                      service:
+                        description: Service referenced by this endpoint. 'console' is no longer supported.
+                        enum:
+                          - messaging
+                          - mqtt
+                          - console
+                        type: string
+                    type: object
+                  type: array
+                networkPolicy:
+                  description: Define NetworkPolicy for this address space.
+                  properties:
+                    egress:
+                      items:
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                      type: array
+                    ingress:
+                      items:
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                      type: array
+                  type: object
+                plan:
+                  description: The name of the address space plan to apply.
+                  type: string
+                type:
+                  description: The type of address space.
+                  enum:
+                    - standard
+                    - brokered
+                  type: string
+              required:
+                - type
+                - plan
+              type: object
+            status:
+              properties:
+                caCert:
+                  description: CA certificate for endpoints.
+                  type: string
+                connectors:
+                  description: Connector status for this address space.
+                  items:
+                    properties:
+                      isReady:
+                        type: boolean
+                      messages:
+                        items:
+                          type: string
+                        type: array
+                      name:
+                        type: string
+                    type: object
+                  type: array
+                endpointStatuses:
+                  description: Endpoint status for this address space.
+                  items:
+                    properties:
+                      externalHost:
+                        type: string
+                      externalPorts:
+                        items:
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
+                        type: array
+                      messages:
+                        items:
+                          type: string
+                        type: array
+                      name:
+                        type: string
+                      serviceHost:
+                        type: string
+                      servicePorts:
+                        items:
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
+                        type: array
+                    type: object
+                  type: array
+                isReady:
+                  description: Whether address space is ready to use or not.
+                  type: boolean
+                messages:
+                  description: Status and error messages for address space.
+                  items:
+                    type: string
+                  type: array
+                phase:
+                  description: Phase of address space.
+                  type: string
+                routers:
+                  description: Router status for this address space.
+                  items:
+                    properties:
+                      id:
+                        type: string
+                      neighbors:
+                        items:
+                          type: string
+                        type: array
+                      undelivered:
+                        type: integer
+                    required:
+                      - id
+                    type: object
+                  type: array
+              type: object
+          type: object
+      served: true
+      storage: true

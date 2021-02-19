@@ -21,7 +21,7 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <executions>
           <execution>
-            <id>dist</id>
+            <id>dist-default</id>
             <phase>package</phase>
             <goals>
               <goal>single</goal>
@@ -34,6 +34,24 @@
                 <descriptor>src/assembly/unix-dist.xml</descriptor>
               </descriptors>
               <tarLongFileMode>posix</tarLongFileMode>
+              <archiveBaseDirectory>${project.basedir}/build/default</archiveBaseDirectory>
+            </configuration>
+          </execution>
+          <execution>
+            <id>dist-prekube1_16</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <finalName>${application.bundle.prefix}-prekube1_16-${image.version}</finalName>
+              <appendAssemblyId>false</appendAssemblyId>
+              <ignoreMissingDescriptor>false</ignoreMissingDescriptor>
+              <descriptors>
+                <descriptor>src/assembly/unix-dist.xml</descriptor>
+              </descriptors>
+              <tarLongFileMode>posix</tarLongFileMode>
+              <archiveBaseDirectory>${project.basedir}/build/prekube1_16</archiveBaseDirectory>
             </configuration>
           </execution>
         </executions>

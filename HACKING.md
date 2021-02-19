@@ -84,16 +84,16 @@ external registries.
     kubectl create namespace enmasse-infra
     kubectl config set-context $(kubectl config current-context) --namespace=enmasse-infra
     
-    kubectl apply -f templates/build/enmasse-latest/install/bundles/enmasse
-    kubectl apply -f templates/build/enmasse-latest/install/components/example-plans
-    kubectl apply -f templates/build/enmasse-latest/install/components/example-authservices
+    kubectl apply -f templates/build/default/enmasse-latest/install/bundles/enmasse
+    kubectl apply -f templates/build/default/enmasse-latest/install/components/example-plans
+    kubectl apply -f templates/build/default/enmasse-latest/install/components/example-authservices
 
 #### Deploying to an OKD instance assuming already logged in with cluster-admin permissions
 
     oc new-project enmasse-infra || oc project enmasse-infra
-    oc apply -f templates/build/enmasse-latest/install/bundles/enmasse
-    oc apply -f templates/build/enmasse-latest/install/components/example-plans
-    oc apply -f templates/build/enmasse-latest/install/components/example-authservices
+    oc apply -f templates/build/default/enmasse-latest/install/bundles/enmasse
+    oc apply -f templates/build/default/enmasse-latest/install/components/example-plans
+    oc apply -f templates/build/default/enmasse-latest/install/components/example-authservices
 
 
 #### Running smoketests against a deployed instance
