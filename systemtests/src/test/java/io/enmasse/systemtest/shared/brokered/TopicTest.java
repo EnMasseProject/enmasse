@@ -155,7 +155,7 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
         MessageConsumer subscriber1 = session.createConsumer(testTopic);
         MessageProducer messageProducer = session.createProducer(testTopic);
 
-        int count = 1000;
+        int count = 100;
         List<javax.jms.Message> listMsgs = jmsProvider.generateMessages(session, count);
 
         CompletableFuture<List<javax.jms.Message>> received = new CompletableFuture<>();
@@ -358,7 +358,6 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
         subscriber1.close();
         subscriber2.close();
         session.unsubscribe(subID);
-        session2.unsubscribe(subID);
         connection1.stop();
         connection2.stop();
         session.close();
