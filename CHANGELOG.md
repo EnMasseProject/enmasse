@@ -11,6 +11,7 @@
 * #5236: Bump netty.version from 4.1.48.Final to 4.1.59.Final 
 * #5238: Console receiver grants too little credit to agent_data receiving link #5239
 * #5240: Upgrade to Artemis 2.16.0 and Qpid Dispatch Router 1.14.0
+* #5249: Bump jackson-databind.version from 2.10.4 to 2.11.3 
 
 ## 0.33.0
 
