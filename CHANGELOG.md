@@ -9,6 +9,7 @@
 * #5228: Guard empty MIN_LARGE_MESSAGE_SIZE in broker plugin
 * #5232: Use quay.io rather than docker.io for prometheus, grafana and oauth-proxy (openshift3) 
 * #5238: Console receiver grants too little credit to agent_data receiving link #5239
+* #5240: Upgrade to Artemis 2.16.0 and Qpid Dispatch Router 1.14.0
 
 ## 0.33.0
 
