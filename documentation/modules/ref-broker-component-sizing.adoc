@@ -28,7 +28,7 @@ In addition, the broker has a fixed storage footprint of about 50 MB.
 
 The amount of memory required for the broker depends on which address full policy is specified. If the `PAGE` policy is used, the memory requirements can be reduced  since the messages are stored separately from the journal (which always needs to fit in memory). If the `FAIL`, `BLOCK`, or `DROP` policies are specified, all messages must also be held in memory, even if they are persisted.
 
-There is also constant memory cost associated with running the broker as well as the JVM. The memory available to store message is automatically derived from the memory set in the broker configuration and is set to be half the JVM memory, which in turn is set to half of the system memory.
+There is also constant memory cost associated with running the broker as well as the JVM. The memory available to store message is automatically derived from the memory set in the broker configuration and is set to be half the JVM memory, which in turn is set to half of the system memory (memory assigned to the container).
 
 NOTE: In the `standard` address space type, multiple broker instances might be created. The sizing of these broker instances also depends on the address plan configuration and how many addresses you expect each broker to be able to handle before another broker is spawned.
 
@@ -56,7 +56,7 @@ spec:
 
 When paging is enabled, the original formula can be modified to only account for a reference to the message as well as holding 1000 in-flight messages in memory:
 
-``` 
+```
 (1000 messages * 1000 * 128 kB) + (10 queues * 128 kB * 1024) = 123.5 MB
 ```
 
