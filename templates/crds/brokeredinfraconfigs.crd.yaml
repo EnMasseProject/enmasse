@@ -37,8 +37,12 @@ spec:
               properties:
                 ingress:
                   type: array
+                  items:
+                    type: object
                 egress:
                   type: array
+                  items:
+                    type: object
             admin:
               type: object
               properties:
@@ -95,6 +99,8 @@ spec:
                           type: object
                         tolerations:
                           type: array
+                          items:
+                            type: object
                         priorityClassName:
                           type: string
                         securityContext:

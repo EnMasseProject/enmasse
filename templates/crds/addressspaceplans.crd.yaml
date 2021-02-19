@@ -46,6 +46,7 @@ spec:
       description: AddressSpacePlan describes the allowed resource usage of an address space. This resource is created by the service administrator.
       properties:
         status:
+          type: object
           properties:
             phase:
               type: string
