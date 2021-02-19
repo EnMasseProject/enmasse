@@ -50,11 +50,11 @@
         <lucene.version>7.7.1</lucene.version>
         <hibernate.validator.version>6.0.20.Final</hibernate.validator.version>
         <jackson-annotations.version>2.10.0</jackson-annotations.version>
-        <jackson-core.version>2.10.4</jackson-core.version>
-        <jackson-databind.version>2.12.1</jackson-databind.version>
-        <jackson-module-jsonSchema.version>2.10.4</jackson-module-jsonSchema.version>
-        <jackson-module-jaxb-annotations.version>2.10.4</jackson-module-jaxb-annotations.version>
-        <jackson-jaxrs-json-provider.version>2.10.4</jackson-jaxrs-json-provider.version>     
+        <jackson-core.version>2.11.3</jackson-core.version>
+        <jackson-databind.version>2.11.3</jackson-databind.version>
+        <jackson-module-jsonSchema.version>2.11.3</jackson-module-jsonSchema.version>
+        <jackson-module-jaxb-annotations.version>2.11.3</jackson-module-jaxb-annotations.version>
+        <jackson-jaxrs-json-provider.version>2.11.3</jackson-jaxrs-json-provider.version>     
         <javax.validation.version>2.0.1.Final</javax.validation.version>
         <jboss.el.api.version>1.0.13.Final</jboss.el.api.version>
         <json-patch.version>1.9</json-patch.version>
