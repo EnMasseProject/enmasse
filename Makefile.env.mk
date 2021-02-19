@@ -23,7 +23,7 @@ DOCKER_REGISTRY_PREFIX ?= $(DOCKER_REGISTRY)/
 IMAGE_VERSION          ?= $(TAG)
 ADDRESS_SPACE_CONTROLLER_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/address-space-controller:$(IMAGE_VERSION)
 STANDARD_CONTROLLER_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/standard-controller:$(IMAGE_VERSION)
-ROUTER_IMAGE ?= quay.io/interconnectedcloud/qdrouterd:1.12.0
+ROUTER_IMAGE ?= quay.io/interconnectedcloud/qdrouterd:1.14.0
 BROKER_PLUGIN_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/broker-plugin:$(IMAGE_VERSION)
 TOPIC_FORWARDER_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/topic-forwarder:$(IMAGE_VERSION)
 AGENT_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/agent:$(IMAGE_VERSION)
@@ -44,7 +44,7 @@ ALERTMANAGER_IMAGE ?= quay.io/prometheus/alertmanager:v0.15.2
 GRAFANA_IMAGE ?= quay.io/app-sre/grafana:5.3.1
 APPLICATION_MONITORING_OPERATOR_IMAGE ?= quay.io/integreatly/application-monitoring-operator:v1.1.4
 KUBE_STATE_METRICS_IMAGE ?= quay.io/coreos/kube-state-metrics:v1.4.0
-BROKER_IMAGE ?= quay.io/enmasse/artemis-base:2.13.0-ARTEMIS-2810
+BROKER_IMAGE ?= quay.io/enmasse/artemis-base:2.16.0
 
 CONTROLLER_MANAGER_IMAGE   ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/controller-manager:$(IMAGE_VERSION)
 

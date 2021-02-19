@@ -67,14 +67,14 @@
         <junit.platform.runner.version>1.5.2</junit.platform.runner.version>
         <junit.platform.launcher.version>1.5.2</junit.platform.launcher.version>
         <rerunner-jupiter.version>2.1.3</rerunner-jupiter.version>
-        <artemis.version>2.13.0</artemis.version>
+        <artemis.version>2.16.0</artemis.version>
         <paho.version>1.2.1</paho.version>
         <netty.version>4.1.48.Final</netty.version>
         <keycloak.version>4.8.3.Final</keycloak.version>
         <jboss.logging.version>3.3.0.Final</jboss.logging.version>
         <jboss.logging.processor.version>2.1.0.Final</jboss.logging.processor.version>
-        <protonj.version>0.33.0</protonj.version>
-        <qpidjms.version>0.40.0</qpidjms.version>
+        <protonj.version>0.33.8</protonj.version>
+        <qpidjms.version>0.56.0</qpidjms.version>
         <selenium.version>3.141.59</selenium.version>
         <gson.version>2.8.2</gson.version>
         <jacoco.version>0.7.9</jacoco.version>
