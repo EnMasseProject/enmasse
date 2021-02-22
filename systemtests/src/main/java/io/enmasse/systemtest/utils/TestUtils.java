@@ -618,7 +618,7 @@ public class TestUtils {
     }
 
     public static void waitUntilDeployed(String namespace) {
-        waitUntilDeployed(namespace, Collections.emptyList());
+        waitUntilDeployed(namespace, Collections.emptyList(), Collections.singletonMap("app", "enmasse"));
     }
 
     /**
@@ -627,10 +627,10 @@ public class TestUtils {
      * @param namespace    namespace where you want to check resource ready
      * @param expectedPods optional list if you want to be sure all pods from this list are deployed
      */
-    public static void waitUntilDeployed(String namespace, List<String> expectedPods) {
+    public static void waitUntilDeployed(String namespace, List<String> expectedPods, Map labels) {
         log.info("-------------------------------------------------------------");
         TestUtils.waitUntilCondition("All Deployments, StatefulSets, ReplicaSets and Pods are ready", waitPhase -> {
-            List<Deployment> deployments = Kubernetes.getInstance().listDeployments(namespace, Collections.singletonMap("app", "enmasse"));
+            List<Deployment> deployments = Kubernetes.getInstance().listDeployments(namespace, labels);
             for (Deployment deployment : deployments) {
                 if (!Objects.equals(deployment.getStatus().getReplicas(), deployment.getStatus().getReadyReplicas())) {
                     log.info("Deployment {} has not all replicas ready", deployment.getMetadata().getName());
@@ -638,7 +638,7 @@ public class TestUtils {
                 }
             }
             log.info("All current Deployments are ready");
-            List<StatefulSet> statefulSets = Kubernetes.getInstance().listStatefulSets(namespace, Collections.singletonMap("app", "enmasse"));
+            List<StatefulSet> statefulSets = Kubernetes.getInstance().listStatefulSets(namespace, labels);
             for (StatefulSet statefulSet : statefulSets) {
                 if (!Objects.equals(statefulSet.getStatus().getReplicas(), statefulSet.getStatus().getReadyReplicas())) {
                     log.info("StatefulSet {} has not all replicas ready", statefulSet.getMetadata().getName());
@@ -646,7 +646,7 @@ public class TestUtils {
                 }
             }
             log.info("All current StatefulSets are ready");
-            List<ReplicaSet> replicaSets = Kubernetes.getInstance().listReplicaSets(namespace, Collections.singletonMap("app", "enmasse"));
+            List<ReplicaSet> replicaSets = Kubernetes.getInstance().listReplicaSets(namespace, labels);
             for (ReplicaSet replicaSet : replicaSets) {
                 if (replicaSet.getSpec().getReplicas() > 0 && !Objects.equals(replicaSet.getStatus().getReplicas(), replicaSet.getStatus().getReadyReplicas())) {
                     log.info("ReplicaSet {} has not all replicas ready", replicaSet.getMetadata().getName());
@@ -654,7 +654,7 @@ public class TestUtils {
                 }
             }
             log.info("All current ReplicaSets are ready");
-            List<Pod> pods = Kubernetes.getInstance().listPods(namespace, Collections.singletonMap("app", "enmasse"));
+            List<Pod> pods = Kubernetes.getInstance().listPods(namespace, labels);
             for (String expectedPod : expectedPods) {
                 if (pods.stream().noneMatch(pod -> pod.getMetadata().getName().contains(expectedPod))) {
                     log.info("Pod {} is still not deployed", expectedPod);
