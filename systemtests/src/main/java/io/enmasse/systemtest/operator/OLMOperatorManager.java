@@ -105,6 +105,7 @@ public class OLMOperatorManager {
         Files.writeString(subscriptionFile,
                 subscription
                         .replaceAll("\\$\\{OPERATOR_NAMESPACE}", installationNamespace)
+                        .replaceAll("\\$\\{CATALOG_SOURCE}", Environment.getInstance().getCatalogSource())
                         .replaceAll("\\$\\{PRODUCT_VERSION}", Environment.getInstance().getProductVersion()));
         KubeCMDClient.applyFromFile(installationNamespace, subscriptionFile);
     }
