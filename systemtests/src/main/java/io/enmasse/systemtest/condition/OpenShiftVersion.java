@@ -28,7 +28,8 @@ public enum OpenShiftVersion {
 
     public enum Openshift4MinorVersion {
         OCP4_PRIOR_4_4(v -> v >= 1.13 && v<1.17),
-        OCP4_AFTER_4_4(v -> v>=1.17);
+        OCP4_AFTER_4_4(v -> v >= 1.17 && v<1.19),
+        OCP4_AFTER_4_6(v -> v >= 1.19);
 
         private final Predicate<Double> versionChecker;
 

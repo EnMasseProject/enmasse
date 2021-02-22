@@ -85,7 +85,12 @@ public class EnmasseOperatorManager {
         LOGGER.info("                Enmasse enable monitoring");
         LOGGER.info("***********************************************************");
         if (Kubernetes.isOpenShiftCompatible(OCP4) && !Kubernetes.isCRC()) {
-            enableUserWorkloadMonitoring();
+            if (OpenShiftVersion.Openshift4MinorVersion.fromK8sVersion(kube.getKubernetesVersion()) ==
+                    OpenShiftVersion.Openshift4MinorVersion.OCP4_AFTER_4_6) {
+                enableUserWorkloadMonitoring();
+            } else {
+                enableTechPreviewUserWorkloadMonitoring();
+            }
         } else {
             if (Kubernetes.isCRC()) {
                 deleteMonitoringOperator();
@@ -97,6 +102,22 @@ public class EnmasseOperatorManager {
 
 
     private void enableUserWorkloadMonitoring() throws Exception {
+        LOGGER.info("***********************************************************");
+        LOGGER.info("                Enmasse user workload monitoring");
+        LOGGER.info("***********************************************************");
+        enableOperatorMetrics(true);
+        kube.createConfigmapFromResource("openshift-monitoring", new ConfigMapBuilder()
+                .editOrNewMetadata()
+                .withNamespace("openshift-monitoring")
+                .withName("cluster-monitoring-config")
+                .endMetadata()
+                .addToData("config.yaml", "enableUserWorkload: true")
+                .build());
+        TestUtils.waitForPodReady("prometheus-user-workload-0", "openshift-user-workload-monitoring");
+        LOGGER.info("***********************************************************");
+    }
+
+    private void enableTechPreviewUserWorkloadMonitoring() throws Exception {
         LOGGER.info("***********************************************************");
         LOGGER.info("                Enmasse user workload monitoring");
         LOGGER.info("***********************************************************");
