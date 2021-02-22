@@ -66,6 +66,7 @@ public class Environment {
     private static final String OVERRIDE_CLUSTER_TYPE = "OVERRIDE_CLUSTER_TYPE";
     private static final String DOWNSTREAM = "DOWNSTREAM";
     private static final String PRODUCT_VERSION = "PRODUCT_VERSION";
+    private static final String CATALOG_SOURCE = "CATALOG_SOURCE";
 
     //Config paths
     private static final String scaleConfig = System.getenv().getOrDefault(SCALE_CONFIG, Paths.get(System.getProperty("user.dir"), "scale-config.json").toAbsolutePath().toString());
@@ -103,6 +104,8 @@ public class Environment {
     private final String clusterInternalImageRegistry = getOrDefault(jsonEnv, OCP4_INTERNAL_IMAGE_REGISTRY, "");
     private final String isTestDownstream = getOrDefault(jsonEnv, DOWNSTREAM, value -> System.getenv("DOWNSTREAM"),"false");
     private final String productVersion = getOrDefault(jsonEnv, PRODUCT_VERSION, System.getenv("PRODUCT_VERSION"));
+    private final String catalogSource = getOrDefault(jsonEnv, CATALOG_SOURCE, value -> System.getenv("CATALOG_SOURCE"),"enmasse-catalog");
+
 
     //Default values
     private final UserCredentials managementCredentials = new UserCredentials(null, null);
@@ -338,6 +341,8 @@ public class Environment {
     }
 
     public String getProductVersion(){ return productVersion; }
+
+    public String getCatalogSource(){ return catalogSource; }
 
     private String getOrDefault(JsonNode jsonConfig, String varName, String defaultValue) {
         return getOrDefault(jsonConfig, varName, String::toString, defaultValue);
