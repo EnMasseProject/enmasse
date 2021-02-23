@@ -146,9 +146,8 @@ public class EnmasseOperatorManager {
                 "prometheus-operator",
                 "application-monitoring-operator",
                 "prometheus-application-monitoring",
-                "alertmanager-application-monitoring",
-                "grafana-operator",
-                "grafana-deployment"));
+                "alertmanager-application-monitoring"),
+                Collections.emptyMap());
         enableMonitoringForNamespace();
         enableOperatorMetrics(true);
         KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "kube-state-metrics"));
