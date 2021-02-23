@@ -23,7 +23,6 @@ GOOPTS          ?= -mod=vendor
 DOCKER_TARGETS   = docker_build docker_tag docker_push kind_load_image clean
 INSTALLDIR       = $(CURDIR)/templates/install
 SKIP_TESTS      ?= false
-SKIP_MANIFESTS  ?= false
 MAVEN_BATCH     ?= true
 
 ifndef GOPATH
@@ -39,7 +38,7 @@ endif
 
 all: build_java build_go templates
 
-templates: imageenv manifests
+templates: imageenv
 	$(MAKE) -C templates
 
 deploy: build_go
@@ -140,43 +139,5 @@ docu_check:
 docu_clean:
 	make -C documentation clean
 
-#region Targets related to kubebuilder
-
-ifeq (, $(shell which controller-gen 2>/dev/null))
-
-LOCALBIN:=$(TOPDIR)/local/go/bin
-CONTROLLER_GEN:=$(abspath $(LOCALBIN)/controller-gen )
-controller-gen: $(CONTROLLER_GEN)
-
-$(CONTROLLER_GEN):
-	@mkdir -p "$(LOCALBIN)"
-	@{ \
-	set -e ;\
-	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$CONTROLLER_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	GOPATH=$(abspath $(LOCALBIN)/../) go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0 ;\
-	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
-	}
-
-else
-
-controller-gen:
-.PHONY: controller-gen
-CONTROLLER_GEN:=$(shell which controller-gen)
-
-endif
-
-ifeq ($(SKIP_MANIFESTS),true)
-manifests:
-	@echo "Skipping generating manifests from source"
-else
-manifests: controller-gen
-	$(CONTROLLER_GEN) crd paths=./pkg/apis/enmasse/v1beta2 output:dir=./templates/shared-infra
-endif
-
-#endregion
-
 .PHONY: test_go_vet test_go_plain build_go imageenv buildpushkind
 .PHONY: all $(GO_DIRS) $(DOCKER_TARGETS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_check docu_clean templates
-.PHONY: manifests
