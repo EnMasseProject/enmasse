@@ -5,20 +5,11 @@
 
 package io.enmasse.systemtest.platform.apps;
 
-import static io.enmasse.systemtest.platform.Kubernetes.executeWithInput;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.time.Duration.ofMinutes;
-import static java.time.Duration.ofSeconds;
-
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -29,9 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,7 +33,6 @@ import io.enmasse.systemtest.certs.BrokerCertBundle;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.scale.ScaleTestClientConfiguration;
 import io.enmasse.systemtest.scale.ScaleTestClientType;
@@ -58,7 +46,6 @@ import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.ContainerState;
 import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
-import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.EnvFromSourceBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
@@ -69,7 +56,6 @@ import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaimBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
-import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -92,9 +78,6 @@ import io.fabric8.kubernetes.api.model.rbac.PolicyRuleBuilder;
 import io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder;
 import io.fabric8.kubernetes.api.model.rbac.RoleBuilder;
 import io.fabric8.kubernetes.api.model.rbac.SubjectBuilder;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.PodResource;
-import io.fabric8.kubernetes.client.utils.ReplaceValueStream;
 import io.vertx.core.json.JsonObject;
 
 public class SystemtestsKubernetesApps {
@@ -104,15 +87,10 @@ public class SystemtestsKubernetesApps {
     private static final Kubernetes kube = Kubernetes.getInstance();
     private static final Environment env = Environment.getInstance();
 
-    public static final Path TEMPLATES_ROOT = Paths.get(env.getTemplatesPath());
-
     //namespaces for apps
     public static final String MESSAGING_PROJECT = "systemtests-clients";
     public static final String SELENIUM_PROJECT = "systemtests-selenium";
     private static final String SCALE_TEST_CLIENTS_PROJECT = "systemtests-scale-test-clients";
-    public static final String INFINISPAN_PROJECT = env.getInfinispanProject();
-    public static final String POSTGRESQL_PROJECT = env.getPostgresqlProject();
-    public static final String H2_PROJECT = env.getH2Project();
     /**
      * No need to add this namespace to ST_NAMESPACES, logs are already collected by process
      */
@@ -120,9 +98,6 @@ public class SystemtestsKubernetesApps {
 
     //namespaces of ST apps (add namespace here in case you want to collect logs)
     public static final String[] ST_NAMESPACES = new String[] {
-            INFINISPAN_PROJECT,
-            POSTGRESQL_PROJECT,
-            H2_PROJECT,
             SELENIUM_PROJECT
     };
 
@@ -148,62 +123,11 @@ public class SystemtestsKubernetesApps {
     private static final String SCALE_TEST_CLIENT_ID_LABEL = "id";
     private static final String SCALE_TEST_CLIENT_TYPE_LABEL = "client";
 
-    //infinispan iot
-    public static final String INFINISPAN_SERVER = "infinispan";
-    private static final Path INFINISPAN_EXAMPLE_BASE;
-    private static final String[] INFINISPAN_OPENSHIFT;
-    private static final String[] INFINISPAN_KUBERNETES;
-
-    //postgress iot
-    public static final String POSTGRESQL_SERVER = "postgresql";
-    private static final Path POSTGRESQL_EXAMPLE_BASE;
-    private static final Path[] POSTGRESQL_CREATE_TABLE_SQL;
-
-    //h2 iot
-    public static final String H2_SERVER = "h2";
-    private static final Path H2_EXAMPLE_BASE;
-    private static final Path H2_CREATE_SQL;
-    public static final String[] H2_SHELL_COMMAND = new String[]{
-            "java",
-            "-cp",
-            "h2.jar",
-            "org.h2.tools.Shell",
-            "-user",
-            "admin",
-            "-password",
-            "admin1234",
-            "-url",
-            "jdbc:h2:tcp://localhost:9092//data/device-registry"
-    };
     private static final String POSTGRES_IMAGE = "quay.io/enmasse/postgres:10.4";
     private static final String SELENIUM_STANDALONE_CHROME_IMAGE = "quay.io/enmasse/selenium-standalone-chrome";
     private static final String SELENIUM_STANDALONE_FIREFOX_IMAGE = "quay.io/enmasse/selenium-standalone-firefox";
     private static final String BUSYBOX_IMAGE = "quay.io/enmasse/busybox:latest";
     private static final String ARTEMIS_BASE_IMAGE = "quay.io/enmasse/artemis-base:2.16.0";
-
-    static {
-
-        final Path examplesIoT = TEMPLATES_ROOT.resolve("install/components/iot/examples");
-
-        INFINISPAN_EXAMPLE_BASE = examplesIoT.resolve("infinispan");
-        INFINISPAN_OPENSHIFT = new String[]{
-                "common",
-                "openshift"
-        };
-        INFINISPAN_KUBERNETES = new String[]{
-                "common",
-                "kubernetes"
-        };
-
-        POSTGRESQL_EXAMPLE_BASE = examplesIoT.resolve("postgresql/deploy");
-        POSTGRESQL_CREATE_TABLE_SQL = new Path[]{
-                examplesIoT.resolve("postgresql/create.devcon.sql"),
-                examplesIoT.resolve("postgresql/create.sql")
-        };
-
-        H2_EXAMPLE_BASE = examplesIoT.resolve("h2/deploy");
-        H2_CREATE_SQL = examplesIoT.resolve("h2/create.sql");
-    }
 
     public static String getMessagingAppPodName() throws Exception {
         return getMessagingAppPodName(MESSAGING_PROJECT);
@@ -359,294 +283,10 @@ public class SystemtestsKubernetesApps {
         return String.format("%s.%s.svc", SystemtestsKubernetesApps.API_PROXY, kube.getInfraNamespace());
     }
 
-    private static Function<InputStream, InputStream> namespaceReplacer(final String namespace) {
-        final Map<String, String> values = new HashMap<>();
-        values.put("NAMESPACE", namespace);
-        return in -> ReplaceValueStream.replaceValues(in, values);
-    }
-
     public static Path[] resolveAll(final Path base, final String... localPaths) {
         return Arrays.stream(localPaths)
                 .map(base::resolve)
                 .toArray(Path[]::new);
-    }
-
-    public static Endpoint deployInfinispanServer() throws Exception {
-
-        if (env.isSkipDeployInfinispan()) {
-            return getInfinispanEndpoint(INFINISPAN_PROJECT);
-        }
-
-        kube.createNamespace(INFINISPAN_PROJECT);
-
-        final KubernetesClient client = kube.getClient();
-
-        // apply "common" and "manual" folders
-
-        if (!Kubernetes.isOpenShiftCompatible()) {
-            log.info("Installing Infinispan for Kubernetes");
-            kube.apply(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT),
-                    resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_KUBERNETES));
-        } else {
-            log.info("Installing Infinispan for OpenShift");
-            kube.apply(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT),
-                    resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_OPENSHIFT));
-        }
-
-        // wait for the deployment
-
-        client
-                .apps().statefulSets()
-                .inNamespace(INFINISPAN_PROJECT)
-                .withName(INFINISPAN_SERVER)
-                .waitUntilReady(5, TimeUnit.MINUTES);
-
-        // return hotrod enpoint
-
-        return getInfinispanEndpoint(INFINISPAN_PROJECT);
-    }
-
-    private static Endpoint getInfinispanEndpoint(final String namespace) {
-        return kube.getServiceEndpoint(INFINISPAN_SERVER, namespace, "infinispan");
-    }
-
-    public static void deleteInfinispanServer() throws Exception {
-
-        if (env.isSkipDeployInfinispan()) {
-            return;
-        }
-
-        // delete "common" and "manual" folders
-        final KubernetesClient client = kube.getClient();
-
-        if (client.apps()
-                .statefulSets()
-                .inNamespace(INFINISPAN_PROJECT)
-                .withName(INFINISPAN_SERVER)
-                .get() != null) {
-
-            log.info("Infinispan server will be removed");
-
-            for (final Path path : resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_OPENSHIFT)) {
-                KubeCMDClient.deleteFromFile(INFINISPAN_PROJECT, path);
-            }
-
-        }
-    }
-
-    public static void collectInfinispanServerLogs(Path path) {
-        try {
-            GlobalLogCollector collector = new GlobalLogCollector(kube, path, SystemtestsKubernetesApps.INFINISPAN_PROJECT);
-            collector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
-        } catch (Exception e) {
-            log.error("Failed to collect pod logs from namespace : {}", SystemtestsKubernetesApps.INFINISPAN_PROJECT);
-        }
-    }
-
-    /**
-     * Deploy the PostgreSQL server for the JDBC device registry.
-     */
-    public static Endpoint deployPostgresqlServer() throws Exception {
-
-        if (env.isSkipDeployPostgresql()) {
-            return getPostgresqlEndpoint(POSTGRESQL_PROJECT);
-        }
-
-        kube.createNamespace(POSTGRESQL_PROJECT);
-
-        final KubernetesClient client = kube.getClient();
-
-        kube.apply(POSTGRESQL_PROJECT, namespaceReplacer(POSTGRESQL_PROJECT), POSTGRESQL_EXAMPLE_BASE);
-
-        // wait for the deployment
-
-        client
-                .apps().deployments()
-                .inNamespace(POSTGRESQL_PROJECT)
-                .withName(POSTGRESQL_SERVER)
-                .waitUntilReady(5, TimeUnit.MINUTES);
-
-        // wait until all containers are ready as well
-
-        var podLister = client
-                .pods()
-                .inNamespace(POSTGRESQL_PROJECT)
-                .withLabel("app", "postgresql");
-
-        TestUtils.waitUntilCondition(() -> {
-            return podLister
-                .list().getItems().stream()
-                .filter(conditionIsTrue("ContainersReady"))
-                .findFirst()
-                .map(p -> true)
-                .orElse(false);
-        }, ofMinutes(5), ofSeconds(10));
-
-        var pod = podLister
-                .list().getItems().stream().findFirst()
-                .orElseThrow(() -> new IllegalStateException("Pod that was ready just dissapeared"));
-        var podAccess = client.pods()
-                .inNamespace(pod.getMetadata().getNamespace())
-                .withName(pod.getMetadata().getName());
-
-        // deploy SQL schema
-
-        deployPostgreSQLSchema(podAccess, POSTGRESQL_CREATE_TABLE_SQL);
-
-        // return endpoint
-
-        return getPostgresqlEndpoint(POSTGRESQL_PROJECT);
-    }
-
-    private static void deployPostgreSQLSchema(final PodResource<Pod, DoneablePod> podAccess, final Path... sql) throws IOException, InterruptedException, TimeoutException {
-        log.info("Deploying SQL schemas: {}", new Object[]{sql});
-
-        for (Path path : sql) {
-            try (InputStream sqlFile = Files.newInputStream(path)) {
-                executeWithInput(
-                        podAccess, sqlFile,
-                        input -> input.write("\n\\q\n".getBytes(UTF_8)),
-                        Duration.ofSeconds(10),
-                        "bash", "-c", "PGPASSWORD=user12 psql device-registry registry");
-            }
-        }
-    }
-
-    /**
-     * Get the endpoint of the PostgreSQL server for the JDBC device registry.
-     */
-    private static Endpoint getPostgresqlEndpoint(final String namespace) {
-        return kube.getServiceEndpoint(POSTGRESQL_SERVER, namespace, "postgresql");
-    }
-
-    /**
-     * Delete the PostgreSQL server for the JDBC device registry.
-     */
-    public static void deletePostgresqlServer() throws Exception {
-
-        if (env.isSkipDeployPostgresql()) {
-            return;
-        }
-
-        final KubernetesClient client = kube.getClient();
-
-        if (client.apps()
-                .deployments()
-                .inNamespace(POSTGRESQL_PROJECT)
-                .withName(POSTGRESQL_SERVER)
-                .get() != null) {
-
-            log.info("Postgresql server will be removed");
-
-            KubeCMDClient.deleteFromFile(POSTGRESQL_PROJECT, POSTGRESQL_EXAMPLE_BASE);
-        }
-    }
-
-    // h2
-
-    /**
-     * Deploy the H2 server for the JDBC device registry.
-     */
-    public static Endpoint deployH2Server() throws Exception {
-
-        if (env.isSkipDeployH2()) {
-            return getH2Endpoint(H2_PROJECT);
-        }
-
-        kube.createNamespace(H2_PROJECT);
-
-        final KubernetesClient client = kube.getClient();
-
-        kube.apply(H2_PROJECT, namespaceReplacer(H2_PROJECT), H2_EXAMPLE_BASE);
-
-        // wait for the deployment
-
-        client
-                .apps().deployments()
-                .inNamespace(H2_PROJECT)
-                .withName(H2_SERVER)
-                .waitUntilReady(5, TimeUnit.MINUTES);
-
-        // deploy the SQL schema
-
-        var pod = getH2ServerPod().orElseThrow(() -> new IllegalStateException("No H2 pod found after deployment was ready"));
-
-        // wait until all containers are ready as well
-
-        pod.waitUntilCondition(conditionIsTrue("ContainersReady"), 5, TimeUnit.MINUTES);
-
-        // deploy SQL schema
-
-        deployH2SQLSchema(pod, H2_CREATE_SQL);
-
-        // return endpoint
-
-        return getH2Endpoint(H2_PROJECT);
-    }
-
-    public static Optional<PodResource<Pod, DoneablePod>> getH2ServerPod() {
-        final var client = kube.getClient();
-        return kube.getClient()
-                .pods()
-                .inNamespace(H2_PROJECT)
-                .withLabel("app", "h2")
-                .list().getItems().stream().findFirst()
-                .map(pod -> client.pods()
-                        .inNamespace(pod.getMetadata().getNamespace())
-                        .withName(pod.getMetadata().getName()));
-    }
-
-    private static void deployH2SQLSchema(final PodResource<Pod, DoneablePod> podAccess, final Path sql) throws IOException, InterruptedException, TimeoutException {
-        log.info("Deploying SQL schema: {}", sql);
-
-        try (InputStream sqlFile = Files.newInputStream(sql)) {
-            executeWithInput(
-                    podAccess, sqlFile,
-                    input -> input.write("\nexit\n".getBytes(UTF_8)),
-                    Duration.ofSeconds(10),
-                    H2_SHELL_COMMAND);
-        }
-
-    }
-
-    /**
-     * Get the endpoint of the H2 server for the JDBC device registry.
-     */
-    private static Endpoint getH2Endpoint(final String namespace) {
-        return kube.getServiceEndpoint(H2_SERVER, namespace, "h2");
-    }
-
-    /**
-     * Delete the PostgreSQL server for the JDBC device registry.
-     */
-    public static void deleteH2Server() throws Exception {
-
-        if (env.isSkipDeployH2()) {
-            return;
-        }
-
-        final KubernetesClient client = kube.getClient();
-
-        if (client.apps()
-                .deployments()
-                .inNamespace(H2_PROJECT)
-                .withName(H2_SERVER)
-                .get() != null) {
-
-            log.info("H2 server will be removed");
-
-            KubeCMDClient.deleteFromFile(H2_PROJECT, H2_EXAMPLE_BASE);
-        }
-    }
-
-    private static Predicate<Pod> conditionIsTrue(final String type) {
-        return p -> Optional.ofNullable(p)
-                .map(Pod::getStatus)
-                .map(PodStatus::getConditions)
-                .flatMap(o -> o.stream().filter(c -> type.equals(c.getType())).findFirst())
-                .map(PodCondition::getStatus)
-                .map("True"::equals)
-                .orElse(false);
     }
 
     public static void deployAMQBroker(String namespace, String name, String user, String password, BrokerCertBundle certBundle) throws Exception {
@@ -1082,24 +722,6 @@ public class SystemtestsKubernetesApps {
                 .endTemplate()
                 .endSpec()
                 .build();
-
-        /*
-         * return new DoneableDeployment(getMessagingAppDeploymentResource())
-         * .editMetadata()
-         * .withName(namespace)
-         * .endMetadata()
-         * .editSpec()
-         * .withNewSelector()
-         * .addToMatchLabels("app", namespace)
-         * .endSelector()
-         * .editTemplate()
-         * .withNewMetadata()
-         * .addToLabels("app", namespace)
-         * .endMetadata()
-         * .endTemplate()
-         * .endSpec()
-         * .done();
-         */
     }
 
     private static Deployment getProxyApiAppDeploymentResource() {
