@@ -511,6 +511,8 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         checkImagesUpdated(getVersionFromTemplateDir(upgradeTemplates));
     }
 
+
+
     private String getManifestsImage(Path templateDir, String version) throws IOException, JsonProcessingException, JsonMappingException {
         String manifestsImage;
         if (version.equals("1.3")) {
