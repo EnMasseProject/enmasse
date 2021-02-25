@@ -9,7 +9,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
+import io.enmasse.systemtest.time.TimeoutBudget;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -97,6 +100,8 @@ public class OLMOperatorManager {
                         .replaceAll("\\$\\{OPERATOR_NAMESPACE}", installationNamespace)
                         .replaceAll("\\$\\{CSV}", csvName));
         KubeCMDClient.applyFromFile(installationNamespace, subscriptionFile);
+        KubeCMDClient.awaitStatusCondition(new TimeoutBudget(2, TimeUnit.MINUTES), installationNamespace,
+                "subscription", "enmasse-sub", "CatalogSourcesUnhealthy=False");
     }
 
     public void applyDownstreamSubscription (String installationNamespace) throws IOException {
@@ -117,6 +122,7 @@ public class OLMOperatorManager {
                 catalogSource
                         .replaceAll("\\$\\{OPERATOR_NAMESPACE}", catalogNamespace));
         KubeCMDClient.applyFromFile(catalogNamespace, catalogSourceFile);
+        KubeCMDClient.awaitCatalogSourceReady(new TimeoutBudget(2, TimeUnit.MINUTES), catalogNamespace, "enmasse-source");
     }
 
     private boolean saysDoingNothing(String text) {
