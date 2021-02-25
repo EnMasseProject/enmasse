@@ -5,6 +5,9 @@ echo "Update archives"
 sudo add-apt-repository ppa:longsleep/golang-backports
 sudo apt-get update
 
+# Depedenncy of newer minikube
+sudo apt-get install -y conntrack
+
 echo "Install maven"
 
 sudo apt install maven
