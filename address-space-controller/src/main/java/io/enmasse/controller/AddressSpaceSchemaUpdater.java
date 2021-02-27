@@ -8,22 +8,22 @@ import io.enmasse.address.model.AddressSpaceSchema;
 import io.enmasse.address.model.AddressSpaceSchemaList;
 import io.enmasse.address.model.AddressSpaceType;
 import io.enmasse.address.model.CoreCrd;
-import io.enmasse.address.model.DoneableAddressSpaceSchema;
 import io.enmasse.address.model.Schema;
 import io.enmasse.k8s.api.SchemaListener;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AddressSpaceSchemaUpdater implements SchemaListener {
     private static final Logger log = LoggerFactory.getLogger(AddressSpaceSchemaUpdater.class);
 
-    private final MixedOperation<AddressSpaceSchema, AddressSpaceSchemaList, DoneableAddressSpaceSchema, Resource<AddressSpaceSchema, DoneableAddressSpaceSchema>> client;
+    private final MixedOperation<AddressSpaceSchema, AddressSpaceSchemaList, Resource<AddressSpaceSchema>> client;
     public AddressSpaceSchemaUpdater(KubernetesClient kubernetesClient) {
-        this.client = kubernetesClient.customResources(CoreCrd.addresseSpaceSchemas(), AddressSpaceSchema.class, AddressSpaceSchemaList.class, DoneableAddressSpaceSchema.class);
+        this.client = kubernetesClient.customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.addresseSpaceSchemas()), AddressSpaceSchema.class, AddressSpaceSchemaList.class);
     }
 
     @Override

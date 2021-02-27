@@ -4,8 +4,8 @@
  */
 package io.enmasse.common.model;
 
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionBuilder;
+import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
+import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinitionBuilder;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 
 public final class CustomResources {
@@ -26,7 +26,7 @@ public final class CustomResources {
         return new CustomResourceDefinitionContext.Builder ()
                 .withGroup(definition.getSpec().getGroup())
                 .withScope(definition.getSpec().getScope())
-                .withVersion(definition.getSpec().getVersion())
+//                .withVersion(definition.getSpec().getVersion())
                 .withPlural(definition.getSpec().getNames().getPlural())
                 .withName(definition.getSpec().getNames().getSingular())
                 .build();
@@ -53,7 +53,7 @@ public final class CustomResources {
                         .endMetadata()
                         .editOrNewSpec()
                         .withGroup(group)
-                        .withVersion(version)
+//                        .withVersion(version)
                         .withScope(scope)
                         .editOrNewNames()
                         .withKind(kind)

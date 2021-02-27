@@ -5,7 +5,7 @@
 package io.enmasse.address.model;
 
 import io.enmasse.common.model.CustomResources;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
+import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
 import io.fabric8.kubernetes.internal.KubernetesDeserializer;
 
 public class CoreCrd {

@@ -15,6 +15,7 @@ import io.enmasse.k8s.api.LogEventLogger;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.SecretKeySelector;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
@@ -307,14 +308,14 @@ public class RouterConfigControllerTest {
         status.setReady(true);
         status.clearMessages();
 
-        client.secrets().inNamespace("space").createOrReplaceWithNew()
+        client.secrets().inNamespace("space").create(new SecretBuilder()
                 .editOrNewMetadata()
                 .withName("remote-certs")
                 .endMetadata()
                 .addToData("tls.crt", "cert")
                 .addToData("tls.key", "key")
                 .addToData("ca.crt", "ca")
-                .done();
+                .build());
 
         configController.reconcileAnyState(addressSpace);
 

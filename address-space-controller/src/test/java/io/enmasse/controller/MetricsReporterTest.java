@@ -7,6 +7,7 @@ package io.enmasse.controller;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.Phase;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.metrics.api.Metric;
 import io.enmasse.metrics.api.MetricSnapshot;
@@ -16,6 +17,8 @@ import static org.mockito.Mockito.mock;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -65,6 +68,7 @@ public class MetricsReporterTest {
         Phase phase = isReady ? Phase.Active : Phase.Configuring;
         return new AddressSpaceBuilder()
                 .editOrNewMetadata()
+                .withAnnotations(Map.of(AnnotationKeys.INFRA_UUID, UUID.randomUUID().toString()))
                 .withName(name)
                 .endMetadata()
                 .editOrNewSpec()

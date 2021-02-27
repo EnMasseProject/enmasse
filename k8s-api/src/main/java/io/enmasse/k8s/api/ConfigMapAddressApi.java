@@ -15,7 +15,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.fabric8.kubernetes.api.model.OwnerReference;
+import io.enmasse.address.model.AddressFluent;
+import io.fabric8.kubernetes.api.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.common.model.AbstractHasMetadataFluent.MetadataNested;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.k8s.api.cache.CacheWatcher;
@@ -34,9 +34,6 @@ import io.enmasse.k8s.api.cache.ListOptions;
 import io.enmasse.k8s.api.cache.ListerWatcher;
 import io.enmasse.k8s.api.cache.Reflector;
 import io.enmasse.k8s.api.cache.WorkQueue;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
-import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.RequestConfig;
@@ -78,7 +75,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         try {
             Address address = mapper.readValue(data.get("config.json"), Address.class);
             AddressBuilder builder = new AddressBuilder(address);
-            MetadataNested<AddressBuilder> metadataBuilder = builder.editOrNewMetadata();
+            AddressFluent.MetadataNested<AddressBuilder> metadataBuilder = builder.editOrNewMetadata();
 
             if (address.getMetadata().getUid() == null) {
                 metadataBuilder.withUid(map.getMetadata().getUid());
@@ -132,7 +129,9 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         labels.put(LabelKeys.INFRA_UUID, infraUuid);
         labels.put(LabelKeys.NAMESPACE, namespace);
 
-        client.configMaps().withLabels(labels).withPropagationPolicy("Background").delete();
+        client.configMaps().withLabels(labels).list().getItems().forEach(i -> {
+            client.resource(i).withPropagationPolicy(DeletionPropagation.BACKGROUND).delete();
+        });
     }
 
     @Override

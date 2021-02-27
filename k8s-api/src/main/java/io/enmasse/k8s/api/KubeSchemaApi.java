@@ -10,7 +10,6 @@ import io.enmasse.admin.model.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AddressPlanStatus;
 import io.enmasse.admin.model.v1.AddressPlanStatusBuilder;
 import io.enmasse.admin.model.v1.AuthenticationService;
-import io.enmasse.admin.model.v1.DoneableAuthenticationService;
 import io.enmasse.admin.model.v1.*;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import org.slf4j.Logger;
@@ -67,28 +66,27 @@ public class KubeSchemaApi implements SchemaApi {
     public static KubeSchemaApi create(NamespacedKubernetesClient openShiftClient, String namespace, String defaultVersion, boolean isOpenShift, boolean updateStatus) {
         CrdApi<io.enmasse.admin.model.v1.AddressSpacePlan> addressSpacePlanApi = new KubeCrdApi<>(openShiftClient, namespace, AdminCrd.addressSpacePlans(),
                 io.enmasse.admin.model.v1.AddressSpacePlan.class,
-                AddressSpacePlanList.class,
-                DoneableAddressSpacePlan.class);
+                AddressSpacePlanList.class);
 
         CrdApi<io.enmasse.admin.model.v1.AddressPlan> addressPlanApi = new KubeCrdApi<>(openShiftClient, namespace, AdminCrd.addressPlans(),
                 io.enmasse.admin.model.v1.AddressPlan.class,
-                AddressPlanList.class,
-                DoneableAddressPlan.class);
+                AddressPlanList.class
+        );
 
         CrdApi<BrokeredInfraConfig> brokeredInfraConfigApi = new KubeCrdApi<>(openShiftClient, namespace, AdminCrd.brokeredInfraConfigs(),
                 BrokeredInfraConfig.class,
-                BrokeredInfraConfigList.class,
-                DoneableBrokeredInfraConfig.class);
+                BrokeredInfraConfigList.class
+        );
 
         CrdApi<StandardInfraConfig> standardInfraConfigApi = new KubeCrdApi<>(openShiftClient, namespace, AdminCrd.standardInfraConfigs(),
                 StandardInfraConfig.class,
-                StandardInfraConfigList.class,
-                DoneableStandardInfraConfig.class);
+                StandardInfraConfigList.class
+        );
 
         CrdApi<AuthenticationService> authenticationServiceApi = new KubeCrdApi<>(openShiftClient, namespace, AdminCrd.authenticationServices(),
                 AuthenticationService.class,
-                AuthenticationServiceList.class,
-                DoneableAuthenticationService.class);
+                AuthenticationServiceList.class
+        );
 
         Clock clock = Clock.systemUTC();
 

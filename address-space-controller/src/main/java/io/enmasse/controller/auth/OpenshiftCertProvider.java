@@ -9,6 +9,7 @@ import io.enmasse.address.model.KubeUtil;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,11 +32,11 @@ public class OpenshiftCertProvider implements CertProvider {
             Service service = client.services().withName(serviceName).get();
             if (service != null && (service.getMetadata().getAnnotations() == null || service.getMetadata().getAnnotations().get(AnnotationKeys.OPENSHIFT_SERVING_CERT_SECRET_NAME) == null)) {
                 log.info("Adding service annotation to generate OpenShift cert");
-                client.services().withName(serviceName).edit()
-                        .editMetadata()
+                client.services().withName(serviceName).edit(s -> new ServiceBuilder(s).editMetadata()
                         .addToAnnotations(AnnotationKeys.OPENSHIFT_SERVING_CERT_SECRET_NAME, endpointInfo.getCertSpec().getSecretName())
                         .endMetadata()
-                        .done();
+                        .build()
+                );
             }
         }
     }

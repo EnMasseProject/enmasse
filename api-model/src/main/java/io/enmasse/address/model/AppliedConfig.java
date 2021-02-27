@@ -31,6 +31,9 @@ public final class AppliedConfig {
 
     public static AppliedConfig parseCurrentAppliedConfig(final HasMetadata resource) {
         try {
+            if (resource.getMetadata().getAnnotations() == null || resource.getMetadata().getAnnotations().isEmpty()) {
+                return null;
+            }
             return parseCurrentAppliedConfig(resource.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_CONFIGURATION));
         } catch (IOException e) {
             throw new UncheckedIOException(e);

@@ -37,9 +37,9 @@ import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRuleBuilder;
-import io.fabric8.kubernetes.api.model.networking.NetworkPolicyPeer;
-import io.fabric8.kubernetes.api.model.networking.NetworkPolicyPeerBuilder;
+import io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicyIngressRuleBuilder;
+import io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicyPeer;
+import io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicyPeerBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Collections;
 import java.util.List;
 
-import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRule;
+import io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicyIngressRule;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,8 +35,8 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.k8s.util.JULInitializingTest;
 import io.enmasse.model.CustomResourceDefinitions;
-import io.fabric8.kubernetes.api.model.networking.NetworkPolicyEgressRuleBuilder;
-import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRuleBuilder;
+import io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicyEgressRuleBuilder;
+import io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicyIngressRuleBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
 
@@ -71,7 +71,7 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         controller.reconcileAnyState(addressSpace);
 
         assertEquals(1, client.network().networkPolicies().list().getItems().size());
-        io.fabric8.kubernetes.api.model.networking.NetworkPolicy networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
+        io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicy networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
         assertNotNull(networkPolicy);
         assertEquals("enmasse", networkPolicy.getMetadata().getLabels().get(LabelKeys.APP));
         assertEquals("1234", networkPolicy.getMetadata().getLabels().get(LabelKeys.INFRA_UUID));
@@ -94,7 +94,7 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         controller.reconcileAnyState(addressSpace);
 
         assertEquals(1, client.network().networkPolicies().list().getItems().size());
-        io.fabric8.kubernetes.api.model.networking.NetworkPolicy networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
+        io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicy networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
         assertNotNull(networkPolicy);
         assertEquals("enmasse", networkPolicy.getMetadata().getLabels().get(LabelKeys.APP));
         assertEquals("1234", networkPolicy.getMetadata().getLabels().get(LabelKeys.INFRA_UUID));
@@ -117,7 +117,7 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         controller.reconcileAnyState(addressSpace);
 
         assertEquals(1, client.network().networkPolicies().list().getItems().size());
-        io.fabric8.kubernetes.api.model.networking.NetworkPolicy networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
+        io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicy networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
         assertNotNull(networkPolicy);
         assertEquals("enmasse", networkPolicy.getMetadata().getLabels().get(LabelKeys.APP));
         assertEquals("1234", networkPolicy.getMetadata().getLabels().get(LabelKeys.INFRA_UUID));
@@ -136,7 +136,7 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         controller.reconcileAnyState(addressSpace);
 
         assertEquals(1, client.network().networkPolicies().list().getItems().size());
-        io.fabric8.kubernetes.api.model.networking.NetworkPolicy networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
+        io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicy networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
         assertNotNull(networkPolicy);
         assertThat(networkPolicy.getSpec().getPolicyTypes(), hasItem("Ingress"));
         assertEquals("label1", networkPolicy.getSpec().getIngress().get(0).getFrom().get(0).getPodSelector().getMatchLabels().get("my"));
@@ -169,7 +169,7 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         controller.reconcileAnyState(addressSpace);
 
         assertEquals(1, client.network().networkPolicies().list().getItems().size());
-        io.fabric8.kubernetes.api.model.networking.NetworkPolicy networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
+        io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicy networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
         assertNotNull(networkPolicy);
         assertThat(networkPolicy.getSpec().getPolicyTypes(), hasItem("Ingress"));
         assertEquals("label", networkPolicy.getSpec().getIngress().get(0).getFrom().get(0).getPodSelector().getMatchLabels().get("my"));

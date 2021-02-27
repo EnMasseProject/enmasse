@@ -11,14 +11,15 @@ import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.enmasse.common.model.AbstractHasMetadata;
+import io.enmasse.admin.model.v1.WithAdditionalProperties;
+import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 import io.enmasse.common.model.DefaultCustomResource;
 import io.enmasse.model.validation.AddressName;
-import io.fabric8.kubernetes.api.model.Doneable;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Version;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
-import io.sundr.builder.annotations.Inline;
 
 /**
  * An EnMasse Address.
@@ -27,18 +28,15 @@ import io.sundr.builder.annotations.Inline;
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(ObjectMeta.class)},
-        inline = @Inline(
-                type = Doneable.class,
-                prefix = "Doneable",
-                value = "done"
-                )
+        refs= {@BuildableReference(ObjectMeta.class)}
         )
 @DefaultCustomResource
 @SuppressWarnings("serial")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @AddressName
-public class Address extends AbstractHasMetadata<Address> {
+@Version(CoreCrd.VERSION)
+@Group(CoreCrd.GROUP)
+public class Address extends CustomResourceWithAdditionalProperties<AddressSpec,  AddressStatus> implements WithAdditionalProperties {
 
     public static final String KIND = "Address";
 
@@ -46,13 +44,18 @@ public class Address extends AbstractHasMetadata<Address> {
     private AddressSpec spec = new AddressSpec();
     @NotNull @Valid
     private AddressStatus status = new AddressStatus();
+    private ObjectMeta metadata = new ObjectMeta();
 
-    public Address() {
-        super(KIND, CoreCrd.API_VERSION);
-        this.getMetadata().setAnnotations(new HashMap<>());
-        this.getMetadata().setLabels(new HashMap<>());
+
+    @Override
+    public ObjectMeta getMetadata() {
+        return metadata;
     }
 
+    @Override
+    public void setMetadata(ObjectMeta metadata) {
+        this.metadata = metadata;
+    }
     public void setSpec(AddressSpec spec) {
         this.spec = spec;
     }
@@ -138,4 +141,5 @@ public class Address extends AbstractHasMetadata<Address> {
     public String getForwarderLinkName(AddressSpecForwarder forwarder) {
         return String.format("%s.%s.%s", getMetadata().getName(), forwarder.getName(), forwarder.getDirection().name());
     }
+
 }

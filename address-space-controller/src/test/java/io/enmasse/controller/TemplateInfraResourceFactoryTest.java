@@ -53,7 +53,7 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
     public void setup() {
         kubeServer.before();
         client = kubeServer.getClient();
-        client.secrets().createNew().editOrNewMetadata().withName("certs").endMetadata().addToData("tls.crt", "cert").done();
+        client.secrets().create(new SecretBuilder().editOrNewMetadata().withName("certs").endMetadata().addToData("tls.crt", "cert").build());
         AuthenticationServiceRegistry authenticationServiceRegistry = mock(AuthenticationServiceRegistry.class);
         SchemaProvider schemaProvider = mock(SchemaProvider.class);
         when(schemaProvider.getSchema()).thenReturn(mock(Schema.class));

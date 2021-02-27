@@ -11,7 +11,7 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.networking.*;
+import io.fabric8.kubernetes.api.model.networking.v1.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
 import static io.enmasse.controller.InfraConfigs.parseCurrentInfraConfig;
@@ -40,12 +40,12 @@ public class NetworkPolicyController implements Controller {
         }
 
 
-        io.fabric8.kubernetes.api.model.networking.NetworkPolicy existingPolicy = kubernetesClient.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
+        io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicy existingPolicy = kubernetesClient.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
 
         if (networkPolicy != null) {
             String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
             List<Service> services = kubernetesClient.services().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems();
-            io.fabric8.kubernetes.api.model.networking.NetworkPolicy newPolicy = createNetworkPolicy(networkPolicy, addressSpace, services);
+            io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicy newPolicy = createNetworkPolicy(networkPolicy, addressSpace, services);
             if (existingPolicy == null) {
                 kubernetesClient.network().networkPolicies().create(newPolicy);
             } else if (hasChanged(existingPolicy, newPolicy)) {
@@ -58,7 +58,7 @@ public class NetworkPolicyController implements Controller {
         return addressSpace;
     }
 
-    private boolean hasChanged(io.fabric8.kubernetes.api.model.networking.NetworkPolicy existingPolicy, io.fabric8.kubernetes.api.model.networking.NetworkPolicy newPolicy) {
+    private boolean hasChanged(io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicy existingPolicy, io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicy newPolicy) {
         if (!Objects.equals(existingPolicy.getSpec().getIngress(), newPolicy.getSpec().getIngress())) {
             return true;
         }
@@ -66,7 +66,7 @@ public class NetworkPolicyController implements Controller {
         return !Objects.equals(existingPolicy.getSpec().getEgress(), newPolicy.getSpec().getEgress());
     }
 
-    private io.fabric8.kubernetes.api.model.networking.NetworkPolicy createNetworkPolicy(NetworkPolicy networkPolicy, AddressSpace addressSpace, List<Service> items) {
+    private io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicy createNetworkPolicy(NetworkPolicy networkPolicy, AddressSpace addressSpace, List<Service> items) {
         NetworkPolicyBuilder builder = new NetworkPolicyBuilder()
                 .editOrNewMetadata()
                 .withName(KubeUtil.getNetworkPolicyName(addressSpace))

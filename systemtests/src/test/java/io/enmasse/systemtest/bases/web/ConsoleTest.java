@@ -73,6 +73,9 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.rbac.ClusterRoleBindingBuilder;
+import io.fabric8.kubernetes.api.model.rbac.ClusterRoleBuilder;
+import io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder;
 import io.fabric8.openshift.api.model.Route;
 import org.apache.qpid.proton.amqp.messaging.Modified;
 import org.apache.qpid.proton.amqp.messaging.Source;
@@ -249,7 +252,7 @@ public abstract class ConsoleTest extends TestBase {
         String namespace = "test-namespace";
         UserCredentials user = Credentials.userCredentials();
         KubeCMDClient.createNamespace(namespace);
-        kubernetes.getClient().rbac().clusterRoles().createOrReplaceWithNew()
+        kubernetes.getClient().rbac().clusterRoles().createOrReplace(new ClusterRoleBuilder()
                 .editOrNewMetadata()
                 .withName(namespace)
                 .endMetadata()
@@ -259,9 +262,9 @@ public abstract class ConsoleTest extends TestBase {
                 .withVerbs("get")
                 .withResourceNames(namespace)
                 .endRule()
-                .done();
+                .build());
 
-        kubernetes.getClient().rbac().clusterRoleBindings().createOrReplaceWithNew()
+        kubernetes.getClient().rbac().clusterRoleBindings().createOrReplace(new ClusterRoleBindingBuilder()
                 .editOrNewMetadata()
                 .withName(namespace)
                 .endMetadata()
@@ -275,9 +278,9 @@ public abstract class ConsoleTest extends TestBase {
                 .withKind("ClusterRole")
                 .withName(namespace)
                 .endRoleRef()
-                .done();
+                .build());
 
-        kubernetes.getClient().rbac().roleBindings().inNamespace(namespace).createOrReplaceWithNew()
+        kubernetes.getClient().rbac().roleBindings().inNamespace(namespace).createOrReplace(new RoleBindingBuilder()
                 .editOrNewMetadata()
                 .withName("pepa-admin")
                 .withNamespace(namespace)
@@ -292,7 +295,7 @@ public abstract class ConsoleTest extends TestBase {
                 .withKind("ClusterRole")
                 .withName("enmasse.io:tenant-edit")
                 .endRoleRef()
-                .done();
+                .build());
 
         UserCredentials messagingUser = new UserCredentials("pepa", "zdepa");
         boolean success = false;

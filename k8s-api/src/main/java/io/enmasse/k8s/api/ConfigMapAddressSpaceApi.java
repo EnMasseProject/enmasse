@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.enmasse.address.model.AddressSpaceFluent;
 import io.fabric8.kubernetes.api.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.common.model.AbstractHasMetadataFluent.MetadataNested;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.k8s.api.cache.CacheWatcher;
@@ -187,14 +187,17 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put(LabelKeys.TYPE, "address-space");
         labels.put(LabelKeys.NAMESPACE, namespace);
-        client.configMaps().withLabels(labels).withPropagationPolicy("Background").delete();
+        client.configMaps().withLabels(labels).list().getItems().forEach(i -> {
+            client.resource(i).withPropagationPolicy(DeletionPropagation.BACKGROUND).delete();
+        });
+
     }
 
     private AddressSpace getAddressSpaceFromConfig(ConfigMap map) {
         try {
             AddressSpace addressSpace = mapper.readValue(map.getData().get("config.json"), AddressSpace.class);
             AddressSpaceBuilder builder = new AddressSpaceBuilder(addressSpace);
-            MetadataNested<AddressSpaceBuilder> metadataBuilder = builder.editOrNewMetadata();
+            AddressSpaceFluent.MetadataNested<AddressSpaceBuilder> metadataBuilder = builder.editOrNewMetadata();
 
             if (addressSpace.getMetadata().getUid() == null) {
                 metadataBuilder.withUid(map.getMetadata().getUid());

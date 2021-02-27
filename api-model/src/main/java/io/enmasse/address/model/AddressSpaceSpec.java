@@ -17,21 +17,14 @@ import com.fasterxml.jackson.annotation.Nulls;
 
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.enmasse.admin.model.v1.NetworkPolicy;
-import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
-import io.sundr.builder.annotations.Inline;
 
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(AbstractWithAdditionalProperties.class)},
-        inline = @Inline(
-                type = Doneable.class,
-                prefix = "Doneable",
-                value = "done"
-                )
+        refs= {@BuildableReference(AbstractWithAdditionalProperties.class)}
         )
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class AddressSpaceSpec extends AbstractWithAdditionalProperties {
@@ -47,7 +40,7 @@ public class AddressSpaceSpec extends AbstractWithAdditionalProperties {
     @Valid
     private AuthenticationService authenticationService;
 
-    private List<@Valid AddressSpaceSpecConnector> connectors;
+    private List<@Valid AddressSpaceSpecConnector> connectors = Collections.emptyList();
 
     public AddressSpaceSpec() {
     }
@@ -93,7 +86,7 @@ public class AddressSpaceSpec extends AbstractWithAdditionalProperties {
     }
 
     public List<AddressSpaceSpecConnector> getConnectors() {
-        return connectors;
+        return Collections.unmodifiableList(connectors);
     }
 
     public void setConnectors(List<AddressSpaceSpecConnector> connectors) {
@@ -104,8 +97,7 @@ public class AddressSpaceSpec extends AbstractWithAdditionalProperties {
     public String toString() {
         final StringBuilder sb = new StringBuilder("{");
 
-        sb
-                .append("type=").append(type).append(",")
+        sb.append("type=").append(type).append(",")
                 .append("plan=").append(plan).append(",")
                 .append("authenticationService=").append(authenticationService).append(",")
                 .append("endpoints=").append(endpoints).append(",")

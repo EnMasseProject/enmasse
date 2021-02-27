@@ -8,9 +8,9 @@ package io.enmasse.model.validation;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-import io.enmasse.common.model.AbstractHasMetadata;
+import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 
-public class HasMetadataValidator implements ConstraintValidator<HasMetadata, AbstractHasMetadata<?>> {
+public class HasMetadataValidator implements ConstraintValidator<HasMetadata, CustomResourceWithAdditionalProperties<?, ?>> {
 
     private boolean needsNamespace;
     private boolean needsName;
@@ -22,7 +22,7 @@ public class HasMetadataValidator implements ConstraintValidator<HasMetadata, Ab
     }
 
     @Override
-    public boolean isValid(final AbstractHasMetadata<?> value, final ConstraintValidatorContext context) {
+    public boolean isValid(final CustomResourceWithAdditionalProperties<?, ?> value, final ConstraintValidatorContext context) {
 
         if (value == null) {
             return true;

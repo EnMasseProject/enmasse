@@ -8,33 +8,39 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import io.enmasse.common.model.AbstractHasMetadata;
+import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 import io.enmasse.common.model.DefaultCustomResource;
-import io.fabric8.kubernetes.api.model.Doneable;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Version;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
-import io.sundr.builder.annotations.Inline;
 
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {
-                @BuildableReference(AbstractHasMetadataWithAdditionalProperties.class),
-                @BuildableReference(AbstractHasMetadata.class)
-        },
-        inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
+        refs = {@BuildableReference(ObjectMeta.class)}
 )
 @DefaultCustomResource
 @SuppressWarnings("serial")
-public class StandardInfraConfig extends AbstractHasMetadataWithAdditionalProperties<StandardInfraConfig> implements InfraConfig {
+@Version(AdminCrd.VERSION_V1BETA1)
+@Group(AdminCrd.GROUP)
+public class StandardInfraConfig extends CustomResourceWithAdditionalProperties<StandardInfraConfigSpec, StandardInfraConfigStatus> implements WithAdditionalProperties, InfraConfig {
 
     public static final String KIND = "StandardInfraConfig";
 
     private StandardInfraConfigSpec spec = new StandardInfraConfigSpec();
+    private ObjectMeta metadata; // for builder
 
-    public StandardInfraConfig() {
-        super(KIND, AdminCrd.API_VERSION_V1BETA1);
+    @Override
+    public ObjectMeta getMetadata() {
+        return metadata;
+    }
+
+    @Override
+    public void setMetadata(ObjectMeta metadata) {
+        this.metadata = metadata;
     }
 
     public void setSpec(StandardInfraConfigSpec spec) {
@@ -83,4 +89,5 @@ public class StandardInfraConfig extends AbstractHasMetadataWithAdditionalProper
     public boolean getUpdatePersistentVolumeClaim() {
         return spec.getBroker().getUpdatePersistentVolumeClaim() != null ? spec.getBroker().getUpdatePersistentVolumeClaim() : false;
     }
+
 }

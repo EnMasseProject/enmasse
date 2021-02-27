@@ -10,10 +10,8 @@ import io.enmasse.address.model.Phase;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
-import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
-import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.enmasse.user.model.v1.UserBuilder;
@@ -26,32 +24,31 @@ import java.util.regex.Pattern;
 
 public class UserUtils {
     private static Logger log = CustomLogger.getLogger();
-    public static DoneableUser createUserResource(UserCredentials cred) {
-        return new DoneableUser(new UserBuilder()
+    public static UserBuilder createUserResource(UserCredentials cred) {
+        return new UserBuilder()
                 .withNewSpec()
                 .withUsername(cred.getUsername())
                 .withNewAuthentication()
                 .withPassword(passwordToBase64(cred.getPassword()))
                 .withType(UserAuthenticationType.password)
                 .endAuthentication()
-                .endSpec()
-                .build());
+                .endSpec();
     }
 
     public static JsonObject userToJson(String addressspace, User user) throws Exception {
-        return new JsonObject(new ObjectMapper().writeValueAsString(new DoneableUser(user)
+        return new JsonObject(new ObjectMapper().writeValueAsString(new UserBuilder(user)
                 .editMetadata()
                 .withName(String.format("%s.%s", addressspace, Pattern.compile(".*:").matcher(user.getSpec().getUsername()).replaceAll("")))
                 .endMetadata()
-                .done()));
+                .build()));
     }
 
     public static JsonObject userToJson(String addressspace, String metaUserName, User user) throws Exception {
-        return new JsonObject(new ObjectMapper().writeValueAsString(new DoneableUser(user)
+        return new JsonObject(new ObjectMapper().writeValueAsString(new UserBuilder(user)
                 .editMetadata()
                 .withName(String.format("%s.%s", addressspace, Pattern.compile(".*:").matcher(metaUserName).replaceAll("")))
                 .endMetadata()
-                .done()));
+                .build()));
     }
 
     public static User waitForUserActive(User user, TimeoutBudget budget) throws Exception {

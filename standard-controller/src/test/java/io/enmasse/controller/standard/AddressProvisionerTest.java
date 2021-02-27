@@ -332,7 +332,7 @@ public class AddressProvisionerTest {
 
     private BrokerCluster createCluster(String clusterId, int replicas) {
         KubernetesListBuilder builder = new KubernetesListBuilder();
-        builder.addToStatefulSetItems(new StatefulSetBuilder()
+        builder.addToItems(new StatefulSetBuilder()
                 .editOrNewMetadata()
                 .withName(clusterId)
                 .endMetadata()

@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import io.enmasse.user.model.v1.UserBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -34,7 +35,6 @@ import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.UserUtils;
-import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
@@ -78,7 +78,7 @@ public class UserApiTest extends TestBase implements ITestSharedStandard {
                                 .withAddresses(queue.getSpec().getAddress())
                                 .withOperations(Operation.send).build()))
                 .endSpec()
-                .done();
+                .build();
 
         users.put(getSharedAddressSpace(), testUser);
         testUser = resourcesManager.createOrUpdateUser(getSharedAddressSpace(), testUser);
@@ -87,13 +87,13 @@ public class UserApiTest extends TestBase implements ITestSharedStandard {
         client.getConnectOptions().setCredentials(cred);
         assertThat(client.sendMessages(queue.getSpec().getAddress(), Arrays.asList("kuk", "puk")).get(1, TimeUnit.MINUTES), is(2));
 
-        testUser = new DoneableUser(testUser)
+        testUser = new UserBuilder(testUser)
                 .editSpec()
                 .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
                         .withAddresses(queue.getSpec().getAddress())
                         .withOperations(Operation.recv).build()))
                 .endSpec()
-                .done();
+                .build();
 
         resourcesManager.createOrUpdateUser(getSharedAddressSpace(), testUser);
         Throwable exception = assertThrows(ExecutionException.class,

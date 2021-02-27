@@ -9,12 +9,12 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 import io.enmasse.address.model.KubeUtil;
-import io.enmasse.common.model.AbstractHasMetadata;
+import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 
-public class KubeMetadataNameValidator implements ConstraintValidator<KubeMetadataName, AbstractHasMetadata<?>> {
+public class KubeMetadataNameValidator implements ConstraintValidator<KubeMetadataName, CustomResourceWithAdditionalProperties<?, ?>> {
 
     @Override
-    public boolean isValid(AbstractHasMetadata<?> value, ConstraintValidatorContext context) {
+    public boolean isValid(CustomResourceWithAdditionalProperties<?, ?> value, ConstraintValidatorContext context) {
 
         if (value == null) {
             return true;

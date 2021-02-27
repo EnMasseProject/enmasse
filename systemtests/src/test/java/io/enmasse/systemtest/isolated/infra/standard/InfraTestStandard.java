@@ -8,7 +8,6 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
@@ -305,7 +304,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .build();
         resourcesManager.createAddressSpacePlan(exampleSpacePlan);
 
-        exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
+        exampleAddressSpace = new AddressSpaceBuilder(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().build();
         isolatedResourcesManager.replaceAddressSpace(exampleAddressSpace);
 
         if (!updatePersistentVolumeClaim) {
@@ -442,7 +441,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .build();
         resourcesManager.createAddressSpacePlan(spacePlanWithOutPdb);
 
-        exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(spacePlanWithOutPdb.getMetadata().getName()).endSpec().done();
+        exampleAddressSpace = new AddressSpaceBuilder(exampleAddressSpace).editSpec().withPlan(spacePlanWithOutPdb.getMetadata().getName()).endSpec().build();
         isolatedResourcesManager.replaceAddressSpace(exampleAddressSpace);
 
         String pdbRouterName = getRouterPdbName();

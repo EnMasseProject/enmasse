@@ -151,7 +151,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         if (standardInfraConfig.getSpec().getRouter() != null) {
             // Workaround since parameterized integer fields cannot be loaded locally by fabric8 kubernetes-client
             for (HasMetadata item : items) {
-                if (item instanceof StatefulSet && "qdrouterd".equals(item.getMetadata().getLabels().get(LabelKeys.NAME))) {
+                if (item instanceof StatefulSet && item.getMetadata().getLabels() != null && "qdrouterd".equals(item.getMetadata().getLabels().get(LabelKeys.NAME))) {
                     StatefulSet router = (StatefulSet) item;
                     if (standardInfraConfig.getSpec().getRouter().getMinReplicas() != null) {
                         router.getSpec().setReplicas(standardInfraConfig.getSpec().getRouter().getMinReplicas());

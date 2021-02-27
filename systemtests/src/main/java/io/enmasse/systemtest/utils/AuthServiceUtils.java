@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
-import io.enmasse.admin.model.v1.DoneableAuthenticationService;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.api.model.SecretReference;
 import io.vertx.core.json.JsonObject;
@@ -21,7 +20,7 @@ import java.util.Map;
 public class AuthServiceUtils {
 
     public static AuthenticationService createNoneAuthServiceObject(String name) {
-        return createAuthService(name, AuthenticationServiceType.none).done();
+        return createAuthService(name, AuthenticationServiceType.none).build();
     }
 
     public static AuthenticationService createStandardAuthServiceObject(String name, boolean persistent) {
@@ -29,14 +28,14 @@ public class AuthServiceUtils {
     }
 
     public static AuthenticationService createStandardAuthServiceObject(String name, String host, int port, String type, String database, String credentialsSecret) {
-        return new DoneableAuthenticationService(createStandardAuthServiceObject(name, false, "5Gi", true, name))
+        return new AuthenticationServiceBuilder(createStandardAuthServiceObject(name, false, "5Gi", true, name))
                 .editSpec()
                 .editStandard()
                 .addToAdditionalProperties("datasource",
                         createDatasource(host, port, type, database, credentialsSecret))
                 .endStandard()
                 .endSpec()
-                .done();
+                .build();
     }
 
     public static AuthenticationService createStandardAuthServiceObject(String name, boolean persistent, String volumeSize, boolean deleteClaim, String claimName) {
@@ -47,7 +46,7 @@ public class AuthServiceUtils {
                 .addToAdditionalProperties("resources", createResources("3Gi", "3Gi"))
                 .endStandard()
                 .endSpec()
-                .done();
+                .build();
     }
 
     public static AuthenticationService createStandardAuthServiceObject(String name, boolean persistent, String volumeSize, String memory, boolean deleteClaim, String claimName) {
@@ -58,7 +57,7 @@ public class AuthServiceUtils {
                 .addToAdditionalProperties("resources", createResources(memory, memory))
                 .endStandard()
                 .endSpec()
-                .done();
+                .build();
     }
 
     public static AuthenticationService createExternalAuthServiceObject(String name, String host, int port, String realm, SecretReference caCertSecret, SecretReference clientCertSecret) {
@@ -73,19 +72,18 @@ public class AuthServiceUtils {
             .addToAdditionalProperties("clientCertSecret", clientCertSecret)
             .endExternal()
             .endSpec()
-            .done();
+            .build();
     }
 
-    private static DoneableAuthenticationService createAuthService(String name, AuthenticationServiceType type) {
-        return new DoneableAuthenticationService(new AuthenticationServiceBuilder()
+    private static AuthenticationServiceBuilder createAuthService(String name, AuthenticationServiceType type) {
+        return new AuthenticationServiceBuilder()
                 .withNewMetadata()
                 .withName(name)
                 .withNamespace(Kubernetes.getInstance().getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(type)
-                .endSpec()
-                .build());
+                .endSpec();
     }
 
     private static Map<String, String> createStorage(boolean persistent, String size, boolean deleteClaim, String claimName) {

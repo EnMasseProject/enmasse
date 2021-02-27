@@ -16,7 +16,7 @@ public class BrokerClusterTest {
     @Test
     public void testPvcStaysTheSameIfNotChanged() throws Exception {
         BrokerCluster oldCluster = new BrokerCluster("broker", new KubernetesListBuilder()
-                .addToStatefulSetItems(new StatefulSetBuilder()
+                .addToItems(new StatefulSetBuilder()
                         .editOrNewMetadata()
                         .withName("broker")
                         .endMetadata()
@@ -60,14 +60,14 @@ public class BrokerClusterTest {
             }
         }
 
-        assertEquals("2Gi", newBroker.getSpec().getVolumeClaimTemplates().get(0).getSpec().getResources().getRequests().get("storage").getAmount());
-        assertEquals("2Gi", newClaim.getSpec().getResources().getRequests().get("storage").getAmount());
+        assertEquals(new Quantity("2Gi"), newBroker.getSpec().getVolumeClaimTemplates().get(0).getSpec().getResources().getRequests().get("storage"));
+        assertEquals(new Quantity("2Gi"), newClaim.getSpec().getResources().getRequests().get("storage"));
     }
 
     @Test
     public void testPvcIsModifiedStatefulStaysTheSameIfModified() throws Exception {
         BrokerCluster oldCluster = new BrokerCluster("broker", new KubernetesListBuilder()
-                .addToStatefulSetItems(new StatefulSetBuilder()
+                .addToItems(new StatefulSetBuilder()
                         .editOrNewMetadata()
                         .withName("broker")
                         .endMetadata()
@@ -100,7 +100,7 @@ public class BrokerClusterTest {
                 .build());
 
         BrokerCluster newCluster = new BrokerCluster("broker", new KubernetesListBuilder()
-                .addToStatefulSetItems(new StatefulSetBuilder()
+                .addToItems(new StatefulSetBuilder()
                         .editOrNewMetadata()
                         .withName("broker")
                         .endMetadata()
@@ -135,7 +135,7 @@ public class BrokerClusterTest {
 
         assertNotNull(newClaim);
         assertNotNull(newBroker);
-        assertEquals("2Gi", newBroker.getSpec().getVolumeClaimTemplates().get(0).getSpec().getResources().getRequests().get("storage").getAmount());
-        assertEquals("5Gi", newClaim.getSpec().getResources().getRequests().get("storage").getAmount());
+        assertEquals(new Quantity("2Gi"), newBroker.getSpec().getVolumeClaimTemplates().get(0).getSpec().getResources().getRequests().get("storage"));
+        assertEquals(new Quantity("5Gi"), newClaim.getSpec().getResources().getRequests().get("storage"));
     }
 }

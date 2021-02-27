@@ -119,7 +119,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                 .withAuthorization(
                         Collections.singletonList(new UserAuthorizationBuilder().withAddresses("*").withOperations(Operation.send).build()))
                 .endSpec()
-                .done());
+                .build());
         Thread.sleep(100);
         assertSend(allowedUser);
         resourcesManager.removeUser(getSharedAddressSpace(), allowedUser.getUsername());
@@ -131,12 +131,12 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                                 .withAddresses(addresses.stream().map(address -> address.getSpec().getAddress()).collect(Collectors.toList()))
                                 .withOperations(Operation.send).build()))
                 .endSpec()
-                .done());
+                .build());
         Thread.sleep(100);
         assertSend(allowedUser);
         resourcesManager.removeUser(getSharedAddressSpace(), allowedUser.getUsername());
 
-        resourcesManager.createOrUpdateUser(getSharedAddressSpace(), UserUtils.createUserResource(noAllowedUser).done());
+        resourcesManager.createOrUpdateUser(getSharedAddressSpace(), UserUtils.createUserResource(noAllowedUser).build());
         assertCannotSend(noAllowedUser);
         resourcesManager.removeUser(getSharedAddressSpace(), noAllowedUser.getUsername());
 
@@ -147,7 +147,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                                 .withAddresses("*")
                                 .withOperations(Operation.recv).build()))
                 .endSpec()
-                .done());
+                .build());
         assertCannotSend(noAllowedUser);
         resourcesManager.removeUser(getSharedAddressSpace(), noAllowedUser.getUsername());
     }
@@ -162,7 +162,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                 .withAuthorization(
                         Collections.singletonList(new UserAuthorizationBuilder().withAddresses("*").withOperations(Operation.recv).build()))
                 .endSpec()
-                .done());
+                .build());
         assertReceive(allowedUser);
         resourcesManager.removeUser(getSharedAddressSpace(), allowedUser.getUsername());
 
@@ -173,7 +173,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                                 .withAddresses(addresses.stream().map(address -> address.getSpec().getAddress()).collect(Collectors.toList()))
                                 .withOperations(Operation.recv).build()))
                 .endSpec()
-                .done());
+                .build());
         assertReceive(allowedUser);
         resourcesManager.removeUser(getSharedAddressSpace(), allowedUser.getUsername());
 
@@ -184,7 +184,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                                 .withAddresses("*")
                                 .withOperations(Operation.send).build()))
                 .endSpec()
-                .done());
+                .build());
         assertCannotReceive(noAllowedUser);
         resourcesManager.removeUser(getSharedAddressSpace(), noAllowedUser.getUsername());
     }
@@ -200,7 +200,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                                 .withOperations(Operation.recv)
                                 .withAddresses("*").build()))
                 .endSpec()
-                .done());
+                .build());
         assertReceive(user);
         resourcesManager.removeUser(getSharedAddressSpace(), user.getUsername());
         Thread.sleep(5000);
@@ -212,7 +212,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                                 .withOperations(Operation.recv)
                                 .withAddresses("pepa_address").build()))
                 .endSpec()
-                .done());
+                .build());
         assertCannotReceive(user);
         resourcesManager.removeUser(getSharedAddressSpace(), user.getUsername());
     }
@@ -475,7 +475,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                         .withOperations(operation)
                         .build()))
                 .endSpec()
-                .done());
+                .build());
 
         users.add(UserUtils.createUserResource(new UserCredentials("user2", "password"))
                 .editSpec()
@@ -484,7 +484,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                         .withOperations(operation)
                         .build()))
                 .endSpec()
-                .done());
+                .build());
 
         users.add(UserUtils.createUserResource(new UserCredentials("user3", "password"))
                 .editSpec()
@@ -493,7 +493,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                         .withOperations(operation)
                         .build()))
                 .endSpec()
-                .done());
+                .build());
 
         users.add(UserUtils.createUserResource(new UserCredentials("user4", "password"))
                 .editSpec()
@@ -502,7 +502,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                         .withOperations(operation)
                         .build()))
                 .endSpec()
-                .done());
+                .build());
 
         users.add(UserUtils.createUserResource(new UserCredentials("user5", "password"))
                 .editSpec()
@@ -511,7 +511,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                         .withOperations(operation)
                         .build()))
                 .endSpec()
-                .done());
+                .build());
 
         for (User user : users) {
             resourcesManager.createOrUpdateUser(addressSpace, user);

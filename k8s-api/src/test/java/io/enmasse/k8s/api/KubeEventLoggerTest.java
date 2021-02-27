@@ -4,7 +4,6 @@
  */
 package io.enmasse.k8s.api;
 
-import io.fabric8.kubernetes.api.model.DoneableEvent;
 import io.fabric8.kubernetes.api.model.Event;
 import io.fabric8.kubernetes.api.model.EventList;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -47,8 +46,8 @@ public class KubeEventLoggerTest {
         String message = "it crashed";
 
         KubernetesClient mockClient = mock(KubernetesClient.class);
-        MixedOperation<Event, EventList, DoneableEvent, Resource<Event, DoneableEvent>> eventOperation = mock(MixedOperation.class);
-        Resource<Event, DoneableEvent> eventResource = mock(Resource.class);
+        MixedOperation<Event, EventList, Resource<Event>> eventOperation = mock(MixedOperation.class);
+        Resource<Event> eventResource = mock(Resource.class);
 
         when(mockClient.events()).thenReturn(eventOperation);
         when(eventOperation.inNamespace(any())).thenReturn(eventOperation);
