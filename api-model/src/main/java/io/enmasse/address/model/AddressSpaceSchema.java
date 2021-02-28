@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(CustomResourceWithAdditionalProperties.class)}
+        refs= {@BuildableReference(ObjectMeta.class)}
 
 )
 @DefaultCustomResource

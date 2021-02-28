@@ -4,34 +4,11 @@
  */
 package io.enmasse.address.model;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import io.enmasse.common.model.AbstractList;
 import io.enmasse.common.model.DefaultCustomResource;
+import io.fabric8.kubernetes.client.CustomResourceList;
 
 @DefaultCustomResource
 @SuppressWarnings("serial")
-public class AddressSpaceSchemaList extends AbstractList<AddressSpaceSchema> {
-
+public class AddressSpaceSchemaList extends CustomResourceList<AddressSpaceSchema> {
     public static final String KIND = "AddressSpaceSchemaList";
-
-    public AddressSpaceSchemaList() {
-        super(KIND, CoreCrd.API_VERSION);
-    }
-
-    public static AddressSpaceSchemaList fromSchema(final Schema schema) {
-        if (schema == null) {
-            return null;
-        }
-
-        final AddressSpaceSchemaList list = new AddressSpaceSchemaList();
-        final List<AddressSpaceSchema> items = schema.getAddressSpaceTypes().stream()
-                .map(type -> AddressSpaceSchema.fromAddressSpaceType(type, schema.getAuthenticationServices()))
-                .collect(Collectors.toList());
-
-        list.setItems(items);
-
-        return list;
-    }
 }

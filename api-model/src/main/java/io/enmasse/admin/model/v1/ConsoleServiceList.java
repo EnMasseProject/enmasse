@@ -4,16 +4,12 @@
  */
 package io.enmasse.admin.model.v1;
 
-import io.enmasse.common.model.AbstractList;
 import io.enmasse.common.model.DefaultCustomResource;
+import io.fabric8.kubernetes.client.CustomResourceList;
 
 @DefaultCustomResource
 @SuppressWarnings("serial")
-public class ConsoleServiceList extends AbstractList<ConsoleService> {
+public class ConsoleServiceList extends CustomResourceList<ConsoleService> {
 
     public static final String KIND = "ConsoleServiceList";
-
-    public ConsoleServiceList() {
-        super(KIND, AdminCrd.API_VERSION_V1BETA1);
-    }
 }

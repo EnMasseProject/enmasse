@@ -4,17 +4,12 @@
  */
 package io.enmasse.admin.model.v1;
 
-import io.enmasse.common.model.AbstractList;
 import io.enmasse.common.model.DefaultCustomResource;
+import io.fabric8.kubernetes.client.CustomResourceList;
 
 @DefaultCustomResource
 @SuppressWarnings("serial")
-public class AddressPlanList extends AbstractList<AddressPlan> {
+public class AddressPlanList extends CustomResourceList<AddressPlan> {
 
     public static final String KIND = "AddressPlanList";
-
-    public AddressPlanList() {
-        super(KIND, AdminCrd.API_VERSION_V1BETA2);
-    }
-
 }

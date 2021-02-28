@@ -17,11 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import javax.validation.ValidationException;
 
@@ -60,7 +56,7 @@ public class SerializationTest {
     @Test
     public void testSerializeAddress() throws IOException {
         String uuid = UUID.randomUUID().toString();
-        Address address = new AddressBuilder()
+        Address address = new AddressBuilder    ()
                 .withNewMetadata()
                 .withNamespace("ns")
                 .withName("as1.a1")
@@ -133,7 +129,8 @@ public class SerializationTest {
                 .build();
 
 
-        AddressList list = new AddressList(Sets.newSet(addr1, addr2));
+        AddressList list = new AddressList();
+        list.setItems(List.of(addr1, addr2));
 
         ObjectMapper mapper = new ObjectMapper();
         String serialized = mapper.writeValueAsString(list);
@@ -146,7 +143,7 @@ public class SerializationTest {
     @Test
     public void testSerializeEmptyAddressList() throws IOException {
 
-        AddressList list = new AddressList(Collections.emptySet());
+        AddressList list = new AddressList();
 
         ObjectMapper mapper = new ObjectMapper();
 

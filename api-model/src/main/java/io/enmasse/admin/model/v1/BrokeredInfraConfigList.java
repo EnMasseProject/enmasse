@@ -4,16 +4,12 @@
  */
 package io.enmasse.admin.model.v1;
 
-import io.enmasse.common.model.AbstractList;
 import io.enmasse.common.model.DefaultCustomResource;
+import io.fabric8.kubernetes.client.CustomResourceList;
 
 @DefaultCustomResource
 @SuppressWarnings("serial")
-public class BrokeredInfraConfigList extends AbstractList<BrokeredInfraConfig> {
+public class BrokeredInfraConfigList extends CustomResourceList<BrokeredInfraConfig> {
 
     public static final String KIND = "BrokeredInfraConfigList";
-
-    public BrokeredInfraConfigList() {
-        super(KIND, AdminCrd.API_VERSION_V1BETA1);
-    }
 }
