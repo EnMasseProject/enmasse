@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.enmasse.admin.model.v1.WithAdditionalProperties;
 import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 import io.enmasse.common.model.DefaultCustomResource;
+import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
@@ -26,8 +27,7 @@ import io.sundr.builder.annotations.Buildable;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Version(UserCrd.VERSION)
 @Group(UserCrd.GROUP)
-
-public class User extends CustomResourceWithAdditionalProperties<UserSpec, UserStatus> implements WithAdditionalProperties {
+public class User extends CustomResourceWithAdditionalProperties<UserSpec, UserStatus> implements WithAdditionalProperties, Namespaced {
 
     private static final Pattern NAME_PATTERN = Pattern.compile("^[a-z]+([a-z0-9\\-]*[a-z0-9]+|[a-z0-9]*)\\.[a-z0-9]+([a-z0-9@.\\-]*[a-z0-9]+|[a-z0-9]*)$");
 

@@ -16,6 +16,7 @@ import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 import io.enmasse.common.model.DefaultCustomResource;
 import io.enmasse.model.validation.AddressSpaceName;
 import io.enmasse.model.validation.KubeMetadataName;
+import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
@@ -39,7 +40,7 @@ import io.sundr.builder.annotations.BuildableReference;
 @Version(AdminCrd.VERSION_V1BETA2)
 @Group(AdminCrd.GROUP)
 
-public class AddressSpace extends CustomResourceWithAdditionalProperties<AddressSpaceSpec,  AddressSpaceStatus> implements WithAdditionalProperties {
+public class AddressSpace extends CustomResourceWithAdditionalProperties<AddressSpaceSpec,  AddressSpaceStatus> implements WithAdditionalProperties, Namespaced {
 
     public static final String KIND = "AddressSpace";
 

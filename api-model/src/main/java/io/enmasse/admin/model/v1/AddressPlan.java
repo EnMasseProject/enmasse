@@ -10,6 +10,7 @@ import io.enmasse.address.model.MessageRedelivery;
 import io.enmasse.address.model.MessageTtl;
 import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 import io.enmasse.common.model.DefaultCustomResource;
+import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
@@ -30,7 +31,7 @@ import java.util.Objects;
 @Version(AdminCrd.VERSION_V1BETA2)
 @Group(AdminCrd.GROUP)
 
-public class AddressPlan extends CustomResourceWithAdditionalProperties<AddressPlanSpec, AddressPlanStatus> implements WithAdditionalProperties, io.enmasse.admin.model.AddressPlan {
+public class AddressPlan extends CustomResourceWithAdditionalProperties<AddressPlanSpec, AddressPlanStatus> implements WithAdditionalProperties, io.enmasse.admin.model.AddressPlan, Namespaced {
 
     public static final String KIND = "AddressPlan";
 

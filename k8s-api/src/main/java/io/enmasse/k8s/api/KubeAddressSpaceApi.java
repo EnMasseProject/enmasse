@@ -23,7 +23,6 @@ import io.enmasse.k8s.api.cache.ListOptions;
 import io.enmasse.k8s.api.cache.ListerWatcher;
 import io.enmasse.k8s.api.cache.Reflector;
 import io.enmasse.k8s.api.cache.WorkQueue;
-import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.RequestConfig;
@@ -36,16 +35,16 @@ public class KubeAddressSpaceApi implements AddressSpaceApi, ListerWatcher<Addre
     private final NamespacedKubernetesClient kubernetesClient;
     private final MixedOperation<AddressSpace, AddressSpaceList, Resource<AddressSpace>> client;
     private final String namespace;
-    private final CustomResourceDefinition customResourceDefinition;
+    private final CustomResourceDefinitionContext customResourceDefinitionContext;
     private final WorkQueue<AddressSpace> cache = new EventCache<>(new HasMetadataFieldExtractor<>());
     private final String version;
 
-    private KubeAddressSpaceApi(NamespacedKubernetesClient kubeClient, String namespace, CustomResourceDefinition customResourceDefinition, String version) {
+    private KubeAddressSpaceApi(NamespacedKubernetesClient kubeClient, String namespace, CustomResourceDefinitionContext customResourceDefinitionContext, String version) {
         this.kubernetesClient = kubeClient;
         this.namespace = namespace;
         this.version = version;
-        this.client = kubeClient.customResources(CustomResourceDefinitionContext.fromCrd(customResourceDefinition), AddressSpace.class, AddressSpaceList.class);
-        this.customResourceDefinition = customResourceDefinition;
+        this.client = kubeClient.customResources(customResourceDefinitionContext, AddressSpace.class, AddressSpaceList.class);
+        this.customResourceDefinitionContext = customResourceDefinitionContext;
     }
 
     public static AddressSpaceApi create(NamespacedKubernetesClient kubernetesClient, String namespace, String version) {
@@ -166,12 +165,12 @@ public class KubeAddressSpaceApi implements AddressSpaceApi, ListerWatcher<Addre
                 .withRequestTimeout(listOptions.getTimeoutSeconds())
                 .build();
         if (namespace != null) {
-            return kubernetesClient.withRequestConfig(requestConfig).call(c -> c.customResources(CustomResourceDefinitionContext.fromCrd(customResourceDefinition), AddressSpace.class, AddressSpaceList.class)
+            return kubernetesClient.withRequestConfig(requestConfig).call(c -> c.customResources(this.customResourceDefinitionContext, AddressSpace.class, AddressSpaceList.class)
                     .inNamespace(namespace)
                     .withResourceVersion(listOptions.getResourceVersion())
                     .watch(watcher));
         } else {
-            return kubernetesClient.withRequestConfig(requestConfig).call(c -> c.customResources(CustomResourceDefinitionContext.fromCrd(customResourceDefinition), AddressSpace.class, AddressSpaceList.class)
+            return kubernetesClient.withRequestConfig(requestConfig).call(c -> c.customResources(this.customResourceDefinitionContext, AddressSpace.class, AddressSpaceList.class)
                     .inAnyNamespace()
                     .withResourceVersion(listOptions.getResourceVersion())
                     .watch(watcher));

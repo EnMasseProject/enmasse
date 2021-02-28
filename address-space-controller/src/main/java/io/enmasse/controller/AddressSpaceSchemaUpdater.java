@@ -14,7 +14,6 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +22,7 @@ public class AddressSpaceSchemaUpdater implements SchemaListener {
 
     private final MixedOperation<AddressSpaceSchema, AddressSpaceSchemaList, Resource<AddressSpaceSchema>> client;
     public AddressSpaceSchemaUpdater(KubernetesClient kubernetesClient) {
-        this.client = kubernetesClient.customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.addresseSpaceSchemas()), AddressSpaceSchema.class, AddressSpaceSchemaList.class);
+        this.client = kubernetesClient.customResources(CoreCrd.addressSpaceSchemas(), AddressSpaceSchema.class, AddressSpaceSchemaList.class);
     }
 
     @Override

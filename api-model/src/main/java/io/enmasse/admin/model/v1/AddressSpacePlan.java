@@ -7,6 +7,7 @@ package io.enmasse.admin.model.v1;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 import io.enmasse.common.model.DefaultCustomResource;
+import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
@@ -27,7 +28,7 @@ import java.util.Objects;
 @SuppressWarnings("serial")
 @Version(AdminCrd.VERSION_V1BETA2)
 @Group(AdminCrd.GROUP)
-public class AddressSpacePlan extends CustomResourceWithAdditionalProperties<AddressSpacePlanSpec, AddressSpacePlanStatus> implements WithAdditionalProperties, io.enmasse.admin.model.AddressSpacePlan {
+public class AddressSpacePlan extends CustomResourceWithAdditionalProperties<AddressSpacePlanSpec, AddressSpacePlanStatus> implements WithAdditionalProperties, io.enmasse.admin.model.AddressSpacePlan, Namespaced {
 
     public static final String KIND = "AddressSpacePlan";
 

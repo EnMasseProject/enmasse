@@ -26,7 +26,7 @@ public class MessagingUserFinalizerController extends AbstractFinalizerControlle
     private final MixedOperation<User, UserList, Resource<User>> userClient;
 
     public MessagingUserFinalizerController(NamespacedKubernetesClient client) {
-        this(client.customResources(CustomResourceDefinitionContext.fromCrd(UserCrd.messagingUser()), User.class, UserList.class));
+        this(client.customResources(UserCrd.messagingUser(), User.class, UserList.class));
     }
 
     MessagingUserFinalizerController(MixedOperation<User, UserList, Resource<User>> userClient) {

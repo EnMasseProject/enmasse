@@ -22,7 +22,6 @@ import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AddressSpacePlanList;
 import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.k8s.util.JULInitializingTest;
-import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 
@@ -43,13 +42,13 @@ class KubeCrdApiTest extends JULInitializingTest {
     @Test
     void testNotifiesExisting() throws Exception {
         NamespacedKubernetesClient client = kubeServer.getClient();
-        CustomResourceDefinition crd = AdminCrd.addressSpacePlans();
+        CustomResourceDefinitionContext crd = AdminCrd.addressSpacePlans();
         CrdApi<AddressSpacePlan> addressSpacePlanApi = new KubeCrdApi<>(client, client.getNamespace(), crd,
                 AddressSpacePlan.class,
                 AddressSpacePlanList.class
         );
 
-        client.customResources(CustomResourceDefinitionContext.fromCrd(crd), AddressSpacePlan.class, AddressSpacePlanList.class)
+        client.customResources(crd, AddressSpacePlan.class, AddressSpacePlanList.class)
                 .create(new AddressSpacePlanBuilder()
                 .withNewMetadata()
                 .withName("plan1")
@@ -76,7 +75,7 @@ class KubeCrdApiTest extends JULInitializingTest {
     @Test
     void testNotifiesCreated() throws Exception {
         NamespacedKubernetesClient client = kubeServer.getClient();
-        CustomResourceDefinition crd = AdminCrd.addressSpacePlans();
+        CustomResourceDefinitionContext crd = AdminCrd.addressSpacePlans();
         CrdApi<AddressSpacePlan> addressSpacePlanApi = new KubeCrdApi<>(client, client.getNamespace(), crd,
                 AddressSpacePlan.class,
                 AddressSpacePlanList.class
@@ -89,7 +88,7 @@ class KubeCrdApiTest extends JULInitializingTest {
             }
 
         }, Duration.ofSeconds(2))) {
-            client.customResources(CustomResourceDefinitionContext.fromCrd(crd), AddressSpacePlan.class, AddressSpacePlanList.class)
+            client.customResources(crd, AddressSpacePlan.class, AddressSpacePlanList.class)
                     .create(new AddressSpacePlanBuilder()
                     .withNewMetadata()
                     .withName("plan1")

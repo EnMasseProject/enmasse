@@ -49,7 +49,7 @@ public class MessagingUserFinalizerControllerTest {
         server = new KubernetesServer(false, true);
         server.before();
         client = server.getClient();
-        userClient = client.customResources(CustomResourceDefinitionContext.fromCrd(UserCrd.messagingUser()), User.class, UserList.class);
+        userClient = client.customResources(UserCrd.messagingUser(), User.class, UserList.class);
         this.controller = new MessagingUserFinalizerController(client);
     }
 

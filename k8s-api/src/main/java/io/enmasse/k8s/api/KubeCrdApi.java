@@ -17,7 +17,6 @@ import io.enmasse.k8s.api.cache.Reflector;
 import io.enmasse.k8s.api.cache.WorkQueue;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
-import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
@@ -31,14 +30,14 @@ public class KubeCrdApi<T extends HasMetadata, LT extends KubernetesResourceList
     private final Class<LT> ltClazz;
     private final CustomResourceDefinitionContext customResourceDefinitionContext;
 
-    public KubeCrdApi(NamespacedKubernetesClient client, String namespace, CustomResourceDefinition resourceDefinition,
+    public KubeCrdApi(NamespacedKubernetesClient client, String namespace, CustomResourceDefinitionContext resourceDefinitionContext,
                       Class<T> tClazz,
                       Class<LT> ltClazz) {
         this.client = client;
         this.namespace = namespace;
         this.tClazz = tClazz;
         this.ltClazz = ltClazz;
-        this.customResourceDefinitionContext = CustomResourceDefinitionContext.fromCrd(resourceDefinition);
+        this.customResourceDefinitionContext = resourceDefinitionContext;
     }
 
     @Override

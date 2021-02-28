@@ -7,6 +7,7 @@ package io.enmasse.admin.model.v1;
 
 import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 import io.enmasse.common.model.DefaultCustomResource;
+import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
@@ -26,7 +27,7 @@ import java.util.Objects;
 @Version(AdminCrd.VERSION_V1BETA1)
 @Group(AdminCrd.GROUP)
 
-public class AuthenticationService extends CustomResourceWithAdditionalProperties<AuthenticationServiceSpec, AuthenticationServiceStatus> implements WithAdditionalProperties {
+public class AuthenticationService extends CustomResourceWithAdditionalProperties<AuthenticationServiceSpec, AuthenticationServiceStatus> implements WithAdditionalProperties, Namespaced {
 
     public static final String KIND = "AuthenticationService";
 

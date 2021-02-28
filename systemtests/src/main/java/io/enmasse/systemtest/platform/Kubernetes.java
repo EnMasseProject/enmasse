@@ -38,7 +38,6 @@ import java.util.stream.Collectors;
 
 import io.enmasse.systemtest.platform.cluster.KubernetesCluster;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.slf4j.Logger;
 
@@ -79,7 +78,6 @@ import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserCrd;
 import io.enmasse.user.model.v1.UserList;
-import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
@@ -137,8 +135,8 @@ public abstract class Kubernetes {
                 instance = new OpenShift(env);
             }
             try {
-                instance.olmAvailable = instance.getCRD("clusterserviceversions.operators.coreos.com") != null
-                        && instance.getCRD("subscriptions.operators.coreos.com") != null;
+                instance.olmAvailable = instance.crdExists("clusterserviceversions.operators.coreos.com")
+                        && instance.crdExists("subscriptions.operators.coreos.com");
                 if (instance.olmAvailable) {
                     log.info("OLM is available in this cluster");
                 } else {
@@ -279,7 +277,7 @@ public abstract class Kubernetes {
 
     public MixedOperation<AddressSpace, AddressSpaceList,
             Resource<AddressSpace>> getAddressSpaceClient(String namespace) {
-        return (MixedOperation<AddressSpace, AddressSpaceList, Resource<AddressSpace>>) client.customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.addressSpaces()), AddressSpace.class, AddressSpaceList.class).inNamespace(namespace);
+        return (MixedOperation<AddressSpace, AddressSpaceList, Resource<AddressSpace>>) client.customResources(CoreCrd.addressSpaces(), AddressSpace.class, AddressSpaceList.class).inNamespace(namespace);
     }
 
     public MixedOperation<Address, AddressList, Resource<Address>> getAddressClient() {
@@ -287,7 +285,7 @@ public abstract class Kubernetes {
     }
 
     public MixedOperation<Address, AddressList, Resource<Address>> getAddressClient(String namespace) {
-        return (MixedOperation<Address, AddressList, Resource<Address>>) client.customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.addresses()), Address.class, AddressList.class).inNamespace(namespace);
+        return (MixedOperation<Address, AddressList, Resource<Address>>) client.customResources(CoreCrd.addresses(), Address.class, AddressList.class).inNamespace(namespace);
     }
 
     public MixedOperation<User, UserList, Resource<User>> getUserClient() {
@@ -296,7 +294,7 @@ public abstract class Kubernetes {
 
     public MixedOperation<User, UserList,
             Resource<User>> getUserClient(String namespace) {
-        return (MixedOperation<User, UserList, Resource<User>>) client.customResources(CustomResourceDefinitionContext.fromCrd(UserCrd.messagingUser()), User.class, UserList.class).inNamespace(namespace);
+        return (MixedOperation<User, UserList, Resource<User>>) client.customResources(UserCrd.messagingUser(), User.class, UserList.class).inNamespace(namespace);
     }
 
     public MixedOperation<AddressSpacePlan, AddressSpacePlanList,
@@ -307,7 +305,7 @@ public abstract class Kubernetes {
     public MixedOperation<AddressSpacePlan, AddressSpacePlanList,
             Resource<AddressSpacePlan>> getAddressSpacePlanClient(String namespace) {
         return (MixedOperation<AddressSpacePlan, AddressSpacePlanList,
-                Resource<AddressSpacePlan>>) client.customResources(CustomResourceDefinitionContext.fromCrd(AdminCrd.addressSpacePlans()), AddressSpacePlan.class, AddressSpacePlanList.class).inNamespace(namespace);
+                Resource<AddressSpacePlan>>) client.customResources(AdminCrd.addressSpacePlans(), AddressSpacePlan.class, AddressSpacePlanList.class).inNamespace(namespace);
     }
 
     public MixedOperation<AddressPlan, AddressPlanList,
@@ -318,7 +316,7 @@ public abstract class Kubernetes {
     public MixedOperation<AddressPlan, AddressPlanList,
             Resource<AddressPlan>> getAddressPlanClient(String namespace) {
         return (MixedOperation<AddressPlan, AddressPlanList,
-                Resource<AddressPlan>>) client.customResources(CustomResourceDefinitionContext.fromCrd(AdminCrd.addressPlans()), AddressPlan.class, AddressPlanList.class).inNamespace(namespace);
+                Resource<AddressPlan>>) client.customResources(AdminCrd.addressPlans(), AddressPlan.class, AddressPlanList.class).inNamespace(namespace);
     }
 
     public MixedOperation<BrokeredInfraConfig, BrokeredInfraConfigList,
@@ -329,7 +327,7 @@ public abstract class Kubernetes {
     public MixedOperation<BrokeredInfraConfig, BrokeredInfraConfigList,
             Resource<BrokeredInfraConfig>> getBrokeredInfraConfigClient(String namespace) {
         return (MixedOperation<BrokeredInfraConfig, BrokeredInfraConfigList,
-                Resource<BrokeredInfraConfig>>) client.customResources(CustomResourceDefinitionContext.fromCrd(AdminCrd.brokeredInfraConfigs()), BrokeredInfraConfig.class, BrokeredInfraConfigList.class).inNamespace(namespace);
+                Resource<BrokeredInfraConfig>>) client.customResources(AdminCrd.brokeredInfraConfigs(), BrokeredInfraConfig.class, BrokeredInfraConfigList.class).inNamespace(namespace);
     }
 
     public MixedOperation<StandardInfraConfig, StandardInfraConfigList,
@@ -340,7 +338,7 @@ public abstract class Kubernetes {
     public MixedOperation<StandardInfraConfig, StandardInfraConfigList,
             Resource<StandardInfraConfig>> getStandardInfraConfigClient(String namespace) {
         return (MixedOperation<StandardInfraConfig, StandardInfraConfigList,
-                Resource<StandardInfraConfig>>) client.customResources(CustomResourceDefinitionContext.fromCrd(AdminCrd.standardInfraConfigs()), StandardInfraConfig.class, StandardInfraConfigList.class).inNamespace(namespace);
+                Resource<StandardInfraConfig>>) client.customResources(AdminCrd.standardInfraConfigs(), StandardInfraConfig.class, StandardInfraConfigList.class).inNamespace(namespace);
     }
 
     public MixedOperation<AuthenticationService, AuthenticationServiceList,
@@ -351,7 +349,7 @@ public abstract class Kubernetes {
     public MixedOperation<AuthenticationService, AuthenticationServiceList,
             Resource<AuthenticationService>> getAuthenticationServiceClient(String namespace) {
         return (MixedOperation<AuthenticationService, AuthenticationServiceList,
-                Resource<AuthenticationService>>) client.customResources(CustomResourceDefinitionContext.fromCrd(AdminCrd.authenticationServices()), AuthenticationService.class, AuthenticationServiceList.class).inNamespace(namespace);
+                Resource<AuthenticationService>>) client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class).inNamespace(namespace);
     }
 
     public MixedOperation<AddressSpaceSchema, AddressSpaceSchemaList,
@@ -362,7 +360,7 @@ public abstract class Kubernetes {
     public MixedOperation<AddressSpaceSchema, AddressSpaceSchemaList,
             Resource<AddressSpaceSchema>> getSchemaClient(String namespace) {
         return (MixedOperation<AddressSpaceSchema, AddressSpaceSchemaList,
-                Resource<AddressSpaceSchema>>) client.customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.addresseSpaceSchemas()), AddressSpaceSchema.class, AddressSpaceSchemaList.class).inNamespace(namespace);
+                Resource<AddressSpaceSchema>>) client.customResources(CoreCrd.addressSpaceSchemas(), AddressSpaceSchema.class, AddressSpaceSchemaList.class).inNamespace(namespace);
     }
 
     public MixedOperation<ConsoleService, ConsoleServiceList,
@@ -373,7 +371,7 @@ public abstract class Kubernetes {
     public MixedOperation<ConsoleService, ConsoleServiceList,
             Resource<ConsoleService>> getConsoleServiceClient(String namespace) {
         return (MixedOperation<ConsoleService, ConsoleServiceList,
-                Resource<ConsoleService>>) client.customResources(CustomResourceDefinitionContext.fromCrd(AdminCrd.consoleServices()), ConsoleService.class, ConsoleServiceList.class).inNamespace(namespace);
+                Resource<ConsoleService>>) client.customResources(AdminCrd.consoleServices(), ConsoleService.class, ConsoleServiceList.class).inNamespace(namespace);
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -1123,9 +1121,12 @@ public abstract class Kubernetes {
                 .map(sec -> sec.getMetadata().getName()).collect(Collectors.toList()).contains(secret);
     }
 
-    public CustomResourceDefinition getCRD(String name) {
-        // TODO
-        return client.apiextensions().v1().customResourceDefinitions().withName(name).get();
+    public boolean crdExists(String name) {
+        if (getOcpVersion() == OpenShiftVersion.OCP3) {
+            return client.apiextensions().v1beta1().customResourceDefinitions().withName(name).get() != null;
+        } else {
+            return client.apiextensions().v1().customResourceDefinitions().withName(name).get() != null;
+        }
     }
 
     public PodDisruptionBudget getPodDisruptionBudget(String namespace, String name) {

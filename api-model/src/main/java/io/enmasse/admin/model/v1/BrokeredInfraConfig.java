@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 import io.enmasse.common.model.DefaultCustomResource;
+import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
@@ -26,7 +27,7 @@ import io.sundr.builder.annotations.BuildableReference;
 @SuppressWarnings("serial")
 @Version(AdminCrd.VERSION_V1BETA1)
 @Group(AdminCrd.GROUP)
-public class BrokeredInfraConfig extends CustomResourceWithAdditionalProperties<BrokeredInfraConfigSpec, BrokeredInfraConfigStatus> implements WithAdditionalProperties, InfraConfig {
+public class BrokeredInfraConfig extends CustomResourceWithAdditionalProperties<BrokeredInfraConfigSpec, BrokeredInfraConfigStatus> implements WithAdditionalProperties, InfraConfig, Namespaced {
 
     public static final String KIND = "BrokeredInfraConfig";
 

@@ -102,7 +102,7 @@ public class ServiceBroker extends AbstractVerticle {
     }
 
     private UserApi createUserApi() {
-        var userClient = client.customResources(CustomResourceDefinitionContext.fromCrd(UserCrd.messagingUser()), User.class, UserList.class);
+        var userClient = client.customResources(UserCrd.messagingUser(), User.class, UserList.class);
         return new UserApi() {
             @Override
             public void createOrReplace(User user) {

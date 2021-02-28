@@ -15,6 +15,7 @@ import io.enmasse.admin.model.v1.WithAdditionalProperties;
 import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 import io.enmasse.common.model.DefaultCustomResource;
 import io.enmasse.model.validation.AddressName;
+import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
@@ -36,7 +37,7 @@ import io.sundr.builder.annotations.BuildableReference;
 @AddressName
 @Version(CoreCrd.VERSION)
 @Group(CoreCrd.GROUP)
-public class Address extends CustomResourceWithAdditionalProperties<AddressSpec,  AddressStatus> implements WithAdditionalProperties {
+public class Address extends CustomResourceWithAdditionalProperties<AddressSpec,  AddressStatus> implements WithAdditionalProperties, Namespaced {
 
     public static final String KIND = "Address";
 
