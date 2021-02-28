@@ -37,9 +37,10 @@ public class AddressSpaceSchema extends CustomResourceWithAdditionalProperties<A
 
     public static final String KIND = "AddressSpaceSchema";
 
+    // for builders - probably will be fixed by https://github.com/fabric8io/kubernetes-client/pull/1346
+    private ObjectMeta metadata;
     @NotNull @Valid
     private AddressSpaceSchemaSpec spec;
-    private ObjectMeta metadata; // for builder
 
     @Override
     public ObjectMeta getMetadata() {

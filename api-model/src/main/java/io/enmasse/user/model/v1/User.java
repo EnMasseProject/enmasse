@@ -33,10 +33,10 @@ public class User extends CustomResourceWithAdditionalProperties<UserSpec, UserS
 
     public static final String KIND = "MessagingUser";
 
+    // for builders - probably will be fixed by https://github.com/fabric8io/kubernetes-client/pull/1346
+    private ObjectMeta metadata;
     private UserSpec spec;
     private UserStatus status;
-
-    private ObjectMeta metadata; // for builder
 
     @Override
     public ObjectMeta getMetadata() {

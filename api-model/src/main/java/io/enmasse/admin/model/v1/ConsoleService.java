@@ -28,9 +28,10 @@ public class ConsoleService extends CustomResourceWithAdditionalProperties<Conso
 
     public static final String KIND = "ConsoleService";
 
+    // for builders - probably will be fixed by https://github.com/fabric8io/kubernetes-client/pull/1346
+    private ObjectMeta metadata;
     private ConsoleServiceSpec spec;
     private ConsoleServiceStatus status;
-    private ObjectMeta metadata; // for builder
 
     @Override
     public ObjectMeta getMetadata() {

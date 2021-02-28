@@ -15,14 +15,11 @@ import io.enmasse.admin.model.v1.WithAdditionalProperties;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.CustomResource;
 import io.sundr.builder.annotations.Buildable;
-import io.sundr.builder.annotations.BuildableReference;
 
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
-        builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(CustomResource.class)}
-
+        builderPackage = "io.fabric8.kubernetes.api.builder"
 )
 @SuppressWarnings("serial")
 public abstract class CustomResourceWithAdditionalProperties<S, T> extends CustomResource<S, T> implements WithAdditionalProperties {

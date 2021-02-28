@@ -31,9 +31,10 @@ public class AddressSpacePlan extends CustomResourceWithAdditionalProperties<Add
 
     public static final String KIND = "AddressSpacePlan";
 
+    // for builders - probably will be fixed by https://github.com/fabric8io/kubernetes-client/pull/1346
+    private ObjectMeta metadata;
     private AddressSpacePlanSpec spec;
     private AddressSpacePlanStatus status;
-    private ObjectMeta metadata; // for builder
 
     @Override
     public ObjectMeta getMetadata() {

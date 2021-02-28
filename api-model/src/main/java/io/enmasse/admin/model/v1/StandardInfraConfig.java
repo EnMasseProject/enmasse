@@ -30,8 +30,9 @@ public class StandardInfraConfig extends CustomResourceWithAdditionalProperties<
 
     public static final String KIND = "StandardInfraConfig";
 
+    // for builders - probably will be fixed by https://github.com/fabric8io/kubernetes-client/pull/1346
+    private ObjectMeta metadata;
     private StandardInfraConfigSpec spec = new StandardInfraConfigSpec();
-    private ObjectMeta metadata; // for builder
 
     @Override
     public ObjectMeta getMetadata() {
