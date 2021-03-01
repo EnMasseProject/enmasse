@@ -1,0 +1,122 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: enmasse
+    enmasse-component: tenant-api
+  name: messagingusers.user.enmasse.io
+spec:
+  conversion:
+    strategy: None
+  group: user.enmasse.io
+  names:
+    categories:
+      - enmasse
+    kind: MessagingUser
+    listKind: MessagingUserList
+    plural: messagingusers
+    singular: messaginguser
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: The user name used by clients
+          jsonPath: .spec.username
+          name: Username
+          type: string
+        - description: Authentication type of the user
+          jsonPath: .spec.authentication.type
+          name: Type
+          type: string
+        - description: Phase of the Messaging User
+          jsonPath: .status.phase
+          name: Phase
+          type: string
+        - description: Message of the Messaging User
+          jsonPath: .status.message
+          name: Message
+          priority: 1
+          type: string
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      name: v1beta1
+      schema:
+        openAPIV3Schema:
+          description: MessagingUser is a user that can be used to authenticate and authorize a messaging application. This resource is created by messaging tenants.
+          properties:
+            spec:
+              properties:
+                authentication:
+                  description: The authentication specification.
+                  properties:
+                    federatedUserid:
+                      description: Federated user id for the 'federated' authentication type.
+                      type: string
+                    federatedUsername:
+                      description: Federated user name for the 'federated' authentication type.
+                      type: string
+                    password:
+                      description: Base64-encoded password for the 'password' authentication type.
+                      type: string
+                    provider:
+                      description: Federated identity provider for the 'federated' authentication type.
+                      type: string
+                    type:
+                      description: The type of authentication.
+                      enum:
+                        - password
+                        - federated
+                        - serviceaccount
+                      type: string
+                  required:
+                    - type
+                  type: object
+                authorization:
+                  description: The authorization rules for the user.
+                  items:
+                    properties:
+                      addresses:
+                        description: The addresses the rule should apply to.
+                        items:
+                          description: 'Pattern used to match addresses. The pattern will be prefixed by the connector name and a forward slash (''myconnector/''). A pattern consists of one or more tokens separated by a forward slash /. A token can be one of the following: a * character, a # character, or a sequence of characters that do not include /, *, or #. The * token matches any single token. The # token matches zero or more tokens. * has higher precedence than #, and exact match has the highest precedence.'
+                          pattern: ([^/#*]+|\*|#)(/([^/#*]+|\*|#))*
+                          type: string
+                        type: array
+                      operations:
+                        description: The operations that should apply to addresses matched by this rule.
+                        items:
+                          enum:
+                            - send
+                            - recv
+                            - view
+                            - manage
+                          type: string
+                        type: array
+                    type: object
+                  type: array
+                username:
+                  description: The username used by messaging clients.
+                  pattern: ^[a-z0-9]+([a-z0-9_@.:\-]*[a-z0-9]+|[a-z0-9]*)$
+                  type: string
+              required:
+                - username
+                - authentication
+              type: object
+            status:
+              properties:
+                generation:
+                  description: Applied generation
+                  type: integer
+                message:
+                  description: Message describing the current state
+                  type: string
+                phase:
+                  description: The lifecycle phase of the messaging user
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}

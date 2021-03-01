@@ -418,4 +418,27 @@ public class KubeCMDClient {
             return rollout.getRetCode();
         }, budget);
     }
+
+    public static void awaitCatalogSourceReady(TimeoutBudget budget, String namespace, String name) {
+        TestUtils.waitUntilCondition(String.format("catalogsource %s in namespace %s to become ready", name, namespace), waitPhase -> {
+            ExecutionResultData rollout = Exec.execute(Arrays.asList(ITestBase.kubernetes.getCluster().getKubeCmd(), "get", "catalogsource",
+                    name,
+                    "--namespace", namespace,
+                    "--output",
+                    "jsonpath={.status.connectionState.lastObservedState}"
+            ), true);
+            return rollout.getRetCode() && "READY".equals(String.valueOf(rollout.getStdOut()).trim());
+        }, budget);
+    }
+
+    public static void awaitStatusCondition(TimeoutBudget budget, String namespace, String resource, String name, String forPredicate) {
+        TestUtils.waitUntilCondition(String.format("%s %s in namespace %s to have condition matching %s", resource, name, namespace, forPredicate), waitPhase -> {
+            ExecutionResultData rollout = Exec.execute(Arrays.asList(ITestBase.kubernetes.getCluster().getKubeCmd(), "wait", resource, name,
+                    "--namespace", namespace,
+                    "--timeout", "15s",
+                    String.format("--for=condition=%s", forPredicate)
+            ), true);
+            return rollout.getRetCode();
+        }, budget);
+    }
 }

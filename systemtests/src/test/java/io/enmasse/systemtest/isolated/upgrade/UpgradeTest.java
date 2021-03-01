@@ -30,6 +30,7 @@ import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.operator.EnmasseOperatorManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
@@ -129,7 +130,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         this.type = EnmasseInstallType.ANSIBLE;
         this.infraNamespace = kubernetes.getInfraNamespace();
         Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", kubernetes.getOcpVersion() == OpenShiftVersion.OCP3 ? "systemtests.inventory" : "systemtests.ocp4.inventory");
-        Path ansiblePlaybook = Paths.get(Environment.getInstance().getUpgradeTemplates(), "ansible", "playbooks", "openshift", "precheck.yml");
+        Path ansiblePlaybook = Paths.get(Environment.getInstance().getUpgradeTemplates(Kubernetes.getInstance()), "ansible", "playbooks", "openshift", "precheck.yml");
         List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
                 "--extra-vars", String.format("namespace=%s", kubernetes.getInfraNamespace()));
         String configname = "doesnotexist.myspace";
@@ -263,11 +264,11 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", "pepa", MESSAGE_COUNT, true));
 
         if (this.type.equals(EnmasseInstallType.ANSIBLE)) {
-            installEnmasseAnsible(Paths.get(Environment.getInstance().getUpgradeTemplates()), true);
+            installEnmasseAnsible(Paths.get(Environment.getInstance().getUpgradeTemplates(Kubernetes.getInstance())), true);
         } else if(this.type.equals(EnmasseInstallType.OLM)) {
-            upgradeEnmasseOLM(Paths.get(Environment.getInstance().getUpgradeTemplates()), version);
+            upgradeEnmasseOLM(Paths.get(Environment.getInstance().getUpgradeTemplates(Kubernetes.getInstance())), version);
         } else {
-            upgradeEnmasseBundle(Paths.get(Environment.getInstance().getUpgradeTemplates()));
+            upgradeEnmasseBundle(Paths.get(Environment.getInstance().getUpgradeTemplates(Kubernetes.getInstance())));
         }
 
         AddressSpace brokered = resourcesManager.getAddressSpace(infraNamespace, "brokered");
@@ -476,7 +477,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     }
 
     private static Stream<Arguments> provideVersions() {
-        return Arrays.stream(environment.getStartTemplates().split(",")).map(templates -> Arguments.of(getVersionFromTemplateDir(Paths.get(templates)), templates));
+        return Arrays.stream(environment.getStartTemplates(Kubernetes.getInstance()).split(",")).map(templates -> Arguments.of(getVersionFromTemplateDir(Paths.get(templates)), templates));
     }
 
     private void installEnmasseOLM(Path templateDir, String version) throws Exception {

@@ -1,0 +1,380 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: enmasse
+  name: brokeredinfraconfigs.admin.enmasse.io
+spec:
+  conversion:
+    strategy: None
+  group: admin.enmasse.io
+  names:
+    categories:
+      - enmasse
+    kind: BrokeredInfraConfig
+    listKind: BrokeredInfraConfigList
+    plural: brokeredinfraconfigs
+    singular: brokeredinfraconfig
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+    - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          description: BrokeredInfraConfig defines configuration applied to brokers for an instance of the brokered address space type. This resource is created by the service administrator.
+          properties:
+            spec:
+              properties:
+                admin:
+                  properties:
+                    podTemplate:
+                      properties:
+                        metadata:
+                          properties:
+                            labels:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                          type: object
+                        spec:
+                          properties:
+                            affinity:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                            containers:
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                    pattern: (agent)
+                                  resources:
+                                    type: object
+                                    x-kubernetes-preserve-unknown-fields: true
+                                  env:
+                                    items:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          type: object
+                                          x-kubernetes-preserve-unknown-fields: true
+                                      required:
+                                        - name
+                                      type: object
+                                    type: array
+                                  livenessProbe:
+                                    properties:
+                                      initialDelaySeconds:
+                                        type: integer
+                                      timeoutSeconds:
+                                        type: integer
+                                      periodSeconds:
+                                        type: integer
+                                      successThreshold:
+                                        type: integer
+                                      failureThreshold:
+                                        type: integer
+                                    type: object
+                                  readinessProbe:
+                                    properties:
+                                      initialDelaySeconds:
+                                        type: integer
+                                      timeoutSeconds:
+                                        type: integer
+                                      periodSeconds:
+                                        type: integer
+                                      successThreshold:
+                                        type: integer
+                                      failureThreshold:
+                                        type: integer
+                                    type: object
+                                type: object
+                                required:
+                                  - name
+                              type: array
+                            priorityClassName:
+                              type: string
+                            securityContext:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                            tolerations:
+                              items:
+                                type: object
+                                x-kubernetes-preserve-unknown-fields: true
+                              type: array
+                          type: object
+                      type: object
+                    resources:
+                      properties:
+                        cpu:
+                          type: string
+                        memory:
+                          type: string
+                      type: object
+                  type: object
+                broker:
+                  properties:
+                    addressFullPolicy:
+                      enum:
+                        - PAGE
+                        - BLOCK
+                        - FAIL
+                        - DROP
+                      type: string
+                    globalMaxSize:
+                      description: Sets a global limit to the amount of memory the broker can use before it applies the rules determined by addressFullPolicy. Value in bytes or use a byte suffix ("B", "K", "MB", "GB")
+                      pattern: ^(?i)\d+\s*[kmg]?b?$
+                      type: string
+                    javaOpts:
+                      type: string
+                    podTemplate:
+                      properties:
+                        metadata:
+                          properties:
+                            labels:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                          type: object
+                        spec:
+                          properties:
+                            affinity:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                            initContainers:
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                    pattern: (broker-plugin)
+                                  resources:
+                                    type: object
+                                    x-kubernetes-preserve-unknown-fields: true
+                                  env:
+                                    items:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          type: object
+                                          x-kubernetes-preserve-unknown-fields: true
+                                      required:
+                                        - name
+                                      type: object
+                                    type: array
+                                type: object
+                              type: array
+                            containers:
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                    pattern: (broker)
+                                  resources:
+                                    type: object
+                                    x-kubernetes-preserve-unknown-fields: true
+                                  env:
+                                    items:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          type: object
+                                          x-kubernetes-preserve-unknown-fields: true
+                                      required:
+                                        - name
+                                      type: object
+                                    type: array
+                                  livenessProbe:
+                                    properties:
+                                      initialDelaySeconds:
+                                        type: integer
+                                      timeoutSeconds:
+                                        type: integer
+                                      periodSeconds:
+                                        type: integer
+                                      successThreshold:
+                                        type: integer
+                                      failureThreshold:
+                                        type: integer
+                                    type: object
+                                  readinessProbe:
+                                    properties:
+                                      initialDelaySeconds:
+                                        type: integer
+                                      timeoutSeconds:
+                                        type: integer
+                                      periodSeconds:
+                                        type: integer
+                                      successThreshold:
+                                        type: integer
+                                      failureThreshold:
+                                        type: integer
+                                    type: object
+                                type: object
+                                required:
+                                  - name
+                              type: array
+                            priorityClassName:
+                              type: string
+                            securityContext:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                            tolerations:
+                              items:
+                                type: object
+                                x-kubernetes-preserve-unknown-fields: true
+                              type: array
+                          type: object
+                      type: object
+                    resources:
+                      properties:
+                        cpu:
+                          type: string
+                        memory:
+                          type: string
+                        storage:
+                          type: string
+                      type: object
+                    storageClassName:
+                      type: string
+                    updatePersistentVolumeClaim:
+                      type: boolean
+                  type: object
+                networkPolicy:
+                  properties:
+                    egress:
+                      items:
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                      type: array
+                    ingress:
+                      items:
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                      type: array
+                  type: object
+                version:
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: BrokeredInfraConfig defines configuration applied to brokers for an instance of the brokered address space type. This resource is created by the service administrator.
+          properties:
+            spec:
+              properties:
+                admin:
+                  properties:
+                    podTemplate:
+                      properties:
+                        metadata:
+                          properties:
+                            labels:
+                              type: object
+                          type: object
+                        spec:
+                          properties:
+                            affinity:
+                              type: object
+                            containers:
+                              items:
+                                properties:
+                                  resources:
+                                    type: object
+                                type: object
+                              type: array
+                            priorityClassName:
+                              type: string
+                            securityContext:
+                              type: object
+                            tolerations:
+                              items:
+                                type: object
+                              type: array
+                          type: object
+                      type: object
+                    resources:
+                      properties:
+                        cpu:
+                          type: string
+                        memory:
+                          type: string
+                      type: object
+                  type: object
+                broker:
+                  properties:
+                    addressFullPolicy:
+                      enum:
+                        - PAGE
+                        - BLOCK
+                        - FAIL
+                        - DROP
+                      type: string
+                    globalMaxSize:
+                      description: Sets a global limit to the amount of memory the broker can use before it applies the rules determined by addressFullPolicy. Value in bytes or use a byte suffix ("B", "K", "MB", "GB")
+                      pattern: ^(?i)\d+\s*[kmg]?b?$
+                      type: string
+                    javaOpts:
+                      type: string
+                    podTemplate:
+                      properties:
+                        metadata:
+                          properties:
+                            labels:
+                              type: object
+                          type: object
+                        spec:
+                          properties:
+                            affinity:
+                              type: object
+                            priorityClassName:
+                              type: string
+                            resources:
+                              type: object
+                            securityContext:
+                              type: object
+                            tolerations:
+                              items:
+                                type: object
+                              type: array
+                          type: object
+                      type: object
+                    resources:
+                      properties:
+                        cpu:
+                          type: string
+                        memory:
+                          type: string
+                        storage:
+                          type: string
+                      type: object
+                    storageClassName:
+                      type: string
+                    updatePersistentVolumeClaim:
+                      type: boolean
+                  type: object
+                networkPolicy:
+                  properties:
+                    egress:
+                      items:
+                        type: object
+                      type: array
+                    ingress:
+                      items:
+                        type: object
+                      type: array
+                  type: object
+                version:
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: false

@@ -95,7 +95,7 @@ jobs:
       - name: Set asset path
         if: job.status == 'success'
         run: |
-          echo "::set-env name=ASSETPATH::templates/build/enmasse-$(echo $TAG).tgz"
+          echo "::set-env name=ASSETPATH::templates/build/default/enmasse-$(echo $TAG).tgz"
           echo "::set-env name=ASSETNAME::enmasse-$(echo $TAG).tgz"
 
       - name: Upload Release Asset

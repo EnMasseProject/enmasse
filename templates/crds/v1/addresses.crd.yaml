@@ -1,0 +1,238 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: enmasse
+    enmasse-component: tenant-api
+  name: addresses.enmasse.io
+spec:
+  conversion:
+    strategy: None
+  group: enmasse.io
+  names:
+    categories:
+      - enmasse
+    kind: Address
+    listKind: AddressList
+    plural: addresses
+    singular: address
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: The address
+          jsonPath: .spec.address
+          name: Address
+          type: string
+        - description: The address type
+          jsonPath: .spec.type
+          name: Type
+          priority: 1
+          type: string
+        - description: The address plan
+          jsonPath: .spec.plan
+          name: Plan
+          priority: 1
+          type: string
+        - description: The readiness of the address
+          jsonPath: .status.isReady
+          name: Ready
+          type: boolean
+        - description: The phase of the address
+          jsonPath: .status.phase
+          name: Phase
+          type: string
+        - description: The status of the address
+          jsonPath: .status.messages
+          name: Status
+          priority: 1
+          type: string
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      name: v1beta1
+      schema:
+        openAPIV3Schema:
+          description: Address describes a destination for sending and receiving messages. An Address has a type, which defines the semantics of sending messages to and receiving messages from that address. This resource is created by messaging tenants.
+          properties:
+            spec:
+              properties:
+                address:
+                  description: Messaging address.
+                  pattern: ^[^\s]+$
+                  type: string
+                deadletter:
+                  description: Dead letter address (only applicable to queue and subscription types).
+                  type: string
+                expiry:
+                  description: Expiry address (only applicable to queue and subscription types).
+                  type: string
+                forwarders:
+                  description: Address forwarders for this address.
+                  items:
+                    properties:
+                      direction:
+                        enum:
+                          - in
+                          - out
+                        type: string
+                      name:
+                        description: Forwarder name.
+                        type: string
+                      priority:
+                        description: Priority of forwarder consumer (Only applied to outgoing forwarders).
+                        type: integer
+                      remoteAddress:
+                        description: Remote address to forward to. Must be prefixed with connector name.
+                        type: string
+                    required:
+                      - name
+                      - remoteAddress
+                      - direction
+                    type: object
+                  type: array
+                messageRedelivery:
+                  description: Configures message redelivery options.  Applies to address types queue, subscription and deadletter only.
+                  properties:
+                    maximumDeliveryAttempts:
+                      description: Maximum number of delivery attempts that will be made for a message before message is directed to a deadletter address (or dropped). Set to -1 for infinite re-deliveries.
+                      type: integer
+                    maximumDeliveryDelay:
+                      description: The maximum delivery delay in milliseconds. Imposes an upper limit on the delivery delay.
+                      type: integer
+                    redeliveryDelay:
+                      description: The number of milliseconds to wait before redelivery. Set to 0 for no redelivery delay.
+                      type: integer
+                    redeliveryDelayMultiplier:
+                      description: The redelivery multiplier. This factor is applied to last redelivery delay.
+                      type: number
+                  type: object
+                messageTtl:
+                  description: Further restricts message time-to-live (TTL). Applies to address types queue and topic only. The maximum and minimum values must fall with the minimum/maximum range described by the plan's TTL settings.
+                  properties:
+                    maximum:
+                      description: Imposes a maximum TTL value (in milliseconds) for messages arriving at the address.  Messages arriving with TTL values greater than this value (or no TTL value) will have their expiration adjusted.
+                      type: integer
+                    minimum:
+                      description: Imposes a minimum TTL value (in milliseconds) for messages arriving at the address.  Messages arriving with TTL values less than this value will have their expiration adjusted.
+                      type: integer
+                  type: object
+                plan:
+                  description: Plan referenced by this address.
+                  type: string
+                subscription:
+                  description: Properties that can be set for subscription type addresses.
+                  properties:
+                    maxConsumers:
+                      description: Maximum number of concurrent consumers that can be attached to this subscription. If unspecified, 1 consumer is allowed per subscription
+                      type: integer
+                  type: object
+                topic:
+                  description: Address of topic that this subscription refers to (only applicable to subscription types).
+                  type: string
+                type:
+                  description: Address type for this address.
+                  enum:
+                    - anycast
+                    - multicast
+                    - queue
+                    - topic
+                    - subscription
+                    - deadletter
+                  type: string
+              required:
+                - address
+                - type
+                - plan
+              type: object
+            status:
+              properties:
+                brokerStatuses:
+                  description: The status of this address in brokers.
+                  items:
+                    properties:
+                      brokerId:
+                        type: string
+                      containerId:
+                        type: string
+                      clusterId:
+                        type: string
+                      state:
+                        enum:
+                          - Active
+                          - Migrating
+                          - Draining
+                        type: string
+                    type: object
+                  type: array
+                forwarders:
+                  description: Forwarder status for this address.
+                  items:
+                    properties:
+                      isReady:
+                        type: boolean
+                      messages:
+                        items:
+                          type: string
+                        type: array
+                      name:
+                        type: string
+                    type: object
+                  type: array
+                isReady:
+                  description: Whether address is ready to use or not.
+                  type: boolean
+                messageRedelivery:
+                  description: Applied message redelivery properties
+                  properties:
+                    maximumDeliveryAttempts:
+                      type: integer
+                    maximumDeliveryDelay:
+                      type: integer
+                    redeliveryDelay:
+                      type: integer
+                    redeliveryDelayMultiplier:
+                      type: number
+                  type: object
+                messageTtl:
+                  description: Applied message TTL properties.
+                  properties:
+                    maximum:
+                      description: Maximum TTL value
+                      type: integer
+                    minimum:
+                      description: Minimum TTL value
+                      type: integer
+                  type: object
+                messages:
+                  description: Status and error messages for address.
+                  items:
+                    type: string
+                  type: array
+                phase:
+                  description: Phase of address.
+                  type: string
+                planStatus:
+                  properties:
+                    name:
+                      type: string
+                    partitions:
+                      type: integer
+                    resources:
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                  required:
+                    - name
+                    - partitions
+                  type: object
+                subscription:
+                  description: Applied properties for subscription type addresses.
+                  properties:
+                    maxConsumers:
+                      description: Maximum number of concurrent consumers that can be attached to this subscription.
+                      type: integer
+                  type: object
+              type: object
+          type: object
+      served: true
+      storage: true

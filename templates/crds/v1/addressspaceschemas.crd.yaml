@@ -1,0 +1,105 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: enmasse
+  name: addressspaceschemas.enmasse.io
+spec:
+  conversion:
+    strategy: None
+  group: enmasse.io
+  names:
+    categories:
+      - enmasse
+    kind: AddressSpaceSchema
+    listKind: AddressSpaceSchemaList
+    plural: addressspaceschemas
+    singular: addressspaceschema
+  preserveUnknownFields: false
+  scope: Cluster
+  versions:
+    - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          description: AddressSpaceSchema describes the available plans and authentication services for an address space type.
+          type: object
+          properties:
+            spec:
+              properties:
+                addressTypes:
+                  items:
+                    properties:
+                      description:
+                        type: string
+                      name:
+                        type: string
+                      plans:
+                        items:
+                          properties:
+                            description:
+                              type: string
+                            name:
+                              type: string
+                            resources:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                          type: object
+                        type: array
+                    type: object
+                  type: array
+                authenticationServices:
+                  items:
+                    type: string
+                  type: array
+                certificateProviderTypes:
+                  items:
+                    properties:
+                      description:
+                        type: string
+                      displayName:
+                        type: string
+                      name:
+                        type: string
+                    type: object
+                  type: array
+                endpointExposeTypes:
+                  items:
+                    properties:
+                      description:
+                        type: string
+                      displayName:
+                        type: string
+                      name:
+                        type: string
+                    type: object
+                  type: array
+                plans:
+                  items:
+                    properties:
+                      description:
+                        type: string
+                      name:
+                        type: string
+                      resourceLimits:
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                    type: object
+                  type: array
+                routeServicePorts:
+                  items:
+                    properties:
+                      description:
+                        type: string
+                      name:
+                        type: string
+                      displayName:
+                        type: string
+                      routeTlsTerminations:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  type: array
+              type: object
+      served: true
+      storage: true

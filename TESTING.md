@@ -56,11 +56,11 @@ Where $PROFILE can be:
 mkdir templates/build -pv
 export START_VERSION=0.28.2
 wget https://github.com/EnMasseProject/enmasse/releases/download/${START_VERSION}/enmasse-${START_VERSION}.tgz -O templates/build/enmasse-${START_VERSION}.tgz
-tar zxvf templates/build/enmasse-${version}.tgz -C templates/build
+tar zxvf templates/build/default/enmasse-${version}.tgz -C templates/build
 make templates
 make TAG=latest imageenv
-export START_TEMPLATES=${pwd}/templates/build/enmasse-${START_VERSION}
-export UPGRADE_TEMPLATES=${pwd}/templates/build/enmasse-latest
+export START_TEMPLATES=${pwd}/templates/build/default/enmasse-${START_VERSION}
+export UPGRADE_TEMPLATES=${pwd}/templates/build/default/enmasse-latest
 make PROFILE=upgrade systemtests
 ```
 
@@ -94,9 +94,9 @@ All environment variables can be seen in [Environment](systemtests/src/main/java
 | KUBERNETES_API_CONNECT_TIMEOUT              | kuberntes api connection timeout                                  | 60                      |
 | KUBERNETES_API_READ_TIMEOUT          | kuberntes api connection timeout                                 | 60                                           |
 | KUBERNETES_API_WRITE_TIMEOUT | kuberntes api connection timeout                                                       | 60                                            |
-| UPGRADE_TEMPLATES         | path for upgrade templates                                                                       | ${ENMASSE_DIR}/templates/build/enmasse-latest                                       |
-| START_TEMPLATES      | path for start templates before upgrade                                     | ${ENMASSE_DIR}/templates/build/enmasse-latest             |
-| TEMPLATES         | path where templates are stored                    | ${ENMASSE_DIR}/templates/build/enmasse-latest                                        |
+| UPGRADE_TEMPLATES         | path for upgrade templates                                                                       | ${ENMASSE_DIR}/templates/build/default/enmasse-latest                                       |
+| START_TEMPLATES      | path for start templates before upgrade                                     | ${ENMASSE_DIR}/templates/build/default/enmasse-latest             |
+| TEMPLATES         | path where templates are stored                    | ${ENMASSE_DIR}/templates/default/build/enmasse-latest                                        |
 | SKIP_CLEANUP             | skip teardown and clean phase of tests (for debug only)                            | false                                            |
 | SKIP_UNINSTALL         | skip enmassse operator uninstall (for debug purpose)                                                                    | false                                     |
 | STORE_SCREENSHOTS         | store screenshots in selenium tests even if test failed or not                                                                    | false                                     |

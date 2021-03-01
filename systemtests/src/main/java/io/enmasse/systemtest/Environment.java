@@ -8,6 +8,7 @@ package io.enmasse.systemtest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.client.Config;
 import org.slf4j.Logger;
 
@@ -26,6 +27,8 @@ public class Environment {
     private static final Logger LOGGER = CustomLogger.getLogger();
     private static JsonNode jsonEnv;
     private final List<Map.Entry<String, String>> values = new ArrayList<>();
+
+    private final String templateRoot = Paths.get(System.getProperty("user.dir"), "..", "templates", "build").toString();
 
     // Env variables
     private static final String SCALE_CONFIG = "SCALE_CONFIG";
@@ -55,12 +58,6 @@ public class Environment {
     private static final String INSTALL_TYPE = "INSTALL_TYPE";
     private static final String OLM_INSTALL_TYPE = "OLM_INSTALL_TYPE";
     private static final String SKIP_SAVE_STATE = "SKIP_SAVE_STATE";
-    private static final String SKIP_DEPLOY_INFINISPAN = "SKIP_DEPLOY_INFINISPAN";
-    private static final String SKIP_DEPLOY_POSTGRESQL = "SKIP_DEPLOY_POSTGRESQL";
-    private static final String SKIP_DEPLOY_H2 = "SKIP_DEPLOY_H2";
-    private static final String INFINISPAN_PROJECT = "INFINISPAN_PROJECT";
-    private static final String POSTGRESQL_PROJECT = "POSTGRESQL_PROJECT";
-    private static final String H2_PROJECT = "H2_PROJECT";
     private static final String OCP4_EXTERNAL_IMAGE_REGISTRY = "OCP4_EXTERNAL_IMAGE_REGISTRY";
     private static final String OCP4_INTERNAL_IMAGE_REGISTRY = "OCP4_INTERNAL_IMAGE_REGISTRY";
     private static final String OVERRIDE_CLUSTER_TYPE = "OVERRIDE_CLUSTER_TYPE";
@@ -80,26 +77,20 @@ public class Environment {
     private String token = getOrDefault(jsonEnv, K8S_API_TOKEN_ENV, "");
     private String url = getOrDefault(jsonEnv, K8S_API_URL_ENV, "");
     private String kubernetesDomain = getOrDefault(jsonEnv, K8S_DOMAIN_ENV, "");
-    private final String startTemplates = getOrDefault(jsonEnv, START_TEMPLATES_ENV, Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
-    private final String upgradeTemplates = getOrDefault(jsonEnv, UPGRADE_TEPLATES_ENV, Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
+    private final String templatesPath = getOrDefault(jsonEnv, TEMPLATES_PATH, null);
+    private final String startTemplates = getOrDefault(jsonEnv, START_TEMPLATES_ENV, null);
+    private final String upgradeTemplates = getOrDefault(jsonEnv, UPGRADE_TEPLATES_ENV, null);
     private final String monitoringNamespace = getOrDefault(jsonEnv, MONITORING_NAMESPACE_ENV, "enmasse-monitoring");
     private final String tag = getOrDefault(jsonEnv, TAG_ENV, "latest");
     private final String productName = getOrDefault(jsonEnv, PRODUCT_NAME_ENV, "enmasse");
     private final String operatorName = getOrDefault(jsonEnv, OPERATOR_NAME_ENV, "enmasse");
     private final String operatorChannel = getOrDefault(jsonEnv, OPERATOR_CHANNEL_ENV, "alpha");
     private final boolean skipSaveState = getOrDefault(jsonEnv, SKIP_SAVE_STATE, Boolean::parseBoolean, false);
-    private final boolean skipDeployInfinispan = getOrDefault(jsonEnv, SKIP_DEPLOY_INFINISPAN, Boolean::parseBoolean, false);
-    private final boolean skipDeployPostgresql = getOrDefault(jsonEnv, SKIP_DEPLOY_POSTGRESQL, Boolean::parseBoolean, false);
-    private final boolean skipDeployH2 = getOrDefault(jsonEnv, SKIP_DEPLOY_H2, Boolean::parseBoolean, false);
-    private final String infinispanProject = getOrDefault(jsonEnv, INFINISPAN_PROJECT, "systemtests-infinispan");
-    private final String postgresqlProject = getOrDefault(jsonEnv, POSTGRESQL_PROJECT, "systemtests-postgresql");
-    private final String h2Project = getOrDefault(jsonEnv, H2_PROJECT, "systemtests-h2");
     private final Duration kubernetesApiConnectTimeout = getOrDefault(jsonEnv, K8S_API_CONNECT_TIMEOUT, i -> Duration.ofSeconds(Long.parseLong(i)), Duration.ofSeconds(60));
     private final Duration kubernetesApiReadTimeout = getOrDefault(jsonEnv, K8S_API_READ_TIMEOUT, i -> Duration.ofSeconds(Long.parseLong(i)), Duration.ofSeconds(60));
     private final Duration kubernetesApiWriteTimeout = getOrDefault(jsonEnv, K8S_API_WRITE_TIMEOUT, i -> Duration.ofSeconds(Long.parseLong(i)), Duration.ofSeconds(60));
     private final EnmasseInstallType installType = getOrDefault(jsonEnv, INSTALL_TYPE, value -> EnmasseInstallType.valueOf(value.toUpperCase()), EnmasseInstallType.BUNDLE);
     private final OLMInstallationType olmInstallType = Optional.ofNullable(getOrDefault(jsonEnv, OLM_INSTALL_TYPE, "")).map(s -> s.isEmpty() ? OLMInstallationType.SPECIFIC.name() : s).map(value -> OLMInstallationType.valueOf(value.toUpperCase())).orElse(OLMInstallationType.SPECIFIC);
-    private final String templatesPath = getOrDefault(jsonEnv, TEMPLATES_PATH, Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     private final String clusterExternalImageRegistry = getOrDefault(jsonEnv, OCP4_EXTERNAL_IMAGE_REGISTRY, "");
     private final String clusterInternalImageRegistry = getOrDefault(jsonEnv, OCP4_INTERNAL_IMAGE_REGISTRY, "");
     private final String isTestDownstream = getOrDefault(jsonEnv, DOWNSTREAM, value -> System.getenv("DOWNSTREAM"),"false");
@@ -240,14 +231,6 @@ public class Environment {
         return kubernetesDomain;
     }
 
-    public String getUpgradeTemplates() {
-        return upgradeTemplates;
-    }
-
-    public String getStartTemplates() {
-        return startTemplates;
-    }
-
     public String getMonitoringNamespace() {
         return monitoringNamespace;
     }
@@ -280,20 +263,36 @@ public class Environment {
         return this.skipSaveState;
     }
 
-    public boolean isSkipDeployInfinispan() {
-        return this.skipDeployInfinispan;
+    public String getTemplatesPath(Kubernetes version) {
+        if (templatesPath == null) {
+            return buildDefaultTemplatePath(version);
+        } else {
+            return templatesPath;
+        }
     }
 
-    public boolean isSkipDeployPostgresql() {
-        return this.skipDeployPostgresql;
+    public String getUpgradeTemplates(Kubernetes version) {
+        if (upgradeTemplates == null) {
+            return buildDefaultTemplatePath(version);
+        } else {
+            return upgradeTemplates;
+        }
+    }
+    public String getStartTemplates(Kubernetes version) {
+        if (startTemplates == null) {
+            return buildDefaultTemplatePath(version);
+        } else {
+            return startTemplates;
+        }
     }
 
-    public boolean isSkipDeployH2() {
-        return this.skipDeployH2;
+    private String buildDefaultTemplatePath(Kubernetes version) {
+        return Path.of(templateRoot, getVersionPart(version), "enmasse-latest").toString();
     }
 
-    public String getTemplatesPath() {
-        return templatesPath;
+
+    private String getVersionPart(Kubernetes version) {
+        return version == null || version.getKubernetesVersion() > 1.15 ? "default" : "prekube1_16";
     }
 
     public Duration getKubernetesApiConnectTimeout() {
@@ -306,18 +305,6 @@ public class Environment {
 
     public Duration getKubernetesApiWriteTimeout() {
         return kubernetesApiWriteTimeout;
-    }
-
-    public String getInfinispanProject() {
-        return infinispanProject;
-    }
-
-    public String getPostgresqlProject() {
-        return postgresqlProject;
-    }
-
-    public String getH2Project() {
-        return h2Project;
     }
 
     public String getScaleConfig() {

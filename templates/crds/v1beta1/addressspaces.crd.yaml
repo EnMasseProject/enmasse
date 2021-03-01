@@ -147,30 +147,30 @@ spec:
                         enum:
                           - loadbalancer
                           - route
-                        annotations:
-                          type: object
-                        loadBalancerPorts:
-                          type: array
-                          items:
-                            type: string
-                        loadBalancerSourceRanges:
-                          type: array
-                          items:
-                            type: string
-                        routeHost:
+                      annotations:
+                        type: object
+                      loadBalancerPorts:
+                        type: array
+                        items:
                           type: string
-                        routeServicePort:
+                      loadBalancerSourceRanges:
+                        type: array
+                        items:
                           type: string
-                          description: "Service port. Valid values are 'amqps' for the messaging service, 'secure-mqtt' for the mqtt service, and 'https' for the console service."
-                          enum:
-                            - amqps
-                            - https
-                            - secure-mqtt
-                        routeTlsTermination:
-                          type: string
-                          enum:
-                            - passthrough
-                            - reencrypt
+                      routeHost:
+                        type: string
+                      routeServicePort:
+                        type: string
+                        description: "Service port. Valid values are 'amqps' for the messaging service, 'secure-mqtt' for the mqtt service, and 'https' for the console service."
+                        enum:
+                          - amqps
+                          - https
+                          - secure-mqtt
+                      routeTlsTermination:
+                        type: string
+                        enum:
+                          - passthrough
+                          - reencrypt
                     anyOf:
                       - properties:
                           type:

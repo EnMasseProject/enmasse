@@ -1,0 +1,185 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: enmasse
+  name: consoleservices.admin.enmasse.io
+spec:
+  conversion:
+    strategy: None
+  group: admin.enmasse.io
+  names:
+    categories:
+      - enmasse
+    kind: ConsoleService
+    listKind: ConsoleServiceList
+    plural: consoleservices
+    singular: consoleservice
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+    - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          description: ConsoleService creates a console that can be used by messaging tenants to manage EnMasse. This resource is created by the service administrator.
+          properties:
+            metadata:
+              properties:
+                name:
+                  pattern: console
+                  type: string
+              type: object
+            spec:
+              properties:
+                certificateSecret:
+                  properties:
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  type: object
+                consoleServer:
+                  properties:
+                    livenessProbe:
+                      description: Overrides for the periodic probe of container liveness.
+                      properties:
+                        failureThreshold:
+                          description: Minimum consecutive failures for the probe to be considered failed after having succeeded.
+                          type: integer
+                        initialDelaySeconds:
+                          description: Number of seconds after the container has started before liveness probes are initiated.
+                          type: integer
+                        periodSeconds:
+                          description: How often (in seconds) to perform the probe.
+                          type: integer
+                        successThreshold:
+                          description: Minimum consecutive successes for the probe to be considered successful after having failed.
+                          type: integer
+                        timeoutSeconds:
+                          description: Number of seconds after which the probe times out.
+                          type: integer
+                      type: object
+                    readinessProbe:
+                      description: Overrides for the periodic probe of container liveness.
+                      properties:
+                        failureThreshold:
+                          description: Minimum consecutive failures for the probe to be considered failed after having succeeded.
+                          type: integer
+                        initialDelaySeconds:
+                          description: Number of seconds after the container has started before liveness probes are initiated.
+                          type: integer
+                        periodSeconds:
+                          description: How often (in seconds) to perform the probe.
+                          type: integer
+                        successThreshold:
+                          description: Minimum consecutive successes for the probe to be considered successful after having failed.
+                          type: integer
+                        timeoutSeconds:
+                          description: Number of seconds after which the probe times out.
+                          type: integer
+                      type: object
+                    resources:
+                      properties:
+                        limits:
+                          properties:
+                            cpu:
+                              type: string
+                            memory:
+                              type: string
+                          type: object
+                        requests:
+                          properties:
+                            cpu:
+                              type: string
+                            memory:
+                              type: string
+                          type: object
+                      type: object
+                    session:
+                      properties:
+                        idleTimeout:
+                          description: IdleTimeout controls the maximum length of time a session can be inactive before it expires. Defaults to 5m.
+                          pattern: ^[-+]?([0-9]*(\.[0-9]*)?(ns|us|µs|μs|ms|s|m|h))+$
+                          type: string
+                        lifetime:
+                          description: Lifetime controls the maximum length of time that a session is valid for before it expires. Defaults to 30m.
+                          pattern: ^[-+]?([0-9]*(\.[0-9]*)?(ns|us|µs|μs|ms|s|m|h))+$
+                          type: string
+                      type: object
+                  type: object
+                discoveryMetadataURL:
+                  type: string
+                host:
+                  type: string
+                impersonation:
+                  description: Enable impersonation as the mechanism for authorizing user actions. For impersonation to work, it is important to also grant the console-server permissions to impersonate users.
+                  properties:
+                    userHeader:
+                      description: Headers to use for user impersonation.
+                      enum:
+                        - X-Forwarded-User
+                        - X-Forwarded-Email
+                        - X-Forwarded-Preferred-Username
+                      type: string
+                  type: object
+                oauthClientSecret:
+                  properties:
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  type: object
+                oauthProxy:
+                  properties:
+                    extraArgs:
+                      description: Extra arguments to pass to oauth-proxy
+                      items:
+                        type: string
+                      type: array
+                    resources:
+                      properties:
+                        limits:
+                          properties:
+                            cpu:
+                              type: string
+                            memory:
+                              type: string
+                          type: object
+                        requests:
+                          properties:
+                            cpu:
+                              type: string
+                            memory:
+                              type: string
+                          type: object
+                      type: object
+                  type: object
+                replicas:
+                  type: integer
+                scope:
+                  type: string
+                ssoCookieDomain:
+                  type: string
+                ssoCookieSecret:
+                  properties:
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  type: object
+              type: object
+            status:
+              properties:
+                caCertSecret:
+                  properties:
+                    name:
+                      type: string
+                  type: object
+                host:
+                  type: string
+                port:
+                  type: integer
+              type: object
+          type: object
+      served: true
+      storage: true

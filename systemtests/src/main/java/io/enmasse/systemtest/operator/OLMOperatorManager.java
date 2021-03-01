@@ -8,16 +8,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import io.enmasse.systemtest.time.TimeoutBudget;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OLMInstallationType;
-import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -27,6 +28,7 @@ import io.enmasse.systemtest.utils.TestUtils;
 public class OLMOperatorManager {
 
     private static final Logger log = CustomLogger.getLogger();
+    private final String templatesPath;
     private Kubernetes kube = Kubernetes.getInstance();
     private String clusterExternalImageRegistry;
     private String clusterInternalImageRegistry;
@@ -42,6 +44,7 @@ public class OLMOperatorManager {
             clusterInternalImageRegistry = kube.getClusterInternalImageRegistry();
         }
         log.info("Using image registries: {} and {}", clusterExternalImageRegistry, clusterInternalImageRegistry);
+        templatesPath = Environment.getInstance().getTemplatesPath(Kubernetes.getInstance());
     }
 
     public static synchronized OLMOperatorManager getInstance() {
@@ -69,7 +72,7 @@ public class OLMOperatorManager {
 
         if (installation == OLMInstallationType.SPECIFIC) {
             Path operatorGroupFile = Files.createTempFile("operatorgroup", ".yaml");
-            String operatorGroup = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "operator-group.yaml"));
+            String operatorGroup = Files.readString(Paths.get(templatesPath, "install", "components", "example-olm", "operator-group.yaml"));
             Files.writeString(operatorGroupFile, operatorGroup.replaceAll("\\$\\{OPERATOR_NAMESPACE}", namespace));
             KubeCMDClient.applyFromFile(namespace, operatorGroupFile);
         }
@@ -91,12 +94,14 @@ public class OLMOperatorManager {
 
     public void applySubscription(String installationNamespace, String catalogNamespace, String csvName, String operatorName, String operatorChannel) throws IOException {
         Path subscriptionFile = Files.createTempFile("subscription", ".yaml");
-        String subscription = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "subscription.yaml"));
+        String subscription = Files.readString(Paths.get(templatesPath, "install", "components", "example-olm", "subscription.yaml"));
         Files.writeString(subscriptionFile,
                 subscription
                         .replaceAll("\\$\\{OPERATOR_NAMESPACE}", installationNamespace)
                         .replaceAll("\\$\\{CSV}", csvName));
         KubeCMDClient.applyFromFile(installationNamespace, subscriptionFile);
+        KubeCMDClient.awaitStatusCondition(new TimeoutBudget(2, TimeUnit.MINUTES), installationNamespace,
+                "subscription", "enmasse-sub", "CatalogSourcesUnhealthy=False");
     }
 
     public void applyDownstreamSubscription (String installationNamespace) throws IOException {
@@ -112,11 +117,12 @@ public class OLMOperatorManager {
 
     public void deployCatalogSource(String catalogNamespace) throws IOException {
         Path catalogSourceFile = Files.createTempFile("catalogsource", ".yaml");
-        String catalogSource = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "catalog-source.yaml"));
+        String catalogSource = Files.readString(Paths.get(templatesPath, "install", "components", "example-olm", "catalog-source.yaml"));
         Files.writeString(catalogSourceFile,
                 catalogSource
                         .replaceAll("\\$\\{OPERATOR_NAMESPACE}", catalogNamespace));
         KubeCMDClient.applyFromFile(catalogNamespace, catalogSourceFile);
+        KubeCMDClient.awaitCatalogSourceReady(new TimeoutBudget(2, TimeUnit.MINUTES), catalogNamespace, "enmasse-source");
     }
 
     private boolean saysDoingNothing(String text) {
@@ -124,13 +130,13 @@ public class OLMOperatorManager {
     }
 
     public String getLatestStartingCsv() throws Exception {
-        String enmasseCSV = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath().toString(), "install", "components", "example-olm", "subscription.yaml"));
+        String enmasseCSV = Files.readString(Paths.get(templatesPath, "install", "components", "example-olm", "subscription.yaml"));
         var yaml = new YAMLMapper().readTree(enmasseCSV);
         return yaml.get("spec").get("startingCSV").asText();
     }
 
     public String getLatestManifestsImage() throws Exception {
-        String exampleCatalogSource = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath().toString(), "install", "components", "example-olm", "catalog-source.yaml"));
+        String exampleCatalogSource = Files.readString(Paths.get(templatesPath.toString(), "install", "components", "example-olm", "catalog-source.yaml"));
         var tree = new YAMLMapper().readTree(exampleCatalogSource);
         return tree.get("spec").get("image").asText();
     }

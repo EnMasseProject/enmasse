@@ -3,6 +3,7 @@
 @Library('enmasse-ci') _
 
 def NODE_LABEL = null
+def BUNDLE = ""
 
 def isCRC() {
     if (env.ghprbCommentBody.contains('ocp4')
@@ -82,8 +83,10 @@ pipeline {
                     }
                     if (isCRC()) {
                         env.OC_VERSION = "4"
+                        BUNDLE = "default"
                     } else {
                         env.OC_VERSION = "3.11"
+                        BUNDLE = "prekube1_16"
                     }
                     if (env.ghprbCommentBody.contains('test_only')) {
                         env.TEST_ONLY = true
@@ -114,7 +117,7 @@ pipeline {
 
                     def startTemplates = ""
                     for (def startVersion : env.UPGRADE_FROM.split(",")) {
-                        startTemplates += "${WORKSPACE}/enmasse/templates/build/enmasse-${startVersion},"
+                        startTemplates += "${WORKSPACE}/enmasse/templates/build/${BUNDLE}/enmasse-${startVersion},"
                     }
                     env.START_TEMPLATES = startTemplates.substring(0, startTemplates.length() - 1)
 
@@ -187,7 +190,7 @@ pipeline {
                 expression { env.TEST_PROFILE == 'upgrade' }
             }
             environment {
-                UPGRADE_TEMPLATES = "${WORKSPACE}/enmasse/templates/build/enmasse-${env.TAG}"
+                UPGRADE_TEMPLATES = "${WORKSPACE}/enmasse/templates/build/${BUNDLE}/enmasse-${env.TAG}"
                 DOCKER_REGISTRY = "${env.INTERNAL_REGISTRY}"
             }
             steps {
