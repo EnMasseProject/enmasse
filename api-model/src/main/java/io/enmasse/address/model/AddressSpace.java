@@ -10,7 +10,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.admin.model.v1.WithAdditionalProperties;
 import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 import io.enmasse.common.model.DefaultCustomResource;
@@ -37,9 +36,8 @@ import io.sundr.builder.annotations.BuildableReference;
 @AddressSpaceName
 @KubeMetadataName
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Version(AdminCrd.VERSION_V1BETA2)
-@Group(AdminCrd.GROUP)
-
+@Version(CoreCrd.VERSION)
+@Group(CoreCrd.GROUP)
 public class AddressSpace extends CustomResourceWithAdditionalProperties<AddressSpaceSpec,  AddressSpaceStatus> implements WithAdditionalProperties, Namespaced {
 
     public static final String KIND = "AddressSpace";
