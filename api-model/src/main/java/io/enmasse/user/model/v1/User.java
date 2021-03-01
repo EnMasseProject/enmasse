@@ -14,6 +14,7 @@ import io.enmasse.common.model.DefaultCustomResource;
 import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Kind;
 import io.fabric8.kubernetes.model.annotation.Version;
 import io.sundr.builder.annotations.Buildable;
 
@@ -27,6 +28,7 @@ import io.sundr.builder.annotations.Buildable;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Version(UserCrd.VERSION)
 @Group(UserCrd.GROUP)
+@Kind(User.KIND)
 public class User extends CustomResourceWithAdditionalProperties<UserSpec, UserStatus> implements WithAdditionalProperties, Namespaced {
 
     private static final Pattern NAME_PATTERN = Pattern.compile("^[a-z]+([a-z0-9\\-]*[a-z0-9]+|[a-z0-9]*)\\.[a-z0-9]+([a-z0-9@.\\-]*[a-z0-9]+|[a-z0-9]*)$");
