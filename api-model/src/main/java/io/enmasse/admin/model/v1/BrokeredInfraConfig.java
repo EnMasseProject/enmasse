@@ -66,6 +66,12 @@ public class BrokeredInfraConfig extends CustomResourceWithAdditionalProperties<
                 ", spec=" + spec + "}";
     }
 
+    @Override
+    @JsonIgnore
+    public String getInfraConfigVersion() {
+        return spec.getVersion();
+    }
+
     public void setSpec(BrokeredInfraConfigSpec spec) {
         this.spec = spec;
     }

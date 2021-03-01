@@ -76,6 +76,12 @@ public class StandardInfraConfig extends CustomResourceWithAdditionalProperties<
 
     @Override
     @JsonIgnore
+    public String getInfraConfigVersion() {
+        return spec.getVersion();
+    }
+
+    @Override
+    @JsonIgnore
     public NetworkPolicy getNetworkPolicy() {
         return spec.getNetworkPolicy();
     }
