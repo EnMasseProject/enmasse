@@ -169,7 +169,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     private void deleteResource(HasMetadata m) {
-        client.resource(m).withPropagationPolicy(DeletionPropagation.BACKGROUND);
+        client.resource(m).withPropagationPolicy(DeletionPropagation.BACKGROUND).delete();
     }
 
 
