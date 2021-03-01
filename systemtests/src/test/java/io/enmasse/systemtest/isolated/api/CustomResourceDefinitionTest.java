@@ -17,10 +17,10 @@ import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionCondition;
-import io.fabric8.kubernetes.api.model.networking.NetworkPolicyEgressRuleBuilder;
-import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRuleBuilder;
+import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
+import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinitionCondition;
+import io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicyEgressRuleBuilder;
+import io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicyIngressRuleBuilder;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ public class CustomResourceDefinitionTest extends TestBase implements ITestBaseI
     @Test
     @OpenShift(version = OpenShiftVersion.OCP4)
     void crdsStatusStructural() {
-        List<CustomResourceDefinition> crds = kubernetes.getClient().customResourceDefinitions().withLabel("app", "enmasse").list().getItems();
+        List<CustomResourceDefinition> crds = kubernetes.getClient().apiextensions().v1().customResourceDefinitions().withLabel("app", "enmasse").list().getItems();
         assertThat("can't find EnMasse CRDs", crds.isEmpty(), is(false));
         crds.forEach(crd -> {
             assertThat(crd.getStatus().getConditions(), not(hasItem(new TypeSafeMatcher<CustomResourceDefinitionCondition>() {
