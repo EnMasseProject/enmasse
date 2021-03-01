@@ -19,7 +19,7 @@ import java.util.Optional;
 public interface AddressApi {
     Optional<Address> getAddressWithName(String namespace, String name);
 
-    ContinuationResult<Address> listAddresses(String namespace, Integer limit, ContinuationResult<Address> continueValue, Map<String,String> labels);
+    ContinuationResult<Address> listAddresses(String namespace, Long limit, ContinuationResult<Address> continueValue, Map<String,String> labels);
 
     default Collection<Address> listAddresses(String namespace) {
         return listAddressesWithLabels(namespace, Collections.emptyMap());

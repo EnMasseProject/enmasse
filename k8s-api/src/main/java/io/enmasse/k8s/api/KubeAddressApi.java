@@ -10,6 +10,7 @@ import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.CoreCrd;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.cache.*;
+import io.fabric8.kubernetes.api.model.ListOptionsBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.RequestConfig;
@@ -106,13 +107,17 @@ public class KubeAddressApi implements AddressApi, ListerWatcher<Address, Addres
     }
 
     @Override
-    public ContinuationResult<Address> listAddresses(final String namespace, final Integer limit, final ContinuationResult<Address> continueValue,
-            final Map<String, String> labels) {
-
+    public ContinuationResult<Address> listAddresses(final String namespace, final Long limit, final ContinuationResult<Address> continueValue,
+                                                     final Map<String, String> labels) {
+        ListOptionsBuilder listOptionsBuilder = new ListOptionsBuilder();
+        listOptionsBuilder.withLimit(limit);
+        if (continueValue != null) {
+            listOptionsBuilder.withContinue(continueValue.getContinuation());
+        }
         return ContinuationResult.from(
                 this.client.inNamespace(namespace)
                         .withLabels(labels != null ? labels : Collections.emptyMap())
-                        .list(limit, continueValue != null ? continueValue.getContinuation() : null));
+                        .list(listOptionsBuilder.build()));
 
 
     }

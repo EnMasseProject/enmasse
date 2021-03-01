@@ -102,16 +102,22 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     }
 
     @Override
-    public ContinuationResult<Address> listAddresses(String namespace, Integer limit, ContinuationResult<Address> continueValue, Map<String, String> labelSelector) {
+    public ContinuationResult<Address> listAddresses(String namespace, Long limit, ContinuationResult<Address> continueValue, Map<String, String> labelSelector) {
         Map<String, String> labels = labelSelector != null ? new LinkedHashMap<>(labelSelector) : new LinkedHashMap<>(2);
         labels.put(LabelKeys.TYPE, "address-config");
         labels.put(LabelKeys.INFRA_UUID, infraUuid);
+
+        ListOptionsBuilder listOptionsBuilder = new ListOptionsBuilder();
+        listOptionsBuilder.withLimit(limit);
+        if (continueValue != null) {
+            listOptionsBuilder.withContinue(continueValue.getContinuation());
+        }
 
         Set<Address> addresses = new LinkedHashSet<>();
         ConfigMapList list = client
                 .configMaps()
                 .withLabels(labels)
-                .list(limit, continueValue != null ? continueValue.getContinuation() : null);
+                .list(listOptionsBuilder.build());
 
         for (ConfigMap config : list.getItems()) {
             Address address = getAddressFromConfig(config);
