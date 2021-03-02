@@ -39,11 +39,7 @@ import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.IntOrString;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.policy.PodDisruptionBudget;
 import org.apache.qpid.proton.amqp.messaging.Rejected;
 import org.apache.qpid.proton.amqp.messaging.Source;
@@ -631,14 +627,14 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                     .findFirst()
                     .map(Container::getResources)
                     .get();
-            assertEquals(routerConfiguration.getMemory(), resources.getLimits().get("memory").getAmount(),
+            assertEquals(new Quantity(routerConfiguration.getMemory()), resources.getLimits().get("memory"),
                     "Router memory limit incorrect");
-            assertEquals(routerConfiguration.getMemory(), resources.getRequests().get("memory").getAmount(),
+            assertEquals(new Quantity(routerConfiguration.getMemory()), resources.getRequests().get("memory"),
                     "Router memory requests incorrect");
             if (routerConfiguration.getCpu() != null) {
-                assertEquals(routerConfiguration.getCpu(), resources.getLimits().get("cpu").getAmount(),
+                assertEquals(new Quantity(routerConfiguration.getCpu()), resources.getLimits().get("cpu"),
                         "Router cpu limit incorrect");
-                assertEquals(routerConfiguration.getCpu(), resources.getRequests().get("cpu").getAmount(),
+                assertEquals(new Quantity(routerConfiguration.getCpu()), resources.getRequests().get("cpu"),
                         "Router cpu requests incorrect");
             }
             if (routerConfiguration.getTemplateSpec() != null) {

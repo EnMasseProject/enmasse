@@ -15,11 +15,11 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.enmasse.user.model.v1.User;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.Toleration;
 import io.fabric8.kubernetes.api.model.storage.StorageClass;
@@ -57,20 +57,20 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
                 .findFirst()
                 .map(Container::getResources)
                 .get();
-        assertEquals(brokerConfig.getMemory(), resources.getLimits().get("memory").getAmount(),
+        assertEquals(new Quantity(brokerConfig.getMemory()), resources.getLimits().get("memory"),
                 "Broker memory limit incorrect");
-        assertEquals(brokerConfig.getMemory(), resources.getRequests().get("memory").getAmount(),
+        assertEquals(new Quantity(brokerConfig.getMemory()), resources.getRequests().get("memory"),
                 "Broker memory requests incorrect");
         if (brokerConfig.getCpu() != null) {
-            assertEquals(brokerConfig.getCpu(), resources.getLimits().get("cpu").getAmount(),
+            assertEquals(new Quantity(brokerConfig.getCpu()), resources.getLimits().get("cpu"),
                     "Broker cpu limit incorrect");
-            assertEquals(brokerConfig.getCpu(), resources.getRequests().get("cpu").getAmount(),
+            assertEquals(new Quantity(brokerConfig.getCpu()), resources.getRequests().get("cpu"),
                     "Broker cpu requests incorrect");
         }
 
         if (brokerConfig.getBrokerStorage() != null) {
             PersistentVolumeClaim brokerVolumeClaim = getBrokerPVCData(broker);
-            assertEquals(brokerConfig.getBrokerStorage(), brokerVolumeClaim.getSpec().getResources().getRequests().get("storage").getAmount(),
+            assertEquals(new Quantity(brokerConfig.getBrokerStorage()), brokerVolumeClaim.getSpec().getResources().getRequests().get("storage"),
                     "Broker data storage request incorrect");
         }
 
@@ -135,14 +135,14 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
                 .stream().map(Container::getResources).collect(Collectors.toList());
 
         for (ResourceRequirements requirements : adminResources) {
-            assertEquals(adminConfig.getMemory(), requirements.getLimits().get("memory").getAmount(),
+            assertEquals(new Quantity(adminConfig.getMemory()), requirements.getLimits().get("memory"),
                     "Admin console memory limit incorrect");
-            assertEquals(adminConfig.getMemory(), requirements.getRequests().get("memory").getAmount(),
+            assertEquals(new Quantity(adminConfig.getMemory()), requirements.getRequests().get("memory"),
                     "Admin console memory requests incorrect");
             if (adminConfig.getCpu() != null) {
-                assertEquals(adminConfig.getCpu(), requirements.getLimits().get("cpu").getAmount(),
+                assertEquals(new Quantity(adminConfig.getCpu()), requirements.getLimits().get("cpu"),
                         "Admin console cpu limit incorrect");
-                assertEquals(adminConfig.getCpu(), requirements.getRequests().get("cpu").getAmount(),
+                assertEquals(new Quantity(adminConfig.getCpu()), requirements.getRequests().get("cpu"),
                         "Admin console cpu requests incorrect");
             }
         }
