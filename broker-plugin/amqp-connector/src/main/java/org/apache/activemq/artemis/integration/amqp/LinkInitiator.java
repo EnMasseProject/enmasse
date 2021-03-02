@@ -21,6 +21,13 @@
 package org.apache.activemq.artemis.integration.amqp;
 
 import io.netty.buffer.ByteBuf;
+import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.core.server.Consumer;
+import org.apache.activemq.artemis.protocol.amqp.broker.ActiveMQProtonRemotingConnection;
+import org.apache.activemq.artemis.protocol.amqp.exceptions.ActiveMQAMQPException;
+import org.apache.activemq.artemis.protocol.amqp.proton.AMQPSessionContext;
+import org.apache.activemq.artemis.protocol.amqp.proton.ProtonServerSenderContext;
+import org.apache.activemq.artemis.protocol.amqp.proton.SenderController;
 import org.apache.activemq.artemis.protocol.amqp.proton.handler.EventHandler;
 import org.apache.activemq.artemis.protocol.amqp.proton.handler.ProtonHandler;
 import org.apache.activemq.artemis.spi.core.remoting.ReadyListener;
@@ -49,9 +56,11 @@ import java.util.Map;
 public class LinkInitiator implements EventHandler {
    private static final Symbol PRIORITY = Symbol.getSymbol("priority");
    private static final Symbol QD_WAYPOINT = Symbol.getSymbol("qd.waypoint");
+   private final ActiveMQProtonRemotingConnection protonRemotingConnection;
    private final LinkInfo linkInfo;
 
-   public LinkInitiator(LinkInfo linkInfo) {
+   public LinkInitiator(ActiveMQProtonRemotingConnection protonRemotingConnection, LinkInfo linkInfo) {
+      this.protonRemotingConnection = protonRemotingConnection;
       this.linkInfo = linkInfo;
    }
 
@@ -137,22 +146,61 @@ public class LinkInitiator implements EventHandler {
 
    @Override
    public void onFinal(Session session) throws Exception {
-
    }
 
    @Override
    public void onInit(Link link) throws Exception {
-
    }
 
    @Override
    public void onLocalOpen(Link link) throws Exception {
-
    }
 
    @Override
    public void onRemoteOpen(Link link) throws Exception {
-      ActiveMQAMQPLogger.LOGGER.infov("{0} onRemoteOpen", link.getName());
+      AMQPSessionContext sessionContext = protonRemotingConnection.getAmqpConnection().getSessionExtension(link.getSession());
+      if (sessionContext != null) {
+         ActiveMQAMQPLogger.LOGGER.infov("{0} onRemoteOpen - registering link {1} with server", linkInfo.getLinkName(), linkInfo.getDirection());
+         if (link instanceof Sender) {
+            Sender sender = ((Sender) link);
+            try {
+               // We really ought to apply the consumer priority here but Artemis doesn't have the API.
+               sessionContext.addSender(sender, new SenderController() {
+                  @Override
+                  public Consumer init(ProtonServerSenderContext senderContext) throws Exception {
+                     return (Consumer) sessionContext.getSessionSPI().createSender(senderContext, SimpleString.toSimpleString(linkInfo.getSourceAddress()), null, false);
+                  }
+
+                  @Override
+                  public void close() {
+                  }
+               });
+            } catch (Exception e) {
+               ActiveMQAMQPLogger.LOGGER.errorv(e, "Failed to register sender", sender.getName());
+               try {
+                  try {
+                     sessionContext.removeSender(sender);
+                  } catch (ActiveMQAMQPException ignored) {
+                  }
+               } finally {
+                  sender.close();
+               }
+            }
+
+         } else if (link instanceof Receiver) {
+            Receiver receiver = ((Receiver) link);
+            try {
+               sessionContext.addReceiver(receiver);
+            } catch (Exception e) {
+               ActiveMQAMQPLogger.LOGGER.errorv(e, "Failed to register receiver", receiver.getName());
+               try {
+                  sessionContext.removeReceiver(receiver);
+               } finally {
+                  receiver.close();
+               }
+            }
+         }
+      }
    }
 
    @Override
@@ -163,7 +211,18 @@ public class LinkInitiator implements EventHandler {
    @Override
    public void onRemoteClose(Link link) throws Exception {
       ActiveMQAMQPLogger.LOGGER.infov("Link {0} closed. Closing connection", link.getName());
-      link.getSession().getConnection().close();
+      try {
+         AMQPSessionContext sessionContext = protonRemotingConnection.getAmqpConnection().getSessionExtension(link.getSession());
+         if (sessionContext != null) {
+            if (link instanceof Sender) {
+               sessionContext.removeSender((Sender) link);
+            } else {
+               sessionContext.removeReceiver((Receiver) link);
+            }
+         }
+      } finally {
+         link.getSession().getConnection().close();
+      }
    }
 
    @Override
@@ -211,7 +270,8 @@ public class LinkInitiator implements EventHandler {
    }
 
    private void createLink(org.apache.qpid.proton.engine.Session session) throws Exception {
-      Link initiatedLink = null;
+      ActiveMQAMQPLogger.LOGGER.infov("{0} creating link {1}", linkInfo.getLinkName(), linkInfo.getDirection());
+
       switch (linkInfo.getDirection()) {
          case out:
             createSender(session);
@@ -258,6 +318,7 @@ public class LinkInitiator implements EventHandler {
 
    private Link createSender(Session session) {
       Sender sender;
+
       if (linkInfo.getLinkName() != null) {
          sender = session.sender(linkInfo.getLinkName());
       } else {
@@ -278,12 +339,7 @@ public class LinkInitiator implements EventHandler {
          source.setCapabilities(QD_WAYPOINT);
       }
 
-      // We really ought to apply the consumer priority to the link properties here, but Artemis takes the link
-      // priority from the remote properties (which are set from the wire as the link attach response performative
-      // arrives).
-
       sender.setSource(source);
-
       sender.open();
       return sender;
    }

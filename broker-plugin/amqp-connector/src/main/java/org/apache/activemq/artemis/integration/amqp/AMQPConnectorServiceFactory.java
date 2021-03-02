@@ -127,7 +127,6 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
 
       String containerId = Optional.ofNullable((String)configuration.get(CONTAINER_ID)).orElse(clusterId);
 
-      int nettyThreads = Optional.ofNullable((String)configuration.get(NETTY_THREADS)).map(Util::parseIntOrNull).orElse(4);
       int idleTimeout = Optional.ofNullable((String)configuration.get(IDLE_TIMEOUT)).map(Util::parseIntOrNull).orElse(16_000);
       Integer consumerPriority = Optional.ofNullable((String)configuration.get(CONSUMER_PRIORITY)).map(Util::parseIntOrNull).orElse(null);
 

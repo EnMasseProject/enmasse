@@ -67,12 +67,12 @@ public class AMQPConnectorService implements ConnectorService, ClientConnectionL
    private final int minLargeMessageSize;
    private final ProtonProtocolManagerFactory protocolManagerFactory;
    private final ClientSASLFactory saslClientFactory;
+   private final Optional<LinkInfo> linkInfo;
    private volatile NettyConnection nettyConnection;
    private volatile NettyConnector connector;
    private ActiveMQProtonRemotingConnection protonRemotingConnection;
    private AtomicBoolean started = new AtomicBoolean();
    private AtomicBoolean restarting = new AtomicBoolean();
-   private final Optional<LinkInitiator> linkInitiator;
 
    public AMQPConnectorService(String connectorName, Map<String, Object> connectorConfig, String containerId, String groupId, Optional<LinkInfo> linkInfo, ActiveMQServer server, ScheduledExecutorService scheduledExecutorService, long idleTimeout, boolean treatRejectAsUnmodifiedDeliveryFailed, boolean useModifiedForTransientDeliveryErrors, int minLargeMessageSize) {
       this.name = connectorName;
@@ -85,6 +85,7 @@ public class AMQPConnectorService implements ConnectorService, ClientConnectionL
       this.useModifiedForTransientDeliveryErrors = useModifiedForTransientDeliveryErrors;
       this.minLargeMessageSize = minLargeMessageSize;
       this.protocolManagerFactory = (ProtonProtocolManagerFactory) server.getRemotingService().getProtocolFactoryMap().get(ProtonProtocolManagerFactory.AMQP_PROTOCOL_NAME);
+      this.linkInfo = linkInfo;
 
       connectionProperties = new HashMap<>();
       connectionProperties.put(groupSymbol, groupId);
@@ -95,7 +96,6 @@ public class AMQPConnectorService implements ConnectorService, ClientConnectionL
 
       saslClientFactory = buildClientSaslFactory(sslEnabled);
 
-      linkInitiator = linkInfo.map(LinkInitiator::new);
    }
 
    private ClientSASLFactory buildClientSaslFactory(boolean sslEnabled) {
@@ -169,16 +169,15 @@ public class AMQPConnectorService implements ConnectorService, ClientConnectionL
                   }
                });
 
+               Optional<LinkInitiator> linkInitiator = this.linkInfo.map(info -> new LinkInitiator(protonRemotingConnection, info));
                linkInitiator.ifPresent(initiator -> protonRemotingConnection.getAmqpConnection().addEventHandler(initiator));
-
 
                protonRemotingConnection.getAmqpConnection().runLater(() -> {
                   protonRemotingConnection.getAmqpConnection().open();
                   protonRemotingConnection.getAmqpConnection().flush();
                });
+               success = true;
             }
-
-            success = true;
          } catch (Throwable t) {
             // Note - the scheduledExecutorService supplied by Artemis ignores exceptions.  Ensure the cause of the failure is logged..
             ActiveMQAMQPLogger.LOGGER.errorv(t, "Error starting connector {0}", name);
