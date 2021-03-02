@@ -39,20 +39,17 @@ import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 import org.apache.qpid.proton.engine.Transport;
-import org.apache.qpid.proton.engine.impl.LinkMutator;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Event handler for establishing outgoing links
  */
 public class LinkInitiator implements EventHandler {
    private static final Symbol PRIORITY = Symbol.getSymbol("priority");
+   private static final Symbol QD_WAYPOINT = Symbol.getSymbol("qd.waypoint");
    private final LinkInfo linkInfo;
-   private final Map<Link, org.apache.qpid.proton.amqp.transport.Target> initiatedReceivingLinks = new ConcurrentHashMap<>();
-   private final Map<Link, org.apache.qpid.proton.amqp.transport.Source> initiatedSendingLinks = new ConcurrentHashMap<>();
 
    public LinkInitiator(LinkInfo linkInfo) {
       this.linkInfo = linkInfo;
@@ -166,8 +163,6 @@ public class LinkInitiator implements EventHandler {
    @Override
    public void onRemoteClose(Link link) throws Exception {
       ActiveMQAMQPLogger.LOGGER.infov("Link {0} closed. Closing connection", link.getName());
-      initiatedSendingLinks.remove(link);
-      initiatedReceivingLinks.remove(link);
       link.getSession().getConnection().close();
    }
 
@@ -184,8 +179,6 @@ public class LinkInitiator implements EventHandler {
    @Override
    public void onRemoteDetach(Link link) throws Exception {
       ActiveMQAMQPLogger.LOGGER.infov("Link {0} detached. Closing connection", link.getName());
-      initiatedSendingLinks.remove(link);
-      initiatedReceivingLinks.remove(link);
       link.getSession().getConnection().close();
    }
 
@@ -221,12 +214,10 @@ public class LinkInitiator implements EventHandler {
       Link initiatedLink = null;
       switch (linkInfo.getDirection()) {
          case out:
-            initiatedLink = createSender(session);
-            initiatedSendingLinks.put(initiatedLink, initiatedLink.getSource().copy());
+            createSender(session);
             break;
          case in:
-            initiatedLink = createReceiver(session);
-            initiatedReceivingLinks.put(initiatedLink, initiatedLink.getTarget().copy());
+            createReceiver(session);
             break;
       }
    }
@@ -241,7 +232,7 @@ public class LinkInitiator implements EventHandler {
       Target target = new Target();
       target.setAddress(linkInfo.getTargetAddress());
       if (!linkInfo.getCapabilities().isEmpty()) {
-         target.setCapabilities(Symbol.getSymbol("qd.waypoint"));
+         target.setCapabilities(QD_WAYPOINT);
       }
       receiver.setTarget(target);
 
@@ -250,7 +241,7 @@ public class LinkInitiator implements EventHandler {
       source.setDurable(TerminusDurability.UNSETTLED_STATE);
       if (!linkInfo.getCapabilities().isEmpty()) {
          source.setCapabilities(linkInfo.getCapabilities().toArray(new Symbol[0]));
-         source.setCapabilities(Symbol.getSymbol("qd.waypoint"));
+         source.setCapabilities(QD_WAYPOINT);
       }
 
       // Requires https://issues.apache.org/jira/browse/DISPATCH-1745
@@ -275,7 +266,7 @@ public class LinkInitiator implements EventHandler {
       Target target = new Target();
       target.setAddress(linkInfo.getTargetAddress());
       if (!linkInfo.getCapabilities().isEmpty()) {
-         target.setCapabilities(Symbol.getSymbol("qd.waypoint"));
+         target.setCapabilities(QD_WAYPOINT);
       }
       sender.setTarget(target);
 
@@ -284,7 +275,7 @@ public class LinkInitiator implements EventHandler {
       source.setDurable(TerminusDurability.UNSETTLED_STATE);
       source.setOutcomes(Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL, Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL);
       if (!linkInfo.getCapabilities().isEmpty()) {
-         source.setCapabilities(Symbol.getSymbol("qd.waypoint"));
+         source.setCapabilities(QD_WAYPOINT);
       }
 
       // We really ought to apply the consumer priority to the link properties here, but Artemis takes the link
@@ -297,19 +288,4 @@ public class LinkInitiator implements EventHandler {
       return sender;
    }
 
-   // This is hack - Artemis allows the definitive view of the target (receiving links), and source (sending links)
-   // to be overwritten by the peer's view.
-   public void processLinkDuringAttach(Link link) {
-      if (initiatedReceivingLinks.containsKey(link)) {
-         LinkMutator.setRemoteTarget(link, initiatedReceivingLinks.get(link));
-      } else if (initiatedSendingLinks.containsKey(link)) {
-         // 2nd hack.  Add the consumer priority to the *remote* priorities.
-         LinkMutator.setRemoteSource(link, initiatedSendingLinks.get(link));
-         if (linkInfo.getConsumerPriority() != null) {
-            Map<Symbol, Object> remoteProperties = link.getRemoteProperties() == null ? new HashMap<>() : new HashMap<>(link.getRemoteProperties());
-            remoteProperties.put(PRIORITY, linkInfo.getConsumerPriority());
-            LinkMutator.setRemoteProperties(link, remoteProperties);
-         }
-      }
-   }
 }
