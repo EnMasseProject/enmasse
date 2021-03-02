@@ -154,14 +154,24 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList<
                 if (e != null) {
                     log.warn("Unexpected watch close - isShouldRetry{}", e.isShouldRetry(), e);
                     if (e.isShouldRetry()) {
-                        nextResync = Instant.MIN;
-                        try {
-                            queue.wakeup();
-                        } catch (InterruptedException ex) {
-                            log.warn("Interrupted when waking up queue processor", ex);
-                            Thread.currentThread().interrupt();
-                        }
+                        doWakeup();
                     }
+                }
+            }
+
+            @Override
+            public void onClose() {
+                log.info("Watch closed");
+                doWakeup();
+            }
+
+            private void doWakeup() {
+                try {
+                    nextResync = Instant.MIN;
+                    queue.wakeup();
+                } catch (InterruptedException ex) {
+                    log.warn("Interrupted when waking up queue processor", ex);
+                    Thread.currentThread().interrupt();
                 }
             }
         }, watchOptions);
