@@ -358,7 +358,7 @@ public class AddressControllerTest {
                 .build();
 
         KubernetesList newList = new KubernetesListBuilder()
-                .addToStatefulSetItems(new StatefulSetBuilder()
+                .addToItems(new StatefulSetBuilder()
                         .editOrNewMetadata()
                         .withName("broker-infra-0")
                         .endMetadata()
@@ -468,7 +468,7 @@ public class AddressControllerTest {
                 .build();
 
         KubernetesList oldList = new KubernetesListBuilder()
-                .addToStatefulSetItems(new StatefulSetBuilder()
+                .addToItems(new StatefulSetBuilder()
                         .editOrNewMetadata()
                         .withName("broker-infra-0")
                         .endMetadata()
@@ -498,7 +498,7 @@ public class AddressControllerTest {
         assertEquals(BrokerState.Migrating, captured.getStatus().getBrokerStatuses().get(0).getState());
 
         oldList = new KubernetesListBuilder()
-                .addToStatefulSetItems(new StatefulSetBuilder()
+                .addToItems(new StatefulSetBuilder()
                         .editOrNewMetadata()
                         .withName("broker-infra-0")
                         .endMetadata()

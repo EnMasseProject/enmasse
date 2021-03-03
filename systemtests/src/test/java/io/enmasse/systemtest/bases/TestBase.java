@@ -267,7 +267,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                                                 .withAddresses(String.format("%s.%s.%s", destNamePrefix, customerIndex, sufix))
                                                 .withOperations(Operation.send, Operation.recv).build()))
                                 .endSpec()
-                                .done());
+                                .build());
                 AmqpClient queueClient = resourcesManager.getAmqpClientFactory().createQueueClient();
                 queueClient.getConnectOptions().setCredentials(user);
                 clients.add(queueClient);

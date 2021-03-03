@@ -17,6 +17,8 @@ import javax.validation.ValidationException;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
+
 public class AddressSpaceTest {
 
     @Test
@@ -24,6 +26,7 @@ public class AddressSpaceTest {
         AddressSpace space = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("name")
+                .withAnnotations(new HashMap<>())
                 .endMetadata()
 
                 .withNewSpec()
@@ -42,11 +45,6 @@ public class AddressSpaceTest {
         assertNotNull(space.getSpec().getEndpoints());
         assertThat(space.getSpec().getEndpoints().size(), is(0));
         assertNull(space.getSpec().getAuthenticationService());
-
-        assertNotNull(space.getMetadata().getAnnotations());
-        assertThat(space.getMetadata().getAnnotations().size(), is(0));
-        assertNotNull(space.getMetadata().getLabels());
-        assertThat(space.getMetadata().getLabels().size(), is(0));
     }
 
 

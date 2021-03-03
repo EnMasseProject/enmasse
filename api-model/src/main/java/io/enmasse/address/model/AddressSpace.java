@@ -10,14 +10,17 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.enmasse.common.model.AbstractHasMetadata;
+import io.enmasse.admin.model.v1.WithAdditionalProperties;
+import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 import io.enmasse.common.model.DefaultCustomResource;
 import io.enmasse.model.validation.AddressSpaceName;
 import io.enmasse.model.validation.KubeMetadataName;
-import io.fabric8.kubernetes.api.model.Doneable;
+import io.fabric8.kubernetes.api.model.Namespaced;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Version;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
-import io.sundr.builder.annotations.Inline;
 
 /**
  * An EnMasse AddressSpace.
@@ -26,19 +29,16 @@ import io.sundr.builder.annotations.Inline;
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(AbstractHasMetadata.class)},
-        inline = @Inline(
-                type = Doneable.class,
-                prefix = "Doneable",
-                value = "done"
-                )
+        refs = {@BuildableReference(ObjectMeta.class)}
         )
 @DefaultCustomResource
 @SuppressWarnings("serial")
 @AddressSpaceName
 @KubeMetadataName
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AddressSpace extends AbstractHasMetadata<AddressSpace> {
+@Version(CoreCrd.VERSION)
+@Group(CoreCrd.GROUP)
+public class AddressSpace extends CustomResourceWithAdditionalProperties<AddressSpaceSpec,  AddressSpaceStatus> implements WithAdditionalProperties, Namespaced {
 
     public static final String KIND = "AddressSpace";
 
@@ -46,10 +46,6 @@ public class AddressSpace extends AbstractHasMetadata<AddressSpace> {
     private AddressSpaceSpec spec = new AddressSpaceSpec();
     @Valid
     private AddressSpaceStatus status = new AddressSpaceStatus(false);
-
-    public AddressSpace() {
-        super(KIND, CoreCrd.API_VERSION);
-    }
 
     public void setSpec(AddressSpaceSpec spec) {
         this.spec = spec;
@@ -65,6 +61,17 @@ public class AddressSpace extends AbstractHasMetadata<AddressSpace> {
 
     public AddressSpaceStatus getStatus() {
         return status;
+    }
+    private ObjectMeta metadata;
+
+    @Override
+    public ObjectMeta getMetadata() {
+        return metadata;
+    }
+
+    @Override
+    public void setMetadata(ObjectMeta metadata) {
+        this.metadata = metadata;
     }
 
     @Override

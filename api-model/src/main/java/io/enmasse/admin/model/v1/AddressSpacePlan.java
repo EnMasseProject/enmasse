@@ -5,11 +5,14 @@
 package io.enmasse.admin.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 import io.enmasse.common.model.DefaultCustomResource;
-import io.fabric8.kubernetes.api.model.Doneable;
+import io.fabric8.kubernetes.api.model.Namespaced;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Version;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
-import io.sundr.builder.annotations.Inline;
 
 import java.util.List;
 import java.util.Map;
@@ -19,20 +22,29 @@ import java.util.Objects;
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(AbstractHasMetadataWithAdditionalProperties.class)},
-        inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
+        refs = {@BuildableReference(ObjectMeta.class)}
 )
 @DefaultCustomResource
 @SuppressWarnings("serial")
-public class AddressSpacePlan extends AbstractHasMetadataWithAdditionalProperties<AddressSpacePlan> implements io.enmasse.admin.model.AddressSpacePlan {
+@Version(AdminCrd.VERSION_V1BETA2)
+@Group(AdminCrd.GROUP)
+public class AddressSpacePlan extends CustomResourceWithAdditionalProperties<AddressSpacePlanSpec, AddressSpacePlanStatus> implements WithAdditionalProperties, io.enmasse.admin.model.AddressSpacePlan, Namespaced {
 
     public static final String KIND = "AddressSpacePlan";
 
+    // for builders - probably will be fixed by https://github.com/fabric8io/kubernetes-client/pull/1346
+    private ObjectMeta metadata;
     private AddressSpacePlanSpec spec;
     private AddressSpacePlanStatus status;
 
-    public AddressSpacePlan() {
-        super(KIND, AdminCrd.API_VERSION_V1BETA2);
+    @Override
+    public ObjectMeta getMetadata() {
+        return metadata;
+    }
+
+    @Override
+    public void setMetadata(ObjectMeta metadata) {
+        this.metadata = metadata;
     }
 
     public void setSpec(AddressSpacePlanSpec spec) {

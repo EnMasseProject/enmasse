@@ -11,19 +11,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
-import io.sundr.builder.annotations.Inline;
 
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
-        builderPackage = "io.fabric8.kubernetes.api.builder",
-        inline = @Inline(
-                type = Doneable.class,
-                prefix = "Doneable",
-                value = "done"
-                )
+        builderPackage = "io.fabric8.kubernetes.api.builder"
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserAuthorization {

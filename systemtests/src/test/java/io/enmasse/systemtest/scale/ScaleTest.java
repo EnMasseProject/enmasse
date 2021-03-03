@@ -46,6 +46,7 @@ import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -610,17 +611,17 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 .deployments()
                 .inNamespace(kubernetes.getInfraNamespace())
                 .withName(authservice)
-                .edit()
-                .editSpec()
-                .editTemplate()
-                .editSpec()
-                .editFirstContainer()
-                .withEnv(updatedEnvVars)
-                .endContainer()
-                .endSpec()
-                .endTemplate()
-                .endSpec()
-                .done();
+                .edit(deployment -> new DeploymentBuilder()
+                        .editSpec()
+                        .editTemplate()
+                        .editSpec()
+                        .editFirstContainer()
+                        .withEnv(updatedEnvVars)
+                        .endContainer()
+                        .endSpec()
+                        .endTemplate()
+                        .endSpec()
+                        .build());
     }
 
     private void appendAddress(Address... addresses) throws InterruptedException {

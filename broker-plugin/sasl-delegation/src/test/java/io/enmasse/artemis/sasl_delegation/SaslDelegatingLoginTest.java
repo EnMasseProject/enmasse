@@ -24,6 +24,7 @@ import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Transport;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -273,7 +274,12 @@ public class SaslDelegatingLoginTest {
     }
 
     private X509Certificate generateCertificate(String cert) throws CertificateException {
-        return X509Certificate.getInstance(cert.getBytes(StandardCharsets.US_ASCII));
+        try {
+            return X509Certificate.getInstance(cert.getBytes(StandardCharsets.US_ASCII));
+        } catch (CertificateException e) {
+            Assumptions.assumeTrue(!e.getMessage().contains("java.lang.ClassNotFoundException"), "Can't run test on this JVM");
+            throw new RuntimeException(e);
+        }
     }
 
     private static final Symbol ADDRESS_AUTHZ_CAPABILITY = Symbol.valueOf("ADDRESS-AUTHZ");

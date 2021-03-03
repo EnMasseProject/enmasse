@@ -167,8 +167,10 @@ public class ExportsController implements Controller {
 
     private static Map<String, String> decodeExportMap(Map<String, String> data) {
         Map<String, String> exportData = new HashMap<>();
-        for (Map.Entry<String, String> entry : data.entrySet()) {
-            exportData.put(entry.getKey(), new String(Base64.getDecoder().decode(entry.getValue()), StandardCharsets.UTF_8));
+        if (data != null && !data.isEmpty()) {
+            for (Map.Entry<String, String> entry : data.entrySet()) {
+                exportData.put(entry.getKey(), new String(Base64.getDecoder().decode(entry.getValue()), StandardCharsets.UTF_8));
+            }
         }
         return exportData;
     }

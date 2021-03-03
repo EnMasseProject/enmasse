@@ -8,39 +8,47 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.enmasse.common.model.AbstractHasMetadata;
+import io.enmasse.admin.model.v1.WithAdditionalProperties;
+import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 import io.enmasse.common.model.DefaultCustomResource;
-import io.fabric8.kubernetes.api.model.Doneable;
+import io.fabric8.kubernetes.api.model.Namespaced;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Kind;
+import io.fabric8.kubernetes.model.annotation.Version;
 import io.sundr.builder.annotations.Buildable;
-import io.sundr.builder.annotations.BuildableReference;
-import io.sundr.builder.annotations.Inline;
 
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
-        builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(AbstractHasMetadata.class)},
-        inline = @Inline(
-                type = Doneable.class,
-                prefix = "Doneable",
-                value = "done"
-                )
+        builderPackage = "io.fabric8.kubernetes.api.builder"
         )
 @DefaultCustomResource
 @SuppressWarnings("serial")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class User extends AbstractHasMetadata<User> {
+@Version(UserCrd.VERSION)
+@Group(UserCrd.GROUP)
+@Kind(User.KIND)
+public class User extends CustomResourceWithAdditionalProperties<UserSpec, UserStatus> implements WithAdditionalProperties, Namespaced {
 
     private static final Pattern NAME_PATTERN = Pattern.compile("^[a-z]+([a-z0-9\\-]*[a-z0-9]+|[a-z0-9]*)\\.[a-z0-9]+([a-z0-9@.\\-]*[a-z0-9]+|[a-z0-9]*)$");
 
     public static final String KIND = "MessagingUser";
 
-    public User() {
-        super(KIND, UserCrd.API_VERSION);
-    }
-
+    // for builders - probably will be fixed by https://github.com/fabric8io/kubernetes-client/pull/1346
+    private ObjectMeta metadata;
     private UserSpec spec;
     private UserStatus status;
+
+    @Override
+    public ObjectMeta getMetadata() {
+        return metadata;
+    }
+
+    @Override
+    public void setMetadata(ObjectMeta metadata) {
+        this.metadata = metadata;
+    }
 
     public void setSpec(final UserSpec spec) {
         this.spec = spec;

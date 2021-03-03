@@ -10,22 +10,15 @@ import java.util.Objects;
 
 import javax.validation.Valid;
 
-import io.enmasse.common.model.AbstractHasMetadata;
-import io.fabric8.kubernetes.api.model.Doneable;
+import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.sundr.builder.annotations.Buildable;
-import io.sundr.builder.annotations.BuildableReference;
-import io.sundr.builder.annotations.Inline;
 
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
-        builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs = {@BuildableReference(AbstractHasMetadata.class)},
-        inline = @Inline(
-                type = Doneable.class,
-                prefix = "Doneable",
-                value = "done"))
-public class AddressSpaceSchemaSpec {
+        builderPackage = "io.fabric8.kubernetes.api.builder"
+)
+public class AddressSpaceSchemaSpec extends AbstractWithAdditionalProperties {
     private String description;
     private List<@Valid AddressTypeInformation> addressTypes = new ArrayList<>();
     private List<@Valid AddressSpacePlanDescription> plans = new ArrayList<>();

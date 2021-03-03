@@ -6,10 +6,8 @@ package io.enmasse.address.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
-import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
-import io.sundr.builder.annotations.Inline;
 
 import javax.validation.constraints.NotNull;
 import java.util.*;
@@ -21,13 +19,8 @@ import java.util.*;
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(AbstractWithAdditionalProperties.class)},
-        inline = @Inline(
-                type = Doneable.class,
-                prefix = "Doneable",
-                value = "done"
+        refs= {@BuildableReference(AbstractWithAdditionalProperties.class)}
         )
-)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CertificateProviderTypeDescription extends AbstractWithAdditionalProperties {
 

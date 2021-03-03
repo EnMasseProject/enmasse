@@ -8,7 +8,6 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.BrokeredInfraConfig;
@@ -101,7 +100,7 @@ public class PlansTestBrokered extends PlansTestBase implements ITestIsolatedBro
 
         clientUtils.sendDurableMessages(resourcesManager, addressSpace, queue, user, 16);
 
-        addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(afterAddressSpacePlan.getMetadata().getName()).endSpec().done();
+        addressSpace = new AddressSpaceBuilder(addressSpace).editSpec().withPlan(afterAddressSpacePlan.getMetadata().getName()).endSpec().build();
         isolatedResourcesManager.replaceAddressSpace(addressSpace);
 
         clientUtils.receiveDurableMessages(resourcesManager, addressSpace, queue, user, 16);

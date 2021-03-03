@@ -8,11 +8,14 @@ package io.enmasse.admin.model.v1;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.enmasse.address.model.MessageRedelivery;
 import io.enmasse.address.model.MessageTtl;
+import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 import io.enmasse.common.model.DefaultCustomResource;
-import io.fabric8.kubernetes.api.model.Doneable;
+import io.fabric8.kubernetes.api.model.Namespaced;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Version;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
-import io.sundr.builder.annotations.Inline;
 
 import java.util.Map;
 import java.util.Objects;
@@ -21,20 +24,29 @@ import java.util.Objects;
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(AbstractHasMetadataWithAdditionalProperties.class)},
-        inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
+        refs = {@BuildableReference(ObjectMeta.class)}
 )
 @DefaultCustomResource
 @SuppressWarnings("serial")
-public class AddressPlan extends AbstractHasMetadataWithAdditionalProperties<AddressPlan> implements io.enmasse.admin.model.AddressPlan {
+@Version(AdminCrd.VERSION_V1BETA2)
+@Group(AdminCrd.GROUP)
+
+public class AddressPlan extends CustomResourceWithAdditionalProperties<AddressPlanSpec, AddressPlanStatus> implements WithAdditionalProperties, io.enmasse.admin.model.AddressPlan, Namespaced {
 
     public static final String KIND = "AddressPlan";
 
     private AddressPlanSpec spec;
     private AddressPlanStatus status;
+    private ObjectMeta metadata; // for builder
 
-    public AddressPlan() {
-        super(KIND, AdminCrd.API_VERSION_V1BETA2);
+    @Override
+    public ObjectMeta getMetadata() {
+        return metadata;
+    }
+
+    @Override
+    public void setMetadata(ObjectMeta metadata) {
+        this.metadata = metadata;
     }
 
     @Override

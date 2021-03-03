@@ -21,7 +21,7 @@ public class AddressFinalizerController extends AbstractFinalizerController {
 
     public static final String FINALIZER_ADDRESSES = "enmasse.io/addresses";
 
-    private static final Integer BATCH_SIZE = Integer.getInteger("io.enmasse.controller.AddressFinalizerController.batchSize", 100);
+    private static final Long BATCH_SIZE = Long.getLong("io.enmasse.controller.AddressFinalizerController.batchSize", 100L);
 
     private AddressSpaceApi addressSpaceApi;
 

@@ -8,7 +8,7 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
-import io.enmasse.admin.model.v1.DoneableAddressSpacePlan;
+import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
 import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
@@ -39,7 +39,7 @@ class PlansTest extends TestBase implements ITestSharedStandard {
 
         AddressSpacePlan standardPlan = resourcesManager.getAddressSpacePlan("standard");
         resourcesManager.createAddressPlan(weakQueuePlan);
-        standardPlan = new DoneableAddressSpacePlan(standardPlan).editOrNewSpec().addNewAddressPlan(weakQueuePlanName).endSpec().done();
+        standardPlan = new AddressSpacePlanBuilder(standardPlan).editOrNewSpec().addNewAddressPlan(weakQueuePlanName).endSpec().build();
         resourcesManager.removeAddressSpacePlan(standardPlan);
 
         ArrayList<Address> dest = new ArrayList<>();

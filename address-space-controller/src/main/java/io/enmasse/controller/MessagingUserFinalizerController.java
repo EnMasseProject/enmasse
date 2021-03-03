@@ -5,7 +5,6 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserCrd;
 import io.enmasse.user.model.v1.UserList;
@@ -13,6 +12,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,13 +23,13 @@ public class MessagingUserFinalizerController extends AbstractFinalizerControlle
     private static final Logger log = LoggerFactory.getLogger(AddressFinalizerController.class);
     public static final String FINALIZER_MESSAGING_USERS = "enmasse.io/messaging-users";
 
-    private final MixedOperation<User, UserList, DoneableUser, Resource<User, DoneableUser>> userClient;
+    private final MixedOperation<User, UserList, Resource<User>> userClient;
 
     public MessagingUserFinalizerController(NamespacedKubernetesClient client) {
-        this(client.customResources(UserCrd.messagingUser(), User.class, UserList.class, DoneableUser.class));
+        this(client.customResources(UserCrd.messagingUser(), User.class, UserList.class));
     }
 
-    MessagingUserFinalizerController(MixedOperation<User, UserList, DoneableUser, Resource<User, DoneableUser>> userClient) {
+    MessagingUserFinalizerController(MixedOperation<User, UserList, Resource<User>> userClient) {
         super(FINALIZER_MESSAGING_USERS);
         this.userClient = userClient;
     }

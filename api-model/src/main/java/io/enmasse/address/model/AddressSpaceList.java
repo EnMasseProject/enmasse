@@ -4,26 +4,14 @@
  */
 package io.enmasse.address.model;
 
-import java.util.Collection;
-
-import io.enmasse.common.model.AbstractList;
 import io.enmasse.common.model.DefaultCustomResource;
+import io.fabric8.kubernetes.client.CustomResourceList;
 
 /**
  * Type for address space list
  */
 @DefaultCustomResource
 @SuppressWarnings("serial")
-public class AddressSpaceList extends AbstractList<AddressSpace> {
-
+public class AddressSpaceList extends CustomResourceList<AddressSpace> {
     public static final String KIND = "AddressSpaceList";
-
-    public AddressSpaceList() {
-        super(KIND, CoreCrd.API_VERSION);
-    }
-
-    public AddressSpaceList(Collection<AddressSpace> addressSpaces) {
-        this();
-        setItems(addressSpaces);
-    }
 }

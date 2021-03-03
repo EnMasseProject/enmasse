@@ -11,6 +11,7 @@ import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetSpec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -156,8 +157,8 @@ public class TemplateBrokerSetGeneratorTest {
     }
 
     private BrokerCluster generateCluster(Address address, ArgumentCaptor<Map<String, String>> captor, List<EnvVar> envVars) throws Exception {
-        when(kubernetes.processTemplate(anyString(), captor.capture())).thenReturn(new KubernetesListBuilder().addNewStatefulSetItem().withNewMetadata().withName("testset").endMetadata().
-                withNewSpec()
+        when(kubernetes.processTemplate(anyString(), captor.capture())).thenReturn(new KubernetesListBuilder().addToItems(new StatefulSetBuilder().withNewMetadata().withName("testset").endMetadata()
+                .withNewSpec()
                 .withReplicas(0)
                 .withNewTemplate()
                 .editOrNewMetadata()
@@ -174,7 +175,7 @@ public class TemplateBrokerSetGeneratorTest {
                         .endSpec()
                         .build())
                 .endSpec()
-                .endStatefulSetItem().build());
+                .build()).build());
 
         return generator.generateCluster(address.getMetadata().getName(), 1, address, null,
                 standardControllerSchema.getSchema().findAddressSpaceType("standard").map(type -> (StandardInfraConfig) type.findInfraConfig("cfg1").orElse(null)).orElse(null));

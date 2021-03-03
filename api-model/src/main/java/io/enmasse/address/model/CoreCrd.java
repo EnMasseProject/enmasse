@@ -4,8 +4,7 @@
  */
 package io.enmasse.address.model;
 
-import io.enmasse.common.model.CustomResources;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.kubernetes.internal.KubernetesDeserializer;
 
 public class CoreCrd {
@@ -13,16 +12,6 @@ public class CoreCrd {
     public static final String VERSION = "v1beta1";
     public static final String GROUP = "enmasse.io";
     public static final String API_VERSION = GROUP + "/" + VERSION;
-
-    private static final CustomResourceDefinition ADDRESS_CRD;
-    private static final CustomResourceDefinition ADDRESS_SPACE_CRD;
-    private static final CustomResourceDefinition ADDRESS_SPACE_SCHEMA_CRD;
-
-    static {
-        ADDRESS_CRD = CustomResources.createCustomResource(GROUP, VERSION, Address.KIND);
-        ADDRESS_SPACE_CRD = CustomResources.createCustomResource(GROUP, VERSION, AddressSpace.KIND);
-        ADDRESS_SPACE_SCHEMA_CRD = CustomResources.createCustomResource(GROUP, VERSION, AddressSpaceSchema.KIND, "Cluster");
-    }
 
     public static void registerCustomCrds() {
         KubernetesDeserializer.registerCustomKind(API_VERSION, Address.KIND, Address.class);
@@ -35,15 +24,15 @@ public class CoreCrd {
         KubernetesDeserializer.registerCustomKind(API_VERSION, AddressSpaceSchemaList.KIND, AddressSpaceSchemaList.class);
     }
 
-    public static CustomResourceDefinition addresses() {
-        return ADDRESS_CRD;
+    public static CustomResourceDefinitionContext addresses() {
+        return CustomResourceDefinitionContext.fromCustomResourceType(Address.class);
     }
 
-    public static CustomResourceDefinition addressSpaces() {
-        return ADDRESS_SPACE_CRD;
+    public static CustomResourceDefinitionContext addressSpaces() {
+        return CustomResourceDefinitionContext.fromCustomResourceType(AddressSpace.class);
     }
 
-    public static CustomResourceDefinition addresseSpaceSchemas() {
-        return ADDRESS_SPACE_SCHEMA_CRD;
+    public static CustomResourceDefinitionContext addressSpaceSchemas() {
+        return CustomResourceDefinitionContext.fromCustomResourceType(AddressSpaceSchema.class);
     }
 }

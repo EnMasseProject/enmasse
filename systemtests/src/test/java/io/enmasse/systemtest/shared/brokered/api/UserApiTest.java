@@ -12,10 +12,10 @@ import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.utils.UserUtils;
-import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
+import io.enmasse.user.model.v1.UserBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.AfterEach;
@@ -57,7 +57,7 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
                                 .withAddresses("jenda")
                                 .withOperations(Operation.send, Operation.recv).build()))
                 .endSpec()
-                .done();
+                .build();
 
         JsonObject userDefinitionPayload = UserUtils.userToJson(getSharedAddressSpace().getMetadata().getName(), testUser);
         users.put(getSharedAddressSpace(), testUser);
@@ -84,7 +84,7 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
                                 .withAddresses("jenda")
                                 .withOperations(Operation.send, Operation.recv).build()))
                 .endSpec()
-                .done();
+                .build();
 
         JsonObject userDefinitionPayload = UserUtils.userToJson(getSharedAddressSpace().getMetadata().getName(), testUser);
         userDefinitionPayload.getJsonObject("spec").getJsonArray("authorization").getJsonObject(0).getJsonArray("operations").add("unknown");
@@ -106,7 +106,7 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
                                 .withAddresses("jenda")
                                 .withOperations(Operation.send, Operation.recv).build()))
                 .endSpec()
-                .done();
+                .build();
 
         JsonObject userDefinitionPayload2 = UserUtils.userToJson("", testUser2);
 
@@ -127,7 +127,7 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
                                 .withAddresses("jenda")
                                 .withOperations(Operation.send).build()))
                 .endSpec()
-                .done();
+                .build();
 
         JsonObject userDefinitionPayload = UserUtils.userToJson(getSharedAddressSpace().getMetadata().getName(), testUser);
         users.put(getSharedAddressSpace(), testUser);
@@ -136,13 +136,13 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
         assertThat(KubeCMDClient.createCR(kubernetes.getInfraNamespace(), userDefinitionPayload.toString()).getRetCode(), is(true));
         assertThat(KubeCMDClient.getUser(kubernetes.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), cred.getUsername()).getRetCode(), is(true));
 
-        testUser = new DoneableUser(testUser)
+        testUser = new UserBuilder(testUser)
                 .editSpec()
                 .editFirstAuthorization()
                 .removeFromOperations(Operation.send)
                 .addToOperations(Operation.recv)
                 .endAuthorization()
-                .endSpec().done();
+                .endSpec().build();
 
         userDefinitionPayload = UserUtils.userToJson(getSharedAddressSpace().getMetadata().getName(), testUser);
 
@@ -185,7 +185,7 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
                                 .withAddresses("*")
                                 .withOperations(Operation.send, Operation.recv).build()))
                 .endSpec()
-                .done();
+                .build();
 
         assertThrows(KubernetesClientException.class, () -> resourcesManager.createOrUpdateUser(getSharedAddressSpace(), testUser));
     }
@@ -201,7 +201,7 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
                                 .withAddresses("*")
                                 .withOperations(Operation.send).build()))
                 .endSpec()
-                .done();
+                .build();
         users.put(getSharedAddressSpace(), testUser);
         resourcesManager.createOrUpdateUser(getSharedAddressSpace(), testUser);
 
@@ -217,7 +217,7 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
                                 .withAddresses("*")
                                 .withOperations(Operation.send).build()))
                 .endSpec()
-                .done();
+                .build();
         assertThrows(KubernetesClientException.class, () -> resourcesManager.createOrUpdateUser(getSharedAddressSpace(), testUser2));
 
         //hyphen is allowed elsewhere in user name (response HTTP:201)
@@ -229,7 +229,7 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
                                 .withAddresses("*")
                                 .withOperations(Operation.send).build()))
                 .endSpec()
-                .done();
+                .build();
         users.put(getSharedAddressSpace(), testUser3);
         resourcesManager.createOrUpdateUser(getSharedAddressSpace(), testUser3);
 
@@ -245,7 +245,7 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
                                 .withAddresses("*")
                                 .withOperations(Operation.send).build()))
                 .endSpec()
-                .done();
+                .build();
         users.put(getSharedAddressSpace(), testUser4);
         resourcesManager.createOrUpdateUser(getSharedAddressSpace(), testUser4);
 
@@ -261,7 +261,7 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
                                 .withAddresses("*")
                                 .withOperations(Operation.send).build()))
                 .endSpec()
-                .done();
+                .build();
         assertThrows(KubernetesClientException.class, () ->
                 resourcesManager.createOrUpdateUser(getSharedAddressSpace(), testUser5));
 
@@ -274,7 +274,7 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
                                 .withAddresses("*")
                                 .withOperations(Operation.send).build()))
                 .endSpec()
-                .done();
+                .build();
         users.put(getSharedAddressSpace(), testUser6);
         resourcesManager.createOrUpdateUser(getSharedAddressSpace(), testUser6);
 
@@ -287,7 +287,7 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
                                 .withAddresses("*")
                                 .withOperations(Operation.send).build()))
                 .endSpec()
-                .done();
+                .build();
         testUser7.getMetadata().setName("userpepinator");
         assertThrows(KubernetesClientException.class, () ->
                 resourcesManager.createOrUpdateUser(getSharedAddressSpace(), testUser5));

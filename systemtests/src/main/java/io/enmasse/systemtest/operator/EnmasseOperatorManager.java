@@ -18,6 +18,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import org.slf4j.Logger;
 
 import io.enmasse.admin.model.v1.ConsoleService;
@@ -272,11 +275,11 @@ public class EnmasseOperatorManager {
     private void enableMonitoringForNamespace() {
         Kubernetes.getInstance().getClient().namespaces()
                 .withName(kube.getInfraNamespace())
-                .edit()
-                .editMetadata()
-                .addToLabels("monitoring-key", "middleware")
-                .endMetadata()
-                .done();
+                .edit(n -> new NamespaceBuilder(n)
+                        .editMetadata()
+                        .addToLabels("monitoring-key", "middleware")
+                        .endMetadata()
+                        .build());
     }
 
     private void enableOperatorMetrics(boolean enable) {
@@ -299,7 +302,7 @@ public class EnmasseOperatorManager {
                 .deployments()
                 .inNamespace(kube.getInfraNamespace())
                 .withName("enmasse-operator")
-                .edit()
+                .edit(d -> new DeploymentBuilder(d)
                 .editSpec()
                 .editTemplate()
                 .editSpec()
@@ -309,7 +312,7 @@ public class EnmasseOperatorManager {
                 .endSpec()
                 .endTemplate()
                 .endSpec()
-                .done();
+                .build());
     }
 
     public boolean removeOlm() throws Exception {

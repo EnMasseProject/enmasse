@@ -6,7 +6,6 @@ package io.enmasse.systemtest.isolated.infra.brokered;
 
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
 import io.enmasse.admin.model.v1.BrokeredInfraConfig;
@@ -178,7 +177,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                 .build();
         resourcesManager.createAddressSpacePlan(exampleSpacePlan);
 
-        exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
+        exampleAddressSpace = new AddressSpaceBuilder(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().build();
         isolatedResourcesManager.replaceAddressSpace(exampleAddressSpace);
 
         if (!updatePersistentVolumeClaim) {

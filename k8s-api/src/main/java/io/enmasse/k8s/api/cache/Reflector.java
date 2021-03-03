@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import io.fabric8.kubernetes.client.WatcherException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,7 +144,7 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList<
             }
 
             @Override
-            public void onClose(KubernetesClientException e) {
+            public void onClose(WatcherException e) {
                 Instant now = clock.instant();
                 if (now.minusMillis(start.toEpochMilli()).toEpochMilli() < 1000 && eventCount.get() == 0) {
                     log.warn("Very short watch: Unexpected watch close - watch lasted less than a second and no items received");
@@ -151,16 +152,26 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList<
                     log.info("Watch closed");
                 }
                 if (e != null) {
-                    log.warn("Unexpected watch close. Code {}. Status: {}", e.getCode(), e.getStatus(), e);
-                    if (e.getCode() == 410) {
-                        nextResync = Instant.MIN;
-                        try {
-                            queue.wakeup();
-                        } catch (InterruptedException ex) {
-                            log.warn("Interrupted when waking up queue processor", ex);
-                            Thread.currentThread().interrupt();
-                        }
+                    log.warn("Unexpected watch close - isShouldRetry{}", e.isShouldRetry(), e);
+                    if (e.isShouldRetry()) {
+                        doWakeup();
                     }
+                }
+            }
+
+            @Override
+            public void onClose() {
+                log.info("Watch closed");
+                doWakeup();
+            }
+
+            private void doWakeup() {
+                try {
+                    nextResync = Instant.MIN;
+                    queue.wakeup();
+                } catch (InterruptedException ex) {
+                    log.warn("Interrupted when waking up queue processor", ex);
+                    Thread.currentThread().interrupt();
                 }
             }
         }, watchOptions);

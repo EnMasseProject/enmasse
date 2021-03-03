@@ -7,7 +7,6 @@ package io.enmasse.k8s.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
-import io.fabric8.kubernetes.api.model.Doneable;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
@@ -25,9 +24,9 @@ public class KubeResourceApplier {
     /**
      * Apply new version of resources if considered changed
      */
-    public static <T extends HasMetadata, L extends KubernetesResourceList<T>, D extends Doneable<T>>
+    public static <T extends HasMetadata, L extends KubernetesResourceList<T>>
         void applyIfDifferent(File resourceDir,
-                          NonNamespaceOperation<T, L, D, Resource<T, D>> operation,
+                          NonNamespaceOperation<T, L, Resource<T>> operation,
                           Class<T> resourceClass,
                           Comparator<T> comparator) {
         if (resourceDir.isDirectory()) {
@@ -53,9 +52,9 @@ public class KubeResourceApplier {
     /**
      * Creates resources in resourceDir if no resource of this type exists.
      */
-    public static <T extends HasMetadata, L extends KubernetesResourceList<T>, D extends Doneable<T>>
+    public static <T extends HasMetadata, L extends KubernetesResourceList<T>>
     void createIfNoneExists(File resourceDir,
-                          NonNamespaceOperation<T, L, D, Resource<T, D>> operation,
+                          NonNamespaceOperation<T, L, Resource<T>> operation,
                           Class<T> resourceClass) {
         if (operation.list().getItems().isEmpty()) {
             if (resourceDir.isDirectory()) {

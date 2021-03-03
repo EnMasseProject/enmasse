@@ -9,7 +9,6 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
@@ -21,7 +20,6 @@ import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.KubeCMDClient;
-import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.resources.CliOutputData;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
@@ -109,10 +107,10 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         log.info("Initial config: {}", currentConfig);
 
         // change plan to "unlimited"
-        standard = new DoneableAddressSpace(standard)
+        standard = new AddressSpaceBuilder(standard)
                 .editMetadata().withResourceVersion(null).endMetadata()
                 .editSpec().withPlan(AddressSpacePlans.STANDARD_UNLIMITED).endSpec()
-                .done();
+                .build();
         AddressSpace finalStandard = standard;
         TestUtils.runUntilPass(10, () -> {
             ExecutionResultData result = updateCR(AddressSpaceUtils.addressSpaceToJson(finalStandard).toString());
@@ -282,7 +280,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                                     .withAddresses("*")
                                     .withOperations(Operation.send, Operation.recv).build()))
                     .endSpec()
-                    .done();
+                    .build();
 
             //create user
             assertThat(KubeCMDClient.createCR(namespace, UserUtils.userToJson(brokered.getMetadata().getName(), testUser).toString()).getRetCode(), is(true));

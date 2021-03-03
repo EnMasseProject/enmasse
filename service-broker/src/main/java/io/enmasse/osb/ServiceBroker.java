@@ -8,6 +8,8 @@ package io.enmasse.osb;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+import io.fabric8.kubernetes.api.model.SecretBuilder;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +23,6 @@ import io.enmasse.k8s.api.KubeAddressSpaceApi;
 import io.enmasse.k8s.api.KubeSchemaApi;
 import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.osb.api.provision.ConsoleProxy;
-import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserCrd;
 import io.enmasse.user.model.v1.UserList;
@@ -90,18 +91,18 @@ public class ServiceBroker extends AbstractVerticle {
     private void ensureCredentialsExist(NamespacedKubernetesClient client, ServiceBrokerOptions options) {
         Secret secret = client.secrets().withName(options.getServiceCatalogCredentialsSecretName()).get();
         if (secret == null) {
-            client.secrets().createNew()
+            client.secrets().create(new SecretBuilder()
                     .editOrNewMetadata()
                     .withName(options.getServiceCatalogCredentialsSecretName())
                     .addToLabels("app", "enmasse")
                     .endMetadata()
                     .addToData("token", Base64.getEncoder().encodeToString(client.getConfiguration().getOauthToken().getBytes(StandardCharsets.UTF_8)))
-                    .done();
+                    .build());
         }
     }
 
     private UserApi createUserApi() {
-        var userClient = client.customResources(UserCrd.messagingUser(), User.class, UserList.class, DoneableUser.class);
+        var userClient = client.customResources(UserCrd.messagingUser(), User.class, UserList.class);
         return new UserApi() {
             @Override
             public void createOrReplace(User user) {

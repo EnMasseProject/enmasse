@@ -222,7 +222,7 @@ public class AddressUtils {
                 .allMatch(AddressStatusForwarder::isReady);
     }
 
-    private static FilterWatchListMultiDeletable<Address, AddressList, Boolean, Watch, Watcher<Address>> getAddressClient(Address... destinations) {
+    private static FilterWatchListMultiDeletable<Address, AddressList> getAddressClient(Address... destinations) {
         List<String> namespaces = Stream.of(destinations)
                 .map(address -> address.getMetadata().getNamespace())
                 .distinct()
@@ -263,7 +263,7 @@ public class AddressUtils {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    private static void waitForAddressesMatched(TimeoutBudget timeoutBudget, int totalDestinations, FilterWatchListMultiDeletable<Address, AddressList, Boolean, Watch, Watcher<Address>> addressClient, AddressListMatcher addressListMatcher) {
+    private static void waitForAddressesMatched(TimeoutBudget timeoutBudget, int totalDestinations, FilterWatchListMultiDeletable<Address, AddressList> addressClient, AddressListMatcher addressListMatcher) {
         TestUtils.waitUntilCondition(totalDestinations + " match", phase -> {
             try {
                 List<Address> addressList = addressClient.list().getItems();

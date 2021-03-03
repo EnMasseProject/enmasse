@@ -13,7 +13,6 @@ import io.enmasse.address.model.AddressSpacePlanDescription;
 import io.enmasse.address.model.AddressSpaceSchema;
 import io.enmasse.address.model.AddressSpaceSchemaList;
 import io.enmasse.address.model.AddressTypeInformation;
-import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.ResourceAllowance;
@@ -469,11 +468,11 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
 
         getClientUtils().assertCanConnect(addressspace, cred, Collections.singletonList(dest), resourcesManager);
 
-        AddressSpace replace = new DoneableAddressSpace(addressspace)
+        AddressSpace replace = new AddressSpaceBuilder(addressspace)
                 .editSpec()
                 .withPlan("no-exists")
                 .endSpec()
-                .done();
+                .build();
 
         resourcesManager.replaceAddressSpace(replace, false, null);
         TimeoutBudget budget = new TimeoutBudget(2, TimeUnit.MINUTES);

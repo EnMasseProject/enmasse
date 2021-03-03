@@ -9,12 +9,13 @@ import javax.validation.constraints.NotNull;
 
 import io.enmasse.admin.model.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AuthenticationService;
-import io.enmasse.common.model.AbstractHasMetadata;
+import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 import io.enmasse.common.model.DefaultCustomResource;
-import io.fabric8.kubernetes.api.model.Doneable;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.sundr.builder.annotations.Buildable;
+import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Version;
 import io.sundr.builder.annotations.BuildableReference;
-import io.sundr.builder.annotations.Inline;
 
 import java.util.Comparator;
 import java.util.List;
@@ -25,25 +26,32 @@ import java.util.stream.Collectors;
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(AbstractHasMetadata.class)},
-        inline = @Inline(
-                type = Doneable.class,
-                prefix = "Doneable",
-                value = "done"
-                )
-        )
+        refs= {@BuildableReference(ObjectMeta.class)}
+
+)
 @DefaultCustomResource
 @SuppressWarnings("serial")
-public class AddressSpaceSchema extends AbstractHasMetadata<AddressSpaceSchema> {
+@Version(CoreCrd.VERSION)
+@Group(CoreCrd.GROUP)
+public class AddressSpaceSchema extends CustomResourceWithAdditionalProperties<AddressSpaceSchemaSpec,  AddressSpaceSchemaStatus> {
 
     public static final String KIND = "AddressSpaceSchema";
 
+    // for builders - probably will be fixed by https://github.com/fabric8io/kubernetes-client/pull/1346
+    private ObjectMeta metadata;
     @NotNull @Valid
     private AddressSpaceSchemaSpec spec;
 
-    public AddressSpaceSchema() {
-        super(KIND, CoreCrd.API_VERSION);
+    @Override
+    public ObjectMeta getMetadata() {
+        return metadata;
     }
+
+    @Override
+    public void setMetadata(ObjectMeta metadata) {
+        this.metadata = metadata;
+    }
+
 
     public void setSpec(final AddressSpaceSchemaSpec spec) {
         this.spec = spec;

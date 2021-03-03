@@ -16,15 +16,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 
-import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
-import io.sundr.builder.annotations.Inline;
 
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
-        builderPackage = "io.fabric8.kubernetes.api.builder",
-        inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
+        builderPackage = "io.fabric8.kubernetes.api.builder"
 )
 @JsonPropertyOrder({"displayName", "displayOrder", "shortDescription", "infraConfigRef", "addressSpaceType", "addressPlans", "resourceLimits"})
 @JsonInclude(JsonInclude.Include.NON_NULL)

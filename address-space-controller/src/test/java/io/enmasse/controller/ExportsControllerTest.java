@@ -126,9 +126,6 @@ public class ExportsControllerTest extends JULInitializingTest {
 
     private AddressSpace createTestSpace(ExportSpec ... exports) {
         return new AddressSpaceBuilder()
-
-                .withApiVersion("enmasse.io/v1beta1")
-                .withKind("AddressSpace")
                 .withNewMetadata()
                 .withName("myspace")
                 .withNamespace("ns")

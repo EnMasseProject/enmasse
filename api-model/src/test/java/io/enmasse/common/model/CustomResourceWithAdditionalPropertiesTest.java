@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 
-public class AbstractHasMetadataTest {
+public class CustomResourceWithAdditionalPropertiesTest {
 
     @Test
     public void testPutAnnotation() {
@@ -24,7 +24,6 @@ public class AbstractHasMetadataTest {
 
         assertEquals(address.getAnnotation("foo"), "bar");
 
-        address.putAnnotationIfAbsent("foo", "bar2");
         assertEquals(address.getAnnotation("foo"), "bar");
     }
 }

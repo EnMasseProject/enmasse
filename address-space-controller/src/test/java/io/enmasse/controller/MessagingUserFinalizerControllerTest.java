@@ -6,10 +6,7 @@ package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.config.AnnotationKeys;
-import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.model.CustomResourceDefinitions;
-import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthenticationType;
@@ -20,6 +17,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,17 +29,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 public class MessagingUserFinalizerControllerTest {
 
     private MessagingUserFinalizerController controller;
     private NamespacedKubernetesClient client;
     private KubernetesServer server;
-    private MixedOperation<User, UserList, DoneableUser, Resource<User, DoneableUser>> userClient;
+    private MixedOperation<User, UserList, Resource<User>> userClient;
 
     @BeforeAll
     public static void init() {
@@ -53,7 +49,7 @@ public class MessagingUserFinalizerControllerTest {
         server = new KubernetesServer(false, true);
         server.before();
         client = server.getClient();
-        userClient = client.customResources(UserCrd.messagingUser(), User.class, UserList.class, DoneableUser.class);
+        userClient = client.customResources(UserCrd.messagingUser(), User.class, UserList.class);
         this.controller = new MessagingUserFinalizerController(client);
     }
 

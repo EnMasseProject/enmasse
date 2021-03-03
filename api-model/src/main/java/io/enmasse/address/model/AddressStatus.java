@@ -17,10 +17,8 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
-import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
-import io.sundr.builder.annotations.Inline;
 
 /**
  * Represents the status of an address
@@ -29,12 +27,7 @@ import io.sundr.builder.annotations.Inline;
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(AbstractWithAdditionalProperties.class)},
-        inline = @Inline(
-                type = Doneable.class,
-                prefix = "Doneable",
-                value = "done"
-                )
+        refs= {@BuildableReference(AbstractWithAdditionalProperties.class)}
         )
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class AddressStatus extends AbstractWithAdditionalProperties {
@@ -168,7 +161,11 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
     }
 
     public void setForwarders(List<AddressStatusForwarder> forwarders) {
-        this.forwarders = new ArrayList<>(forwarders);
+        if (forwarders == null) {
+            this.forwarders = null;
+        } else {
+            this.forwarders = new ArrayList<>(forwarders);
+        }
     }
 
     public SubscriptionStatus getSubscription() {

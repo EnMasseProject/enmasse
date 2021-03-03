@@ -8,9 +8,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.fabric8.kubernetes.api.model.Doneable;
+import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.sundr.builder.annotations.Buildable;
-import io.sundr.builder.annotations.Inline;
 
 import java.util.List;
 import java.util.Objects;
@@ -19,20 +18,21 @@ import java.util.regex.Pattern;
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
-        builderPackage = "io.fabric8.kubernetes.api.builder",
-        inline = @Inline(
-                type = Doneable.class,
-                prefix = "Doneable",
-                value = "done"
-                )
+        builderPackage = "io.fabric8.kubernetes.api.builder"
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class UserSpec {
+public class UserSpec extends AbstractWithAdditionalProperties {
     private final static Pattern USERNAME_PATTERN = Pattern.compile("^[a-z0-9]+([a-z0-9_@.:\\-]*[a-z0-9]+|[a-z0-9]*)$");
 
-    private final String username;
-    private final UserAuthentication authentication;
-    private final List<UserAuthorization> authorization;
+
+    private String username;
+    private UserAuthentication authentication;
+    private List<UserAuthorization> authorization;
+
+    // Works around builder problem
+    public UserSpec() {
+        this(null, null, null);
+    }
 
     @JsonCreator
     public UserSpec(@JsonProperty("username") String username,

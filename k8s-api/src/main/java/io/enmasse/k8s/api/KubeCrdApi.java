@@ -15,41 +15,37 @@ import io.enmasse.k8s.api.cache.ListOptions;
 import io.enmasse.k8s.api.cache.ListerWatcher;
 import io.enmasse.k8s.api.cache.Reflector;
 import io.enmasse.k8s.api.cache.WorkQueue;
-import io.fabric8.kubernetes.api.model.Doneable;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 
-public class KubeCrdApi<T extends HasMetadata, LT extends KubernetesResourceList<T>, DT extends Doneable<T>> implements CrdApi<T>, ListerWatcher<T, LT> {
+public class KubeCrdApi<T extends HasMetadata, LT extends KubernetesResourceList<T>> implements CrdApi<T>, ListerWatcher<T, LT> {
 
     private final NamespacedKubernetesClient client;
     private final String namespace;
     private final Class<T> tClazz;
     private final Class<LT> ltClazz;
-    private final Class<DT> dtClazz;
-    private final CustomResourceDefinition customResourceDefinition;
+    private final CustomResourceDefinitionContext customResourceDefinitionContext;
 
-    public KubeCrdApi(NamespacedKubernetesClient client, String namespace, CustomResourceDefinition customResourceDefinition,
+    public KubeCrdApi(NamespacedKubernetesClient client, String namespace, CustomResourceDefinitionContext resourceDefinitionContext,
                       Class<T> tClazz,
-                      Class<LT> ltClazz,
-                      Class<DT> dtClazz) {
+                      Class<LT> ltClazz) {
         this.client = client;
         this.namespace = namespace;
         this.tClazz = tClazz;
         this.ltClazz = ltClazz;
-        this.dtClazz = dtClazz;
-        this.customResourceDefinition = customResourceDefinition;
+        this.customResourceDefinitionContext = resourceDefinitionContext;
     }
 
     @Override
     public LT list(ListOptions listOptions) {
         if (namespace != null) {
-            return client.customResources(customResourceDefinition, tClazz, ltClazz, dtClazz).inNamespace(namespace).list();
+            return client.customResources(customResourceDefinitionContext, tClazz, ltClazz).inNamespace(namespace).list();
         } else {
-            return client.customResources(customResourceDefinition, tClazz, ltClazz, dtClazz).inAnyNamespace().list();
+            return client.customResources(customResourceDefinitionContext, tClazz, ltClazz).inAnyNamespace().list();
         }
     }
 
@@ -60,10 +56,10 @@ public class KubeCrdApi<T extends HasMetadata, LT extends KubernetesResourceList
                 .build();
         if (namespace != null) {
             return client.withRequestConfig(requestConfig).call(c ->
-                    c.customResources(customResourceDefinition, tClazz, ltClazz, dtClazz).inNamespace(namespace).withResourceVersion(listOptions.getResourceVersion()).watch(watcher));
+                    c.customResources(customResourceDefinitionContext, tClazz, ltClazz).inNamespace(namespace).withResourceVersion(listOptions.getResourceVersion()).watch(watcher));
         } else {
             return client.withRequestConfig(requestConfig).call(c ->
-                    c.customResources(customResourceDefinition, tClazz, ltClazz, dtClazz).inAnyNamespace().withResourceVersion(listOptions.getResourceVersion()).watch(watcher));
+                    c.customResources(customResourceDefinitionContext, tClazz, ltClazz).inAnyNamespace().withResourceVersion(listOptions.getResourceVersion()).watch(watcher));
         }
     }
 
@@ -90,6 +86,6 @@ public class KubeCrdApi<T extends HasMetadata, LT extends KubernetesResourceList
 
     @Override
     public void patch(T instance) {
-        client.customResources(customResourceDefinition, tClazz, ltClazz, dtClazz).inNamespace(namespace).withName(instance.getMetadata().getName()).patch(instance);
+        client.customResources(customResourceDefinitionContext, tClazz, ltClazz).inNamespace(namespace).withName(instance.getMetadata().getName()).patch(instance);
     }
 }

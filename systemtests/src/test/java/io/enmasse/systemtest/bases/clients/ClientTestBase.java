@@ -573,7 +573,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                         .withOperations(Operation.send)
                         .build()))
                 .endSpec()
-                .done());
+                .build());
 
         User consumer = (UserUtils.createUserResource(consumCred)
                 .editSpec()
@@ -582,7 +582,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                         .withOperations(Operation.recv)
                         .build()))
                 .endSpec()
-                .done());
+                .build());
 
         resourcesManager.createOrUpdateUser(getSharedAddressSpace(), publisher);
         resourcesManager.createOrUpdateUser(getSharedAddressSpace(), consumer);

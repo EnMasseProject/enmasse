@@ -6,6 +6,7 @@ package io.enmasse.controller.auth;
 
 import io.enmasse.address.model.AddressSpace;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,13 +44,13 @@ public class WildcardCertProvider implements CertProvider {
             data.put("tls.key", wildcardSecret.getData().get("tls.key"));
             data.put("tls.crt", wildcardSecret.getData().get("tls.crt"));
 
-            client.secrets().inNamespace(namespace).createNew()
+            client.secrets().inNamespace(namespace).create(new SecretBuilder()
                     .editOrNewMetadata()
                     .withName(endpointInfo.getCertSpec().getSecretName())
                     .endMetadata()
                     .withType("kubernetes.io/tls")
                     .addToData(data)
-                    .done();
+                    .build());
         }
     }
 }

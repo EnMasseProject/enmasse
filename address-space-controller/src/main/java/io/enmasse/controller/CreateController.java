@@ -157,7 +157,7 @@ public class CreateController implements Controller {
             addressSpace.getStatus().setPhase(Phase.Configuring);
         } else if (currentInfraConfig == null || !currentInfraConfig.equals(desiredInfraConfig)) {
 
-            if (version.equals(desiredInfraConfig.getVersion())) {
+            if (version.equals(desiredInfraConfig.getInfraConfigVersion())) {
                 addressSpace.getStatus().setPhase(Phase.Configuring);
                 if (checkExceedsQuota(addressSpaceType, addressSpacePlan, addressSpace)) {
                     return addressSpace;
@@ -175,7 +175,7 @@ public class CreateController implements Controller {
                 InfraConfigs.setCurrentInfraConfig(addressSpace, desiredInfraConfig);
                 AppliedConfig.setCurrentAppliedConfig(addressSpace, desiredConfig);
             } else {
-                log.info("Version of desired config ({}) does not match controller version ({}), skipping upgrade", desiredInfraConfig.getVersion(), version);
+                log.info("Version of desired config ({}) does not match controller version ({}), skipping upgrade", desiredInfraConfig.getInfraConfigVersion(), version);
             }
         } else if (!desiredConfig.equals(appliedConfig)) {
             addressSpace.getStatus().setPhase(Phase.Configuring);

@@ -8,31 +8,41 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import io.enmasse.common.model.CustomResourceWithAdditionalProperties;
 import io.enmasse.common.model.DefaultCustomResource;
-import io.fabric8.kubernetes.api.model.Doneable;
+import io.fabric8.kubernetes.api.model.Namespaced;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Version;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
-import io.sundr.builder.annotations.Inline;
 
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {
-                @BuildableReference(AbstractHasMetadataWithAdditionalProperties.class)
-        },
-        inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
+        refs = {@BuildableReference(ObjectMeta.class)}
 )
 @DefaultCustomResource
 @SuppressWarnings("serial")
-public class BrokeredInfraConfig extends AbstractHasMetadataWithAdditionalProperties<BrokeredInfraConfig> implements InfraConfig {
+@Version(AdminCrd.VERSION_V1BETA1)
+@Group(AdminCrd.GROUP)
+public class BrokeredInfraConfig extends CustomResourceWithAdditionalProperties<BrokeredInfraConfigSpec, BrokeredInfraConfigStatus> implements WithAdditionalProperties, InfraConfig, Namespaced {
 
     public static final String KIND = "BrokeredInfraConfig";
 
+    // for builders - probably will be fixed by https://github.com/fabric8io/kubernetes-client/pull/1346
+    private ObjectMeta metadata;
     private BrokeredInfraConfigSpec spec = new BrokeredInfraConfigSpec();
 
-    public BrokeredInfraConfig() {
-        super(KIND, AdminCrd.API_VERSION_V1BETA1);
+    @Override
+    public ObjectMeta getMetadata() {
+        return metadata;
+    }
+
+    @Override
+    public void setMetadata(ObjectMeta metadata) {
+        this.metadata = metadata;
     }
 
     @Override
@@ -56,18 +66,18 @@ public class BrokeredInfraConfig extends AbstractHasMetadataWithAdditionalProper
                 ", spec=" + spec + "}";
     }
 
+    @Override
+    @JsonIgnore
+    public String getInfraConfigVersion() {
+        return spec.getVersion();
+    }
+
     public void setSpec(BrokeredInfraConfigSpec spec) {
         this.spec = spec;
     }
 
     public BrokeredInfraConfigSpec getSpec() {
         return spec;
-    }
-
-    @Override
-    @JsonIgnore
-    public String getVersion() {
-        return spec.getVersion();
     }
 
     @Override

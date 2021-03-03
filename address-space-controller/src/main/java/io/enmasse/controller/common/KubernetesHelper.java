@@ -14,6 +14,7 @@ import io.enmasse.controller.AppliedConfig;
 import io.enmasse.controller.InfraConfigs;
 import io.enmasse.k8s.util.Templates;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.DeletionPropagation;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
@@ -22,7 +23,7 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-import io.fabric8.kubernetes.api.model.networking.NetworkPolicy;
+import io.fabric8.kubernetes.api.model.networking.v1.NetworkPolicy;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -140,10 +141,10 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public void deleteResources(String infraUuid) throws InterruptedException {
         // Delete and await deployments to be deleted so that the per-address space controllers are not re-creating any resources.
-        // Parallelize deletiong by triggering delete of all deployments and then wait for pods
+        // Parallelize deleting by triggering delete of all deployments and then wait for pods
         Set<Map<String, String>> labelSet = new HashSet<>();
         for (Deployment deployment : client.apps().deployments().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems()) {
-            if (!client.apps().deployments().inNamespace(deployment.getMetadata().getNamespace()).withName(deployment.getMetadata().getName()).withPropagationPolicy("Background").delete()) {
+            if (!client.apps().deployments().inNamespace(deployment.getMetadata().getNamespace()).withName(deployment.getMetadata().getName()).withPropagationPolicy(DeletionPropagation.BACKGROUND).delete()) {
                 throw new RuntimeException("Failed to delete infra with uuid " + infraUuid + ": failed to delete deployment " + deployment.getMetadata().getName());
             }
             labelSet.add(deployment.getSpec().getTemplate().getMetadata().getLabels());
@@ -155,18 +156,22 @@ public class KubernetesHelper implements Kubernetes {
             waitForZeroPods(infraUuid, labels, 300_000);
         }
 
-        client.apps().statefulSets().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
-        client.secrets().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
-        client.configMaps().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
-        client.network().networkPolicies().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
-        client.services().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
-        client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
-        client.policy().podDisruptionBudget().withLabel(LabelKeys.INFRA_UUID, infraUuid)
-                .withPropagationPolicy("Background").delete();
+        client.apps().statefulSets().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems().forEach(this::deleteResource);
+        client.secrets().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems().forEach(this::deleteResource);
+        client.configMaps().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems().forEach(this::deleteResource);
+        client.network().networkPolicies().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems().forEach(this::deleteResource);
+        client.services().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems().forEach(this::deleteResource);
+        client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems().forEach(this::deleteResource);
+        client.policy().podDisruptionBudget().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems().forEach(this::deleteResource);
         if (isOpenShift) {
-            client.adapt(OpenShiftClient.class).routes().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
+            client.adapt(OpenShiftClient.class).routes().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems().forEach(this::deleteResource);
         }
     }
+
+    private void deleteResource(HasMetadata m) {
+        client.resource(m).withPropagationPolicy(DeletionPropagation.BACKGROUND).delete();
+    }
+
 
     @Override
     public Optional<Secret> getSecret(String secretName) {
@@ -252,4 +257,5 @@ public class KubernetesHelper implements Kubernetes {
 
         return InfraConfigs.parseCurrentInfraConfig(messaging.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_INFRA_CONFIG));
     }
+
 }

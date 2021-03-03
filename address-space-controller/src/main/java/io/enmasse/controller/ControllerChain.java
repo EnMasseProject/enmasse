@@ -10,6 +10,7 @@ import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -152,15 +153,15 @@ public class ControllerChain implements Watcher<AddressSpace> {
 
         boolean changed = false;
 
-        if (!original.getMetadata().equals(addressSpace.getMetadata())) {
+        if (!Objects.equals(original.getMetadata(), addressSpace.getMetadata())) {
             log.debug("Meta changed from {} to {}", original.getMetadata(), addressSpace.getMetadata());
             changed = true;
         }
-        if (!original.getSpec().equals(addressSpace.getSpec())) {
+        if (!Objects.equals(original.getSpec(), addressSpace.getSpec())) {
             log.debug("Spec changed from {} to {}", original.getSpec(), addressSpace.getSpec());
             changed = true;
         }
-        if (!original.getStatus().equals(addressSpace.getStatus())) {
+        if (!Objects.equals(original.getStatus(), addressSpace.getStatus())) {
             log.debug("Status changed from {} to {}", original.getStatus(), addressSpace.getStatus());
             changed = true;
         }

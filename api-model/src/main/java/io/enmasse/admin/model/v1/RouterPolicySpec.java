@@ -6,19 +6,14 @@ package io.enmasse.admin.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
-import io.sundr.builder.annotations.BuildableReference;
-import io.sundr.builder.annotations.Inline;
 
 import java.util.Objects;
 
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
-        builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs = {@BuildableReference(AbstractWithAdditionalProperties.class)},
-        inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
+        builderPackage = "io.fabric8.kubernetes.api.builder"
 )
 @JsonPropertyOrder({"maxConnections", "maxConnectionsPerUser", "maxConnectionsPerHost", "maxSessionsPerConnection", "maxSendersPerConnection", "maxReceiversPerConnection"})
 @JsonInclude(JsonInclude.Include.NON_NULL)

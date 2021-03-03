@@ -8,7 +8,6 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.address.model.Phase;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressPlanBuilder;
@@ -910,7 +909,7 @@ class PlansTestStandard extends PlansTestBase implements ITestIsolatedStandard {
 
         clientUtils.sendDurableMessages(isolatedResourcesManager, addressSpace, queue, user, 16);
 
-        addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(afterAddressSpacePlan.getMetadata().getName()).endSpec().done();
+        addressSpace = new AddressSpaceBuilder(addressSpace).editSpec().withPlan(afterAddressSpacePlan.getMetadata().getName()).endSpec().build();
         isolatedResourcesManager.replaceAddressSpace(addressSpace);
         AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), queue, topic);
 
@@ -931,7 +930,7 @@ class PlansTestStandard extends PlansTestBase implements ITestIsolatedStandard {
 
         getClientUtils().assertCanConnect(addressSpace, user, Arrays.asList(afterQueue, queue, topic), resourcesManager);
 
-        addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(pooledAddressSpacePlan.getMetadata().getName()).endSpec().done();
+        addressSpace = new AddressSpaceBuilder(addressSpace).editSpec().withPlan(pooledAddressSpacePlan.getMetadata().getName()).endSpec().build();
         isolatedResourcesManager.replaceAddressSpace(addressSpace);
         AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), afterQueue, queue, topic);
 

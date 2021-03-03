@@ -4,16 +4,12 @@
  */
 package io.enmasse.user.model.v1;
 
-import io.enmasse.common.model.AbstractList;
 import io.enmasse.common.model.DefaultCustomResource;
+import io.fabric8.kubernetes.client.CustomResourceList;
 
 @DefaultCustomResource
 @SuppressWarnings("serial")
-public class UserList extends AbstractList<User> {
+public class UserList extends CustomResourceList<User> {
 
     public static final String KIND = "MessagingUserList";
-
-    public UserList() {
-        super(KIND, UserCrd.API_VERSION);
-    }
 }

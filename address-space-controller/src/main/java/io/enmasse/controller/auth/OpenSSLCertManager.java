@@ -61,13 +61,13 @@ public class OpenSSLCertManager implements CertManager {
         Base64.Encoder encoder = Base64.getEncoder();
         data.put(keyKey, encoder.encodeToString(FileUtils.readFileToByteArray(keyFile)));
         data.put(certKey, encoder.encodeToString(FileUtils.readFileToByteArray(certFile)));
-        return client.secrets().inNamespace(namespace).withName(secretName).createOrReplaceWithNew()
+        return client.secrets().inNamespace(namespace).withName(secretName).createOrReplace(new SecretBuilder()
                 .editOrNewMetadata()
                 .withName(secretName)
                 .withLabels(secretLabels)
                 .endMetadata()
                 .addToData(data)
-                .done();
+                .build());
     }
 
     private static void runCommand(String... cmd) {
@@ -222,14 +222,14 @@ public class OpenSSLCertManager implements CertManager {
             data.put("tls.crt", encoder.encodeToString(FileUtils.readFileToByteArray(cert.getCertFile())));
             data.put("ca.crt", caSecret.getData().get("tls.crt"));
 
-            return client.secrets().inNamespace(namespace).createNew()
+            return client.secrets().inNamespace(namespace).create(new SecretBuilder()
                     .editOrNewMetadata()
                     .withName(cert.getComponent().getSecretName())
                     .withLabels(labels)
                     .endMetadata()
                     .withType("kubernetes.io/tls")
                     .addToData(data)
-                    .done();
+                    .build());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

@@ -4,8 +4,7 @@
  */
 package io.enmasse.admin.model.v1;
 
-import io.enmasse.common.model.CustomResources;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.kubernetes.internal.KubernetesDeserializer;
 
 public class AdminCrd {
@@ -17,22 +16,6 @@ public class AdminCrd {
     public static final String API_VERSION_V1ALPHA1 = GROUP + "/" + VERSION_V1ALPHA1;
     public static final String API_VERSION_V1BETA1 = GROUP + "/" + VERSION_V1BETA1;
     public static final String API_VERSION_V1BETA2 = GROUP + "/" + VERSION_V1BETA2;
-
-    private static final CustomResourceDefinition ADDRESS_PLAN_CRD;
-    private static final CustomResourceDefinition ADDRESS_SPACE_PLAN_CRD;
-    private static final CustomResourceDefinition BROKERED_INFRA_CONFIG_CRD;
-    private static final CustomResourceDefinition STANDARD_INFRA_CONFIG_CRD;
-    private static final CustomResourceDefinition AUTHENTICATION_SERVICE_CRD;
-    private static final CustomResourceDefinition CONSOLE_SERVICE_CRD;
-
-    static {
-        ADDRESS_PLAN_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA2, AddressPlan.KIND);
-        ADDRESS_SPACE_PLAN_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA2, AddressSpacePlan.KIND);
-        BROKERED_INFRA_CONFIG_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA1, BrokeredInfraConfig.KIND);
-        STANDARD_INFRA_CONFIG_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA1, StandardInfraConfig.KIND);
-        AUTHENTICATION_SERVICE_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA1, AuthenticationService.KIND);
-        CONSOLE_SERVICE_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA1, ConsoleService.KIND);
-    }
 
     public static void registerCustomCrds() {
 
@@ -53,31 +36,30 @@ public class AdminCrd {
 
         KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA1, ConsoleService.KIND, ConsoleService.class);
         KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA1, ConsoleServiceList.KIND, ConsoleServiceList.class);
-
     }
 
-    public static CustomResourceDefinition addressPlans() {
-        return ADDRESS_PLAN_CRD;
+    public static CustomResourceDefinitionContext addressPlans() {
+        return CustomResourceDefinitionContext.fromCustomResourceType(AddressPlan.class);
     }
 
-    public static CustomResourceDefinition addressSpacePlans() {
-        return ADDRESS_SPACE_PLAN_CRD;
+    public static CustomResourceDefinitionContext addressSpacePlans() {
+        return CustomResourceDefinitionContext.fromCustomResourceType(AddressSpacePlan.class);
     }
 
-    public static CustomResourceDefinition brokeredInfraConfigs() {
-        return BROKERED_INFRA_CONFIG_CRD;
+    public static CustomResourceDefinitionContext brokeredInfraConfigs() {
+        return CustomResourceDefinitionContext.fromCustomResourceType(BrokeredInfraConfig.class);
     }
 
-    public static CustomResourceDefinition standardInfraConfigs() {
-        return STANDARD_INFRA_CONFIG_CRD;
+    public static CustomResourceDefinitionContext standardInfraConfigs() {
+        return CustomResourceDefinitionContext.fromCustomResourceType(StandardInfraConfig.class);
     }
 
-    public static CustomResourceDefinition authenticationServices() {
-        return AUTHENTICATION_SERVICE_CRD;
+    public static CustomResourceDefinitionContext authenticationServices() {
+        return CustomResourceDefinitionContext.fromCustomResourceType(AuthenticationService.class);
     }
 
-    public static CustomResourceDefinition consoleServices() {
-        return CONSOLE_SERVICE_CRD;
+    public static CustomResourceDefinitionContext consoleServices() {
+        return CustomResourceDefinitionContext.fromCustomResourceType(ConsoleService.class);
     }
 
 }

@@ -37,21 +37,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import io.enmasse.systemtest.platform.cluster.KubernetesCluster;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.ConfigMapList;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.DoneablePod;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.Namespace;
-import io.fabric8.kubernetes.api.model.NamespaceBuilder;
-import io.fabric8.kubernetes.api.model.NodeAddress;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceAccount;
-import io.fabric8.kubernetes.api.model.ServiceAccountBuilder;
-import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.*;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.slf4j.Logger;
 
@@ -62,9 +48,6 @@ import io.enmasse.address.model.AddressSpaceList;
 import io.enmasse.address.model.AddressSpaceSchema;
 import io.enmasse.address.model.AddressSpaceSchemaList;
 import io.enmasse.address.model.CoreCrd;
-import io.enmasse.address.model.DoneableAddress;
-import io.enmasse.address.model.DoneableAddressSpace;
-import io.enmasse.address.model.DoneableAddressSpaceSchema;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressPlanList;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
@@ -76,12 +59,6 @@ import io.enmasse.admin.model.v1.BrokeredInfraConfig;
 import io.enmasse.admin.model.v1.BrokeredInfraConfigList;
 import io.enmasse.admin.model.v1.ConsoleService;
 import io.enmasse.admin.model.v1.ConsoleServiceList;
-import io.enmasse.admin.model.v1.DoneableAddressPlan;
-import io.enmasse.admin.model.v1.DoneableAddressSpacePlan;
-import io.enmasse.admin.model.v1.DoneableAuthenticationService;
-import io.enmasse.admin.model.v1.DoneableBrokeredInfraConfig;
-import io.enmasse.admin.model.v1.DoneableConsoleService;
-import io.enmasse.admin.model.v1.DoneableStandardInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfigList;
 import io.enmasse.model.CustomResourceDefinitions;
@@ -94,16 +71,13 @@ import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.cluster.ClusterType;
 import io.enmasse.systemtest.platform.cluster.KubeCluster;
-import io.enmasse.systemtest.platform.cluster.KubernetesCluster;
 import io.enmasse.systemtest.platform.cluster.MinikubeCluster;
 import io.enmasse.systemtest.platform.cluster.NoClusterException;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserCrd;
 import io.enmasse.user.model.v1.UserList;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
@@ -161,8 +135,8 @@ public abstract class Kubernetes {
                 instance = new OpenShift(env);
             }
             try {
-                instance.olmAvailable = instance.getCRD("clusterserviceversions.operators.coreos.com") != null
-                        && instance.getCRD("subscriptions.operators.coreos.com") != null;
+                instance.olmAvailable = instance.crdExists("clusterserviceversions.operators.coreos.com")
+                        && instance.crdExists("subscriptions.operators.coreos.com");
                 if (instance.olmAvailable) {
                     log.info("OLM is available in this cluster");
                 } else {
@@ -297,107 +271,107 @@ public abstract class Kubernetes {
     // client and crd clients
     ///////////////////////////////////////////////////////////////////////////////
 
-    public MixedOperation<AddressSpace, AddressSpaceList, DoneableAddressSpace, Resource<AddressSpace, DoneableAddressSpace>> getAddressSpaceClient() {
+    public MixedOperation<AddressSpace, AddressSpaceList, Resource<AddressSpace>> getAddressSpaceClient() {
         return getAddressSpaceClient(infraNamespace);
     }
 
-    public MixedOperation<AddressSpace, AddressSpaceList, DoneableAddressSpace,
-            Resource<AddressSpace, DoneableAddressSpace>> getAddressSpaceClient(String namespace) {
-        return (MixedOperation<AddressSpace, AddressSpaceList, DoneableAddressSpace, Resource<AddressSpace, DoneableAddressSpace>>) client.customResources(CoreCrd.addressSpaces(), AddressSpace.class, AddressSpaceList.class, DoneableAddressSpace.class).inNamespace(namespace);
+    public MixedOperation<AddressSpace, AddressSpaceList,
+            Resource<AddressSpace>> getAddressSpaceClient(String namespace) {
+        return (MixedOperation<AddressSpace, AddressSpaceList, Resource<AddressSpace>>) client.customResources(CoreCrd.addressSpaces(), AddressSpace.class, AddressSpaceList.class).inNamespace(namespace);
     }
 
-    public MixedOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>> getAddressClient() {
+    public MixedOperation<Address, AddressList, Resource<Address>> getAddressClient() {
         return getAddressClient(infraNamespace);
     }
 
-    public MixedOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>> getAddressClient(String namespace) {
-        return (MixedOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>>) client.customResources(CoreCrd.addresses(), Address.class, AddressList.class, DoneableAddress.class).inNamespace(namespace);
+    public MixedOperation<Address, AddressList, Resource<Address>> getAddressClient(String namespace) {
+        return (MixedOperation<Address, AddressList, Resource<Address>>) client.customResources(CoreCrd.addresses(), Address.class, AddressList.class).inNamespace(namespace);
     }
 
-    public MixedOperation<User, UserList, DoneableUser, Resource<User, DoneableUser>> getUserClient() {
+    public MixedOperation<User, UserList, Resource<User>> getUserClient() {
         return getUserClient(infraNamespace);
     }
 
-    public MixedOperation<User, UserList, DoneableUser,
-            Resource<User, DoneableUser>> getUserClient(String namespace) {
-        return (MixedOperation<User, UserList, DoneableUser, Resource<User, DoneableUser>>) client.customResources(UserCrd.messagingUser(), User.class, UserList.class, DoneableUser.class).inNamespace(namespace);
+    public MixedOperation<User, UserList,
+            Resource<User>> getUserClient(String namespace) {
+        return (MixedOperation<User, UserList, Resource<User>>) client.customResources(UserCrd.messagingUser(), User.class, UserList.class).inNamespace(namespace);
     }
 
-    public MixedOperation<AddressSpacePlan, AddressSpacePlanList, DoneableAddressSpacePlan,
-            Resource<AddressSpacePlan, DoneableAddressSpacePlan>> getAddressSpacePlanClient() {
+    public MixedOperation<AddressSpacePlan, AddressSpacePlanList,
+            Resource<AddressSpacePlan>> getAddressSpacePlanClient() {
         return getAddressSpacePlanClient(infraNamespace);
     }
 
-    public MixedOperation<AddressSpacePlan, AddressSpacePlanList, DoneableAddressSpacePlan,
-            Resource<AddressSpacePlan, DoneableAddressSpacePlan>> getAddressSpacePlanClient(String namespace) {
-        return (MixedOperation<AddressSpacePlan, AddressSpacePlanList, DoneableAddressSpacePlan,
-                Resource<AddressSpacePlan, DoneableAddressSpacePlan>>) client.customResources(AdminCrd.addressSpacePlans(), AddressSpacePlan.class, AddressSpacePlanList.class, DoneableAddressSpacePlan.class).inNamespace(namespace);
+    public MixedOperation<AddressSpacePlan, AddressSpacePlanList,
+            Resource<AddressSpacePlan>> getAddressSpacePlanClient(String namespace) {
+        return (MixedOperation<AddressSpacePlan, AddressSpacePlanList,
+                Resource<AddressSpacePlan>>) client.customResources(AdminCrd.addressSpacePlans(), AddressSpacePlan.class, AddressSpacePlanList.class).inNamespace(namespace);
     }
 
-    public MixedOperation<AddressPlan, AddressPlanList, DoneableAddressPlan,
-            Resource<AddressPlan, DoneableAddressPlan>> getAddressPlanClient() {
+    public MixedOperation<AddressPlan, AddressPlanList,
+            Resource<AddressPlan>> getAddressPlanClient() {
         return getAddressPlanClient(infraNamespace);
     }
 
-    public MixedOperation<AddressPlan, AddressPlanList, DoneableAddressPlan,
-            Resource<AddressPlan, DoneableAddressPlan>> getAddressPlanClient(String namespace) {
-        return (MixedOperation<AddressPlan, AddressPlanList, DoneableAddressPlan,
-                Resource<AddressPlan, DoneableAddressPlan>>) client.customResources(AdminCrd.addressPlans(), AddressPlan.class, AddressPlanList.class, DoneableAddressPlan.class).inNamespace(namespace);
+    public MixedOperation<AddressPlan, AddressPlanList,
+            Resource<AddressPlan>> getAddressPlanClient(String namespace) {
+        return (MixedOperation<AddressPlan, AddressPlanList,
+                Resource<AddressPlan>>) client.customResources(AdminCrd.addressPlans(), AddressPlan.class, AddressPlanList.class).inNamespace(namespace);
     }
 
-    public MixedOperation<BrokeredInfraConfig, BrokeredInfraConfigList, DoneableBrokeredInfraConfig,
-            Resource<BrokeredInfraConfig, DoneableBrokeredInfraConfig>> getBrokeredInfraConfigClient() {
+    public MixedOperation<BrokeredInfraConfig, BrokeredInfraConfigList,
+            Resource<BrokeredInfraConfig>> getBrokeredInfraConfigClient() {
         return getBrokeredInfraConfigClient(infraNamespace);
     }
 
-    public MixedOperation<BrokeredInfraConfig, BrokeredInfraConfigList, DoneableBrokeredInfraConfig,
-            Resource<BrokeredInfraConfig, DoneableBrokeredInfraConfig>> getBrokeredInfraConfigClient(String namespace) {
-        return (MixedOperation<BrokeredInfraConfig, BrokeredInfraConfigList, DoneableBrokeredInfraConfig,
-                Resource<BrokeredInfraConfig, DoneableBrokeredInfraConfig>>) client.customResources(AdminCrd.brokeredInfraConfigs(), BrokeredInfraConfig.class, BrokeredInfraConfigList.class, DoneableBrokeredInfraConfig.class).inNamespace(namespace);
+    public MixedOperation<BrokeredInfraConfig, BrokeredInfraConfigList,
+            Resource<BrokeredInfraConfig>> getBrokeredInfraConfigClient(String namespace) {
+        return (MixedOperation<BrokeredInfraConfig, BrokeredInfraConfigList,
+                Resource<BrokeredInfraConfig>>) client.customResources(AdminCrd.brokeredInfraConfigs(), BrokeredInfraConfig.class, BrokeredInfraConfigList.class).inNamespace(namespace);
     }
 
-    public MixedOperation<StandardInfraConfig, StandardInfraConfigList, DoneableStandardInfraConfig,
-            Resource<StandardInfraConfig, DoneableStandardInfraConfig>> getStandardInfraConfigClient() {
+    public MixedOperation<StandardInfraConfig, StandardInfraConfigList,
+            Resource<StandardInfraConfig>> getStandardInfraConfigClient() {
         return getStandardInfraConfigClient(infraNamespace);
     }
 
-    public MixedOperation<StandardInfraConfig, StandardInfraConfigList, DoneableStandardInfraConfig,
-            Resource<StandardInfraConfig, DoneableStandardInfraConfig>> getStandardInfraConfigClient(String namespace) {
-        return (MixedOperation<StandardInfraConfig, StandardInfraConfigList, DoneableStandardInfraConfig,
-                Resource<StandardInfraConfig, DoneableStandardInfraConfig>>) client.customResources(AdminCrd.standardInfraConfigs(), StandardInfraConfig.class, StandardInfraConfigList.class, DoneableStandardInfraConfig.class).inNamespace(namespace);
+    public MixedOperation<StandardInfraConfig, StandardInfraConfigList,
+            Resource<StandardInfraConfig>> getStandardInfraConfigClient(String namespace) {
+        return (MixedOperation<StandardInfraConfig, StandardInfraConfigList,
+                Resource<StandardInfraConfig>>) client.customResources(AdminCrd.standardInfraConfigs(), StandardInfraConfig.class, StandardInfraConfigList.class).inNamespace(namespace);
     }
 
-    public MixedOperation<AuthenticationService, AuthenticationServiceList, DoneableAuthenticationService,
-            Resource<AuthenticationService, DoneableAuthenticationService>> getAuthenticationServiceClient() {
+    public MixedOperation<AuthenticationService, AuthenticationServiceList,
+            Resource<AuthenticationService>> getAuthenticationServiceClient() {
         return getAuthenticationServiceClient(infraNamespace);
     }
 
-    public MixedOperation<AuthenticationService, AuthenticationServiceList, DoneableAuthenticationService,
-            Resource<AuthenticationService, DoneableAuthenticationService>> getAuthenticationServiceClient(String namespace) {
-        return (MixedOperation<AuthenticationService, AuthenticationServiceList, DoneableAuthenticationService,
-                Resource<AuthenticationService, DoneableAuthenticationService>>) client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class, DoneableAuthenticationService.class).inNamespace(namespace);
+    public MixedOperation<AuthenticationService, AuthenticationServiceList,
+            Resource<AuthenticationService>> getAuthenticationServiceClient(String namespace) {
+        return (MixedOperation<AuthenticationService, AuthenticationServiceList,
+                Resource<AuthenticationService>>) client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class).inNamespace(namespace);
     }
 
-    public MixedOperation<AddressSpaceSchema, AddressSpaceSchemaList, DoneableAddressSpaceSchema,
-            Resource<AddressSpaceSchema, DoneableAddressSpaceSchema>> getSchemaClient() {
+    public MixedOperation<AddressSpaceSchema, AddressSpaceSchemaList,
+            Resource<AddressSpaceSchema>> getSchemaClient() {
         return getSchemaClient(infraNamespace);
     }
 
-    public MixedOperation<AddressSpaceSchema, AddressSpaceSchemaList, DoneableAddressSpaceSchema,
-            Resource<AddressSpaceSchema, DoneableAddressSpaceSchema>> getSchemaClient(String namespace) {
-        return (MixedOperation<AddressSpaceSchema, AddressSpaceSchemaList, DoneableAddressSpaceSchema,
-                Resource<AddressSpaceSchema, DoneableAddressSpaceSchema>>) client.customResources(CoreCrd.addresseSpaceSchemas(), AddressSpaceSchema.class, AddressSpaceSchemaList.class, DoneableAddressSpaceSchema.class).inNamespace(namespace);
+    public MixedOperation<AddressSpaceSchema, AddressSpaceSchemaList,
+            Resource<AddressSpaceSchema>> getSchemaClient(String namespace) {
+        return (MixedOperation<AddressSpaceSchema, AddressSpaceSchemaList,
+                Resource<AddressSpaceSchema>>) client.customResources(CoreCrd.addressSpaceSchemas(), AddressSpaceSchema.class, AddressSpaceSchemaList.class).inNamespace(namespace);
     }
 
-    public MixedOperation<ConsoleService, ConsoleServiceList, DoneableConsoleService,
-            Resource<ConsoleService, DoneableConsoleService>> getConsoleServiceClient() {
+    public MixedOperation<ConsoleService, ConsoleServiceList,
+            Resource<ConsoleService>> getConsoleServiceClient() {
         return getConsoleServiceClient(infraNamespace);
     }
 
-    public MixedOperation<ConsoleService, ConsoleServiceList, DoneableConsoleService,
-            Resource<ConsoleService, DoneableConsoleService>> getConsoleServiceClient(String namespace) {
-        return (MixedOperation<ConsoleService, ConsoleServiceList, DoneableConsoleService,
-                Resource<ConsoleService, DoneableConsoleService>>) client.customResources(AdminCrd.consoleServices(), ConsoleService.class, ConsoleServiceList.class, DoneableConsoleService.class).inNamespace(namespace);
+    public MixedOperation<ConsoleService, ConsoleServiceList,
+            Resource<ConsoleService>> getConsoleServiceClient(String namespace) {
+        return (MixedOperation<ConsoleService, ConsoleServiceList,
+                Resource<ConsoleService>>) client.customResources(AdminCrd.consoleServices(), ConsoleService.class, ConsoleServiceList.class).inNamespace(namespace);
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -701,7 +675,9 @@ public abstract class Kubernetes {
 
     public void deletePod(String namespace, Map<String, String> labels) {
         log.info("Delete pods with labels: {}", labels.toString());
-        client.pods().inNamespace(namespace).withLabels(labels).withPropagationPolicy("Background").delete();
+        client.pods().inNamespace(namespace).withLabels(labels).list().getItems().forEach(i -> {
+            client.resource(i).withPropagationPolicy(DeletionPropagation.BACKGROUND).delete();
+        });
     }
 
     /***
@@ -1145,8 +1121,12 @@ public abstract class Kubernetes {
                 .map(sec -> sec.getMetadata().getName()).collect(Collectors.toList()).contains(secret);
     }
 
-    public CustomResourceDefinition getCRD(String name) {
-        return client.customResourceDefinitions().withName(name).get();
+    public boolean crdExists(String name) {
+        if (getOcpVersion() == OpenShiftVersion.OCP3) {
+            return client.apiextensions().v1beta1().customResourceDefinitions().withName(name).get() != null;
+        } else {
+            return client.apiextensions().v1().customResourceDefinitions().withName(name).get() != null;
+        }
     }
 
     public PodDisruptionBudget getPodDisruptionBudget(String namespace, String name) {
@@ -1177,14 +1157,14 @@ public abstract class Kubernetes {
     }
 
     private void loadDirectories(final Function<InputStream, InputStream> streamManipulator,
-                                 Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path... paths) throws Exception {
+                                 Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata>> consumer, final Path... paths) throws Exception {
         for (Path path : paths) {
             loadDirectory(streamManipulator, consumer, path);
         }
     }
 
     private void loadDirectory(final Function<InputStream, InputStream> streamManipulator,
-                               Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path path) throws Exception {
+                               Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata>> consumer, final Path path) throws Exception {
 
         final Kubernetes kubeCli = Kubernetes.getInstance();
         final KubernetesClient client = kubeCli.getClient();
@@ -1276,7 +1256,7 @@ public abstract class Kubernetes {
      * @throws TimeoutException     When waiting for the command times out.
      * @throws InterruptedException If waiting for the command fails.
      */
-    public static String executeWithInput(final PodResource<Pod, DoneablePod> podAccess, final InputStream input, final AfterInput afterInput, final Duration timeout,
+    public static String executeWithInput(final PodResource<Pod> podAccess, final InputStream input, final AfterInput afterInput, final Duration timeout,
                                           final String... command) throws IOException, InterruptedException, TimeoutException {
 
         final ByteArrayOutputStream errorChannel = new ByteArrayOutputStream();

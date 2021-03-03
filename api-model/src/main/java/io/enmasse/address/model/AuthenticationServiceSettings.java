@@ -8,24 +8,15 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.base.MoreObjects.ToStringHelper;
 
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
-import io.fabric8.kubernetes.api.model.Doneable;
 import io.fabric8.kubernetes.api.model.SecretReference;
 import io.sundr.builder.annotations.Buildable;
-import io.sundr.builder.annotations.BuildableReference;
-import io.sundr.builder.annotations.Inline;
 
 import java.util.Objects;
 
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
-        builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(AbstractWithAdditionalProperties.class)},
-        inline = @Inline(
-                type = Doneable.class,
-                prefix = "Doneable",
-                value = "done"
-        )
+        builderPackage = "io.fabric8.kubernetes.api.builder"
 )
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuthenticationServiceSettings extends AbstractWithAdditionalProperties {
