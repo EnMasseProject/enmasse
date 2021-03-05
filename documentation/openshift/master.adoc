@@ -10,8 +10,8 @@ include::common/attributes.adoc[]
 :KubePlatformCredentials: OpenShift
 :OperatorMarketplaceNamespace: openshift-marketplace
 
-:KubePlatformRbacURL: https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/cluster_administration/index#admin-guide-manage-rbac
-:KubePlatformSecurityContextURL: https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/cluster_administration/index#admin-guide-manage-rbac
+:KubePlatformRbacURL: https://access.redhat.com/documentation/en-us/openshift_container_platform/4.7/html-single/authentication_and_authorization/index#using-rbac
+:KubePlatformSecurityContextURL: https://access.redhat.com/documentation/en-us/openshift_container_platform/4.7/html-single/authentication_and_authorization/index#using-rbac
 
 = Documentation for {ProductName} on OpenShift
 

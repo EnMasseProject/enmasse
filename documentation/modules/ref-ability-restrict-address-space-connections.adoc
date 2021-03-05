@@ -15,7 +15,7 @@ endif::[]
 
 ifeval::["{cmdcli}" == "oc"]
 * OpenShift Container Platform 3.11 documentation about link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/cluster_administration/index#admin-guide-networking-networkpolicy[Enabling Network Policy].
-* OpenShift Container Platform 4.2 documentation about link:https://access.redhat.com/documentation/en-us/openshift_container_platform/4.2/html-single/networking/index#configuring-networkpolicy[Configuring network policy with OpenShift SDN].
+* OpenShift Container Platform 4.x documentation about link:https://access.redhat.com/documentation/en-us/openshift_container_platform/4.7/html-single/networking/index#network-policy[Network policy].
 endif::[]
 
 .Brokered infrastructure configuration example showing network policy setting
@@ -54,5 +54,3 @@ spec:
   - brokered-queue
   - brokered-topic
 ----
-
-
