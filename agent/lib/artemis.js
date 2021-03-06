@@ -655,6 +655,12 @@ Artemis.prototype.createConnectorService = function (connector) {
     if (connector.consumerPriority !== undefined) {
         parameters.consumerPriority = '' + connector.consumerPriority;
     }
+    if (connector.treatRejectAsUnmodifiedDeliveryFailed !== undefined) {
+        parameters.treatRejectAsUnmodifiedDeliveryFailed = '' + connector.treatRejectAsUnmodifiedDeliveryFailed;
+    }
+    if (connector.useModifiedForTransientDeliveryErrors !== undefined) {
+        parameters.useModifiedForTransientDeliveryErrors = '' + connector.useModifiedForTransientDeliveryErrors;
+    }
     return this._request('broker', 'createConnectorService', [connector.name, "org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory", parameters]);
 };
 
