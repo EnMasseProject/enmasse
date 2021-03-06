@@ -50,6 +50,8 @@ import org.apache.qpid.proton.engine.Transport;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.apache.qpid.proton.engine.impl.LinkMutator.setRemoteProperties;
+
 /**
  * Event handler for establishing outgoing links
  */
@@ -164,7 +166,12 @@ public class LinkInitiator implements EventHandler {
          if (link instanceof Sender) {
             Sender sender = ((Sender) link);
             try {
-               // We really ought to apply the consumer priority here but Artemis doesn't have the API.
+               // Artemis only takes the priority from the remote properties, so we need to munge it in.
+               if (linkInfo.getConsumerPriority() != null) {
+                  Map<Symbol, Object> remoteProperties = link.getRemoteProperties() == null ? new HashMap<>() : new HashMap<>(link.getRemoteProperties());
+                  remoteProperties.put(PRIORITY, linkInfo.getConsumerPriority());
+                  setRemoteProperties(link, remoteProperties);
+               }
                sessionContext.addSender(sender, new SenderController() {
                   @Override
                   public Consumer init(ProtonServerSenderContext senderContext) throws Exception {
