@@ -14,6 +14,7 @@
 * #5247: Add optional support for CRD v1
 * #5249: Bump jackson-databind.version from 2.10.4 to 2.11.3 
 * #5253: Enable user workload monitoring on OCP 4.6
+* #5263: Reimplement server initiated connections. (#5266)
 * #5265: Update fabric8 kubernetes-client from 4.6.4 to 5.0.2
 
 
