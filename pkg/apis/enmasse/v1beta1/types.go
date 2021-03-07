@@ -177,12 +177,12 @@ const (
 type ExposeSpec struct {
 	Type ExposeType `json:"type"`
 
-	RouteHost           string              `json:"routeHost"`
-	RouteServicePort    RouteServicePort    `json:"routeServicePort"`
-	RouteTlsTermination RouteTlsTermination `json:"routeTlsTermination"`
+	RouteHost           string              `json:"routeHost,omitempty"`
+	RouteServicePort    RouteServicePort    `json:"routeServicePort,omitempty"`
+	RouteTlsTermination RouteTlsTermination `json:"routeTlsTermination,omitempty"`
 
-	LoadBalancerPorts        []string `json:"loadBalancerPorts"`
-	LoadBalancerSourceRanges []string `json:"loadBalancerSourceRanges"`
+	LoadBalancerPorts        []string `json:"loadBalancerPorts,omitempty"`
+	LoadBalancerSourceRanges []string `json:"loadBalancerSourceRanges,omitempty"`
 }
 
 type ConnectorSpec struct {
