@@ -20,7 +20,6 @@
  */
 package org.apache.activemq.artemis.integration.amqp;
 
-import io.netty.util.concurrent.DefaultThreadFactory;
 import org.apache.activemq.artemis.core.persistence.StorageManager;
 import org.apache.activemq.artemis.core.postoffice.PostOffice;
 import org.apache.activemq.artemis.core.postoffice.impl.PostOfficeImpl;
@@ -30,7 +29,6 @@ import org.apache.activemq.artemis.core.server.ConnectorServiceFactory;
 import org.apache.qpid.proton.amqp.Symbol;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
@@ -129,7 +127,6 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
 
       String containerId = Optional.ofNullable((String)configuration.get(CONTAINER_ID)).orElse(clusterId);
 
-      int nettyThreads = Optional.ofNullable((String)configuration.get(NETTY_THREADS)).map(Util::parseIntOrNull).orElse(4);
       int idleTimeout = Optional.ofNullable((String)configuration.get(IDLE_TIMEOUT)).map(Util::parseIntOrNull).orElse(16_000);
       Integer consumerPriority = Optional.ofNullable((String)configuration.get(CONSUMER_PRIORITY)).map(Util::parseIntOrNull).orElse(null);
 
@@ -147,7 +144,6 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
          ActiveMQAMQPLogger.LOGGER.infof("Creating connector host %s port %s", configuration.get(TransportConstants.HOST_PROP_NAME), configuration.get(TransportConstants.PORT_PROP_NAME));
       }
 
-      ExecutorService nettyThreadPool = ThreadPoolExecutor.newFixedThreadPool(nettyThreads, new DefaultThreadFactory("connector-" + connectorName));
       return new AMQPConnectorService(connectorName,
               connectorConfig,
               containerId,
@@ -155,7 +151,6 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
               linkInfo,
               ((PostOfficeImpl)postOffice).getServer(),
               scheduledExecutorService,
-              nettyThreadPool,
               idleTimeout,
               treatRejectAsUnmodifiedDeliveryFailed,
               useModifiedForTransientDeliveryErrors,

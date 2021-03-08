@@ -20,69 +20,89 @@
  */
 package org.apache.activemq.artemis.integration.amqp;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.netty.util.concurrent.DefaultThreadFactory;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
+import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnection;
 import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnector;
+import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnectorFactory;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.server.ActiveMQComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.ConnectorService;
+import org.apache.activemq.artemis.protocol.amqp.broker.ActiveMQProtonRemotingConnection;
 import org.apache.activemq.artemis.protocol.amqp.broker.ProtonProtocolManager;
 import org.apache.activemq.artemis.protocol.amqp.broker.ProtonProtocolManagerFactory;
 import org.apache.activemq.artemis.protocol.amqp.client.ProtonClientProtocolManager;
+import org.apache.activemq.artemis.protocol.amqp.proton.AmqpSupport;
+import org.apache.activemq.artemis.protocol.amqp.proton.handler.EventHandler;
 import org.apache.activemq.artemis.protocol.amqp.sasl.ClientSASL;
 import org.apache.activemq.artemis.protocol.amqp.sasl.ClientSASLFactory;
-import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
-import org.apache.activemq.artemis.spi.core.remoting.BaseConnectionLifeCycleListener;
+import org.apache.activemq.artemis.spi.core.protocol.ConnectionEntry;
+import org.apache.activemq.artemis.spi.core.remoting.ClientConnectionLifeCycleListener;
+import org.apache.activemq.artemis.spi.core.remoting.ClientProtocolManager;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
 
 import org.apache.activemq.artemis.utils.ConfigurationHelper;
+import org.apache.activemq.artemis.utils.VersionLoader;
 import org.apache.qpid.proton.amqp.Symbol;
 
 /**
  * Connector service for outgoing AMQP connections.
  */
-public class AMQPConnectorService implements ConnectorService, BaseConnectionLifeCycleListener<ProtonProtocolManager> {
+public class AMQPConnectorService implements ConnectorService, ClientConnectionLifeCycleListener {
    private static final Symbol groupSymbol = Symbol.getSymbol("qd.route-container-group");
+   private final NettyConnectorFactory factory = new NettyConnectorFactory().setServerConnector(true);
    private final String name;
+   private final String containerId;
    private final ActiveMQServer server;
-   private volatile RemotingConnection connection;
-   private final ExecutorService closeExecutor = ThreadPoolExecutor.newSingleThreadExecutor(new DefaultThreadFactory(AMQPConnectorService.class));
-   private final ExecutorService nettyThreadPool;
    private final ScheduledExecutorService scheduledExecutorService;
-   private final ProtonClientConnectionManager lifecycleHandler;
-   private volatile boolean started = false;
-   private volatile ScheduledFuture<?> connectionCheckFuture;
+   private final Map<Symbol, Object> connectionProperties;
    private final Map<String, Object> connectorConfig;
-   private final int idleTimeout;
+   private final long idleTimeout;
    private final boolean treatRejectAsUnmodifiedDeliveryFailed;
    private final boolean useModifiedForTransientDeliveryErrors;
    private final int minLargeMessageSize;
+   private final ProtonProtocolManagerFactory protocolManagerFactory;
+   private final ClientSASLFactory saslClientFactory;
+   private final Optional<LinkInfo> linkInfo;
+   private volatile NettyConnection nettyConnection;
+   private volatile NettyConnector connector;
+   private ActiveMQProtonRemotingConnection protonRemotingConnection;
+   private AtomicBoolean started = new AtomicBoolean();
+   private AtomicBoolean restarting = new AtomicBoolean();
 
-   public AMQPConnectorService(String connectorName, Map<String, Object> connectorConfig, String containerId, String groupId, Optional<LinkInfo> linkInfo, ActiveMQServer server, ScheduledExecutorService scheduledExecutorService, ExecutorService nettyThreadPool, int idleTimeout, boolean treatRejectAsUnmodifiedDeliveryFailed, boolean useModifiedForTransientDeliveryErrors, int minLargeMessageSize) {
+   public AMQPConnectorService(String connectorName, Map<String, Object> connectorConfig, String containerId, String groupId, Optional<LinkInfo> linkInfo, ActiveMQServer server, ScheduledExecutorService scheduledExecutorService, long idleTimeout, boolean treatRejectAsUnmodifiedDeliveryFailed, boolean useModifiedForTransientDeliveryErrors, int minLargeMessageSize) {
       this.name = connectorName;
       this.connectorConfig = connectorConfig;
+      this.containerId = containerId;
       this.server = server;
       this.scheduledExecutorService = scheduledExecutorService;
-      this.nettyThreadPool = nettyThreadPool;
       this.idleTimeout = idleTimeout;
       this.treatRejectAsUnmodifiedDeliveryFailed = treatRejectAsUnmodifiedDeliveryFailed;
       this.useModifiedForTransientDeliveryErrors = useModifiedForTransientDeliveryErrors;
       this.minLargeMessageSize = minLargeMessageSize;
-      AMQPClientConnectionFactory factory = new AMQPClientConnectionFactory(server, containerId, Collections.singletonMap(groupSymbol, groupId), idleTimeout);
+      this.protocolManagerFactory = (ProtonProtocolManagerFactory) server.getRemotingService().getProtocolFactoryMap().get(ProtonProtocolManagerFactory.AMQP_PROTOCOL_NAME);
+      this.linkInfo = linkInfo;
+
+      connectionProperties = new HashMap<>();
+      connectionProperties.put(groupSymbol, groupId);
+      connectionProperties.put(AmqpSupport.PRODUCT, "apache-activemq-artemis");  // Duplicated from ctor of AMQPConnectionContext
+      connectionProperties.put(AmqpSupport.VERSION, VersionLoader.getVersion().getFullVersion());
+
       boolean sslEnabled = ConfigurationHelper.getBooleanProperty(TransportConstants.SSL_ENABLED_PROP_NAME, TransportConstants.DEFAULT_SSL_ENABLED, connectorConfig);
 
-      ClientSASLFactory saslClientFactory = null;
+      saslClientFactory = buildClientSaslFactory(sslEnabled);
+
+   }
+
+   private ClientSASLFactory buildClientSaslFactory(boolean sslEnabled) {
       if (sslEnabled) {
          ActiveMQAMQPLogger.LOGGER.infov("Enabling SSL for AMQP Connector {0}", name);
-         saslClientFactory = availableMechanims -> {
-            if (Arrays.asList(availableMechanims).contains("EXTERNAL")) {
+         return availableMechanisms -> {
+            if (Arrays.asList(availableMechanisms).contains("EXTERNAL")) {
                return new ClientSASL() {
                   @Override
                   public String getName() {
@@ -105,73 +125,91 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
          };
       } else  {
          ActiveMQAMQPLogger.LOGGER.infov("Disabling SSL for AMQP Connector {0}", name);
+         return null;
       }
-      this.lifecycleHandler = new ProtonClientConnectionManager(factory, linkInfo.map(LinkInitiator::new), saslClientFactory);
    }
 
    @Override
-   public void start() throws Exception {
+   public void start() {
+      started.set(true);
 
       scheduledExecutorService.submit(() -> {
-         Connection connection;
+         boolean success = false;
          try {
             ActiveMQAMQPLogger.LOGGER.infov("Starting connector {0}", name);
-            ProtonClientProtocolManager protocolManager = new ProtonClientProtocolManager(new ProtonProtocolManagerFactory(), server);
-
+            ProtonProtocolManager protocolManager = ((ProtonProtocolManager) this.protocolManagerFactory.createProtocolManager( server, null, null, null));
+            protocolManager.setAmqpIdleTimeout(idleTimeout);
+            protocolManager.setAmqpMinLargeMessageSize(minLargeMessageSize);
             // These settings have the desired semantics when working in a cloud environment and for the built-in message
             // forwarding.
             protocolManager.setAmqpTreatRejectAsUnmodifiedDeliveryFailed(treatRejectAsUnmodifiedDeliveryFailed);
             protocolManager.setAmqpUseModifiedForTransientDeliveryErrors(useModifiedForTransientDeliveryErrors);
-            protocolManager.setAmqpMinLargeMessageSize(minLargeMessageSize);
 
-            NettyConnector connector = new NettyConnector(connectorConfig, lifecycleHandler, AMQPConnectorService.this, closeExecutor, nettyThreadPool, server.getScheduledPool(), protocolManager);
+            connector = (NettyConnector) factory.createConnector(connectorConfig,
+                    null, this,
+                    server.getExecutorFactory().getExecutor(), server.getThreadPool(), server.getScheduledPool(), new ProtonClientProtocolManager(protocolManagerFactory, server));
+
             connector.start();
-            connection = connector.createConnection();
+            nettyConnection = (NettyConnection) connector.createConnection();
+
+            if (nettyConnection != null) {
+               ConnectionEntry entry = protocolManager.createOutgoingConnectionEntry(nettyConnection, saslClientFactory);
+               server.getRemotingService().addConnectionEntry(nettyConnection, entry);
+
+
+               protonRemotingConnection = (ActiveMQProtonRemotingConnection) entry.connection;
+               nettyConnection.getChannel().pipeline().addLast(new AMQPClientConnectionChannelHandler(connector.getChannelGroup(), protonRemotingConnection.getAmqpConnection().getHandler(), this, server.getExecutorFactory().getExecutor()));
+
+               // Munge in the containerId and the connectionProperties as the createOutgoingConnectionEntry doesn't convey these args.
+               protonRemotingConnection.getAmqpConnection().addEventHandler(new EventHandler() {
+                  @Override
+                  public void onInit(org.apache.qpid.proton.engine.Connection connection) {
+                     connection.setContainer(containerId);
+                     connection.setProperties(connectionProperties);
+                  }
+               });
+
+               Optional<LinkInitiator> linkInitiator = this.linkInfo.map(info -> new LinkInitiator(protonRemotingConnection, info));
+               linkInitiator.ifPresent(initiator -> protonRemotingConnection.getAmqpConnection().addEventHandler(initiator));
+
+               protonRemotingConnection.getAmqpConnection().runLater(() -> {
+                  protonRemotingConnection.getAmqpConnection().open();
+                  protonRemotingConnection.getAmqpConnection().flush();
+               });
+               success = true;
+            }
          } catch (Throwable t) {
             // Note - the scheduledExecutorService supplied by Artemis ignores exceptions.  Ensure the cause of the failure is logged..
             ActiveMQAMQPLogger.LOGGER.errorv(t, "Error starting connector {0}", name);
-            throw t;
-         }
-
-         if (connection != null) {
-            started = true;
-            if (idleTimeout > 0 && connectionCheckFuture == null) {
-               long connCheckTimeout = idleTimeout * 2;
-               connectionCheckFuture = scheduledExecutorService.scheduleAtFixedRate(() -> {
-                          ActiveMQAMQPLogger.LOGGER.infov("Checking connections on connector {0}", name);
-                          lifecycleHandler.checkIdleConnections(connCheckTimeout);
-                       },
-                       connCheckTimeout,
-                       connCheckTimeout,
-                       TimeUnit.MILLISECONDS);
+         } finally {
+            restarting.set(false);
+            if (!success) {
+               closeCarefully();
+               restart();
             }
-         } else {
-            ActiveMQAMQPLogger.LOGGER.infov("Error starting connector {0}, retrying in 5 seconds", name);
-            scheduledExecutorService.schedule(() -> {
-               start();
-               return true;
-            }, 5, TimeUnit.SECONDS);
          }
       });
    }
 
+   private void restart() {
+      if (started.get() && restarting.compareAndSet(false, true)) {
+         ActiveMQAMQPLogger.LOGGER.infov("Re-starting connector {0} in 5 seconds", name);
+         scheduledExecutorService.schedule(() -> {
+            start();
+            return true;
+         }, 5, TimeUnit.SECONDS);
+      }
+   }
+
+
    @Override
-   public void stop() throws Exception {
+   public void stop() {
       scheduledExecutorService.submit(() -> {
          try {
-            started = false;
+            started.set(false);
             ActiveMQAMQPLogger.LOGGER.infov("Stopping connector {0}", name);
-            if (connection != null) {
-               lifecycleHandler.stop();
-            }
-            closeExecutor.shutdown();
-            nettyThreadPool.shutdown();
+            closeCarefully();
             ActiveMQAMQPLogger.LOGGER.infov("Stopped connector {0}", name);
-
-            if (connectionCheckFuture != null) {
-               connectionCheckFuture.cancel(false);
-               connectionCheckFuture = null;
-            }
          } catch (Throwable t) {
             // Note - the scheduledExecutorService supplied by Artemis ignores exceptions.  Ensure the cause of the failure is logged..
             ActiveMQAMQPLogger.LOGGER.errorv(t, "Error stopping connector {0}", name);
@@ -180,9 +218,27 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
       });
    }
 
+   private void closeCarefully() {
+      if (nettyConnection != null) {
+         try {
+            if (this.connector != null) {
+               this.connector.close();
+               this.connector = null;
+            }
+         } catch (Exception ignore) {
+         } finally {
+            try {
+               this.nettyConnection.close();
+               this.nettyConnection = null;
+            } catch (Exception ignore) {
+            }
+         }
+      }
+   }
+
    @Override
    public boolean isStarted() {
-      return started;
+      return started.get();
    }
 
    @Override
@@ -190,34 +246,40 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
       return name;
    }
 
+
    @Override
-   public void connectionCreated(ActiveMQComponent component, Connection connection, ProtonProtocolManager protocol) {
+   public void connectionCreated(ActiveMQComponent component, Connection connection, ClientProtocolManager protocol) {
       ActiveMQAMQPLogger.LOGGER.infov("connectionCreated for connector {0}", name);
-      lifecycleHandler.connectionCreated(component, connection, protocol);
-      this.connection = connection.getProtocolConnection();
    }
 
    @Override
    public void connectionDestroyed(Object connectionID) {
-      lifecycleHandler.connectionDestroyed(connectionID);
       ActiveMQAMQPLogger.LOGGER.infov("connectionDestroyed for connector {0}", name);
-      if (started) {
-         scheduledExecutorService.schedule(() -> {
-            start();
-            return true;
-         }, 5, TimeUnit.SECONDS);
-      }
+      scheduledExecutorService.submit(() -> {
+
+         try {
+            if (protonRemotingConnection != null) {
+               protonRemotingConnection.fail(new ActiveMQException("Connection being recreated"));
+               protonRemotingConnection = null;
+            }
+         } catch (Exception ignored) {
+         }
+
+         closeCarefully();
+
+         restart();
+         return true;
+      });
    }
 
    @Override
    public void connectionException(Object connectionID, ActiveMQException me) {
       ActiveMQAMQPLogger.LOGGER.infov("connectionException for connector {0}: {1}", name, me.getMessage());
-      lifecycleHandler.connectionException(connectionID, me);
    }
 
    @Override
    public void connectionReadyForWrites(Object connectionID, boolean ready) {
       ActiveMQAMQPLogger.LOGGER.debugv("connectionReadyForWrites for connector {0}", name);
-      lifecycleHandler.connectionReadyForWrites(connectionID, ready);
+      protonRemotingConnection.flush();
    }
 }

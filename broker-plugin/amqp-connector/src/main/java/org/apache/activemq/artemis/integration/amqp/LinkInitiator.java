@@ -21,6 +21,13 @@
 package org.apache.activemq.artemis.integration.amqp;
 
 import io.netty.buffer.ByteBuf;
+import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.core.server.Consumer;
+import org.apache.activemq.artemis.protocol.amqp.broker.ActiveMQProtonRemotingConnection;
+import org.apache.activemq.artemis.protocol.amqp.exceptions.ActiveMQAMQPException;
+import org.apache.activemq.artemis.protocol.amqp.proton.AMQPSessionContext;
+import org.apache.activemq.artemis.protocol.amqp.proton.ProtonServerSenderContext;
+import org.apache.activemq.artemis.protocol.amqp.proton.SenderController;
 import org.apache.activemq.artemis.protocol.amqp.proton.handler.EventHandler;
 import org.apache.activemq.artemis.protocol.amqp.proton.handler.ProtonHandler;
 import org.apache.activemq.artemis.spi.core.remoting.ReadyListener;
@@ -39,22 +46,23 @@ import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 import org.apache.qpid.proton.engine.Transport;
-import org.apache.qpid.proton.engine.impl.LinkMutator;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+
+import static org.apache.qpid.proton.engine.impl.LinkMutator.setRemoteProperties;
 
 /**
  * Event handler for establishing outgoing links
  */
 public class LinkInitiator implements EventHandler {
    private static final Symbol PRIORITY = Symbol.getSymbol("priority");
+   private static final Symbol QD_WAYPOINT = Symbol.getSymbol("qd.waypoint");
+   private final ActiveMQProtonRemotingConnection protonRemotingConnection;
    private final LinkInfo linkInfo;
-   private final Map<Link, org.apache.qpid.proton.amqp.transport.Target> initiatedReceivingLinks = new ConcurrentHashMap<>();
-   private final Map<Link, org.apache.qpid.proton.amqp.transport.Source> initiatedSendingLinks = new ConcurrentHashMap<>();
 
-   public LinkInitiator(LinkInfo linkInfo) {
+   public LinkInitiator(ActiveMQProtonRemotingConnection protonRemotingConnection, LinkInfo linkInfo) {
+      this.protonRemotingConnection = protonRemotingConnection;
       this.linkInfo = linkInfo;
    }
 
@@ -140,22 +148,66 @@ public class LinkInitiator implements EventHandler {
 
    @Override
    public void onFinal(Session session) throws Exception {
-
    }
 
    @Override
    public void onInit(Link link) throws Exception {
-
    }
 
    @Override
    public void onLocalOpen(Link link) throws Exception {
-
    }
 
    @Override
    public void onRemoteOpen(Link link) throws Exception {
-      ActiveMQAMQPLogger.LOGGER.infov("{0} onRemoteOpen", link.getName());
+      AMQPSessionContext sessionContext = protonRemotingConnection.getAmqpConnection().getSessionExtension(link.getSession());
+      if (sessionContext != null) {
+         ActiveMQAMQPLogger.LOGGER.infov("{0} onRemoteOpen - registering link {1} with server", linkInfo.getLinkName(), linkInfo.getDirection());
+         if (link instanceof Sender) {
+            Sender sender = ((Sender) link);
+            try {
+               // Artemis only takes the priority from the remote properties, so we need to munge it in.
+               if (linkInfo.getConsumerPriority() != null) {
+                  Map<Symbol, Object> remoteProperties = link.getRemoteProperties() == null ? new HashMap<>() : new HashMap<>(link.getRemoteProperties());
+                  remoteProperties.put(PRIORITY, linkInfo.getConsumerPriority());
+                  setRemoteProperties(link, remoteProperties);
+               }
+               sessionContext.addSender(sender, new SenderController() {
+                  @Override
+                  public Consumer init(ProtonServerSenderContext senderContext) throws Exception {
+                     return (Consumer) sessionContext.getSessionSPI().createSender(senderContext, SimpleString.toSimpleString(linkInfo.getSourceAddress()), null, false);
+                  }
+
+                  @Override
+                  public void close() {
+                  }
+               });
+            } catch (Exception e) {
+               ActiveMQAMQPLogger.LOGGER.errorv(e, "Failed to register sender", sender.getName());
+               try {
+                  try {
+                     sessionContext.removeSender(sender);
+                  } catch (ActiveMQAMQPException ignored) {
+                  }
+               } finally {
+                  sender.close();
+               }
+            }
+
+         } else if (link instanceof Receiver) {
+            Receiver receiver = ((Receiver) link);
+            try {
+               sessionContext.addReceiver(receiver);
+            } catch (Exception e) {
+               ActiveMQAMQPLogger.LOGGER.errorv(e, "Failed to register receiver", receiver.getName());
+               try {
+                  sessionContext.removeReceiver(receiver);
+               } finally {
+                  receiver.close();
+               }
+            }
+         }
+      }
    }
 
    @Override
@@ -166,9 +218,18 @@ public class LinkInitiator implements EventHandler {
    @Override
    public void onRemoteClose(Link link) throws Exception {
       ActiveMQAMQPLogger.LOGGER.infov("Link {0} closed. Closing connection", link.getName());
-      initiatedSendingLinks.remove(link);
-      initiatedReceivingLinks.remove(link);
-      link.getSession().getConnection().close();
+      try {
+         AMQPSessionContext sessionContext = protonRemotingConnection.getAmqpConnection().getSessionExtension(link.getSession());
+         if (sessionContext != null) {
+            if (link instanceof Sender) {
+               sessionContext.removeSender((Sender) link);
+            } else {
+               sessionContext.removeReceiver((Receiver) link);
+            }
+         }
+      } finally {
+         link.getSession().getConnection().close();
+      }
    }
 
    @Override
@@ -184,8 +245,6 @@ public class LinkInitiator implements EventHandler {
    @Override
    public void onRemoteDetach(Link link) throws Exception {
       ActiveMQAMQPLogger.LOGGER.infov("Link {0} detached. Closing connection", link.getName());
-      initiatedSendingLinks.remove(link);
-      initiatedReceivingLinks.remove(link);
       link.getSession().getConnection().close();
    }
 
@@ -218,15 +277,14 @@ public class LinkInitiator implements EventHandler {
    }
 
    private void createLink(org.apache.qpid.proton.engine.Session session) throws Exception {
-      Link initiatedLink = null;
+      ActiveMQAMQPLogger.LOGGER.infov("{0} creating link {1}", linkInfo.getLinkName(), linkInfo.getDirection());
+
       switch (linkInfo.getDirection()) {
          case out:
-            initiatedLink = createSender(session);
-            initiatedSendingLinks.put(initiatedLink, initiatedLink.getSource().copy());
+            createSender(session);
             break;
          case in:
-            initiatedLink = createReceiver(session);
-            initiatedReceivingLinks.put(initiatedLink, initiatedLink.getTarget().copy());
+            createReceiver(session);
             break;
       }
    }
@@ -241,7 +299,7 @@ public class LinkInitiator implements EventHandler {
       Target target = new Target();
       target.setAddress(linkInfo.getTargetAddress());
       if (!linkInfo.getCapabilities().isEmpty()) {
-         target.setCapabilities(Symbol.getSymbol("qd.waypoint"));
+         target.setCapabilities(QD_WAYPOINT);
       }
       receiver.setTarget(target);
 
@@ -250,7 +308,7 @@ public class LinkInitiator implements EventHandler {
       source.setDurable(TerminusDurability.UNSETTLED_STATE);
       if (!linkInfo.getCapabilities().isEmpty()) {
          source.setCapabilities(linkInfo.getCapabilities().toArray(new Symbol[0]));
-         source.setCapabilities(Symbol.getSymbol("qd.waypoint"));
+         source.setCapabilities(QD_WAYPOINT);
       }
 
       // Requires https://issues.apache.org/jira/browse/DISPATCH-1745
@@ -267,6 +325,7 @@ public class LinkInitiator implements EventHandler {
 
    private Link createSender(Session session) {
       Sender sender;
+
       if (linkInfo.getLinkName() != null) {
          sender = session.sender(linkInfo.getLinkName());
       } else {
@@ -275,7 +334,7 @@ public class LinkInitiator implements EventHandler {
       Target target = new Target();
       target.setAddress(linkInfo.getTargetAddress());
       if (!linkInfo.getCapabilities().isEmpty()) {
-         target.setCapabilities(Symbol.getSymbol("qd.waypoint"));
+         target.setCapabilities(QD_WAYPOINT);
       }
       sender.setTarget(target);
 
@@ -284,32 +343,12 @@ public class LinkInitiator implements EventHandler {
       source.setDurable(TerminusDurability.UNSETTLED_STATE);
       source.setOutcomes(Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL, Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL);
       if (!linkInfo.getCapabilities().isEmpty()) {
-         source.setCapabilities(Symbol.getSymbol("qd.waypoint"));
+         source.setCapabilities(QD_WAYPOINT);
       }
 
-      // We really ought to apply the consumer priority to the link properties here, but Artemis takes the link
-      // priority from the remote properties (which are set from the wire as the link attach response performative
-      // arrives).
-
       sender.setSource(source);
-
       sender.open();
       return sender;
    }
 
-   // This is hack - Artemis allows the definitive view of the target (receiving links), and source (sending links)
-   // to be overwritten by the peer's view.
-   public void processLinkDuringAttach(Link link) {
-      if (initiatedReceivingLinks.containsKey(link)) {
-         LinkMutator.setRemoteTarget(link, initiatedReceivingLinks.get(link));
-      } else if (initiatedSendingLinks.containsKey(link)) {
-         // 2nd hack.  Add the consumer priority to the *remote* priorities.
-         LinkMutator.setRemoteSource(link, initiatedSendingLinks.get(link));
-         if (linkInfo.getConsumerPriority() != null) {
-            Map<Symbol, Object> remoteProperties = link.getRemoteProperties() == null ? new HashMap<>() : new HashMap<>(link.getRemoteProperties());
-            remoteProperties.put(PRIORITY, linkInfo.getConsumerPriority());
-            LinkMutator.setRemoteProperties(link, remoteProperties);
-         }
-      }
-   }
 }

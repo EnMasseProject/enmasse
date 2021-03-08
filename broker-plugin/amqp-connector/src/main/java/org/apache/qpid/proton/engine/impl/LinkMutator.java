@@ -7,8 +7,6 @@ package org.apache.qpid.proton.engine.impl;
 
 import org.apache.activemq.artemis.integration.amqp.LinkInitiator;
 import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.transport.Source;
-import org.apache.qpid.proton.amqp.transport.Target;
 import org.apache.qpid.proton.engine.Link;
 import org.jboss.logging.Logger;
 
@@ -17,18 +15,10 @@ import java.util.Map;
 public class LinkMutator {
     private static final Logger log = Logger.getLogger(LinkInitiator.class);
 
-    public static void setRemoteTarget(Link link, Target target) {
-        log.debugv("Changing target from {} => {}}", link.getRemoteTarget(), target);
-        ((LinkImpl) link).setRemoteTarget(target);
-    }
-
-    public static void setRemoteSource(Link link, Source source) {
-        log.debugv("Changing source from {} => {}}", link.getRemoteSource(), source);
-        ((LinkImpl) link).setRemoteSource(source);
-    }
-
     public static void setRemoteProperties(Link link, Map<Symbol, Object> properties) {
-        log.debugv("Changing remote properties from {} => {}}", link.getRemoteProperties(), properties);
-        ((LinkImpl) link).setRemoteProperties(properties);
+        if (link instanceof LinkImpl) {
+            log.debugv("Changing remote properties from {} => {}}", link.getRemoteProperties(), properties);
+            ((LinkImpl) link).setRemoteProperties(properties);
+        }
     }
 }

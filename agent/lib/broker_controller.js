@@ -721,7 +721,9 @@ BrokerController.prototype._sync_broker_forwarders = function () {
                             targetAddress: targetAddress,
                             sourceAddress: sourceAddress,
                             direction: forwarder.direction,
-                            consumerPriority: forwarder.priority
+                            consumerPriority: forwarder.priority,
+                            useModifiedForTransientDeliveryErrors: 'FWD_USE_MODIFIED_FOR_TRANSIENT_DELIVERY_ERRORS' in this.config ? this.config.FWD_USE_MODIFIED_FOR_TRANSIENT_DELIVERY_ERRORS : true,
+                            treatRejectAsUnmodifiedDeliveryFailed: 'FWD_TREAT_REJECT_AS_UNMODIFIED_DELIVERY_FAILED' in this.config ? this.config.FWD_TREAT_REJECT_AS_UNMODIFIED_DELIVERY_FAILED : true
                         };
                         desired.push(forwarder_entry);
                     }
