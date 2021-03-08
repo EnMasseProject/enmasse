@@ -37,16 +37,8 @@ public class UserUtils {
 
     public static JsonObject userToJson(String addressspace, User user) throws Exception {
         return new JsonObject(new ObjectMapper().writeValueAsString(new UserBuilder(user)
-                .editMetadata()
+                .editOrNewMetadata()
                 .withName(String.format("%s.%s", addressspace, Pattern.compile(".*:").matcher(user.getSpec().getUsername()).replaceAll("")))
-                .endMetadata()
-                .build()));
-    }
-
-    public static JsonObject userToJson(String addressspace, String metaUserName, User user) throws Exception {
-        return new JsonObject(new ObjectMapper().writeValueAsString(new UserBuilder(user)
-                .editMetadata()
-                .withName(String.format("%s.%s", addressspace, Pattern.compile(".*:").matcher(metaUserName).replaceAll("")))
                 .endMetadata()
                 .build()));
     }
