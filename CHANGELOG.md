@@ -16,6 +16,7 @@
 * #5253: Enable user workload monitoring on OCP 4.6
 * #5263: Reimplement server initiated connections. (#5266)
 * #5265: Update fabric8 kubernetes-client from 4.6.4 to 5.0.2
+* #5272: Support router configuration maxMessageSize
 
 
 ## 0.33.0
