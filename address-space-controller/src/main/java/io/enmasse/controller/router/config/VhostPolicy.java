@@ -16,6 +16,7 @@ public class VhostPolicy {
     private Integer maxConnections;
     private Integer maxConnectionsPerUser;
     private Integer maxConnectionsPerHost;
+    private Integer maxMessageSize;
     private Map<String, VhostPolicyGroup> groups;
 
     public String getHostname() {
@@ -66,6 +67,15 @@ public class VhostPolicy {
         this.groups = groups;
     }
 
+
+    public Integer getMaxMessageSize() {
+        return maxMessageSize;
+    }
+
+    public void setMaxMessageSize(Integer maxMessageSize) {
+        this.maxMessageSize = maxMessageSize;
+    }
+
     @Override
     public String toString() {
         return "VhostPolicy{" +
@@ -74,6 +84,7 @@ public class VhostPolicy {
                 ", maxConnections=" + maxConnections +
                 ", maxConnectionsPerUser=" + maxConnectionsPerUser +
                 ", maxConnectionsPerHost=" + maxConnectionsPerHost +
+                ", maxMessageSize=" + maxMessageSize +
                 ", groups=" + groups +
                 '}';
     }
@@ -88,11 +99,12 @@ public class VhostPolicy {
                 Objects.equals(maxConnections, that.maxConnections) &&
                 Objects.equals(maxConnectionsPerUser, that.maxConnectionsPerUser) &&
                 Objects.equals(maxConnectionsPerHost, that.maxConnectionsPerHost) &&
+                Objects.equals(maxMessageSize, that.maxMessageSize) &&
                 Objects.equals(groups, that.groups);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(hostname, allowUnknownUser, maxConnections, maxConnectionsPerUser, maxConnectionsPerHost, groups);
+        return Objects.hash(hostname, allowUnknownUser, maxConnections, maxConnectionsPerUser, maxConnectionsPerHost, groups, maxMessageSize);
     }
 }

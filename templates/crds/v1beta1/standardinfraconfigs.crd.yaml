@@ -218,3 +218,5 @@ spec:
                       type: integer
                     maxReceiversPerConnection:
                       type: integer
+                    maxMessageSize:
+                      type: integer

@@ -691,6 +691,10 @@ public class RouterConfigController implements Controller {
             vhostPolicy.setMaxConnectionsPerUser(policy.getMaxConnectionsPerUser());
         }
 
+        if (policy.getMaxMessageSize() != null) {
+            vhostPolicy.setMaxMessageSize(policy.getMaxMessageSize());
+        }
+
         vhostPolicy.setGroups(Collections.singletonMap("$default", group));
 
         VhostPolicyGroup internalGroup = new VhostPolicyGroup();

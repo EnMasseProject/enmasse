@@ -299,6 +299,7 @@ public class CustomResourceDefinitionTest extends TestBase implements ITestBaseI
                     .withLinkCapacity(500)
                     .withNewPolicy()
                     .withMaxConnections(1000)
+                    .withMaxMessageSize(2000)
                     .endPolicy()
                     .endRouter()
 

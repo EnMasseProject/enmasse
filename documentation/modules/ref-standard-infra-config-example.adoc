@@ -37,6 +37,7 @@ spec:
       maxSessionsPerConnection: 10
       maxSendersPerConnection: 5
       maxReceiversPerConnection: 5
+      maxMessageSize: 1048576
     podTemplate: <5>
       spec:
         affinity:
