@@ -17,7 +17,7 @@ import java.util.Objects;
 )
 @JsonPropertyOrder({"maxConnections", "maxConnectionsPerUser", "maxConnectionsPerHost", "maxSessionsPerConnection", "maxSendersPerConnection", "maxReceiversPerConnection", "maxMessageSize"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class RouterPolicySpec {
+public class RouterPolicySpec extends AbstractWithAdditionalProperties {
     private Integer maxConnections;
     private Integer maxConnectionsPerUser;
     private Integer maxConnectionsPerHost;
