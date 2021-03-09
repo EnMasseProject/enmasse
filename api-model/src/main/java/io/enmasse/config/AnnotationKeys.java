@@ -25,7 +25,8 @@ public interface AnnotationKeys {
     String QUEUE_TEMPLATE_NAME = "enmasse.io/queue-template-name";
     String TOPIC_TEMPLATE_NAME = "enmasse.io/topic-template-name";
     String APPLIED_INFRA_CONFIG = "enmasse.io/applied-infra-config";
-    String OPENSHIFT_SERVING_CERT_SECRET_NAME = "service.alpha.openshift.io/serving-cert-secret-name";
+    String OPENSHIFT_SERVING_CERT_SECRET_NAME_ALPHA = "service.alpha.openshift.io/serving-cert-secret-name";
+    String OPENSHIFT_SERVING_CERT_SECRET_NAME_BETA = "service.beta.openshift.io/serving-cert-secret-name";
     String OPENSHIFT_CONNECTS_TO = "app.openshift.io/connects-to";
     String GENERATION = "enmasse.io/generation";
     String VERSION = "enmasse.io/version";

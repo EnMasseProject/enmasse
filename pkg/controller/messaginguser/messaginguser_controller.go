@@ -8,8 +8,10 @@ package messaginguser
 import (
 	"context"
 	"fmt"
+	"github.com/enmasseproject/enmasse/pkg/controller/ca_bundle"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/tools/record"
+	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -56,6 +58,7 @@ type ReconcileMessagingUser struct {
 	namespace             string
 	keycloakCache         keycloakCache
 	newKeycloakClientFunc keycloak.NewKeycloakClientFunc
+	serviceCaPath         *string
 }
 
 // Gets called by parent "init", adding as to the manager
@@ -64,13 +67,23 @@ func Add(mgr manager.Manager) error {
 }
 
 func newReconciler(mgr manager.Manager) *ReconcileMessagingUser {
-	return &ReconcileMessagingUser{
+	var serviceCaPath string
+	if util.IsOpenshift() {
+		if util.IsOpenshift4() {
+			serviceCaPath = fmt.Sprintf("%s/%s", ca_bundle.ServiceCaPathOcp4, ca_bundle.ServiceCaFilename)
+		} else {
+			serviceCaPath = fmt.Sprintf("%s/%s", ca_bundle.ServiceCaPathOcp311, ca_bundle.ServiceCaFilename)
+		}
+	}
+
+		return &ReconcileMessagingUser{
 		client:                mgr.GetClient(),
 		reader:                mgr.GetAPIReader(),
 		scheme:                mgr.GetScheme(),
 		namespace:             util.GetEnvOrDefault("NAMESPACE", "enmasse-infra"),
 		keycloakCache:         NewKeycloakCache(),
 		newKeycloakClientFunc: keycloak.NewClient,
+		serviceCaPath:         &serviceCaPath,
 	}
 }
 
@@ -97,6 +110,17 @@ func (r *ReconcileMessagingUser) Reconcile(request reconcile.Request) (reconcile
 	reqLogger.Info("Reconciling MessagingUser")
 
 	ctx := context.TODO()
+
+	// On OpenShift 4, await the arrival of projected service-ca.
+	if util.IsOpenshift4() && r.serviceCaPath != nil {
+		if _, err := os.Stat(*r.serviceCaPath); err != nil {
+			reqLogger.Error(err, "Can't stat service ca, will requeue", "serviceCaPath", r.serviceCaPath)
+			return reconcile.Result{
+				Requeue:      true,
+				RequeueAfter: 1 * time.Minute,
+			}, nil
+		}
+	}
 
 	user := &userv1beta1.MessagingUser{}
 	err := r.client.Get(ctx, request.NamespacedName, user)
@@ -382,7 +406,8 @@ func (r *ReconcileMessagingUser) getKeycloakClient(ctx context.Context, authserv
 
 		adminUser := credentials.Data["admin.username"]
 		adminPassword := credentials.Data["admin.password"]
-		kcClient, err := r.newKeycloakClientFunc(host, 8443, string(adminUser), string(adminPassword), ca)
+
+		kcClient, err := r.newKeycloakClientFunc(host, 8443, string(adminUser), string(adminPassword), ca, r.serviceCaPath)
 		if err != nil {
 			return nil, err
 		}

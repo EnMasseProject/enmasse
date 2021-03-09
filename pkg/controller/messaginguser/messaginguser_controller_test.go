@@ -80,7 +80,7 @@ func setup(t *testing.T) *ReconcileMessagingUser {
 	r := &ReconcileMessagingUser{
 		client: cl,
 		reader: cl,
-		newKeycloakClientFunc: func(host string, port int, user string, password string, cert []byte) (keycloak.KeycloakClient, error) {
+		newKeycloakClientFunc: func(host string, port int, user string, password string, cert []byte, _ *string) (keycloak.KeycloakClient, error) {
 			return &keycloak.FakeClient{
 				Users: map[string][]*userv1beta1.MessagingUser{
 					"realm1": make([]*userv1beta1.MessagingUser, 0),

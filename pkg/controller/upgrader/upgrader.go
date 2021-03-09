@@ -8,6 +8,8 @@ package upgrader
 import (
 	"errors"
 	"fmt"
+	"github.com/enmasseproject/enmasse/pkg/controller/ca_bundle"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -40,6 +42,7 @@ var log = logf.Log.WithName("upgrader")
 const ADDRESS_SPACE_CONTROLLER_NAME = "address-space-controller"
 const ANNOTATION_VERSION = "enmasse.io/version"
 const ENV_VERSION = "VERSION"
+const serviceCaPath = "/var/run/secrets/enmasse.io/service-ca.crt"
 
 type Upgrader struct {
 	client    *kubernetes.Clientset
@@ -85,10 +88,20 @@ func (u *Upgrader) Upgrade() error {
 }
 
 func (u *Upgrader) performUpgrade(addressSpaceControllerDeployment *appsv1.Deployment) error {
+	var err error
 	deploymentClient := u.client.AppsV1().Deployments(u.namespace)
 
+	// Await the appearance of the service CA
+	var serviceCaPath *string = nil
+	if util.IsOpenshift() {
+		err, serviceCaPath = u.awaitServiceCa()
+		if err != nil {
+			return err
+		}
+	}
+
 	// Scale down iot-operator
-	err := u.scale("iot-operator", 0)
+	err = u.scale("iot-operator", 0)
 	if err != nil {
 		return err
 	}
@@ -165,7 +178,7 @@ func (u *Upgrader) performUpgrade(addressSpaceControllerDeployment *appsv1.Deplo
 	}
 
 	// Create MessagingUser CRs for all users in all realms
-	err = u.convertMessagingUsers()
+	err = u.convertMessagingUsers(serviceCaPath)
 	if err != nil {
 		return err
 	}
@@ -201,7 +214,44 @@ func (u *Upgrader) performUpgrade(addressSpaceControllerDeployment *appsv1.Deplo
 	return u.deleteDeploymentIfExists("iot-operator")
 }
 
-func (u *Upgrader) convertMessagingUsers() error {
+func (u *Upgrader) awaitServiceCa() (error, *string) {
+	client := u.client.CoreV1().ConfigMaps(u.namespace)
+	_, err := client.Get(ca_bundle.CaBundleConfigmapName, metav1.GetOptions{})
+	if err != nil {
+		if k8errors.IsNotFound(err) {
+			cm := &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{Namespace: u.namespace, Name: ca_bundle.CaBundleConfigmapName},
+			}
+			err = ca_bundle.ApplyConfigMap(cm, ca_bundle.CaBundleConfigmapName)
+			if err != nil {
+				return err, nil
+			}
+			_, err = client.Create(cm)
+			if err != nil {
+				return err, nil
+			}
+		} else {
+			return err, nil
+		}
+	}
+
+	// Set a long timeout like 15 minutes to prevent from looping forever in case of errors
+	var timeout = 15 * time.Minute
+	end := time.Now().Add(timeout)
+
+	path := serviceCaPath
+	for time.Now().Before(end) {
+		if _, err := os.Stat(path); err == nil {
+			return nil, &path
+		}
+		log.Info(fmt.Sprintf("Awaiting serviceCa %s to be projected into this pod", path))
+		time.Sleep(5 * time.Second)
+	}
+
+	return err, nil
+}
+
+func (u *Upgrader) convertMessagingUsers(serviceCaPath *string) error {
 	adminClient, err := adminv1beta1_client.NewForConfig(u.config)
 	if err != nil {
 		return err
@@ -211,9 +261,6 @@ func (u *Upgrader) convertMessagingUsers() error {
 		return err
 	}
 	secretClient := u.client.CoreV1().Secrets(u.namespace)
-	if err != nil {
-		return err
-	}
 	list, err := adminClient.AuthenticationServices(u.namespace).List(metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -243,7 +290,8 @@ func (u *Upgrader) convertMessagingUsers() error {
 			if !strings.HasSuffix(host, fmt.Sprintf("%s.svc", authenticationService.Namespace)) {
 				host += "." + authenticationService.Namespace + ".svc"
 			}
-			kcClient, err := keycloak.NewClient(host, 8443, string(adminUser), string(adminPassword), ca)
+
+			kcClient, err := keycloak.NewClient(host, 8443, string(adminUser), string(adminPassword), ca, serviceCaPath)
 			if err != nil {
 				log.Error(err, "Creating keycloak client")
 				return err
