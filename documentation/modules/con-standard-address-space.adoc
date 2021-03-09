@@ -11,6 +11,8 @@ The standard address space is the default address space in {ProductName}. It con
 * No selectors on queues
 * No browsing on queues
 * No message groups
+* Restrictions affecting the use of some AMQP delivery states, such as the `undeliverable-here=true` modified delivery state when there are competing consumers attached to the same message router.
+
 
 Clients connect and send and receive messages in this address space using the AMQP protocol.
 
