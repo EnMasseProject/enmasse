@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
@@ -462,6 +463,9 @@ public abstract class ResourceManager {
     }
 
     public User createOrUpdateUser(AddressSpace addressSpace, User user, boolean wait) throws Exception {
+        if (user.getMetadata() == null) {
+            user.setMetadata(new ObjectMeta());
+        }
         if (user.getMetadata().getName() == null || !user.getMetadata().getName().contains(addressSpace.getMetadata().getName())) {
             user.getMetadata().setName(addressSpace.getMetadata().getName() + "." + user.getSpec().getUsername());
         }

@@ -203,7 +203,8 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                 .build());
         assertReceive(user);
         resourcesManager.removeUser(getSharedAddressSpace(), user.getUsername());
-        Thread.sleep(5000);
+        // Seems the delete be racy on the keycloak side?  If we don't wait the permission change can be ineffective.
+        Thread.sleep(10_000);
 
         resourcesManager.createOrUpdateUser(getSharedAddressSpace(), UserUtils.createUserResource(user)
                 .editSpec()
