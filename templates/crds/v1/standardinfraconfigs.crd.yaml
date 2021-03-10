@@ -395,6 +395,8 @@ spec:
                           type: integer
                         maxSessionsPerConnection:
                           type: integer
+                        maxMessageSize:
+                          type: integer
                       type: object
                     resources:
                       properties:

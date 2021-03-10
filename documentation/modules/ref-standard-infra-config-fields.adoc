@@ -68,4 +68,5 @@ This table shows the fields available for the standard infrastructure configurat
 |`router.policy.maxSessionsPerConnection` |Specifies the maximum number of sessions allowed per router connection.
 |`router.policy.maxSendersPerConnection` |Specifies the maximum number of senders allowed per router connection.
 |`router.policy.maxReceiversPerConnection` |Specifies the maximum number of receivers allowed per router connection.
+|`router.policy.maxMessageSize` |Specifies the maximum size in bytes of AMQP message transfers allowed for this router. This limit is applied to transfers to/from client connections. A value of zero disables this limit.
 |===

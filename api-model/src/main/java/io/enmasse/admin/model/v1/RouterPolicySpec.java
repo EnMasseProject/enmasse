@@ -15,15 +15,16 @@ import java.util.Objects;
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder"
 )
-@JsonPropertyOrder({"maxConnections", "maxConnectionsPerUser", "maxConnectionsPerHost", "maxSessionsPerConnection", "maxSendersPerConnection", "maxReceiversPerConnection"})
+@JsonPropertyOrder({"maxConnections", "maxConnectionsPerUser", "maxConnectionsPerHost", "maxSessionsPerConnection", "maxSendersPerConnection", "maxReceiversPerConnection", "maxMessageSize"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class RouterPolicySpec {
+public class RouterPolicySpec extends AbstractWithAdditionalProperties {
     private Integer maxConnections;
     private Integer maxConnectionsPerUser;
     private Integer maxConnectionsPerHost;
     private Integer maxSessionsPerConnection;
     private Integer maxSendersPerConnection;
     private Integer maxReceiversPerConnection;
+    private Integer maxMessageSize;
 
     public Integer getMaxConnections() {
         return maxConnections;
@@ -73,6 +74,14 @@ public class RouterPolicySpec {
         this.maxReceiversPerConnection = maxReceiversPerConnection;
     }
 
+    public Integer getMaxMessageSize() {
+        return maxMessageSize;
+    }
+
+    public void setMaxMessageSize(Integer maxMessageSize) {
+        this.maxMessageSize = maxMessageSize;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -83,12 +92,14 @@ public class RouterPolicySpec {
                 Objects.equals(maxConnectionsPerHost, that.maxConnectionsPerHost) &&
                 Objects.equals(maxSessionsPerConnection, that.maxSessionsPerConnection) &&
                 Objects.equals(maxSendersPerConnection, that.maxSendersPerConnection) &&
-                Objects.equals(maxReceiversPerConnection, that.maxReceiversPerConnection);
+                Objects.equals(maxReceiversPerConnection, that.maxReceiversPerConnection) &&
+                Objects.equals(maxMessageSize, that.maxMessageSize);
     }
+
 
     @Override
     public int hashCode() {
-        return Objects.hash(maxConnections, maxConnectionsPerUser, maxConnectionsPerHost, maxSessionsPerConnection, maxSendersPerConnection, maxReceiversPerConnection);
+        return Objects.hash(maxConnections, maxConnectionsPerUser, maxConnectionsPerHost, maxSessionsPerConnection, maxSendersPerConnection, maxReceiversPerConnection, maxMessageSize);
     }
 
     @Override
@@ -100,6 +111,7 @@ public class RouterPolicySpec {
                 ", maxSessionsPerConnection=" + maxSessionsPerConnection +
                 ", maxSendersPerConnection=" + maxSendersPerConnection +
                 ", maxReceiversPerConnection=" + maxReceiversPerConnection +
+                ", maxMessageSize=" + maxMessageSize +
                 '}';
     }
 }

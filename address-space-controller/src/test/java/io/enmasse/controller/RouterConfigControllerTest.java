@@ -85,6 +85,7 @@ public class RouterConfigControllerTest {
                 .withLinkCapacity(50)
                 .withHandshakeTimeout(20)
                 .withNewPolicy()
+                .withMaxMessageSize(40_000)
                 .withMaxConnections(30)
                 .withMaxConnectionsPerHost(10)
                 .withMaxConnectionsPerUser(10)
@@ -137,6 +138,7 @@ public class RouterConfigControllerTest {
 
         VhostPolicy internal = getPolicyForHostname("$default", actual.getVhosts());
         assertNotNull(internal);
+        assertNull(internal.getMaxMessageSize());
         assertNull(internal.getMaxConnections());
         assertNull(internal.getMaxConnectionsPerHost());
         assertNull(internal.getMaxConnectionsPerUser());
@@ -146,6 +148,7 @@ public class RouterConfigControllerTest {
 
         VhostPolicy pub = getPolicyForHostname("public", actual.getVhosts());
         assertNotNull(pub);
+        assertEquals(40_000, pub.getMaxMessageSize());
         assertEquals(30, pub.getMaxConnections());
         assertEquals(10, pub.getMaxConnectionsPerUser());
         assertEquals(10, pub.getMaxConnectionsPerHost());
