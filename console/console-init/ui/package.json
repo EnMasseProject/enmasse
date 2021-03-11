@@ -21,7 +21,7 @@
     "@types/react-router-dom": "^5.1.2",
     "apollo-boost": "^0.4.4",
     "date-fns": "^2.7.0",
-    "elliptic": "6.5.3",
+    "elliptic": "6.5.4",
     "graphql": "^14.5.8",
     "react": "^16.13.1",
     "react-ace": "^8.0.0",
@@ -103,7 +103,7 @@
   "resolutions": {
     "handlebars": "4.5.3",
     "react-popper": "1.3.7",
-    "elliptic": "6.5.3",
+    "elliptic": "6.5.4",
     "request": "2.88.2"
   }
 }
