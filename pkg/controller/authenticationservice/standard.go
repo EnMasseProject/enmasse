@@ -116,6 +116,13 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 	install.ApplyDeploymentDefaults(deployment, "standard-authservice", *authservice.Spec.Standard.DeploymentName)
 	install.OverrideSecurityContextFsGroup("standard-authservice", authservice.Spec.Standard.SecurityContext, deployment)
 
+	var serviceCaPath string
+	if util.IsOpenshift4() {
+		serviceCaPath = fmt.Sprintf("%s/%s", ca_bundle.ServiceCaPathOcp4, ca_bundle.ServiceCaFilename)
+	} else {
+		serviceCaPath = fmt.Sprintf("%s/%s", ca_bundle.ServiceCaPathOcp311, ca_bundle.ServiceCaFilename)
+	}
+
 	if util.IsOpenshift4() {
 		install.ApplyConfigMapVolumeItems(&deployment.Spec.Template.Spec, ca_bundle.CaBundleVolumeName, ca_bundle.CaBundleConfigmapName, []corev1.KeyToPath{
 			{
@@ -136,12 +143,8 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		install.ApplyEnvSimple(container, "KEYCLOAK_CONFIG_FILE", "standalone-"+string(authservice.Spec.Standard.Datasource.Type)+".xml")
 
 		if util.IsOpenshift() {
-			var serviceCaPath string
 			if util.IsOpenshift4() {
-				serviceCaPath = fmt.Sprintf("%s/%s", ca_bundle.ServiceCaPathOcp4, ca_bundle.ServiceCaFilename)
 				install.ApplyVolumeMountSimple(container, ca_bundle.CaBundleVolumeName, ca_bundle.ServiceCaPathOcp4, true)
-			} else {
-				serviceCaPath = fmt.Sprintf("%s/%s", ca_bundle.ServiceCaPathOcp311, ca_bundle.ServiceCaFilename)
 			}
 			install.ApplyEnvSimple(container, "SERVICE_CA", serviceCaPath)
 		}
@@ -167,7 +170,10 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		install.ApplyEnvSecret(container, "KEYCLOAK_PASSWORD", "admin.password", authservice.Spec.Standard.CredentialsSecret.Name)
 
 		if util.IsOpenshift() {
-			install.ApplyEnvSimple(container, "SERVICE_CA", "/var/run/secrets/enmasse.io/service-ca.crt")
+			if util.IsOpenshift4() {
+				install.ApplyVolumeMountSimple(container, ca_bundle.CaBundleVolumeName, ca_bundle.ServiceCaPathOcp4, true)
+			}
+			install.ApplyEnvSimple(container, "SERVICE_CA", serviceCaPath)
 		}
 
 		if authservice.Spec.Standard.Datasource.Type == adminv1beta1.PostgresqlDatasource {
@@ -212,9 +218,6 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		install.ApplyVolumeMountSimple(container, "keycloak-configuration", "/opt/jboss/keycloak/standalone/configuration", false)
 		install.ApplyVolumeMountSimple(container, "keycloak-persistence", "/opt/jboss/keycloak/standalone/data", false)
 		install.ApplyVolumeMountSimple(container, "standard-authservice-cert", "/opt/enmasse/cert", true)
-		if util.IsOpenshift() {
-			install.ApplyVolumeMountSimple(container, ca_bundle.CaBundleVolumeName, "/var/run/secrets/enmasse.io/", true)
-		}
 		return nil
 	}); err != nil {
 		return err

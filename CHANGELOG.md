@@ -17,6 +17,7 @@
 * #5263: Reimplement server initiated connections. (#5266)
 * #5265: Update fabric8 kubernetes-client from 4.6.4 to 5.0.2
 * #5272: Support router configuration maxMessageSize
+* #5275: Avoid reliance of deprecated service-ca.crt (OpenShift4)
 
 
 ## 0.33.0
