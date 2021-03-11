@@ -42,7 +42,7 @@ spec:
         imagePullPolicy: ${IMAGE_PULL_POLICY}
         volumeMounts:
           - name: ca-bundle
-            mountPath: /var/run/secrets/enmasse.io/ca-bundle
+            mountPath: /var/run/secrets/enmasse.io
         env:
         - name: POD_NAME
           valueFrom:
