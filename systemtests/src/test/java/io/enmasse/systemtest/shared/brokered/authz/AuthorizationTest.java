@@ -26,12 +26,12 @@ class AuthorizationTest extends AuthorizationTestBase implements ITestSharedBrok
     }
 
     @Test
-    void testSendAuthzWithWIldcards() throws Exception {
+    void testSendAuthzWithWildcards() throws Exception {
         doTestSendAuthzWithWIldcards();
     }
 
     @Test
-    void testReceiveAuthzWithWIldcards() throws Exception {
+    void testReceiveAuthzWithWildcards() throws Exception {
         doTestReceiveAuthzWithWIldcards();
     }
 }

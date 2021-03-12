@@ -26,6 +26,8 @@ public class UserUtils {
     private static Logger log = CustomLogger.getLogger();
     public static UserBuilder createUserResource(UserCredentials cred) {
         return new UserBuilder()
+                .withNewMetadata()
+                .endMetadata()
                 .withNewSpec()
                 .withUsername(cred.getUsername())
                 .withNewAuthentication()

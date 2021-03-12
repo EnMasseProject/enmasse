@@ -30,13 +30,13 @@ class AuthorizationTest extends AuthorizationTestBase implements ITestSharedStan
 
     @Test
     @Tag(NON_PR)
-    void testSendAuthzWithWIldcards() throws Exception {
+    void testSendAuthzWithWildcards() throws Exception {
         doTestSendAuthzWithWIldcards();
     }
 
     @Test
     @Tag(NON_PR)
-    void testReceiveAuthzWithWIldcards() throws Exception {
+    void testReceiveAuthzWithWildcards() throws Exception {
         doTestReceiveAuthzWithWIldcards();
     }
 }
