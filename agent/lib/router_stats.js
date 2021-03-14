@@ -227,10 +227,20 @@ function is_role_normal (c) {
     return c.role === 'normal';
 }
 
-var internal_identifiers = ['address-space-controller', 'standard-controller', 'agent', 'ragent', 'qdconfigd', 'subserv', 'lwt-service', 'standard-controller-healthcheck'];
+const internal_identifiers = {
+    'address-space-controller': true,
+    'standard-controller': true,
+    'agent': true,
+    'ragent': true,
+    'qdconfigd': true,
+    'subserv': true,
+    'lwt-service': true,
+    'standard-controller-healthcheck': true
+};
+
 
 function is_internal_identifier (s) {
-    return internal_identifiers.indexOf(s) >= 0;
+    return s in internal_identifiers;
 }
 
 function is_internal (c) {
