@@ -18,6 +18,8 @@
 var rhea = require('rhea');
 var util = require('util');
 var log = require("./log.js").logger();
+var crypto = require('crypto');
+var uuidv5 = require('uuid/v5');
 
 module.exports.remove = function (list, predicate) {
     var count = 0;
@@ -351,3 +353,17 @@ module.exports.description = function description(list, name) {
         return JSON.stringify(list.map(name));
     }
 };
+
+module.exports.generate_stable_uuid = function() {
+    var hash = crypto.createHash('sha1');
+    for (var i = 0, j = arguments.length; i < j; i++){
+        var argument = arguments[i];
+        if (argument) {
+            hash.update(argument);
+        }
+    }
+    var ba = [];
+    ba.push(...hash.digest().slice(0, 16));
+    const ns = "3751f842-240e-48b9-89b5-5b47f04e931b";
+    return uuidv5(ns, ba);
+}
