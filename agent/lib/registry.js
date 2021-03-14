@@ -67,7 +67,7 @@ Registry.prototype.update = function (id, latest) {
     } else {
         var changed = false;
         for (var s in latest) {
-            if (latest.hasOwnProperty(s)) {
+            if (latest.hasOwnProperty(s) && this.property_filter(s, current[s], latest[s])) {
                 if (changed || !equals(current[s], latest[s])) {
                     if (log.isDebugEnabled()) {
                         log.debug('changing ' + s + ' on ' + id + ' from ' + JSON.stringify(current[s]) + ' to ' + JSON.stringify(latest[s]));
@@ -112,6 +112,10 @@ Registry.prototype.first = function (action, filter) {
             action(this.objects[key]);
         }
     }
+};
+
+Registry.prototype.property_filter =  function (name, current, latest) {
+    return true;
 };
 
 module.exports = Registry;
