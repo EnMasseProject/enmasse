@@ -67,12 +67,14 @@ Registry.prototype.update = function (id, latest) {
     } else {
         var changed = false;
         for (var s in latest) {
-            if (changed || !equals(current[s], latest[s])) {
-                if (log.isDebugEnabled()) {
-                    log.debug('changing ' + s + ' on ' + id + ' from ' + JSON.stringify(current[s]) + ' to ' + JSON.stringify(latest[s]));
+            if (latest.hasOwnProperty(s)) {
+                if (changed || !equals(current[s], latest[s])) {
+                    if (log.isDebugEnabled()) {
+                        log.debug('changing ' + s + ' on ' + id + ' from ' + JSON.stringify(current[s]) + ' to ' + JSON.stringify(latest[s]));
+                    }
+                    current[s] = latest[s];
+                    changed = true;
                 }
-                current[s] = latest[s];
-                changed = true;
             }
         }
         if (changed) {
