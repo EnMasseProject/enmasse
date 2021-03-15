@@ -137,7 +137,7 @@ public class AMQPConnectorService implements ConnectorService, ClientConnectionL
          boolean success = false;
          try {
             ActiveMQAMQPLogger.LOGGER.infov("Starting connector {0}", name);
-            ProtonProtocolManager protocolManager = ((ProtonProtocolManager) this.protocolManagerFactory.createProtocolManager( server, null, null, null));
+            ProtonProtocolManager protocolManager = ((ProtonProtocolManager) this.protocolManagerFactory.createProtocolManager( server, Collections.emptyMap(), null, null));
             protocolManager.setAmqpIdleTimeout(idleTimeout);
             protocolManager.setAmqpMinLargeMessageSize(minLargeMessageSize);
             // These settings have the desired semantics when working in a cloud environment and for the built-in message
