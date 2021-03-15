@@ -243,3 +243,75 @@ func TestAppendEnvVar(t *testing.T) {
 	assert.Equal(t, "foo bar", container.Env[0].Value)
 
 }
+
+func TestApplyServiceAnnotationDefaults(t *testing.T) {
+	annotations := make(map[string]string)
+	ApplyOpenShiftServingCertAnnotation(annotations, "bar",
+		func() bool {return true},
+		func() bool {return true})
+	assert.Len(t, annotations, 1)
+	assert.Equal(t, "bar", annotations[ServingCertSecretNameBeta])
+
+	annotations = make(map[string]string)
+	annotations[ServingCertSecretNameBeta] = "bar"
+	ApplyOpenShiftServingCertAnnotation(annotations, "bar",
+		func() bool {return true},
+		func() bool {return true})
+	assert.Len(t, annotations, 1)
+	assert.Equal(t, "bar", annotations[ServingCertSecretNameBeta])
+
+	annotations = make(map[string]string)
+	annotations[ServingCertSecretNameBeta] = "baz"
+	ApplyOpenShiftServingCertAnnotation(annotations, "bar",
+		func() bool {return true},
+		func() bool {return true})
+	assert.Len(t, annotations, 1)
+	assert.Equal(t, "bar", annotations[ServingCertSecretNameBeta])
+
+	annotations = make(map[string]string)
+	annotations[ServingCertSecretNameAlpha] = "baz"
+	ApplyOpenShiftServingCertAnnotation(annotations, "bar",
+		func() bool {return true},
+		func() bool {return true})
+	assert.Len(t, annotations, 1)
+	assert.Equal(t, "bar", annotations[ServingCertSecretNameBeta])
+
+	annotations = make(map[string]string)
+	annotations[ServingCertSecretNameAlpha] = "bar"
+	ApplyOpenShiftServingCertAnnotation(annotations, "bar",
+		func() bool {return true},
+		func() bool {return true})
+	assert.Len(t, annotations, 1)
+	assert.Equal(t, "bar", annotations[ServingCertSecretNameAlpha])
+
+	annotations = make(map[string]string)
+	annotations["foo"] = "goo"
+	annotations[ServingCertSecretNameAlpha] = "bar"
+	ApplyOpenShiftServingCertAnnotation(annotations, "bar",
+		func() bool {return true},
+		func() bool {return true})
+	assert.Len(t, annotations, 2)
+	assert.Equal(t, "bar", annotations[ServingCertSecretNameAlpha])
+	assert.Equal(t, "goo", annotations["foo"])
+
+	annotations = make(map[string]string)
+	ApplyOpenShiftServingCertAnnotation(annotations, "bar",
+		func() bool {return true},
+		func() bool {return false})
+	assert.Len(t, annotations, 1)
+	assert.Equal(t, "bar", annotations[ServingCertSecretNameAlpha])
+
+	annotations = make(map[string]string)
+	annotations[ServingCertSecretNameAlpha] = "baz"
+	ApplyOpenShiftServingCertAnnotation(annotations, "bar",
+		func() bool {return true},
+		func() bool {return false})
+	assert.Len(t, annotations, 1)
+	assert.Equal(t, "bar", annotations[ServingCertSecretNameAlpha])
+
+	annotations = make(map[string]string)
+	ApplyOpenShiftServingCertAnnotation(annotations, "bar",
+		func() bool {return false},
+		func() bool {return false})
+	assert.Len(t, annotations, 0)
+}

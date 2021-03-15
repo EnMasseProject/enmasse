@@ -31,10 +31,18 @@ spec:
                     values:
                       - "true"
       serviceAccountName: enmasse-operator
+      volumes:
+        - name: ca-bundle
+          configMap:
+            name: ca-bundle
+            optional: true
       containers:
       - name: controller
         image: ${CONTROLLER_MANAGER_IMAGE}
         imagePullPolicy: ${IMAGE_PULL_POLICY}
+        volumeMounts:
+          - name: ca-bundle
+            mountPath: /var/run/secrets/enmasse.io
         env:
         - name: POD_NAME
           valueFrom:
@@ -63,6 +71,8 @@ spec:
         - name: CONTROLLER_ENABLE_ADDRESS_SPACE_CONTROLLER
           value: "true"
         - name: CONTROLLER_ENABLE_MESSAGING_USER
+          value: "true"
+        - name: CONTROLLER_ENABLE_CA_BUNDLE
           value: "true"
         - name: RELATED_IMAGE_ADDRESS_SPACE_CONTROLLER
           value: ${ADDRESS_SPACE_CONTROLLER_IMAGE}

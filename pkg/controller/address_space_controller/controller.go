@@ -205,6 +205,9 @@ func ApplyDeployment(deployment *appsv1.Deployment) error {
 		applyImageEnv(container, "TOPIC_FORWARDER_IMAGE", "topic-forwarder")
 		if util.IsOpenshift() {
 			install.ApplyEnvSimple(container, util.EnMasseOpenshiftEnvVar, "true")
+			if util.IsOpenshift4() {
+				install.ApplyEnvSimple(container, util.EnMasseOpenshift4EnvVar, "true")
+			}
 		}
 
 		if value, ok := os.LookupEnv("ENABLE_MONITORING_ANNOTATIONS"); ok && value == "true" {

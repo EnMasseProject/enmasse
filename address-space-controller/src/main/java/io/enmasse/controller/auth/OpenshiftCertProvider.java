@@ -6,6 +6,7 @@ package io.enmasse.controller.auth;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.KubeUtil;
+import io.enmasse.api.common.OpenShift;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
@@ -30,10 +31,12 @@ public class OpenshiftCertProvider implements CertProvider {
         if (secret == null) {
             String serviceName = KubeUtil.getAddressSpaceServiceName(endpointInfo.getServiceName(), addressSpace);
             Service service = client.services().withName(serviceName).get();
-            if (service != null && (service.getMetadata().getAnnotations() == null || service.getMetadata().getAnnotations().get(AnnotationKeys.OPENSHIFT_SERVING_CERT_SECRET_NAME) == null)) {
+            String annotation = OpenShift.isOpenShift4(client) ? AnnotationKeys.OPENSHIFT_SERVING_CERT_SECRET_NAME_BETA : AnnotationKeys.OPENSHIFT_SERVING_CERT_SECRET_NAME_ALPHA;
+
+            if (service != null && (service.getMetadata().getAnnotations() == null || service.getMetadata().getAnnotations().get(annotation) == null)) {
                 log.info("Adding service annotation to generate OpenShift cert");
                 client.services().withName(serviceName).edit(s -> new ServiceBuilder(s).editMetadata()
-                        .addToAnnotations(AnnotationKeys.OPENSHIFT_SERVING_CERT_SECRET_NAME, endpointInfo.getCertSpec().getSecretName())
+                        .addToAnnotations(annotation, endpointInfo.getCertSpec().getSecretName())
                         .endMetadata()
                         .build()
                 );

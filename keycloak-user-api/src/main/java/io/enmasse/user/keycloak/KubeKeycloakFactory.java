@@ -41,7 +41,7 @@ public class KubeKeycloakFactory implements KeycloakFactory {
 
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final NamespacedKubernetesClient kubeClient;
-    private static final File serviceCaFile = new File("/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt");
+    private static final File serviceCaFile = new File(System.getenv().getOrDefault("SERVICE_CA", "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt"));
 
     public KubeKeycloakFactory(NamespacedKubernetesClient kubeClient) {
         this.kubeClient = kubeClient;
@@ -75,9 +75,10 @@ public class KubeKeycloakFactory implements KeycloakFactory {
 
         byte []serviceCa = null;
         try {
+            log.info("Loading service CA {}", serviceCaFile);
             serviceCa = Files.readAllBytes(serviceCaFile.toPath());
         } catch (IOException e) {
-            log.warn("Unable to load service CA, ignoring", e);
+            log.warn("Unable to load service CA {}, ignoring", serviceCaFile, e);
         }
         KeyStore trustStore = createKeyStore(b64dec.decode(certificate.getData().get("tls.crt")), serviceCa);
         ResteasyJackson2Provider provider = new ResteasyJackson2Provider() {

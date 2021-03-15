@@ -27,6 +27,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+
+const ServingCertSecretNameAlpha = "service.alpha.openshift.io/serving-cert-secret-name"
+const ServingCertSecretNameBeta = "service.beta.openshift.io/serving-cert-secret-name"
+
 func CreateDefaultLabels(labels map[string]string, component string, name string) map[string]string {
 
 	if labels == nil {
@@ -69,6 +73,36 @@ func ApplyMetricsServiceDefaults(service *corev1.Service, component string, name
 	service.Spec.Selector = CreateDefaultLabels(nil, component, name)
 
 }
+
+func ApplyOpenShiftServingCertAnnotation(annotations map[string]string, certName string, isOpenShift func() bool, isOpenShift4 func() bool) {
+	if isOpenShift() {
+		keys := make([]string, 0)
+		if isOpenShift4() {
+			keys = append(keys, ServingCertSecretNameBeta)
+		}
+		keys = append(keys, ServingCertSecretNameAlpha)
+
+		for _, k := range keys {
+			if v, okay := annotations[k]; okay && v == certName {
+				return;
+			}
+		}
+
+		annotations[keys[0]] = certName
+		for _, k := range keys[1:] {
+			delete(annotations,k)
+		}
+	}
+}
+
+func ApplyAnnotation(meta *v1.ObjectMeta, key string, value string) {
+
+	if meta.Annotations == nil {
+		meta.Annotations = make(map[string]string)
+	}
+	meta.Annotations[key] = value
+}
+
 
 func CreateDefaultAnnotations(annotations map[string]string) map[string]string {
 
@@ -251,11 +285,16 @@ func ApplyPersistentVolume(pod *corev1.PodSpec, name string, claimName string) {
 }
 
 func ApplyConfigMapVolume(pod *corev1.PodSpec, name string, configMapName string) {
+	ApplyConfigMapVolumeItems(pod, name, configMapName, nil)
+}
+
+func ApplyConfigMapVolumeItems(pod *corev1.PodSpec, name string, configMapName string, items []corev1.KeyToPath) {
 	ApplyVolume(pod, name, func(volume *corev1.Volume) {
 		if volume.ConfigMap == nil {
 			volume.ConfigMap = &corev1.ConfigMapVolumeSource{}
 		}
 		volume.ConfigMap.Name = configMapName
+		volume.ConfigMap.Items = items
 	})
 }
 

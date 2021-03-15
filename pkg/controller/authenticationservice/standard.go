@@ -6,8 +6,8 @@ package authenticationservice
 
 import (
 	"fmt"
-
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
+	"github.com/enmasseproject/enmasse/pkg/controller/ca_bundle"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	oauthv1 "github.com/openshift/api/oauth/v1"
@@ -114,8 +114,23 @@ func applyStandardAuthServiceCert(authservice *adminv1beta1.AuthenticationServic
 func applyStandardAuthServiceDeployment(authservice *adminv1beta1.AuthenticationService, deployment *appsv1.Deployment) error {
 
 	install.ApplyDeploymentDefaults(deployment, "standard-authservice", *authservice.Spec.Standard.DeploymentName)
-
 	install.OverrideSecurityContextFsGroup("standard-authservice", authservice.Spec.Standard.SecurityContext, deployment)
+
+	var serviceCaPath string
+	if util.IsOpenshift4() {
+		serviceCaPath = fmt.Sprintf("%s/%s", ca_bundle.ServiceCaPathOcp4, ca_bundle.ServiceCaFilename)
+	} else {
+		serviceCaPath = fmt.Sprintf("%s/%s", ca_bundle.ServiceCaPathOcp311, ca_bundle.ServiceCaFilename)
+	}
+
+	if util.IsOpenshift4() {
+		install.ApplyConfigMapVolumeItems(&deployment.Spec.Template.Spec, ca_bundle.CaBundleVolumeName, ca_bundle.CaBundleConfigmapName, []corev1.KeyToPath{
+			{
+				Key:  ca_bundle.CaBundleKey,
+				Path: ca_bundle.ServiceCaFilename,
+			},
+		})
+	}
 
 	if err := install.ApplyInitContainerWithError(deployment, "keycloak-plugin", func(container *corev1.Container) error {
 		if err := install.ApplyContainerImage(container, "keycloak-plugin", authservice.Spec.Standard.InitImage); err != nil {
@@ -127,10 +142,17 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		install.ApplyVolumeMountSimple(container, "standard-authservice-cert", "/opt/enmasse/cert", false)
 		install.ApplyEnvSimple(container, "KEYCLOAK_CONFIG_FILE", "standalone-"+string(authservice.Spec.Standard.Datasource.Type)+".xml")
 
+		if util.IsOpenshift() {
+			if util.IsOpenshift4() {
+				install.ApplyVolumeMountSimple(container, ca_bundle.CaBundleVolumeName, ca_bundle.ServiceCaPathOcp4, true)
+			}
+			install.ApplyEnvSimple(container, "SERVICE_CA", serviceCaPath)
+		}
 		return nil
 	}); err != nil {
 		return err
 	}
+
 
 	if err := install.ApplyDeploymentContainerWithError(deployment, "keycloak", func(container *corev1.Container) error {
 		if err := install.ApplyContainerImage(container, "keycloak", authservice.Spec.Standard.Image); err != nil {
@@ -146,6 +168,13 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		install.ApplyEnvSimple(container, "JAVA_OPTS", jvmOptions)
 		install.ApplyEnvSecret(container, "KEYCLOAK_USER", "admin.username", authservice.Spec.Standard.CredentialsSecret.Name)
 		install.ApplyEnvSecret(container, "KEYCLOAK_PASSWORD", "admin.password", authservice.Spec.Standard.CredentialsSecret.Name)
+
+		if util.IsOpenshift() {
+			if util.IsOpenshift4() {
+				install.ApplyVolumeMountSimple(container, ca_bundle.CaBundleVolumeName, ca_bundle.ServiceCaPathOcp4, true)
+			}
+			install.ApplyEnvSimple(container, "SERVICE_CA", serviceCaPath)
+		}
 
 		if authservice.Spec.Standard.Datasource.Type == adminv1beta1.PostgresqlDatasource {
 			install.ApplyEnvSimple(container, "DB_HOST", authservice.Spec.Standard.Datasource.Host)
@@ -189,7 +218,6 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		install.ApplyVolumeMountSimple(container, "keycloak-configuration", "/opt/jboss/keycloak/standalone/configuration", false)
 		install.ApplyVolumeMountSimple(container, "keycloak-persistence", "/opt/jboss/keycloak/standalone/data", false)
 		install.ApplyVolumeMountSimple(container, "standard-authservice-cert", "/opt/enmasse/cert", true)
-
 		return nil
 	}); err != nil {
 		return err
@@ -232,7 +260,9 @@ func applyStandardAuthServiceService(authservice *adminv1beta1.AuthenticationSer
 	if service.Annotations == nil {
 		service.Annotations = make(map[string]string)
 	}
-	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = authservice.Spec.Standard.CertificateSecret.Name
+
+	install.ApplyOpenShiftServingCertAnnotation(service.Annotations, authservice.Spec.Standard.CertificateSecret.Name, util.IsOpenshift, util.IsOpenshift4)
+
 	service.Spec.Ports = []corev1.ServicePort{
 		{
 			Port:       8443,

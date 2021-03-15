@@ -104,7 +104,9 @@ func applyNoneAuthServiceService(authservice *adminv1beta1.AuthenticationService
 	if service.Annotations == nil {
 		service.Annotations = make(map[string]string)
 	}
-	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = authservice.Spec.None.CertificateSecret.Name
+
+	install.ApplyOpenShiftServingCertAnnotation(service.Annotations, authservice.Spec.None.CertificateSecret.Name, util.IsOpenshift, util.IsOpenshift4)
+
 	service.Spec.Ports = []corev1.ServicePort{
 		{
 			Port:       5671,

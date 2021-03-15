@@ -28,7 +28,7 @@ import (
 
 var log = logf.Log.WithName("keycloak")
 
-type NewKeycloakClientFunc func(string, int, string, string, []byte) (KeycloakClient, error)
+type NewKeycloakClientFunc func(string, int, string, string, []byte, *string) (KeycloakClient, error)
 type AttributeFilter func(string, []string) bool
 
 type KeycloakClient interface {
@@ -53,9 +53,8 @@ var (
 )
 
 const clusterCaPath = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-const serviceCaPath = "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt"
 
-func NewClient(hostname string, port int, username string, password string, caCert []byte) (KeycloakClient, error) {
+func NewClient(hostname string, port int, username string, password string, caCert []byte, serviceCaPath *string) (KeycloakClient, error) {
 
 	client := gocloak.NewClient(fmt.Sprintf("https://%s:%d", hostname, port))
 
@@ -63,8 +62,10 @@ func NewClient(hostname string, port int, username string, password string, caCe
 		client.RestyClient().SetRootCertificate(clusterCaPath)
 	}
 
-	if _, err := os.Stat(serviceCaPath); err == nil {
-		client.RestyClient().SetRootCertificate(serviceCaPath)
+	if serviceCaPath != nil {
+		if _, err := os.Stat(*serviceCaPath); err == nil {
+			client.RestyClient().SetRootCertificate(*serviceCaPath)
+		}
 	}
 
 	// client.RestyClient().SetDebug(true)
