@@ -25,6 +25,7 @@ public class StandardInfraConfigSpec extends AbstractWithAdditionalProperties {
     private StandardInfraConfigSpecAdmin admin;
     private StandardInfraConfigSpecBroker broker;
     private StandardInfraConfigSpecRouter router;
+    private Boolean globalDLQ;
 
     public void setVersion(String version) {
         this.version = version;
@@ -65,6 +66,7 @@ public class StandardInfraConfigSpec extends AbstractWithAdditionalProperties {
         StandardInfraConfigSpec that = (StandardInfraConfigSpec) o;
         return Objects.equals(version, that.version) &&
                 Objects.equals(networkPolicy, that.networkPolicy) &&
+                Objects.equals(globalDLQ, that.globalDLQ) &&
                 Objects.equals(admin, that.admin) &&
                 Objects.equals(broker, that.broker) &&
                 Objects.equals(router, that.router);
@@ -72,7 +74,7 @@ public class StandardInfraConfigSpec extends AbstractWithAdditionalProperties {
 
     @Override
     public int hashCode() {
-        return Objects.hash(version, networkPolicy, admin, broker, router);
+        return Objects.hash(version, networkPolicy, globalDLQ, admin, broker, router);
     }
 
     @Override
@@ -80,6 +82,7 @@ public class StandardInfraConfigSpec extends AbstractWithAdditionalProperties {
         return "StandardInfraConfigSpec{" +
                 "version='" + version + '\'' +
                 ", networkPolicy=" + networkPolicy +
+                ", globalDLQ=" + globalDLQ +
                 ", admin=" + admin +
                 ", broker=" + broker +
                 ", router=" + router +
@@ -92,5 +95,13 @@ public class StandardInfraConfigSpec extends AbstractWithAdditionalProperties {
 
     public NetworkPolicy getNetworkPolicy() {
         return networkPolicy;
+    }
+
+    public Boolean getGlobalDLQ() {
+        return globalDLQ;
+    }
+
+    public void setGlobalDLQ(Boolean globalDLQ) {
+        this.globalDLQ = globalDLQ;
     }
 }

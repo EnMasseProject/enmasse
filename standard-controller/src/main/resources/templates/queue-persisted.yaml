@@ -191,6 +191,8 @@ objects:
             value: ${BROKER_CONNECTOR_IDLE_TIMEOUT_MS}
           - name: GLOBAL_MAX_SIZE
             value: ${BROKER_GLOBAL_MAX_SIZE}
+          - name: ENABLE_GLOBAL_DLQ
+            value: ${ENABLE_GLOBAL_DLQ}
           - name: TREAT_REJECT_AS_UNMODIFIED_DELIVERY_FAILED
             value: ${BROKER_TREAT_REJECT_AS_UNMODIFIED_DELIVERY_FAILED}
           - name: USE_MODIFIED_FOR_TRANSIENT_DELIVERY_ERRORS
@@ -323,3 +325,6 @@ parameters:
 - name: BROKER_MIN_LARGE_MESSAGE_SIZE
   description: Min large message size
   value: "-1"
+- name: ENABLE_GLOBAL_DLQ
+  description: Enable Global DLQ
+  value: "false"

@@ -283,6 +283,9 @@ spec:
                         x-kubernetes-preserve-unknown-fields: true
                       type: array
                   type: object
+                globalDLQ:
+                  description: Enable fallback DLQ destination. Defaults to false.
+                  type: boolean
                 router:
                   properties:
                     idleTimeout:

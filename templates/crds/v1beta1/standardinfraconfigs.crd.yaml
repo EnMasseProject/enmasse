@@ -43,6 +43,9 @@ spec:
                   type: array
                   items:
                     type: object
+            globalDLQ:
+              description: Enable fallback DLQ destination. Defaults to false.
+              type: boolean
             admin:
               type: object
               properties:

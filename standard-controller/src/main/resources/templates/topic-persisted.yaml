@@ -216,6 +216,8 @@ objects:
             value: ${BROKER_CONNECTOR_IDLE_TIMEOUT_MS}
           - name: GLOBAL_MAX_SIZE
             value: ${BROKER_GLOBAL_MAX_SIZE}
+          - name: ENABLE_GLOBAL_DLQ
+            value: ${ENABLE_GLOBAL_DLQ}
           - name: ADDRESS_FULL_POLICY
             value: ${BROKER_ADDRESS_FULL_POLICY}
           - name: JAVA_OPTS
@@ -345,3 +347,6 @@ parameters:
 - name: BROKER_MIN_LARGE_MESSAGE_SIZE
   description: Min large message size
   value: "-1"
+- name: ENABLE_GLOBAL_DLQ
+  description: Enable Global DLQ
+  value: "false"

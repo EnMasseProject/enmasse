@@ -154,6 +154,10 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
             if (standardInfraConfig.getSpec().getBroker().getMinLargeMessageSize() != null) {
                 paramMap.put(TemplateParameter.BROKER_MIN_LARGE_MESSAGE_SIZE, String.valueOf(standardInfraConfig.getSpec().getBroker().getMinLargeMessageSize()));
             }
+
+            if (standardInfraConfig.getSpec().getGlobalDLQ() != null) {
+                paramMap.put(TemplateParameter.ENABLE_GLOBAL_DLQ, String.valueOf(standardInfraConfig.getSpec().getGlobalDLQ()));
+            }
         }
 
         KubernetesList items = kubernetes.processTemplate(templateName, paramMap);
