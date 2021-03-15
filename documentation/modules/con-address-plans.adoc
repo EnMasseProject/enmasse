@@ -48,10 +48,10 @@ spec:
 
 The other fields are used by the {ConsoleName} UI.
 
-A single router can support five instances of addresses and broker can support three instances of addresses with this plan. If the number of addresses with this plan increases to four, another broker is created. If it increases further to six, another router is created as well.
+A single router can support five instances of addresses and a broker can support three instances of addresses with this plan. If the number of addresses with this plan increases to four, another broker is created. If it increases further to six, another router is created as well.
 
 In the `standard` address space, address plans for the `queue` address type may contain a field
-`partitions`, which allows a queue to be sharded across multiple brokers for HA and improved performance. Specifying an amount of `broker` resource above 1 will automatically cause a queue to be partitioned.
+`partitions`, which allows a queue to be sharded across multiple brokers for HA and improved performance. Specifying a `broker` resource amount above 1 will automatically cause a queue to be partitioned.
 
 include::ref-message-ttl.adoc[]
 

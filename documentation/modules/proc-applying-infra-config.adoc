@@ -19,7 +19,7 @@ ifeval::["{cmdcli}" == "oc"]
 
 . Change to the project where {ProductName} is installed:
 +
-[subs="attributes",options="nowrap"]
+[subs="attributes,+quotes",options="nowrap"]
 ----
 {cmdcli} project _{ProductNamespace}_
 ----
@@ -65,4 +65,3 @@ spec:
 ----
 +
 The configuration changes are applied within several minutes.
-
