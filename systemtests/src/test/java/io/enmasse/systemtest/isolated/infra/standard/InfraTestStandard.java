@@ -475,6 +475,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .withBroker(new StandardInfraConfigSpecBrokerBuilder()
                         .withTreatRejectAsUnmodifiedDeliveryFailed(treatRejectedAsModified)
                         .build())
+                .withGlobalDLQ(true)
                 .endSpec()
                 .build();
 

@@ -24,4 +24,7 @@ message redelivery settings that are in force.
 
 If the address has a `deadletter` address assigned, messages that have exceeded the maximum number of delivery attempts are automatically moved to it.
 
-If the address has no `deadletter` address assigned, the system drops the messages. These messages are lost permanently.
+If the address has no `deadletter` address assigned, the system drops the messages. These messages are lost permanently. However, the standard address space
+supports a *global DLQ* mode. If set to `true` in the `standardinfraconfig` resources, the system establishes a fallback global dead letter address named
+`!!GLOBAL_DLQ` and routes the undelivered messages to it.  To remove messages from this address and prevent the broker(s) from becoming full, connect a
+consuming application to the `!!GLOBAL_DLQ` address.

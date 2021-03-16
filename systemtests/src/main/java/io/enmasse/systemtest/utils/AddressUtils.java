@@ -433,7 +433,7 @@ public class AddressUtils {
     public static void assertRedeliveryStatus(Address addr, MessageRedelivery expectedRedelivery) {
         Address reread = IsolatedResourcesManager.getInstance().getAddress(addr.getMetadata().getNamespace(), addr);
         if (expectedRedelivery == null) {
-            assertThat(reread.getStatus().getMessageTtl(), nullValue());
+            assertThat(reread.getStatus().getMessageRedelivery(), nullValue());
         } else {
             assertThat(reread.getStatus().getMessageRedelivery(), notNullValue());
 

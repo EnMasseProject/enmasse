@@ -488,12 +488,14 @@ public class RouterConfigController implements Controller {
         tempAddress.setDistribution(Distribution.balanced);
         addresses.add(tempAddress);
 
-        Address dlqAddress = new Address();
-        dlqAddress.setName("override.global.dlq");
-        dlqAddress.setPattern("!!GLOBAL_DLQ");
-        dlqAddress.setDistribution(Distribution.balanced);
-        dlqAddress.setWaypoint(true);
-        addresses.add(dlqAddress);
+        if (infraConfig.getSpec().getGlobalDLQ() != null && infraConfig.getSpec().getGlobalDLQ()) {
+            Address dlqAddress = new Address();
+            dlqAddress.setName("override.global.dlq");
+            dlqAddress.setPattern("!!GLOBAL_DLQ");
+            dlqAddress.setDistribution(Distribution.balanced);
+            dlqAddress.setWaypoint(true);
+            addresses.add(dlqAddress);
+        }
 
         Address routerHealthCheckAddress = new Address();
         routerHealthCheckAddress.setName("!!HEALTH_CHECK_ROUTER");
@@ -503,12 +505,14 @@ public class RouterConfigController implements Controller {
 
         // Autolinks
         List<AutoLink> autoLinks = new ArrayList<>();
-        AutoLink dlqAutoLink = new AutoLink();
-        dlqAutoLink.setName("override.global.dlq.in");
-        dlqAutoLink.setAddress("!!GLOBAL_DLQ");
-        dlqAutoLink.setDirection(LinkDirection.in);
-        dlqAutoLink.setContainerId("broker-global-dlq-out");
-        autoLinks.add(dlqAutoLink);
+        if (infraConfig.getSpec().getGlobalDLQ() != null && infraConfig.getSpec().getGlobalDLQ()) {
+            AutoLink dlqAutoLink = new AutoLink();
+            dlqAutoLink.setName("override.global.dlq.in");
+            dlqAutoLink.setAddress("!!GLOBAL_DLQ");
+            dlqAutoLink.setDirection(LinkDirection.in);
+            dlqAutoLink.setContainerId("broker-global-dlq-out");
+            autoLinks.add(dlqAutoLink);
+        }
 
         // LinkRoutes
         List<LinkRoute> linkRoutes = new ArrayList<>();

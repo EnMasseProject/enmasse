@@ -46,11 +46,33 @@ function configure_shared() {
 
 function configure_standard() {
     if [ -n "$TOPIC_NAME" ]; then
-        cp $CONFIG_TEMPLATES/standard/sharded-topic/broker.xml /tmp/broker.xml
+        SRC=$CONFIG_TEMPLATES/standard/sharded-topic/broker.xml
     elif [ -n "$QUEUE_NAME" ] && [ "$QUEUE_NAME" != "" ]; then
-        cp $CONFIG_TEMPLATES/standard/sharded-queue/broker.xml /tmp/broker.xml
+        SRC=$CONFIG_TEMPLATES/standard/sharded-queue/broker.xml
     else
-        cp $CONFIG_TEMPLATES/standard/colocated/broker.xml /tmp/broker.xml
+        SRC=$CONFIG_TEMPLATES/standard/colocated/broker.xml
+    fi
+
+
+    if [ "${ENABLE_GLOBAL_DLQ}" = true ] ;then
+        cp "${SRC}" /tmp/broker.xml
+    else
+        TRANSFORM=/tmp/transform.xslt
+        cat > /tmp/transform.xslt << EOF
+<xsl:stylesheet version="1.0"
+ xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+ xmlns:activemq="urn:activemq:core">
+    <xsl:output/>
+    <xsl:template match="node()|@*">
+      <xsl:copy>
+         <xsl:apply-templates select="node()|@*"/>
+      </xsl:copy>
+    </xsl:template>
+    <xsl:template match="activemq:dead-letter-address[.='!!GLOBAL_DLQ']"/>
+    <xsl:template match="activemq:address[@name='!!GLOBAL_DLQ']"/>
+</xsl:stylesheet>
+EOF
+      xsltproc -o "/tmp/broker.xml" "${TRANSFORM}" "${SRC}"
     fi
 
     cp $CONFIG_TEMPLATES/standard/login.config /tmp/login.config    

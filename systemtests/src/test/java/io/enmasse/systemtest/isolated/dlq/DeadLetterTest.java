@@ -8,7 +8,6 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.address.model.MessageRedelivery;
 import io.enmasse.address.model.MessageRedeliveryBuilder;
 import io.enmasse.admin.model.v1.AddressPlan;
@@ -19,30 +18,28 @@ import io.enmasse.admin.model.v1.BrokeredInfraConfig;
 import io.enmasse.admin.model.v1.BrokeredInfraConfigBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
-import io.enmasse.config.LabelKeys;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
-import io.enmasse.systemtest.broker.ArtemisUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
-import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import org.apache.qpid.proton.amqp.messaging.Modified;
+import org.apache.qpid.proton.amqp.messaging.Rejected;
 import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
@@ -52,20 +49,20 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(ISOLATED)
 @Tag(ACCEPTANCE)
 class DeadLetterTest extends TestBase implements ITestBaseIsolated {
     private static final Logger log = CustomLogger.getLogger();
     private static final Modified DELIVERY_FAILED = new Modified();
+    private static final Rejected REJECTED = new Rejected();
+    private static final String GLOBAL_DLQ = "!!GLOBAL_DLQ";
+
     {
         DELIVERY_FAILED.setDeliveryFailed(true);
     }
@@ -75,6 +72,8 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
     void testAddressSpecified(String type) throws Exception {
         doTestMessageRedelivery(AddressSpaceType.getEnum(type), AddressType.QUEUE, null, new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(2).build(),
                 new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(2).build());
+
+        System.out.println("hello");
     }
 
     @ParameterizedTest(name = "testAddressPlanSpecified-{0}-space")
@@ -99,13 +98,7 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
         final String baseSpacePlan;
         final String baseAddressPlan;
         final String deadLetterAddressPlan;
-        final long messageExpiryScanPeriod = 1000L;
-
-        PodTemplateSpec brokerInfraTtlOverride = new PodTemplateSpecBuilder()
-                .withNewSpec()
-                .withInitContainers(new ContainerBuilder()
-                        .withName("broker-plugin")
-                        .withEnv(new EnvVar("MESSAGE_EXPIRY_SCAN_PERIOD", String.format("%d", messageExpiryScanPeriod), null)).build()).endSpec().build();
+        PodTemplateSpec brokerInfraTtlOverride = getPodTemplateSpec();
 
         if (AddressSpaceType.STANDARD == addressSpaceType) {
             baseSpacePlan =  AddressSpacePlans.STANDARD_SMALL;
@@ -272,6 +265,131 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
 
         sendAndReceiveFailingDeliveries(addressSpace, addr, recvAddr, user, List.of(createMessage(addr)));
     }
+    @Test
+    void testModDeliveryFailedDeliveriesFlowToGlobalDeadLetter() throws Exception {
+        doGlobalDlqTest(new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(2).build(), new MessageRedeliveryBuilder().withMaximumDeliveryAttempts(2).build(), DELIVERY_FAILED, true);
+    }
+
+    @Test
+    void testRejectedDeliveriesFlowToGlobalDeadLetter() throws Exception {
+        doGlobalDlqTest(null, null, REJECTED, false);
+    }
+
+    private void doGlobalDlqTest(MessageRedelivery messageRedelivery, MessageRedelivery expectedRedelivery, DeliveryState state, boolean treatRejectAsUnmodifiedDeliveryFailed) throws Exception {
+        final String infraConfigName = "redelivery-infra";
+        final String spacePlanName = "space-plan-redelivery";
+        final String addrPlanName = "addr-plan-redelivery";
+
+        PodTemplateSpec brokerInfraTtlOverride = getPodTemplateSpec();
+
+        final String baseSpacePlan = AddressSpacePlans.STANDARD_SMALL;
+        final String baseAddressPlan = DestinationPlan.STANDARD_MEDIUM_QUEUE;
+        StandardInfraConfig infraConfig = isolatedResourcesManager.getStandardInfraConfig("default");
+        StandardInfraConfig ttlInfra = new StandardInfraConfigBuilder()
+                .withNewMetadata()
+                .withName(infraConfigName)
+                .endMetadata()
+                .withNewSpecLike(infraConfig.getSpec())
+                .withNewBrokerLike(infraConfig.getSpec().getBroker())
+                .withTreatRejectAsUnmodifiedDeliveryFailed(treatRejectAsUnmodifiedDeliveryFailed)
+                .withPodTemplate(brokerInfraTtlOverride)
+                .endBroker()
+                .withGlobalDLQ(true)
+                .endSpec()
+                .build();
+        ttlInfra.getSpec().getBroker().setTreatRejectAsUnmodifiedDeliveryFailed(false);
+        isolatedResourcesManager.createInfraConfig(ttlInfra);
+
+        AddressSpacePlan smallSpacePlan = kubernetes.getAddressSpacePlanClient().withName(baseSpacePlan).get();
+        AddressPlan smallPlan = kubernetes.getAddressPlanClient().withName(baseAddressPlan).get();
+
+        AddressPlan addrPlan = new AddressPlanBuilder()
+                .withNewMetadata()
+                .withName(addrPlanName)
+                .endMetadata()
+                .withNewSpecLike(smallPlan.getSpec())
+                .withMessageRedelivery(null)
+                .endSpec()
+                .build();
+
+        List<String> plans = new ArrayList<>(smallSpacePlan.getSpec().getAddressPlans());
+        plans.add(addrPlan.getMetadata().getName());
+
+        AddressSpacePlan spacePlan = new AddressSpacePlanBuilder()
+                .withNewMetadata()
+                .withName(spacePlanName)
+                .endMetadata()
+                .withNewSpecLike(smallSpacePlan.getSpec())
+                .withAddressPlans(plans)
+                .withInfraConfigRef(infraConfigName)
+                .endSpec()
+                .build();
+
+        isolatedResourcesManager.createAddressPlan(addrPlan);
+        isolatedResourcesManager.createAddressSpacePlan(spacePlan);
+
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("message-dl-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(spacePlan.getAddressSpaceType())
+                .withPlan(spacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        Address addr = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(kubernetes.getInfraNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "message-redelivery"))
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressType.QUEUE.toString())
+                .withMessageRedelivery(messageRedelivery)
+                .withAddress("message-redelivery")
+                .withPlan(addrPlan.getMetadata().getName())
+                .endSpec()
+                .build();
+        isolatedResourcesManager.createAddressSpace(addressSpace);
+        isolatedResourcesManager.setAddresses(addr);
+
+        AddressUtils.assertRedeliveryStatus(addr, expectedRedelivery);
+        AddressUtils.awaitAddressSettingsSync(addressSpace, addr, expectedRedelivery);
+
+        UserCredentials user = new UserCredentials("user", "passwd");
+        isolatedResourcesManager.createOrUpdateUser(addressSpace, user);
+
+        List<Message> messages = List.of(createMessage(addr));
+        Address sendAddr = resourcesManager.getAddress(addr.getMetadata().getNamespace(), addr);
+        MessageRedelivery redelivery = sendAddr.getStatus().getMessageRedelivery() == null ? new MessageRedelivery() : sendAddr.getStatus().getMessageRedelivery();
+
+        try(AmqpClient client = getAmqpClientFactory().createQueueClient(addressSpace)) {
+            client.getConnectOptions().setCredentials(user);
+
+            AtomicInteger count = new AtomicInteger();
+            CompletableFuture<Integer> sent = client.sendMessages(sendAddr.getSpec().getAddress(), messages, (message -> count.getAndIncrement() == messages.size()));
+            assertThat("all messages should have been sent", sent.get(20, TimeUnit.SECONDS), is(messages.size()));
+
+            AtomicInteger totalDeliveries = new AtomicInteger();
+            Source source = createSource(addr.getSpec().getAddress());
+            int expected = messages.size() * Math.max(redelivery.getMaximumDeliveryAttempts() == null || state instanceof Rejected ? 0 : redelivery.getMaximumDeliveryAttempts(), 1);
+            assertThat("unexpected number of failed deliveries", client.recvMessages(source, message -> {
+                        log.info("message: {}, delivery count: {}", message.getMessageId(), message.getHeader().getDeliveryCount());
+                        return totalDeliveries.incrementAndGet() >= expected;}, Optional.empty(),
+                    delivery -> delivery.disposition(state, true)).getResult().get(1, TimeUnit.MINUTES).size(), is(expected));
+
+            if (state instanceof Rejected || (redelivery.getMaximumDeliveryAttempts() != null && redelivery.getMaximumDeliveryAttempts() >= 0)) {
+                assertThat("all messages should have been routed to the dead letter address", client.recvMessages(GLOBAL_DLQ, 1).get(1, TimeUnit.MINUTES).size(), is(messages.size()));
+            } else {
+                // Infinite delivery attempts configured - consume normally
+                assertThat("all messages should have been eligible for consumption", client.recvMessages(addr.getSpec().getAddress(), 1).get(1, TimeUnit.MINUTES).size(), is(messages.size()));
+            }
+        }
+    }
 
     private void sendAndReceiveFailingDeliveries(AddressSpace addressSpace, Address sendAddr, Address recvAddr, UserCredentials user, List<Message> messages) throws Exception {
         sendAddr = resourcesManager.getAddress(sendAddr.getMetadata().getNamespace(), sendAddr);
@@ -404,48 +522,14 @@ class DeadLetterTest extends TestBase implements ITestBaseIsolated {
         }
     }
 
-    // It'd be better if the address's status reflected when the expiry/address settings spaces were applied
-    // but with our current architecture, agent (for the standard case) doesn't write the address status.
-    // For now peep at the broker(s)
-    private void awaitAddressSettingsSync(AddressSpace addressSpace, Address addr) {
-        Address reread = resourcesManager.getAddress(addr.getMetadata().getNamespace(), addr);
-        MessageRedelivery expectedRedelivery = reread.getStatus().getMessageRedelivery() == null ? new MessageRedelivery() : reread.getStatus().getMessageRedelivery();
+    private PodTemplateSpec getPodTemplateSpec() {
+        final long messageExpiryScanPeriod = 1000L;
 
-        UserCredentials supportCredentials = ArtemisUtils.getSupportCredentials(addressSpace);
-        List<String> brokers = new ArrayList<>();
-        if (addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
-            brokers.addAll(reread.getStatus().getBrokerStatuses().stream().map(BrokerStatus::getContainerId).collect(Collectors.toSet()));
-            assertThat(brokers.size(), greaterThanOrEqualTo(1));
-        } else {
-            Map<String, String> brokerLabels = new HashMap<>();
-            brokerLabels.put(LabelKeys.INFRA_UUID, AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
-            brokerLabels.put(LabelKeys.ROLE, "broker");
-
-            List<Pod> brokerPods = Kubernetes.getInstance().listPods(brokerLabels);
-            assertThat(brokerPods.size(), equalTo(1));
-            brokers.add(brokerPods.get(0).getMetadata().getName());
-        }
-
-        brokers.forEach(name -> TestUtils.waitUntilCondition(() -> {
-            Map<String, Object> actualSettings = ArtemisUtils.getAddressSettings(kubernetes, name, supportCredentials, reread.getSpec().getAddress());
-            int maxDeliveryAttempts = ((Number) actualSettings.get("maxDeliveryAttempts")).intValue();
-            String deadletter = String.valueOf(actualSettings.get("DLA"));
-            String expiry = String.valueOf(actualSettings.get("expiryAddress"));
-            boolean b = maxDeliveryAttemptsEquals(maxDeliveryAttempts, expectedRedelivery.getMaximumDeliveryAttempts());
-            if (!b) {
-                log.info("Address {} on broker {} does not have expected redelivery values: {}, dead letter: {}, expiry: {}." +
-                                " Actual maxDeliveryAttempts: {}, dead letter: {} expiry: {}",
-                        reread.getMetadata().getName(), name,
-                        expectedRedelivery, reread.getSpec().getDeadletter(), reread.getSpec().getExpiry(),
-                        maxDeliveryAttempts, deadletter, expiry);
-            }
-            return b;
-                }, Duration.ofMinutes(2), Duration.ofSeconds(5),
-                () -> fail("Failed to await address settings to sync")));
-    }
-
-    private boolean maxDeliveryAttemptsEquals(int artemisMaxDeliveryAttempts, Integer maximumDeliveryAttempts) {
-        return Objects.equals(maximumDeliveryAttempts == null ? -1 : maximumDeliveryAttempts, artemisMaxDeliveryAttempts);
+        return new PodTemplateSpecBuilder()
+                .withNewSpec()
+                .withInitContainers(new ContainerBuilder()
+                        .withName("broker-plugin")
+                        .withEnv(new EnvVar("MESSAGE_EXPIRY_SCAN_PERIOD", String.format("%d", messageExpiryScanPeriod), null)).build()).endSpec().build();
     }
 
     private Source createSource(String recvAddress) {

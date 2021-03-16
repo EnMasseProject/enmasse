@@ -94,6 +94,7 @@ public class RouterConfigControllerTest {
                 .withMaxSessionsPerConnection(4)
                 .endPolicy()
                 .endRouter()
+                .withGlobalDLQ(true)
                 .endSpec()
                 .build();
 
