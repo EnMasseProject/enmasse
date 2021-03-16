@@ -24,7 +24,7 @@ otherwise take `enmasse-<version>.tgz`.
 endif::Downloading[]
 
 ifndef::Downloading[]
-* Download and extract the `{ZipInstallFile}` file (for {KubePlatform} 4 and above) or `{ZipInstallFileOcp311}` file (for {KubePlatform} 3.11) from the {ZipDownload}. 
+* Download and extract the `{ZipInstallFile}` file (for {KubePlatform} 4 and above) or `{ZipInstallFileOcp311}` file (for {KubePlatform} 3.11) from the {ZipDownload}.
 
 NOTE: Although container images for {ProductName} are available in the {DockerRepository}, we recommend that you use the YAML files provided instead.
 
