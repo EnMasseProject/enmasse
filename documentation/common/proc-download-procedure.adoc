@@ -19,7 +19,7 @@ endif::[]
 ifeval::["{cmdcli}" == "kubectl"]
 On {KubePlatform} 1.15 and below, choose `enmasse-prekube1_16-<version>.tgz`.
 endif::[]
-otherwise take `enmasse-<version>.tgz`.
+Otherwise, choose `enmasse-<version>.tgz`.
 * Unnpack the bundle.
 endif::Downloading[]
 
