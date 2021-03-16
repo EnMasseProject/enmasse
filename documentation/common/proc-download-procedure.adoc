@@ -10,13 +10,22 @@
 
 .Procedure
 ifdef::Downloading[]
-* Download one of the releases from the link:https://github.com/EnMasseProject/enmasse/releases[GitHub repository] and unpack it.
+
+
+* Download one of the releases from the link:https://github.com/EnMasseProject/enmasse/releases[GitHub repository]. There are two versions of the bundle provided: `enmasse-<version>.tgz` and `enmasse-prekube1_16-<version>.tgz`.
+ifeval::["{cmdcli}" == "oc"]
+On {KubePlatform} 3.11 and before, choose `enmasse-prekube1_16-<version>.tgz`.
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+On {KubePlatform} 1.15 and below, choose `enmasse-prekube1_16-<version>.tgz`.
+endif::[]
+Otherwise, choose `enmasse-<version>.tgz`.
+* Unnpack the bundle.
 endif::Downloading[]
 
 ifndef::Downloading[]
-* Download and extract the `{ZipInstallFile}` file from the {ZipDownload}.
+* Download and extract the `{ZipInstallFile}` file (for {KubePlatform} 4 and above) or `{ZipInstallFileOcp311}` file (for {KubePlatform} 3.11) from the {ZipDownload}.
 
 NOTE: Although container images for {ProductName} are available in the {DockerRepository}, we recommend that you use the YAML files provided instead.
 
 endif::Downloading[]
-
