@@ -19,8 +19,7 @@
 * #5272: Support router configuration maxMessageSize
 * #5275: Avoid reliance of deprecated service-ca.crt (OpenShift4)
 * #5279: Bump elliptic from 6.5.3 to 6.5.4 in /console/console-init/ui 
-
-
+* #5281: Agent performance improvements
 
 ## 0.33.0
 
