@@ -26,4 +26,4 @@ If the address has a `deadletter` address assigned, messages that have exceeded 
 
 If the address has no `deadletter` address assigned, the system drops the messages. These messages are lost permanently. footnote:[The standard address
 space supports a *global DLQ* mode. If set to `true` in the `standardinfraconfig` resources, the system establishes a fallback global dead letter address named `!!GLOBAL_DLQ` and routes the undelivered
-message will be routed to it.  Connect a consuming application to `!!GLOBAL_DLQ` to process the messages and remove them from the broker(s).]
+messages to it.  To remove messages from this address and prevent the broker(s) from becoming full, connect a consuming application to the `!!GLOBAL_DLQ` address.
