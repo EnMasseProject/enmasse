@@ -71,7 +71,7 @@ public class AddressSpaceUtils {
     }
 
     public static String getAddressSpaceInfraUuid(AddressSpace addressSpace) {
-        String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+        String infraUuid = addressSpace == null ? null : addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
         if (infraUuid == null) {
             return KubeUtil.infraUuid(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
         }
