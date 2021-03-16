@@ -101,6 +101,9 @@ jobs:
         run: |
           echo "::set-env name=ASSETPATH::templates/build/default/enmasse-$(echo $TAG).tgz"
           echo "::set-env name=ASSETNAME::enmasse-$(echo $TAG).tgz"
+
+          echo "::set-env name=OLD_ASSETPATH::templates/build/prekube1_16/enmasse-$(echo $TAG).tgz"
+          echo "::set-env name=OLD_ASSETNAME::enmasse-prekube1_16-$(echo $TAG).tgz"
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: true
 
@@ -114,6 +117,18 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ env.ASSETPATH }}
           asset_name: ${{ env.ASSETNAME }}
+          asset_content_type: application/gzip
+
+      - name: Upload prekube1_16 Release Asset
+        if: job.status == 'success'
+        id: upload-prekube1_16-release-asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.OLD_ASSETPATH }}
+          asset_name: ${{ env.OLD_ASSETNAME }}
           asset_content_type: application/gzip
     
       - name: Publish documentation

@@ -20,8 +20,7 @@ var rhea = require('rhea');
 var path = require('path');
 var fs = require('fs');
 var Router = require('./qdr.js').Router;
-var crypto = require('crypto');
-var uuidv5 = require('uuid/v5');
+var myutils = require('./utils.js');
 
 
 
@@ -228,10 +227,20 @@ function is_role_normal (c) {
     return c.role === 'normal';
 }
 
-var internal_identifiers = ['address-space-controller', 'standard-controller', 'agent', 'ragent', 'qdconfigd', 'subserv', 'lwt-service', 'standard-controller-healthcheck'];
+const internal_identifiers = {
+    'address-space-controller': true,
+    'standard-controller': true,
+    'agent': true,
+    'ragent': true,
+    'qdconfigd': true,
+    'subserv': true,
+    'lwt-service': true,
+    'standard-controller-healthcheck': true
+};
+
 
 function is_internal_identifier (s) {
-    return internal_identifiers.indexOf(s) >= 0;
+    return s in internal_identifiers;
 }
 
 function is_internal (c) {
@@ -242,20 +251,6 @@ function is_application_connection (c) {
     return is_role_normal(c) && !is_internal(c);
 }
 
-
-function generateStableUuid() {
-    var hash = crypto.createHash('sha256');
-    for (var i = 0, j = arguments.length; i < j; i++){
-        var argument = arguments[i];
-        if (argument) {
-            hash.update(argument);
-        }
-    }
-    var ba = [];
-    ba.push(...hash.digest().slice(0, 16));
-    const ns = "3751f842-240e-48b9-89b5-5b47f04e931b";
-    return uuidv5(ns, ba);
-}
 
 function get_normal_connections (results) {
     var connections = {};
@@ -268,7 +263,7 @@ function get_normal_connections (results) {
             var addressSpace = process.env.ADDRESS_SPACE;
             var addressSpaceNamespace = process.env.ADDRESS_SPACE_NAMESPACE;
             var addressSpaceType = process.env.ADDRESS_SPACE_TYPE;
-            var uuid = generateStableUuid(addressSpaceNamespace, addressSpace, c.container, c.host);
+            var uuid = myutils.generate_stable_uuid(addressSpaceNamespace, addressSpace, c.container, c.host);
             connections[qualified_id] = {
                 id: c.identity,
                 addressSpace: addressSpace,
