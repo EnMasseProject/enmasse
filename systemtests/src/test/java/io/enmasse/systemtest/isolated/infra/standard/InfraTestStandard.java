@@ -170,7 +170,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .build())
                 .withRouter(new StandardInfraConfigSpecRouterBuilder()
                         .withNewPolicy()
-                        .withNewMaxMessageSize(maxMessageSize)
+                        .withMaxMessageSize(maxMessageSize)
                         .endPolicy()
                         .withNewResources()
                         .withMemory("256Mi")
