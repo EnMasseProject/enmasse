@@ -32,6 +32,8 @@ import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
+import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
+import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.time.TimeoutBudget;
@@ -43,6 +45,7 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.policy.PodDisruptionBudget;
 import org.apache.qpid.proton.amqp.messaging.Rejected;
 import org.apache.qpid.proton.amqp.messaging.Source;
+
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -54,6 +57,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -62,6 +66,7 @@ import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
@@ -139,6 +144,140 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 InfraConfiguration.router(null, "256Mi", routerTemplateSpec, 1),
                 InfraConfiguration.admin(null, "512Mi", adminTemplateSpec));
     }
+
+    @ExternalClients
+    @ParameterizedTest(name = "testRouterMaxMessageSize-with-messageSize-{0}")
+    @ValueSource(ints = {10, 1000})
+    void testRouterMaxMessageSize(int maxMessageSize) throws  Exception {
+
+        PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"), "mybrokernode", "broker");
+        PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"), "myadminnode", "admin");
+        PodTemplateSpec routerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "router"), "myrouternode", "router");
+        StandardInfraConfig testInfra = new StandardInfraConfigBuilder()
+                .withNewMetadata()
+                .withName("test-infra-1-standard")
+                .endMetadata()
+                .withNewSpec()
+                .withVersion(environment.enmasseVersion())
+                .withBroker(new StandardInfraConfigSpecBrokerBuilder()
+                        .withAddressFullPolicy("FAIL")
+                        .withNewResources()
+                        .withMemory("512Mi")
+                        .withStorage("1Gi")
+                        .endResources()
+                        .withPodTemplate(brokerTemplateSpec)
+                        .withJavaOpts("-Dsystemtest=property")
+                        .build())
+                .withRouter(new StandardInfraConfigSpecRouterBuilder()
+                        .withNewPolicy()
+                        .withMaxMessageSize(maxMessageSize)
+                        .endPolicy()
+                        .withNewResources()
+                        .withMemory("256Mi")
+                        .endResources()
+                        .withPodTemplate(routerTemplateSpec)
+                        .build())
+                .withAdmin(new StandardInfraConfigSpecAdminBuilder()
+                        .withNewResources()
+                        .withMemory("512Mi")
+                        .endResources()
+                        .withPodTemplate(adminTemplateSpec)
+                        .build())
+                .endSpec()
+                .build();
+
+        resourcesManager.createInfraConfig(testInfra);
+
+        exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan-standard", AddressType.QUEUE,
+                Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 1.0)));
+
+        resourcesManager.createAddressPlan(exampleAddressPlan);
+
+        AddressSpacePlan exampleSpacePlan = buildExampleAddressSpacePlan(testInfra,
+                "example-space-plan-standard", Collections.singletonList(exampleAddressPlan));
+        resourcesManager.createAddressSpacePlan(exampleSpacePlan);
+
+        exampleAddressSpace = buildExampleAddressSpace(exampleSpacePlan, "example-address-space");
+
+        resourcesManager.createAddressSpace(exampleAddressSpace);
+
+        exampleAddress = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(exampleSpacePlan.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(exampleAddressSpace, "example-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressType.QUEUE.toString())
+                .withAddress("example-queue")
+                .withPlan(exampleAddressPlan.getMetadata().getName())
+                .endSpec()
+                .build();
+
+        resourcesManager.setAddresses(exampleAddress);
+
+        resourcesManager.createOrUpdateUser(exampleAddressSpace, exampleUser);
+
+
+        String alphabetChoice = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+        StringBuilder stringLoad = new StringBuilder();
+        Random rnd = new Random();
+
+        if (maxMessageSize == 10){
+            log.info("Test type: MessageOverflow");
+
+            while (stringLoad.length() < maxMessageSize+5) {
+                int index = (int) (rnd.nextFloat() * alphabetChoice.length());
+                stringLoad.append(alphabetChoice.charAt(index));
+            }
+            String comleteStringLoad = stringLoad.toString();
+            log.info("Sending string: "+comleteStringLoad);
+
+            try(ExternalMessagingClient client = new ExternalMessagingClient()
+                    .withClientEngine(new RheaClientSender())
+                    .withCredentials(exampleUser)
+                    .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getInternalEndpointByName(exampleAddressSpace, "messaging", "amqps")))
+                    .withAdditionalArgument(ClientArgument.MSG_DURABLE, "true")
+                    .withCount(1)
+                    .withMessageBody(stringLoad)
+                    .withTimeout(300)
+                    .withAddress(exampleAddress)){
+                assertFalse(client.run());
+            }
+        }
+        else {
+            log.info("Test type: MessageInRange");
+            while (stringLoad.length() < maxMessageSize/10) {
+                int index = (int) (rnd.nextFloat() * alphabetChoice.length());
+                stringLoad.append(alphabetChoice.charAt(index));
+            }
+            String comleteStringLoad = stringLoad.toString();
+            log.info("Sending string: "+comleteStringLoad);
+
+            ExternalMessagingClient senderClient = new ExternalMessagingClient()
+                    .withClientEngine(new RheaClientSender())
+                    .withCredentials(exampleUser)
+                    .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getInternalEndpointByName(exampleAddressSpace, "messaging", "amqps")))
+                    .withAdditionalArgument(ClientArgument.MSG_DURABLE, "true")
+                    .withCount(1)
+                    .withMessageBody(stringLoad)
+                    .withTimeout(300)
+                    .withAddress(exampleAddress)
+                    .withAdditionalArgument(ClientArgument.DEST_TYPE, "ANYCAST");
+
+            ExternalMessagingClient receiverClient = new ExternalMessagingClient()
+                    .withClientEngine(new RheaClientReceiver())
+                    .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getInternalEndpointByName(exampleAddressSpace, "messaging", "amqps")))
+                    .withAddress(exampleAddress)
+                    .withCredentials(exampleUser)
+                    .withCount(1)
+                    .withTimeout(300)
+                    .withAdditionalArgument(ClientArgument.DEST_TYPE, "ANYCAST");
+
+            assertTrue(senderClient.run());
+            assertTrue(receiverClient.run());
+        }
+    }
+
 
     @Test
     @Tag(ACCEPTANCE)
