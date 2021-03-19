@@ -44,7 +44,7 @@
         <avro.version>1.9.0</avro.version>
         <fabric8.kubernetes-client.version>5.0.2</fabric8.kubernetes-client.version>
         <sundrio.version>0.24.2</sundrio.version>
-        <vertx.version>3.9.0</vertx.version>
+        <vertx.version>3.9.6</vertx.version>
         <slf4j.version>1.7.21</slf4j.version>
         <logback.version>1.2.3</logback.version>
         <lucene.version>7.7.1</lucene.version>
@@ -576,6 +576,12 @@
                 <version>${vertx.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-core</artifactId>
+                <version>3.9.7-SNAPSHOT</version>
             </dependency>
 
             <dependency>
