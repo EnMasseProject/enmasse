@@ -104,6 +104,13 @@ public abstract class OSBServiceBase {
                     .build();
         }
 
+        if (addressSpace.getMetadata().getAnnotations() == null) {
+            addressSpace.getMetadata().setAnnotations(new LinkedHashMap<>());
+        }
+        if (addressSpace.getMetadata().getLabels() == null) {
+            addressSpace.getMetadata().setLabels(new LinkedHashMap<>());
+        }
+
         final Map<String, String> annotations = addressSpace.getMetadata().getAnnotations();
         final Map<String, String> labels = addressSpace.getMetadata().getLabels();
 
