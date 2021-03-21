@@ -21,6 +21,7 @@
 * #5279: Bump elliptic from 6.5.3 to 6.5.4 in /console/console-init/ui 
 * #5281: Agent performance improvements
 * #5285: Make !!GLOBAL_DLQ configurable from infraconfig #5286
+* #5292: Workaround for Service broker provisioning failure
 
 ## 0.33.0
 
