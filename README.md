@@ -46,7 +46,7 @@ See [contributing] for more info on how to get help from the community.
 
 If you run into issues, don't hesitate to raise an [issue].
 
-[website]: https://enmasse.io
+[website]: https://enmasseproject.github.io
 [contributing]: CONTRIBUTING.md
 [developing]: HACKING.md
 [mailinglist]: https://www.redhat.com/mailman/listinfo/enmasse
