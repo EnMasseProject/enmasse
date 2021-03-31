@@ -61,7 +61,7 @@
 
 // Book links
 
-:BookUrlBase: http://enmasse.io/documentation/
+:BookUrlBase: https://enmasseproject.github.io/documentation/
 :OCPBookURLBase: https://docs.openshift.com/container-platform/
 
 
