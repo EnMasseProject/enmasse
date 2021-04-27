@@ -45,7 +45,7 @@ under the License.
 
       <journal-min-files>2</journal-min-files>
 
-      <journal-pool-files>-1</journal-pool-files>
+      <journal-pool-files>10</journal-pool-files>
 
       <journal-buffer-timeout>2212000</journal-buffer-timeout>
 
