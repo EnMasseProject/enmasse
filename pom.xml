@@ -59,7 +59,7 @@
         <jboss.el.api.version>1.0.13.Final</jboss.el.api.version>
         <json-patch.version>1.9</json-patch.version>
         <glassfish.el.version>3.0.1-b08</glassfish.el.version>
-        <resteasy.version>3.6.1.SP2</resteasy.version>
+        <resteasy.version>4.5.7.Final</resteasy.version>
         <mockito.version>2.21.0</mockito.version>
         <guava.version>25.0-jre</guava.version>
         <hamcrest.version>2.2</hamcrest.version>
