@@ -9,10 +9,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import io.enmasse.systemtest.executor.ExecutionResultData;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -25,6 +32,8 @@ import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.TestUtils;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class OLMOperatorManager {
 
     private static final Logger log = CustomLogger.getLogger();
@@ -33,6 +42,7 @@ public class OLMOperatorManager {
     private String clusterExternalImageRegistry;
     private String clusterInternalImageRegistry;
     private static OLMOperatorManager instance;
+    private static final ArrayList<String> installPlanList = new ArrayList<>();
 
     private OLMOperatorManager() {
         clusterExternalImageRegistry = Environment.getInstance().getClusterExternalImageRegistry();
@@ -79,6 +89,12 @@ public class OLMOperatorManager {
 
         if(Environment.getInstance().isTestDownstream().equals("true")){
             applyDownstreamSubscription(namespace);
+
+            if(Environment.getInstance().getInstallPlanApproval().equals("Manual")) {
+                TestUtils.waitForInstallPlanPresent(namespace);
+                String installPlanName = (String) getInstallPlanName(namespace).get(0);
+                approveInstallPlan(namespace, installPlanName);
+            }
         }
         else{
             applySubscription(namespace, namespace, csvName, Environment.getInstance().getOperatorName(), Environment.getInstance().getOperatorChannel());
@@ -104,15 +120,78 @@ public class OLMOperatorManager {
                 "subscription", "enmasse-sub", "CatalogSourcesUnhealthy=False");
     }
 
-    public void applyDownstreamSubscription (String installationNamespace) throws IOException {
-        Path subscriptionFile = Files.createTempFile("subscription", ".yaml");
+    public void applyDownstreamSubscription (String installationNamespace) throws IOException, InterruptedException {        Path subscriptionFile = Files.createTempFile("subscription", ".yaml");
         String subscription = Files.readString(Paths.get(System.getProperty("user.dir"), "..","systemtests","olm", "subscription.yaml"));
         Files.writeString(subscriptionFile,
                 subscription
                         .replaceAll("\\$\\{OPERATOR_NAMESPACE}", installationNamespace)
                         .replaceAll("\\$\\{CATALOG_SOURCE}", Environment.getInstance().getCatalogSource())
-                        .replaceAll("\\$\\{PRODUCT_VERSION}", Environment.getInstance().getProductVersion()));
+                        .replaceAll("\\$\\{PRODUCT_VERSION}", Environment.getInstance().getProductVersion())
+                        .replaceAll("\\$\\{INSTALL_PLAN_APPROVAL}", Environment.getInstance().getInstallPlanApproval()));
         KubeCMDClient.applyFromFile(installationNamespace, subscriptionFile);
+        KubeCMDClient.awaitStatusCondition(new TimeoutBudget(2, TimeUnit.MINUTES), installationNamespace,
+                "subscription", "amq-online", "CatalogSourcesUnhealthy=False");
+    }
+
+    public void approveInstallPlan(String namespace, String installPlanName) {
+        log.info("Approving install plan {} in namespace {}", installPlanName, namespace);
+        ExecutionResultData result = KubeCMDClient.runOnCluster("patch", "installplan", installPlanName, "--namespace", namespace, "--type", "merge",  "--patch", "{\"spec\":{\"approved\":true}}");
+        //oc patch installplan install-whmhz --namespace openshift-operators --type merge --patch {"spec":{"approved":true}}
+        log.info(result.getStdOut());
+        installPlanList.removeIf(string -> string.contains(installPlanName));
+        assertTrue(result.getRetCode(), result.getStdOut());
+    }
+
+    public ArrayList getInstallPlanName(String namespace) {
+        ExecutionResultData result = KubeCMDClient.runOnCluster("get", "installplan", "-n", namespace);
+        String installPlansString = result.getStdOut();
+        String[] installPlansLines = installPlansString.split("\n");
+
+        for (String line : installPlansLines) {
+            // line: NAME  CSV  APPROVAL   APPROVED
+            String[] wholeLine = line.split(" ");
+
+            // name
+            if (wholeLine[0].startsWith("install-")) {
+                if (!installPlanList.contains(wholeLine[0])) {
+                    log.info("Adding {} install plan to the list of available install plans.", wholeLine[0]);
+                    installPlanList.add(wholeLine[0]);
+                }
+            }
+        }
+        if ((installPlanList.isEmpty())) {
+            log.warn("No install plans located in namespace: " + namespace);
+        }
+        return installPlanList;
+    }
+
+    //delete later, just another method for getting install plan name
+    public ArrayList getInstallPlanNameFromSubDescription(String namespace) {
+        ExecutionResultData result = KubeCMDClient.runOnCluster("describe", "subscription", "amq-online", "-n", namespace);
+        String installPlansString = result.getStdOut();
+        String[] installPlansLines = installPlansString.split("\n");
+
+        for (int i = 0; i < installPlansLines.length; i++) {
+            if (installPlansLines[i].contains("Kind:") && installPlansLines[i].contains("InstallPlan")) {
+                if (installPlansLines[i+1].contains("Name:")){
+                    String line = installPlansLines[i+1].trim();
+                    String pattern = "Name:\\s*(install-[a-zA-Z0-9]*)";
+                    Pattern r = Pattern.compile(pattern);
+                    Matcher m = r.matcher(line);
+                    if (m.find( )) {
+                        String installPlanName = m.group(1);
+                        if (!installPlanList.contains(installPlanName)) {
+                            log.info("Adding {} install plan to the list of available install plans.", installPlanName);
+                            installPlanList.add(installPlanName);
+                        }
+                    }
+                }
+            }
+        }
+        if ((installPlanList.isEmpty())) {
+            log.warn("No install plans located in namespace: " + namespace);
+        }
+        return installPlanList;
     }
 
     public void deployCatalogSource(String catalogNamespace) throws IOException {
