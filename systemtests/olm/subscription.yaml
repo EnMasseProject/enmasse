@@ -9,3 +9,4 @@ spec:
   source: ${CATALOG_SOURCE}
   sourceNamespace: openshift-marketplace
   startingCSV: amq-online.${PRODUCT_VERSION}
+  installPlanApproval: ${INSTALL_PLAN_APPROVAL}
