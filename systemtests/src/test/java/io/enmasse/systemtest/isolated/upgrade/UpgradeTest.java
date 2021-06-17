@@ -514,7 +514,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
                 operatorManager.olm().approveInstallPlan(infraNamespace, installPlanName);
             }
         }
-        else {
+        else{
             operatorManager.olm().applySubscription(infraNamespace, catalogNamespace, csvName, Environment.getInstance().getOperatorName(), Environment.getInstance().getOperatorChannel());
         }
 
