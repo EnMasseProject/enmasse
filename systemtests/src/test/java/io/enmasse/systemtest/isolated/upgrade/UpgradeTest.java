@@ -513,7 +513,8 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
                 String installPlanName = (String) operatorManager.olm().getInstallPlanNameFromSubDescription(infraNamespace).get(0);
                 operatorManager.olm().approveInstallPlan(infraNamespace, installPlanName);
             }
-        } else {
+        }
+        else {
             operatorManager.olm().applySubscription(infraNamespace, catalogNamespace, csvName, Environment.getInstance().getOperatorName(), Environment.getInstance().getOperatorChannel());
         }
 
