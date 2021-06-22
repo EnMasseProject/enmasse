@@ -506,15 +506,14 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         String csvName = getCsvName(upgradeTemplates, newVersion);
         String catalogNamespace = infraNamespace;
         //update subscription to point to new catalog and to use latest csv
-        if(Environment.getInstance().isTestDownstream().equals("true")){
+        if (Environment.getInstance().isTestDownstream().equals("true")){
             operatorManager.olm().applyDownstreamSubscription(infraNamespace);
-            if(Environment.getInstance().getInstallPlanApproval().equals("Manual")){
+            if (Environment.getInstance().getInstallPlanApproval().equals("Manual")){
                 TestUtils.waitForInstallPlanPresent(infraNamespace);
                 String installPlanName = (String) operatorManager.olm().getInstallPlanNameFromSubDescription(infraNamespace).get(0);
                 operatorManager.olm().approveInstallPlan(infraNamespace, installPlanName);
             }
-        }
-        else{
+        } else {
             operatorManager.olm().applySubscription(infraNamespace, catalogNamespace, csvName, Environment.getInstance().getOperatorName(), Environment.getInstance().getOperatorChannel());
         }
 
