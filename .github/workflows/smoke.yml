@@ -36,10 +36,12 @@ jobs:
       - name: setup-docker
         run: ./.github/scripts/setup_docker.sh
 
-      - name: Minikube setup with registry V1.0.2-2
-        uses: EnMasseProject/minikube-setup@V1.0.2-2
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+      - name: Setup Minikube
+        uses: manusa/actions-setup-minikube@v2.4.1
+        with:
+          minikube version: 'v1.20.0'
+          kubernetes version: 'latest'
+          start args: '--addons=registry,storage --insecure-registry "10.0.0.0/24" --insecure-registry "localhost:5000" --extra-config=kubeadm.ignore-preflight-errors=SystemVerification --extra-config=apiserver.authorization-mode=RBAC,Node'
 
       - name: Set up JDK 11
         uses: actions/setup-java@v1
