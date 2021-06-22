@@ -90,5 +90,3 @@ jobs:
         with:
           name: smoke-test-logs
           path: test-logs.zip
-
-
