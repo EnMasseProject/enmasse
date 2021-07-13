@@ -9,6 +9,12 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+case "$OSTYPE" in
+  darwin*)  CP=gcp;;
+  *)        CP=cp;;
+esac
+
+
 SCRIPTPATH="$(cd "$(dirname "$0")" && pwd -P)"
 
 TMPBASE="$(mktemp -d)"
@@ -24,7 +30,7 @@ echo "Using tmp base: $TMPBASE"
 trap "cleanup" EXIT SIGINT
 
 mkdir -p "$TMPPROJ"
-cp -dR "$SCRIPTPATH/../" "$TMPPROJ"
+${CP} -dR "$SCRIPTPATH/../" "$TMPPROJ"
 
 "$SCRIPTPATH/run-codegen.sh" --output-base "$TMPBASE"
 
