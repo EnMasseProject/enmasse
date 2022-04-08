@@ -76,7 +76,7 @@ public class K8sServiceAccountCredentialProvider implements CredentialProvider, 
         JsonObject body = new JsonObject();
         String userName = null;
         body.put("kind", "TokenReview");
-        body.put("apiVersion", "authentication.k8s.io/v1beta1");
+        body.put("apiVersion", "authentication.k8s.io/v1");
 
         JsonObject spec = new JsonObject();
         spec.put("token", token);
@@ -84,7 +84,7 @@ public class K8sServiceAccountCredentialProvider implements CredentialProvider, 
 
         JsonObject result;
 
-        HttpUrl url = HttpUrl.get(client.getOpenshiftUrl()).resolve("/apis/authentication.k8s.io/v1beta1/tokenreviews");
+        HttpUrl url = HttpUrl.get(client.getOpenshiftUrl()).resolve("/apis/authentication.k8s.io/v1/tokenreviews");
         Request.Builder requestBuilder = new Request.Builder()
                 .url(url)
                 .addHeader("Content-Type", "application/json")
@@ -97,7 +97,7 @@ public class K8sServiceAccountCredentialProvider implements CredentialProvider, 
                 if (response.isSuccessful()) {
                     result = new JsonObject(responseString);
                 } else {
-                    String errorMessage = String.format("Error performing POST on /apis/authentication.k8s.io/v1beta1/tokenreviews: %d, %s", response.code(), responseString);
+                    String errorMessage = String.format("Error performing POST on /apis/authentication.k8s.io/v1/tokenreviews: %d, %s", response.code(), responseString);
                     throw new RuntimeException(errorMessage);
                 }
             }

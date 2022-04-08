@@ -103,6 +103,7 @@ public class UserApiTest extends TestBase implements ITestSharedStandard {
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testServiceaccountUser() throws Exception {
         Address queue = new AddressBuilder()
                 .withNewMetadata()
