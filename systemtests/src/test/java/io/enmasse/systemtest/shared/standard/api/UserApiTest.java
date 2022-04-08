@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.shared.standard.api;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -18,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.enmasse.user.model.v1.UserBuilder;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
