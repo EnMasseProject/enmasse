@@ -24,6 +24,14 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.fabric8.kubernetes.api.model.networking.v1.HTTPIngressPath;
+import io.fabric8.kubernetes.api.model.networking.v1.Ingress;
+import io.fabric8.kubernetes.api.model.networking.v1.IngressBackend;
+import io.fabric8.kubernetes.api.model.networking.v1.IngressBuilder;
+import io.fabric8.kubernetes.api.model.networking.v1.IngressRuleBuilder;
+import io.fabric8.kubernetes.api.model.networking.v1.IngressServiceBackendBuilder;
+import io.fabric8.kubernetes.api.model.networking.v1.ServiceBackendPort;
+import io.fabric8.kubernetes.api.model.networking.v1.ServiceBackendPortBuilder;
 import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 
@@ -69,11 +77,6 @@ import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPath;
-import io.fabric8.kubernetes.api.model.extensions.Ingress;
-import io.fabric8.kubernetes.api.model.extensions.IngressBackend;
-import io.fabric8.kubernetes.api.model.extensions.IngressBuilder;
-import io.fabric8.kubernetes.api.model.extensions.IngressRuleBuilder;
 import io.fabric8.kubernetes.api.model.rbac.PolicyRuleBuilder;
 import io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder;
 import io.fabric8.kubernetes.api.model.rbac.RoleBuilder;
@@ -805,11 +808,13 @@ public class SystemtestsKubernetesApps {
 
     private static Ingress getSystemtestsIngressResource(String appName, int port) throws Exception {
         IngressBackend backend = new IngressBackend();
-        backend.setServiceName(appName);
-        backend.setServicePort(new IntOrString(port));
+        ServiceBackendPort backendPort = new ServiceBackendPortBuilder().withNumber(port).build();
+        backend.setService(new IngressServiceBackendBuilder().withName(appName)
+                                                             .withPort(backendPort).build());
         HTTPIngressPath path = new HTTPIngressPath();
         path.setPath("/");
         path.setBackend(backend);
+        path.setPathType("ImplementationSpecific");  // for v1beta1 compat see https://kubernetes.io/docs/reference/using-api/deprecation-guide/#ingress-v122
 
         return new IngressBuilder()
                 .withNewMetadata()
