@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 
 import io.enmasse.systemtest.platform.cluster.KubernetesCluster;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.networking.v1.Ingress;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.slf4j.Logger;
 
@@ -81,7 +82,6 @@ import io.enmasse.user.model.v1.UserList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.policy.PodDisruptionBudget;
 import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
@@ -760,17 +760,17 @@ public abstract class Kubernetes {
      * Creates ingress from resource
      *
      * @param namespace namespace
-     * @param resources resources
+     * @param resource resources
      */
-    public void createIngressFromResource(String namespace, Ingress resources) {
-        if (!ingressExists(namespace, resources.getMetadata().getName())) {
-            Ingress serRes = client.extensions().ingresses().inNamespace(namespace).create(resources);
+    public void createIngressFromResource(String namespace, Ingress resource) {
+        if (!ingressExists(namespace, resource.getMetadata().getName())) {
+            Ingress serRes = client.network().v1().ingresses().inNamespace(namespace).create(resource);
             if (verboseLog) {
                 log.info("Ingress {} created", serRes.getMetadata().getName());
             }
         } else {
             if (verboseLog) {
-                log.info("Ingress {} already exists", resources.getMetadata().getName());
+                log.info("Ingress {} already exists", resource.getMetadata().getName());
             }
         }
     }
@@ -782,7 +782,7 @@ public abstract class Kubernetes {
      * @param ingressName ingress name
      */
     public void deleteIngress(String namespace, String ingressName) {
-        client.extensions().ingresses().inNamespace(namespace).withName(ingressName).cascading(true).delete();
+        client.network().v1().ingresses().inNamespace(namespace).withName(ingressName).cascading(true).delete();
         if (verboseLog) {
             log.info("Ingress {} deleted", ingressName);
         }
@@ -796,7 +796,7 @@ public abstract class Kubernetes {
      * @return boolean
      */
     public boolean ingressExists(String namespace, String ingressName) {
-        return client.extensions().ingresses().inNamespace(namespace).list().getItems().stream()
+        return client.network().v1().ingresses().inNamespace(namespace).list().getItems().stream()
                 .map(ingress -> ingress.getMetadata().getName()).collect(Collectors.toList()).contains(ingressName);
     }
 
@@ -808,7 +808,7 @@ public abstract class Kubernetes {
      * @return string host
      */
     public String getIngressHost(String namespace, String ingressName) {
-        return client.extensions().ingresses().inNamespace(namespace).withName(ingressName).get().getSpec().getRules().get(0).getHost();
+        return client.network().v1().ingresses().inNamespace(namespace).withName(ingressName).get().getSpec().getRules().get(0).getHost();
     }
 
     /**
