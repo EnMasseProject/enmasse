@@ -89,7 +89,7 @@ public class StandardInfraConfig extends CustomResourceWithAdditionalProperties<
     @Override
     @JsonIgnore
     public boolean getUpdatePersistentVolumeClaim() {
-        return spec.getBroker().getUpdatePersistentVolumeClaim() != null ? spec.getBroker().getUpdatePersistentVolumeClaim() : false;
+        return spec.getBroker() != null && spec.getBroker().getUpdatePersistentVolumeClaim() != null ? spec.getBroker().getUpdatePersistentVolumeClaim() : false;
     }
 
 }

@@ -28,8 +28,10 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -256,6 +258,11 @@ public class KubernetesHelper implements Kubernetes {
         }
 
         return InfraConfigs.parseCurrentInfraConfig(messaging.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_INFRA_CONFIG));
+    }
+
+    @Override
+    public byte[] getClusterCaCertAsBytes() throws IOException {
+        return Files.readAllBytes(new File("/etc/ssl/certs/ca-bundle.crt").toPath());
     }
 
 }

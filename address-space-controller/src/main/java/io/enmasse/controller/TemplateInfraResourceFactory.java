@@ -23,10 +23,8 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -64,18 +62,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authServiceSettings.getPort()));
         parameters.put(TemplateParameter.ADDRESS_SPACE_PLAN, addressSpace.getSpec().getPlan());
 
-        String encodedCaCert = Optional.ofNullable(authServiceSettings.getCaCertSecret())
-                .map(secretName ->
-                    kubernetes.getSecret(secretName.getName()).map(secret ->
-                            secret.getData().get("tls.crt"))
-                            .orElseThrow(() -> new IllegalArgumentException("Unable to decode secret " + secretName)))
-                .orElseGet(() -> {
-                    try {
-                        return Base64.getEncoder().encodeToString(Files.readAllBytes(new File("/etc/ssl/certs/ca-bundle.crt").toPath()));
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                });
+        String encodedCaCert = getCaCertCertificateAsString(authServiceSettings, kubernetes);
         parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_CERT, encodedCaCert);
         if (authServiceSettings.getClientCertSecret() != null) {
             parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, authServiceSettings.getClientCertSecret().getName());
@@ -103,6 +90,29 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         } else {
             createSupportCredentials(parameters);
         }
+    }
+
+    public static String getCaCertCertificateAsString(AuthenticationServiceSettings authServiceSettings, Kubernetes kubernetes) {
+        if (authServiceSettings == null) {
+            return null;
+        }
+
+        return Optional.ofNullable(authServiceSettings.getCaCertSecret())
+                .map(secretName ->
+                    kubernetes.getSecret(secretName.getName()).map(secret ->
+                            secret.getData().get("tls.crt"))
+                            .orElseThrow(() -> new IllegalArgumentException("Unable to decode secret " + secretName)))
+                .orElseGet(() -> {
+                    try {
+                        return Base64.getEncoder().encodeToString(getFilesystemCaCertAsBytes(kubernetes));
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                });
+    }
+
+    private static byte[] getFilesystemCaCertAsBytes(Kubernetes kubernetes) throws IOException {
+        return kubernetes.getClusterCaCertAsBytes();
     }
 
     private void createSupportCredentials(Map<String, String> parameters) {

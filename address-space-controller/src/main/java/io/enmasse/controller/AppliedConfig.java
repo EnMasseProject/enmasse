@@ -6,9 +6,12 @@
 package io.enmasse.controller;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -17,11 +20,13 @@ import io.enmasse.address.model.AuthenticationServiceSettings;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class AppliedConfig {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     private AuthenticationServiceSettings authenticationServiceSettings;
     private AddressSpaceSpec addressSpaceSpec;
+    private String caTrustDigest;
 
     public static AppliedConfig parseCurrentAppliedConfig(String json) throws IOException {
         if (json == null) {
@@ -52,16 +57,18 @@ public final class AppliedConfig {
         }
     }
 
-    public static AppliedConfig create(AddressSpaceSpec spec, AuthenticationServiceSettings authServiceSettings) throws JsonProcessingException {
+    public static AppliedConfig create(AddressSpaceSpec spec, AuthenticationServiceSettings authServiceSettings, String caTrust) throws JsonProcessingException {
         // First normalize the values to your JSON convention.
         // If we don't do this, then a serialized object might not be equal to an in-memory object
         final AddressSpaceSpec normalizedSpec = normalize(AddressSpaceSpec.class, spec);
         final AuthenticationServiceSettings normalizedAuth= normalize(AuthenticationServiceSettings.class, authServiceSettings);
+        final String caTrustDigest = caTrust == null ? null : Base64.getEncoder().encodeToString(caTrust.getBytes(StandardCharsets.UTF_8));
 
         // create the new instance
         final AppliedConfig config = new AppliedConfig();
         config.addressSpaceSpec = normalizedSpec;
         config.authenticationServiceSettings = normalizedAuth;
+        config.caTrustDigest = caTrustDigest;
 
         // and return it
         return config;
@@ -75,17 +82,22 @@ public final class AppliedConfig {
         return addressSpaceSpec;
     }
 
+    public String getCaTrustDigest() {
+        return caTrustDigest;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AppliedConfig that = (AppliedConfig) o;
         return Objects.equals(authenticationServiceSettings, that.authenticationServiceSettings) &&
-                Objects.equals(addressSpaceSpec, that.addressSpaceSpec);
+                Objects.equals(addressSpaceSpec, that.addressSpaceSpec) &&
+                Objects.equals(caTrustDigest, that.caTrustDigest);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(authenticationServiceSettings, addressSpaceSpec);
+        return Objects.hash(authenticationServiceSettings, addressSpaceSpec, caTrustDigest);
     }
 }

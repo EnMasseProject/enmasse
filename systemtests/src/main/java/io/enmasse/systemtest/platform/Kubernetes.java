@@ -1109,6 +1109,10 @@ public abstract class Kubernetes {
         log.info("Secret {} deleted", secret);
     }
 
+    public Secret getSecret(String namespace, String secret)  {
+        return client.secrets().inNamespace(namespace).withName(secret).get();
+    }
+
     /**
      * Test if secret already exists
      *

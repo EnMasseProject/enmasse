@@ -9,7 +9,6 @@ import io.enmasse.address.model.*;
 import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.admin.model.AddressSpacePlan;
 import io.enmasse.admin.model.v1.InfraConfig;
-import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.AddressApi;
@@ -24,9 +23,16 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.google.common.hash.Hashing.sha256;
 import static io.enmasse.controller.common.ControllerReason.AddressSpaceChanged;
 import static io.enmasse.controller.common.ControllerReason.AddressSpaceCreated;
 import static io.enmasse.controller.common.ControllerReason.AddressSpaceUpgraded;
@@ -139,7 +145,9 @@ public class CreateController implements Controller {
         InfraConfigs.setCurrentInfraConfig(addressSpace, currentInfraConfig);
         AppliedConfig.setCurrentAppliedConfig(addressSpace, appliedConfig);
 
-        AppliedConfig desiredConfig = AppliedConfig.create(addressSpace.getSpec(), authenticationServiceResolver.resolve(addressSpace));
+        AuthenticationServiceSettings desiredAddressSettings = authenticationServiceResolver.resolve(addressSpace);
+        String desiredCaTrustHash = getDesiredCaTrustHash(desiredAddressSettings);
+        AppliedConfig desiredConfig = AppliedConfig.create(addressSpace.getSpec(), desiredAddressSettings, desiredCaTrustHash);
 
         if (currentInfraConfig == null && !kubernetes.existsAddressSpace(addressSpace)) {
             KubernetesList resourceList = new KubernetesListBuilder()
@@ -197,6 +205,18 @@ public class CreateController implements Controller {
             AppliedConfig.setCurrentAppliedConfig(addressSpace, desiredConfig);
         }
         return addressSpace;
+    }
+
+    private String getDesiredCaTrustHash(AuthenticationServiceSettings desiredAddressSettings) {
+        try {
+            String desiredCaCertCertificateAsString = TemplateInfraResourceFactory.getCaCertCertificateAsString(desiredAddressSettings, kubernetes);
+            if (desiredCaCertCertificateAsString != null) {
+                return sha256().hashString(desiredCaCertCertificateAsString, StandardCharsets.US_ASCII).toString();
+            }
+        } catch (Exception e) {
+            log.debug("ignoring failure to calculate desired ca trust hash", e);
+        }
+        return null;
     }
 
     private void addAppliedConfigAnnotation(KubernetesList resourceList, AppliedConfig config) throws JsonProcessingException {
