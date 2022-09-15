@@ -41,4 +41,6 @@ public interface Kubernetes {
     AppliedConfig getAppliedConfig(AddressSpace addressSpace) throws IOException;
 
     String getInfraUuid(AddressSpace addressSpace);
+
+    byte[] getClusterCaCertAsBytes() throws IOException;
 }

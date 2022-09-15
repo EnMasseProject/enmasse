@@ -6,6 +6,7 @@ package io.enmasse.controller;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -13,6 +14,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -28,6 +30,9 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.AddressSpaceSpecBuilder;
 import io.enmasse.address.model.AuthenticationServiceBuilder;
+import io.enmasse.address.model.AuthenticationServiceSettingsBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
+
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.AddressApi;
@@ -112,7 +117,7 @@ public class CreateControllerTest {
 
         AppliedConfig.setCurrentAppliedConfig(addressSpace, AppliedConfig.create(new AddressSpaceSpecBuilder(addressSpace.getSpec())
                 .withPlan("plan1")
-                .build(), null));
+                .build(), null, null));
         TestAddressSpaceApi addressSpaceApi = new TestAddressSpaceApi();
         addressSpaceApi.createAddressSpace(addressSpace);
 
@@ -160,5 +165,62 @@ public class CreateControllerTest {
 
         assertThat(addressSpace.getStatus().getMessages().size(), is(1));
         assertTrue(addressSpace.getStatus().getMessages().iterator().next().contains("quota exceeded for resource broker"));
+    }
+
+    @Test
+    public void testAddressSpaceUpdateCa() throws Exception {
+        Kubernetes kubernetes = mock(Kubernetes.class);
+        when(kubernetes.getNamespace()).thenReturn("otherspace");
+
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .withUid(UUID.randomUUID().toString())
+                .withNamespace("mynamespace")
+                .endMetadata()
+
+                .withNewSpec()
+                .withType("type1")
+                .withPlan("myplan")
+                .withAuthenticationService(new AuthenticationServiceBuilder().withName("standard").build())
+                .endSpec()
+                .build();
+        AppliedConfig.setCurrentAppliedConfig(addressSpace, AppliedConfig.create(null, null, "OWYyYjRjZWZmZGI2NWQwZGUzN2NiYWVkMjAyYTI5NTMxMzIyNjFkNmM5NzkzMTExZThiOWYwMGE5NTQ5OGFmZQ=="));
+
+        when(kubernetes.getAppliedInfraConfig(addressSpace)).thenReturn(new StandardInfraConfigBuilder()
+                .withNewMetadata()
+                .withName("infra")
+                .endMetadata()
+                .withNewSpec()
+                .withVersion("1.0")
+                .endSpec()
+                .build());
+        when(kubernetes.existsAddressSpace(addressSpace)).thenReturn(true);
+        when(kubernetes.getClusterCaCertAsBytes()).thenReturn("newca".getBytes(StandardCharsets.UTF_8));
+        AuthenticationServiceResolver authenticationServiceResolver = mock(AuthenticationServiceResolver.class);
+
+        when(authenticationServiceResolver.resolve(addressSpace)).thenReturn(new AuthenticationServiceSettingsBuilder().build());
+
+        EventLogger eventLogger = mock(EventLogger.class);
+        InfraResourceFactory mockResourceFactory = mock(InfraResourceFactory.class);
+        when(mockResourceFactory.createInfraResources(eq(addressSpace), any(), any())).thenReturn(Arrays.asList(new ConfigMapBuilder()
+                .editOrNewMetadata()
+                .withName("mymap")
+                .endMetadata()
+                .build()));
+
+        SchemaProvider testSchema = new TestSchemaProvider();
+        CreateController createController = new CreateController(kubernetes, testSchema, mockResourceFactory, eventLogger, null, "1.0", new TestAddressSpaceApi(), authenticationServiceResolver);
+
+        Controller.ReconcileResult reconcileResult = createController.reconcileAnyState(addressSpace);
+        var appliedConfig = AppliedConfig.parseCurrentAppliedConfig(reconcileResult.getAddressSpace());
+        assertEquals("NDQ4ZGQzZDk2M2YyNmU1ODkxZDg3ZWYxNzc2YzlmZDEyZDA4MGE3MWI2NTllNzFkYzkzZDE4NjQwZmIwMjRjNQ==", appliedConfig.getCaTrustDigest());
+
+        ArgumentCaptor<KubernetesList> resourceCaptor = ArgumentCaptor.forClass(KubernetesList.class);
+        ArgumentCaptor<Boolean> booleanCaptor = ArgumentCaptor.forClass(Boolean.class);
+        verify(kubernetes).apply(resourceCaptor.capture(), booleanCaptor.capture());
+        KubernetesList value = resourceCaptor.getValue();
+        assertThat(value.getItems().size(), is(1));
+
     }
 }

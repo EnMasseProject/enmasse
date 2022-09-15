@@ -12,6 +12,7 @@ import io.enmasse.address.model.AuthenticationServiceSettings;
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
@@ -27,6 +28,7 @@ import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
@@ -38,9 +40,12 @@ import org.slf4j.Logger;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
 
@@ -97,6 +102,90 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
 
         UserCredentials cred = new UserCredentials("david", "pepinator");
         resourcesManager.createOrUpdateUser(addressSpace, cred);
+
+        getClientUtils().assertCanConnect(addressSpace, cred, Collections.singletonList(queue), resourcesManager);
+    }
+
+    @Test
+    @Tag(ACCEPTANCE)
+    void testAuthServiceStandardCertRecycle() throws Exception {
+        String name = "test-standard-authservice";
+        resourcesManager.createAuthService(AuthServiceUtils.createStandardAuthServiceObject(name, true));
+        TestUtils.waitUntilCondition("Awaiting operator populating authservice cert in status", waitPhase -> {
+            try {
+                AuthenticationService standardAuth = resourcesManager.getAuthService(name);
+                return standardAuth != null && standardAuth.getStatus() != null && standardAuth.getStatus().getCaCertSecret() != null && standardAuth.getStatus().getCaCertSecret().getName() != null;
+            } catch (Exception e) {
+                return false;
+            }
+        }, new TimeoutBudget(5, TimeUnit.MINUTES));
+        AuthenticationService standardAuth = resourcesManager.getAuthService(name);
+
+        log.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
+
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space-auth")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_SMALL)
+                .withNewAuthenticationService()
+                .withName(standardAuth.getMetadata().getName())
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        resourcesManager.createAddressSpace(addressSpace);
+
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "myqueue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("myqueue")
+                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                .endSpec()
+                .build();
+        resourcesManager.setAddresses(queue);
+
+        UserCredentials cred = new UserCredentials("david", "pepinator");
+        resourcesManager.createOrUpdateUser(addressSpace, cred);
+
+        getClientUtils().assertCanConnect(addressSpace, cred, Collections.singletonList(queue), resourcesManager);
+
+        // Delete the secret openshift created for the auth service by OpenShift
+        Secret originalSrvSecret = kubernetes.getSecret(kubernetes.getInfraNamespace(), standardAuth.getStatus().getCaCertSecret().getName());
+        assertNotNull(originalSrvSecret.getData().get("tls.crt"));
+        kubernetes.deleteSecret(kubernetes.getInfraNamespace(), standardAuth.getStatus().getCaCertSecret().getName());
+
+        // await openshift to recreate certificate - we expect openshift to issue a new cert
+        TestUtils.waitUntilCondition("Awaiting openshift to recreate secret with cert material", waitPhase -> {
+            try {
+                Secret secret = kubernetes.getSecret(kubernetes.getInfraNamespace(), standardAuth.getStatus().getCaCertSecret().getName());
+                return secret != null && secret.getData() != null && secret.getData().containsKey("tls.crt");
+            } catch (Exception e) {
+                return false;
+            }
+        }, new TimeoutBudget(5, TimeUnit.MINUTES));
+        Secret newSrvSecret = kubernetes.getSecret(kubernetes.getInfraNamespace(), standardAuth.getStatus().getCaCertSecret().getName());
+        assertNotNull(newSrvSecret.getData().get("tls.crt"));
+        assertNotEquals(originalSrvSecret.getData().get("tls.crt"), newSrvSecret.getData().get("tls.crt"), "expecting openshift to generate a new cerificate");
+
+        // await address space controller to propagate the certificate
+        TestUtils.waitUntilCondition("Awaiting address space controller to propagate the CA to the address space", waitPhase -> {
+            try {
+                Secret addressSpaceCaCert = kubernetes.getSecret(kubernetes.getInfraNamespace(), String.format("authservice-ca.%s", addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID)));
+                return Objects.equals(addressSpaceCaCert.getData().get("tls.crt"), newSrvSecret.getData().get("tls.crt"));
+            } catch (Exception e) {
+                return false;
+            }
+        }, new TimeoutBudget(5, TimeUnit.MINUTES));
+
+        AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
 
         getClientUtils().assertCanConnect(addressSpace, cred, Collections.singletonList(queue), resourcesManager);
     }
