@@ -15,6 +15,9 @@
         "rhea": "^1.0.13",
         "uuid": "^3.3.3"
     },
+    "resolutions": {
+        "minimatch": "^3.0.5"
+    },
     "devDependencies": {
         "eslint": "5.16.0",
         "mocha": "^6.2.3",
