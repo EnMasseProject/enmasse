@@ -61,7 +61,7 @@
         <glassfish.el.version>3.0.1-b08</glassfish.el.version>
         <resteasy.version>3.6.1.SP2</resteasy.version>
         <mockito.version>2.21.0</mockito.version>
-        <guava.version>25.0-jre</guava.version>
+        <guava.version>29.0-jre</guava.version>
         <hamcrest.version>2.2</hamcrest.version>
         <junit.jupiter.version>5.5.2</junit.jupiter.version>
         <junit.platform.runner.version>1.5.2</junit.platform.runner.version>
