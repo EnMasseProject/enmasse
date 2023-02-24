@@ -38,7 +38,6 @@ require (
 	github.com/Nerzal/gocloak/v3 v3.7.0
 	github.com/alexedwards/scs/v2 v2.2.0
 	github.com/coreos/prometheus-operator v0.34.0
-	github.com/fabric8io/kubernetes-client v4.9.0+incompatible
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-logr/logr v0.1.0
 	github.com/google/uuid v1.1.1
@@ -58,8 +57,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.0.1
 	go.uber.org/multierr v1.1.0
 	go.uber.org/zap v1.10.0
-	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553
-	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
+	golang.org/x/net v0.7.0
 	gopkg.in/yaml.v2 v2.2.4
 	k8s.io/api v0.17.1
 	k8s.io/apimachinery v0.17.1
@@ -69,5 +67,4 @@ require (
 	k8s.io/kube-aggregator v0.0.0
 	pack.ag/amqp v0.12.6
 	sigs.k8s.io/controller-runtime v0.4.0
-	software.sslmate.com/src/go-pkcs12 v0.0.0-20200408181440-2981468c0ff3
 )
